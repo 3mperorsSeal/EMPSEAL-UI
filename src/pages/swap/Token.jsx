@@ -117,9 +117,9 @@ const Token = ({ onClose, onSelect }) => {
 
   const filteredTokens = Tokens.filter(
     (token) =>
-      token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.address.toLowerCase().includes(searchQuery.toLowerCase())
+      (token.name && token.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (token.ticker && token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (token.address && token.address.toLowerCase().includes(searchQuery.toLowerCase()))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
   const SortedTokenList = () => {

@@ -60,7 +60,7 @@ const Emp = ({ setPadding }) => {
   }, [address, datas]);
 
   const formattedBalance = balanceAddress
-    ? `${parseFloat(balanceAddress).toFixed(2)}`
+    ? `${parseFloat(balanceAddress).toFixed(6)}`
     : "0.00";
 
   function setRoute(path) {
@@ -83,7 +83,7 @@ const Emp = ({ setPadding }) => {
 
   // Format the chain balance
   const formattedChainBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(2) // Format to 6 decimal places
+    ? parseFloat(tokenBalance.formatted).toFixed(6) // Format to 6 decimal places
     : "0.000000";
 
   const { data: tokenBBalance } = useBalance({
@@ -94,7 +94,7 @@ const Emp = ({ setPadding }) => {
 
   // Format the chain balance
   const formattedChainBalanceTokenB = tokenBBalance
-    ? parseFloat(tokenBBalance.formatted).toFixed(2) // Format to 6 decimal places
+    ? parseFloat(tokenBBalance.formatted).toFixed(6) // Format to 6 decimal places
     : "0.000000";
 
   const handlePercentageChange = (e) => {
@@ -124,9 +124,8 @@ const Emp = ({ setPadding }) => {
       percentage === 100
     ) {
       // Leave some balance for gas fees (e.g., 0.01 units)
-      return Math.max(0, calculatedAmount - 0.01).toFixed(6);
+      return Math.max(0, calculatedAmount - 0.000001).toFixed(6);
     }
-
     return calculatedAmount.toFixed(6);
   };
 
@@ -498,9 +497,9 @@ const Emp = ({ setPadding }) => {
   const isInsufficientBalance = () => {
     const inputAmount = parseFloat(amountIn) || 0;
     if (selectedTokenA.address === EMPTY_ADDRESS) {
-      return inputAmount > parseFloat(formattedBalance);
+      return inputAmount >= parseFloat(formattedBalance);
     } else {
-      return inputAmount > parseFloat(tokenBalance?.formatted || "0");
+      return inputAmount >= parseFloat(tokenBalance?.formatted || "0");
     }
   };
 
@@ -609,7 +608,7 @@ const Emp = ({ setPadding }) => {
                 : `${
                     tokenBalance
                       ? formatNumber(
-                          parseFloat(tokenBalance.formatted).toFixed(2)
+                          parseFloat(tokenBalance.formatted).toFixed(6)
                         )
                       : "0.00"
                   }`}
@@ -770,7 +769,7 @@ const Emp = ({ setPadding }) => {
                 : `${
                     tokenBBalance
                       ? formatNumber(
-                          parseFloat(tokenBBalance.formatted).toFixed(2)
+                          parseFloat(tokenBBalance.formatted).toFixed(6)
                         )
                       : "0.00"
                   }`}
