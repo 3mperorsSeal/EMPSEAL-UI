@@ -168,7 +168,7 @@ const Amount = ({
                 {formatNumber(amountOut)} {tokenB.ticker}
               </div>
             </div>
-            <div className="flex justify-between gap-3 items-center w-full mt-2">
+            {/* <div className="flex justify-between gap-3 items-center w-full mt-2">
               <div className="flex gap-2 items-center">
                 <div className="text-gray-400 text-sm font-normal roboto leading-normal">
                   Price Impact
@@ -178,7 +178,7 @@ const Amount = ({
               <div className="text-right text-white text-sm font-normal roboto leading-normal">
                 {((amountOut / 1000) * 0.01).toFixed(2)} %
               </div>
-            </div>
+            </div> */}
             <button
               onClick={handleClick}
               disabled={disabled || isLoading}

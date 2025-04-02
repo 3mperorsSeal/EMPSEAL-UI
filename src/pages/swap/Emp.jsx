@@ -124,7 +124,7 @@ const Emp = ({ setPadding }) => {
       percentage === 100
     ) {
       // Leave some balance for gas fees (e.g., 0.01 units)
-      return Math.max(0, calculatedAmount - 0.000001).toFixed(6);
+      return Math.max(0, calculatedAmount).toFixed(6);
     }
     return calculatedAmount.toFixed(6);
   };
@@ -494,13 +494,23 @@ const Emp = ({ setPadding }) => {
     }
   };
 
+  // const isInsufficientBalance = () => {
+  //   const inputAmount = parseFloat(amountIn) || 0;
+  //   if (selectedTokenA.address === EMPTY_ADDRESS) {
+  //     return inputAmount > parseFloat(formattedBalance);
+  //   } else {
+  //     return inputAmount > parseFloat(tokenBalance?.formatted || "0");
+  //   }
+  // };
+  
   const isInsufficientBalance = () => {
     const inputAmount = parseFloat(amountIn) || 0;
-    if (selectedTokenA.address === EMPTY_ADDRESS) {
-      return inputAmount >= parseFloat(formattedBalance);
-    } else {
-      return inputAmount >= parseFloat(tokenBalance?.formatted || "0");
-    }
+    const balance = selectedTokenA.address === EMPTY_ADDRESS
+      ? parseFloat(formattedBalance)
+      : parseFloat(tokenBalance?.formatted || "0");
+  
+    //small precision difference
+    return inputAmount > balance && Math.abs(inputAmount - balance) > 1e-6;
   };
 
   const getButtonText = () => {
