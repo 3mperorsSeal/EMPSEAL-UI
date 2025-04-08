@@ -2819,584 +2819,584 @@
         "chainId": 369,
         "name": "MOST WANTED",
         "address": "0x79FC0E1d3EC00d81E5423DcC01A617b0e1245c2B",
-        "symbol": "RICKY",
-        "decimals": 18,
+        "ticker": "RICKY",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x79FC0E1d3EC00d81E5423DcC01A617b0e1245c2B.png"
     },
     {
         "chainId": 369,
         "name": "redPILL",
         "address": "0x2f4C121cB612d423d9639dc223576A08098c3537",
-        "symbol": "RDPIL",
-        "decimals": 18,
+        "ticker": "RDPIL",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x2f4C121cB612d423d9639dc223576A08098c3537.png"
     },
     {
         "chainId": 369,
         "name": "ICE KING",
         "address": "0xb33a7a3142532207012F8A88787aB465eAa7FfAc",
-        "symbol": "ICE",
-        "decimals": 18,
+        "ticker": "ICE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xb33a7a3142532207012F8A88787aB465eAa7FfAc.png"
     },
     {
         "chainId": 369,
         "name": "Linker",
         "address": "0xA99C95f034Cb10b725724f7679D10DE1748aD8ca",
-        "symbol": "LNKR",
-        "decimals": 18,
+        "ticker": "LNKR",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xA99C95f034Cb10b725724f7679D10DE1748aD8ca.png"
     },
     {
         "chainId": 369,
         "name": "Project Pi Liquid Staking Token",
         "address": "0x21dCB2c16C3773A565AcB45f6c34348EC78a8385",
-        "symbol": "stPLS",
-        "decimals": 18,
+        "ticker": "stPLS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x21dCB2c16C3773A565AcB45f6c34348EC78a8385.png"
     },
     {
         "chainId": 369,
         "name": "MICHI",
         "address": "0xdeFB2a9455B2d8f432d8cFe4355e0594787C23D5",
-        "symbol": "MICHI",
-        "decimals": 18,
+        "ticker": "MICHI",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xdeFB2a9455B2d8f432d8cFe4355e0594787C23D5.png"
     },
     {
         "chainId": 369,
         "name": "Orion Directive",
         "address": "0xd4f6Dfd7dA9731D11B8789226F6d692f02fea16F",
-        "symbol": "ORD",
-        "decimals": 18,
+        "ticker": "ORD",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xd4f6Dfd7dA9731D11B8789226F6d692f02fea16F.png"
     },
     {
         "chainId": 369,
         "name": "Knights of the Orion",
         "address": "0xE7308da032326dE7A2a2b80E1131650E845Ab989",
-        "symbol": "KORD",
-        "decimals": 18,
+        "ticker": "KORD",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xE7308da032326dE7A2a2b80E1131650E845Ab989.png"
     },
     {
         "chainId": 369,
         "name": "DOMINANCE",
         "address": "0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA",
-        "symbol": "DOMINANCE",
-        "decimals": 18,
+        "ticker": "DOMINANCE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x116D162d729E27E2E1D6478F1d2A8AEd9C7a2beA.png"
     },
     {
         "chainId": 369,
         "name": "GOPUMPME",
         "address": "0x78Ad9dA5d80a08AeDE9B0876B7A8807320DbDc9A",
-        "symbol": "PUMP",
-        "decimals": 18,
+        "ticker": "PUMP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x78Ad9dA5d80a08AeDE9B0876B7A8807320DbDc9A.png"
     },
     {
         "chainId": 369,
         "name": "MostWanted",
         "address": "0xe33a5AE21F93aceC5CfC0b7b0FDBB65A0f0Be5cC",
-        "symbol": "MOST",
-        "decimals": 18,
+        "ticker": "MOST",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xe33a5AE21F93aceC5CfC0b7b0FDBB65A0f0Be5cC.png"
     },
     {
         "chainId": 369,
         "name": "Trump",
         "address": "0x8cC6d99114Edd628249fAbc8a4d64F9A759a77Bf",
-        "symbol": "Trump",
-        "decimals": 18,
+        "ticker": "Trump",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x8cC6d99114Edd628249fAbc8a4d64F9A759a77Bf.png"
     },
     {
         "chainId": 369,
         "name": "PUMP.tires",
         "address": "0xec4252e62C6dE3D655cA9Ce3AfC12E553ebBA274",
-        "symbol": "PUMP",
-        "decimals": 18,
+        "ticker": "PUMP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xec4252e62C6dE3D655cA9Ce3AfC12E553ebBA274.png"
     },
     {
         "chainId": 369,
         "name": "Sommi Fan Token",
         "address": "0x6A46d56F9Dd963cEAc7f60aD148d49219CC3b79f",
-        "symbol": "FRIENDSHIP",
-        "decimals": 18,
+        "ticker": "FRIENDSHIP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6A46d56F9Dd963cEAc7f60aD148d49219CC3b79f.png"
     },
     {
         "chainId": 369,
         "name": "Core Coin",
         "address": "0xEa65cae72a3B4410aa5e9A964860D46AFc885987",
-        "symbol": "CORE",
-        "decimals": 18,
+        "ticker": "CORE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xEa65cae72a3B4410aa5e9A964860D46AFc885987.png"
     },
     {
         "chainId": 369,
         "name": "MARS",
         "address": "0x709e07230860FE0543DCBC359Fdf1D1b5eD13305",
-        "symbol": "MARS",
-        "decimals": 18,
+        "ticker": "MARS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x709e07230860FE0543DCBC359Fdf1D1b5eD13305.png"
     },
     {
         "chainId": 369,
         "name": "ELON",
         "address": "0x435363A7C8C63057aAD5d9903c154b4d43E00093",
-        "symbol": "ELON",
-        "decimals": 18,
+        "ticker": "ELON",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x435363A7C8C63057aAD5d9903c154b4d43E00093.png"
     },
     {
         "chainId": 369,
         "name": "DEGENS RUN THE CHAIN",
         "address": "0xb8A7bC2c6d5C1f28a8a95Dd0E7676611cfF4b075",
-        "symbol": "ALMIGHTY",
-        "decimals": 18,
+        "ticker": "ALMIGHTY",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xb8A7bC2c6d5C1f28a8a95Dd0E7676611cfF4b075.png"
     },
     {
         "chainId": 369,
         "name": "HexO",
         "address": "0x39BcA0fE6Aed637042Ef19f0FdC2F918933C6b97",
-        "symbol": "HexO",
-        "decimals": 18,
+        "ticker": "HexO",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x39BcA0fE6Aed637042Ef19f0FdC2F918933C6b97.png"
     },
     {
         "chainId": 369,
         "name": "BABY HACKER",
         "address": "0x253d5EcaE52B6AFEE9aC4C50e6b51FA9e7E6A8Da",
-        "symbol": "BABYHACKER",
-        "decimals": 18,
+        "ticker": "BABYHACKER",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x253d5EcaE52B6AFEE9aC4C50e6b51FA9e7E6A8Da.png"
     },
     {
         "chainId": 369,
         "name": "DAI from pump.tires",
         "address": "0xf598cB1D27Fb2c5C731F535AD6c1D0ec5EfE1320",
-        "symbol": "DAI",
-        "decimals": 18,
+        "ticker": "DAI",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xf598cB1D27Fb2c5C731F535AD6c1D0ec5EfE1320.png"
     },
     {
         "chainId": 369,
         "name": "USDC from pump.tires",
         "address": "0x080f7A005834c84240F25B2Df4AED8236bd57812",
-        "symbol": "USDC",
-        "decimals": 18,
+        "ticker": "USDC",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x080f7A005834c84240F25B2Df4AED8236bd57812.png"
     },
     {
         "chainId": 369,
         "name": "USDT from pump.tires",
         "address": "0x279d6564A78Cc9f126eC630e8a826DD55294f875",
-        "symbol": "USDT",
-        "decimals": 18,
+        "ticker": "USDT",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x279d6564A78Cc9f126eC630e8a826DD55294f875.png"
     },
     {
         "chainId": 369,
         "name": "ETH from pump.tires",
         "address": "0xBFcfA52225Baa5feec5fbb54E6458957D53ddD94",
-        "symbol": "ETH",
-        "decimals": 18,
+        "ticker": "ETH",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xBFcfA52225Baa5feec5fbb54E6458957D53ddD94.png"
     },
     {
         "chainId": 369,
         "name": "DOGE from pump.tires",
         "address": "0xDDe9164E7E0DA7ae48b58F36B42c1c9f80e7245F",
-        "symbol": "DOGE",
-        "decimals": 18,
+        "ticker": "DOGE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xDDe9164E7E0DA7ae48b58F36B42c1c9f80e7245F.png"
     },
     {
         "chainId": 369,
         "name": "PEPE from pump.tires",
         "address": "0x1B71505D95Ab3e7234ed2239b8EC7aa65b94ae7B",
-        "symbol": "PEPE",
-        "decimals": 18,
+        "ticker": "PEPE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x1B71505D95Ab3e7234ed2239b8EC7aa65b94ae7B.png"
     },
     {
         "chainId": 369,
         "name": "Bitcoin from pump.tires",
         "address": "0xF7bf2A938f971D7e4811A1170C43d651d21A0F81",
-        "symbol": "BTC",
-        "decimals": 18,
+        "ticker": "BTC",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xF7bf2A938f971D7e4811A1170C43d651d21A0F81.png"
     },
     {
         "chainId": 369,
         "name": "XRP from pump.tires",
         "address": "0x35Cf97eC047F93660C27c21FdD846dEa72bc66D7",
-        "symbol": "XRP",
-        "decimals": 18,
+        "ticker": "XRP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x35Cf97eC047F93660C27c21FdD846dEa72bc66D7.png"
     },
     {
         "chainId": 369,
         "name": "XRP new from pump.tires",
         "address": "0x9Ff4f187D1a41DCD05d6a80c060c6489C132e372",
-        "symbol": "XRP",
-        "decimals": 18,
+        "ticker": "XRP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x9Ff4f187D1a41DCD05d6a80c060c6489C132e372.png"
     },
     {
         "chainId": 369,
         "name": "Solana from pump.tires",
         "address": "0x873301F2B4B83FeaFF04121B68eC9231B29Ce0df",
-        "symbol": "SOL",
-        "decimals": 18,
+        "ticker": "SOL",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x873301F2B4B83FeaFF04121B68eC9231B29Ce0df.png"
     },
     {
         "chainId": 369,
         "name": "Cardano from pump.tires",
         "address": "0x4774e075c16989be68C26cC146fE707Ef4393661",
-        "symbol": "ADA",
-        "decimals": 18,
+        "ticker": "ADA",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x4774e075c16989be68C26cC146fE707Ef4393661.png"
     },
     {
         "chainId": 369,
         "name": "Tron from pump.tires",
         "address": "0x0392fBD58918E7ECBB2C68f4EBe4e2225C9a6468",
-        "symbol": "TRX",
-        "decimals": 18,
+        "ticker": "TRX",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x0392fBD58918E7ECBB2C68f4EBe4e2225C9a6468.png"
     },
     {
         "chainId": 369,
         "name": "PulseX from pump.tires",
         "address": "0xd73731bDA87C3464e76268c094D959c1B35b9bF1",
-        "symbol": "PLSX",
-        "decimals": 18,
+        "ticker": "PLSX",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xd73731bDA87C3464e76268c094D959c1B35b9bF1.png"
     },
     {
         "chainId": 369,
         "name": "PulseChain from pump.tires",
         "address": "0x260e5dA7eF6E30e0A647d1aDF47628198DCb0709",
-        "symbol": "PLS",
-        "decimals": 18,
+        "ticker": "PLS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x260e5dA7eF6E30e0A647d1aDF47628198DCb0709.png"
     },
     {
         "chainId": 369,
         "name": "HEX from pump.tires",
         "address": "0x55C50875e890c7eE5621480baB02511C380E12C6",
-        "symbol": "HEX",
-        "decimals": 18,
+        "ticker": "HEX",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x55C50875e890c7eE5621480baB02511C380E12C6.png"
     },
     {
         "chainId": 369,
         "name": "BestEverything",
         "address": "0x84601f4e914E00Dc40296Ac11CdD27926BE319f2",
-        "symbol": "BEST",
-        "decimals": 18,
+        "ticker": "BEST",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x84601f4e914E00Dc40296Ac11CdD27926BE319f2.png"
     },
     {
         "chainId": 369,
         "name": "Dick Heart",
         "address": "0xC86E034d7571459C4E7076Ff92b03fD3e3D0CA0C",
-        "symbol": "DICK",
-        "decimals": 18,
+        "ticker": "DICK",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xC86E034d7571459C4E7076Ff92b03fD3e3D0CA0C.png"
     },
     {
         "chainId": 369,
         "name": "ApeCoin on Pulsechain",
         "address": "0x4d224452801ACEd8B2F0aebE155379bb5D594381",
-        "symbol": "pAPE",
-        "decimals": 18,
+        "ticker": "pAPE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x4d224452801ACEd8B2F0aebE155379bb5D594381.png"
     },
     {
         "chainId": 369,
         "name": "Richard Fartcoin",
         "address": "0x6f40B31737c2B9010Ca86C8a04683Dd64527E205",
-        "symbol": "Fartcoin",
-        "decimals": 18,
+        "ticker": "Fartcoin",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6f40B31737c2B9010Ca86C8a04683Dd64527E205.png"
     },
     {
         "chainId": 369,
         "name": "DOUBT",
         "address": "0x6ba0876e30CcE2A9AfC4B82D8BD8A8349DF4Ca96",
-        "symbol": "DOUBT",
-        "decimals": 18,
+        "ticker": "DOUBT",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6ba0876e30CcE2A9AfC4B82D8BD8A8349DF4Ca96.png"
     },
     {
         "chainId": 369,
         "name": "ETH TAKEOVER",
         "address": "0x018eDECc388650C1Af0441907e49fE2c75cdbABD",
-        "symbol": "CTO",
-        "decimals": 18,
+        "ticker": "CTO",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x018eDECc388650C1Af0441907e49fE2c75cdbABD.png"
     },
     {
         "chainId": 369,
         "name": "JAMES",
         "address": "0x05076bf151AC83680151111027CBfb08cA057a7A",
-        "symbol": "JAMES",
-        "decimals": 18,
+        "ticker": "JAMES",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x05076bf151AC83680151111027CBfb08cA057a7A.png"
     },
     {
         "chainId": 369,
         "name": "Dark Rock Insiders Fund Trust",
         "address": "0xA9e71e1AcF993F001f734cE849e8E2fec4B6A4Ea",
-        "symbol": "DRIFT",
-        "decimals": 18,
+        "ticker": "DRIFT",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xA9e71e1AcF993F001f734cE849e8E2fec4B6A4Ea.png"
     },
     {
         "chainId": 369,
         "name": "TIRES",
         "address": "0x1039ED7f66Ca06346ecc807985b7262EeEad8e4f",
-        "symbol": "TIRES",
-        "decimals": 18,
+        "ticker": "TIRES",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x1039ED7f66Ca06346ecc807985b7262EeEad8e4f.png"
     },
     {
         "chainId": 369,
         "name": "dogwifhat from pump.tires",
         "address": "0xcbc9C2666193733BF99ECCAD74b4435eb0DF179A",
-        "symbol": "WIF",
-        "decimals": 18,
+        "ticker": "WIF",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xcbc9C2666193733BF99ECCAD74b4435eb0DF179A.png"
     },
     {
         "chainId": 369,
         "name": "Golden Bear",
         "address": "0x24e130bb9c0436FBB840dbE391861bEA45B96991",
-        "symbol": "TEDI",
-        "decimals": 18,
+        "ticker": "TEDI",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x24e130bb9c0436FBB840dbE391861bEA45B96991.png"
     },
     {
         "chainId": 369,
         "name": "MAGIC CARPET",
         "address": "0x6794E23f0C09e4e54848eDd64502806876d42b0F",
-        "symbol": "RIDE",
-        "decimals": 18,
+        "ticker": "RIDE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6794E23f0C09e4e54848eDd64502806876d42b0F.png"
     },
     {
         "chainId": 369,
         "name": "Michi",
         "address": "0x4c27CC93603bC1d0913C6aA0100Da49A9D982c38",
-        "symbol": "Michi",
-        "decimals": 18,
+        "ticker": "Michi",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x4c27CC93603bC1d0913C6aA0100Da49A9D982c38.png"
     },
     {
         "chainId": 369,
         "name": "The One Meme",
         "address": "0x2012aC87AE6222E5B496d1ba873c6fd79E9c0b7A",
-        "symbol": "RING",
-        "decimals": 18,
+        "ticker": "RING",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x2012aC87AE6222E5B496d1ba873c6fd79E9c0b7A.png"
     },
     {
         "chainId": 369,
         "name": "Eli Porter",
         "address": "0x6f82e6c4747c616d2e57D306f44EFCc206D49858",
-        "symbol": "ELI",
-        "decimals": 18,
+        "ticker": "ELI",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6f82e6c4747c616d2e57D306f44EFCc206D49858.png"
     },
     {
         "chainId": 369,
         "name": "Lazy",
         "address": "0x97df6a05AEaaeF7b461ef6d08aCB058f02868c17",
-        "symbol": "LZY",
-        "decimals": 18,
+        "ticker": "LZY",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x97df6a05AEaaeF7b461ef6d08aCB058f02868c17.png"
     },
     {
         "chainId": 369,
         "name": "PUPPERS",
         "address": "0x27246B3e508c696Af6C6F3D83286aC6D8242d3bA",
-        "symbol": "PUPPERS",
-        "decimals": 18,
+        "ticker": "PUPPERS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x27246B3e508c696Af6C6F3D83286aC6D8242d3bA.png"
     },
     {
         "chainId": 369,
         "name": "NPC",
         "address": "0xa6C897bc61270073f998FbC8d2425f01D3aDEb65",
-        "symbol": "NPC",
-        "decimals": 18,
+        "ticker": "NPC",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xa6C897bc61270073f998FbC8d2425f01D3aDEb65.png"
     },
     {
         "chainId": 369,
         "name": "PUPPERS",
         "address": "0xbd59a88754902B80922dFEBc15c7ea94a8C21ce2",
-        "symbol": "PUPPERS",
-        "decimals": 18,
+        "ticker": "PUPPERS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xbd59a88754902B80922dFEBc15c7ea94a8C21ce2.png"
     },
     {
         "chainId": 369,
         "name": "DumbMoney",
         "address": "0xe65112d2f120c8cb23ADC80D8E8122c0c8b7fF8D",
-        "symbol": "DUMB",
-        "decimals": 18,
+        "ticker": "DUMB",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xe65112d2f120c8cb23ADC80D8E8122c0c8b7fF8D.png"
     },
     {
         "chainId": 369,
         "name": "Dumb Amplifier",
         "address": "0x8357aA9070dc7d8d154Da74561CEc58cA30c41C3",
-        "symbol": "DAMP",
-        "decimals": 18,
+        "ticker": "DAMP",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x8357aA9070dc7d8d154Da74561CEc58cA30c41C3.png"
     },
     {
         "chainId": 369,
         "name": "Smoki",
         "address": "0x708DACAb783DeCbB4994A9Db612Da8C2100Ab186",
-        "symbol": "SMOKI",
-        "decimals": 18,
+        "ticker": "SMOKI",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x708DACAb783DeCbB4994A9Db612Da8C2100Ab186.png"
     },
     {
         "chainId": 369,
         "name": "Audio Ecstasy Inc",
         "address": "0x3Fa77830bFaF10e27bd1211Ff54E2D0Fd4869cA4",
-        "symbol": "XTC",
-        "decimals": 18,
+        "ticker": "XTC",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x3Fa77830bFaF10e27bd1211Ff54E2D0Fd4869cA4.png"
     },
     {
         "chainId": 369,
         "name": "Richards first Car",
         "address": "0xeF7A713C3F10c12D8b12B7CBB78b79b92303Ccd4",
-        "symbol": "BONNIE",
-        "decimals": 18,
+        "ticker": "BONNIE",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xeF7A713C3F10c12D8b12B7CBB78b79b92303Ccd4.png"
     },
     {
         "chainId": 369,
         "name": "REMEMBER",
         "address": "0xC506af3eA272dAFBE1A8E39d9C3446E03637bB12",
-        "symbol": "REMEMBER",
-        "decimals": 18,
+        "ticker": "REMEMBER",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xC506af3eA272dAFBE1A8E39d9C3446E03637bB12.png"
     },
     {
         "chainId": 369,
         "name": "TrumpOfficial",
         "address": "0xf2DD4FE4bE7B8C0655d0962A4285150Ff09769EA",
-        "symbol": "Trump",
-        "decimals": 18,
+        "ticker": "Trump",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xf2DD4FE4bE7B8C0655d0962A4285150Ff09769EA.png"
     },
     {
         "chainId": 369,
         "name": "Power to Profit",
         "address": "0xA831a35f48664fE357c584540fb79e172157CBF3",
-        "symbol": "POWER",
-        "decimals": 18,
+        "ticker": "POWER",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xA831a35f48664fE357c584540fb79e172157CBF3.png"
     },
     {
         "chainId": 369,
         "name": "Fetch",
         "address": "0xe39B70c9978E4232140d148Ad3C0b08f4A42220D",
-        "symbol": "FETCH",
-        "decimals": 18,
+        "ticker": "FETCH",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xe39B70c9978E4232140d148Ad3C0b08f4A42220D.png"
     },
     {
         "chainId": 369,
         "name": "INC Dollar",
         "address": "0x144Cd22AaA2a80FEd0Bb8B1DeADDc51A53Df1d50",
-        "symbol": "INCD",
-        "decimals": 18,
+        "ticker": "INCD",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x144Cd22AaA2a80FEd0Bb8B1DeADDc51A53Df1d50.png"
     },
     {
         "chainId": 369,
         "name": "INC Printer",
         "address": "0x6C203A555824ec90a215f37916cf8Db58EBe2fA3",
-        "symbol": "PRINT",
-        "decimals": 18,
+        "ticker": "PRINT",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x6C203A555824ec90a215f37916cf8Db58EBe2fA3.png"
     },
     {
         "chainId": 369,
         "name": "GAS Money",
         "address": "0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106",
-        "symbol": "GAS",
-        "decimals": 18,
+        "ticker": "GAS",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x042b48a98B37042D58Bc8defEEB7cA4eC76E6106.png"
     },
     {
         "chainId": 369,
         "name": "pDONG",
         "address": "0x47C7Ae1514Ee90c43e2bD50CAa8DA63285ae146d",
-        "symbol": "pDONG",
-        "decimals": 18,
+        "ticker": "pDONG",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x47C7Ae1514Ee90c43e2bD50CAa8DA63285ae146d.png"
     },
     {
         "chainId": 369,
         "name": "pdied",
         "address": "0xa8f501432348c5DD042347e22FBb0F0EB1528Cab",
-        "symbol": "pdied",
-        "decimals": 18,
+        "ticker": "pdied",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xa8f501432348c5DD042347e22FBb0F0EB1528Cab.png"
     },
     {
         "chainId": 369,
         "name": "Surgicaltrainers.com",
         "address": "0x62bd78d40A9FCb4D29F6fF183CFbcaf2f5ca9B52",
-        "symbol": "STM",
-        "decimals": 18,
+        "ticker": "STM",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x62bd78d40A9FCb4D29F6fF183CFbcaf2f5ca9B52.png"
     },
     {
         "chainId": 369,
         "name": "QUEEN POOIE",
         "address": "0xd5cFb4Cf3f49EfAf435Cd16105Cf6a40Ef921957",
-        "symbol": "QUEEN2",
-        "decimals": 18,
+        "ticker": "QUEEN2",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0xd5cFb4Cf3f49EfAf435Cd16105Cf6a40Ef921957.png"
     },
     {
         "chainId": 369,
         "name": "XGAME.IO",
         "address": "0x4Eb7C1c05087f98Ae617d006F48914eE73fF8D2A",
-        "symbol": "XGAME",
-        "decimals": 18,
+        "ticker": "XGAME",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x4Eb7C1c05087f98Ae617d006F48914eE73fF8D2A.png"
     },
     {
         "chainId": 369,
         "name": "SolidX from pump.tires",
         "address": "0x988aCabE384d80454995D6c9e105a4f67eA9947C",
-        "symbol": "SOLIDX",
-        "decimals": 18,
+        "ticker": "SOLIDX",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x988aCabE384d80454995D6c9e105a4f67eA9947C.png"
     },
     {
         "chainId": 369,
         "name": "Firewhale",
         "address": "0x03b4652C8565BC8c257Fbd9fA935AAE41160fc4C",
-        "symbol": "FIREW",
-        "decimals": 18,
+        "ticker": "FIREW",
+        "decimal": 18,
         "image": "https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/0x03b4652C8565BC8c257Fbd9fA935AAE41160fc4C.png"
     }
 ]
