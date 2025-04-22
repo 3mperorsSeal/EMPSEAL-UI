@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import Arrow from "../../assets/images/arrow-2.svg";
-import tokenList from "../tokenList.json";
-import adapters from "../adapters.json";
+import { useChainConfig } from "../../hooks/useChainConfig";
 import { useStore } from "../../redux/store/routeStore";
 
 const Routing = ({ routing }) => {
   const [tokenImages, setTokenImages] = useState({});
   const route = useStore((state) => state.route);
   const adapter = useStore((state) => state.adapter);
+  const { 
+    chainId,
+    tokenList, 
+    adapters,
+    isSupported,
+    wethAddress // Assuming this is the wrapped token address
+  } = useChainConfig();
 
   // Function to get token image from tokenList.json
   const getLocalTokenImage = (address) => {
     const token = tokenList.find(
       (token) => token.address.toLowerCase() === address.toLowerCase()
     );
-    return token ? token.image : null;
+    return token ? token.logoURI || token.image : null;
   };
 
   // Function to get token image from GitHub
@@ -24,12 +30,17 @@ const Routing = ({ routing }) => {
 
   // Combined function to get token image from any source
   const getTokenImage = (address) => {
+    // Check if the address is the native token address
+    if (address === "0x0000000000000000000000000000000000000000") {
+      return getLocalTokenImage(wethAddress);
+    }
+
     // First check if we already have it cached
     if (tokenImages[address]) {
       return tokenImages[address];
     }
 
-    // Then check tokenList.json
+    // Then check tokenList from current chain
     const localImage = getLocalTokenImage(address);
     if (localImage) {
       setTokenImages((prev) => ({
@@ -48,7 +59,7 @@ const Routing = ({ routing }) => {
     return githubImage;
   };
 
-  // Initialize and update token images whenever route changes
+  // Initialize and update token images whenever route or chainId changes
   useEffect(() => {
     if (route && route.length > 0) {
       const newTokenImages = {};
@@ -62,7 +73,7 @@ const Routing = ({ routing }) => {
         ...newTokenImages,
       }));
     }
-  }, [route]);
+  }, [route, chainId]);
 
   const getAdapter = (address) => {
     if (!address) return "Unknown";
@@ -72,13 +83,17 @@ const Routing = ({ routing }) => {
     return foundAdapter ? foundAdapter.name : "Unknown";
   };
 
-  // Get token symbol from tokenList.json
+  // Get token symbol from chain-specific tokenList
   const getTokenSymbol = (address) => {
     const token = tokenList.find(
       (token) => token.address.toLowerCase() === address.toLowerCase()
     );
-    return token ? token.ticker : "Unknown";
+    return token ? token.symbol || token.ticker : "Unknown";
   };
+
+  if (!isSupported) {
+    return <div className="text-white text-center">Please switch to a supported chain</div>;
+  }
 
   if (!route || route.length === 0) {
     return null;
@@ -100,10 +115,10 @@ const Routing = ({ routing }) => {
                 className="w-6 h-6"
                 src={tokenImages[address] || "/path/to/fallback/image.png"}
                 alt={getTokenSymbol(address)}
-                onError={(e) => {
-                  console.log(`Failed to load image for ${address}`);
-                  e.target.src = "/path/to/fallback/image.png";
-                }}
+                // onError={(e) => {
+                //   // console.log(`Failed to load image for ${address}`);
+                //   e.target.src = "/path/to/fallback/image.png";
+                // }}
               />
             </div>
 

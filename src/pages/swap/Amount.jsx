@@ -4,7 +4,7 @@ import Three from "../../assets/images/324.svg";
 import Refresh from "../../assets/images/refresh.svg";
 import Info from "../../assets/images/info.svg";
 import { formatUnits } from "viem";
-import Transcation from "./Transcation";
+import Transaction from "./Transaction";
 const Amount = ({
   onClose,
   amountIn,
@@ -201,7 +201,7 @@ const Amount = ({
         </div>
       </div>
       <div aria-label="Modal">
-        {isConfirm && <Transcation onClose={() => setConfirm(false)} />}
+        {isConfirm && <Transaction onClose={() => setConfirm(false)} />}
       </div>
     </>
   );

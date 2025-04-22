@@ -16,8 +16,9 @@ import { formatUnits } from "viem";
 import Tokens from "../tokenList.json";
 import { swapTokens } from "../../utils/contractCalls";
 import { useStore } from "../../redux/store/routeStore";
-import Transcation from "./Transcation";
+import Transaction from "./Transaction";
 import { Copy, Check } from "lucide-react";
+import { useChainConfig } from '../../hooks/useChainConfig';
 
 const Emp = ({ setPadding }) => {
   const [isAmountVisible, setAmountVisible] = useState(false);
@@ -25,8 +26,8 @@ const Emp = ({ setPadding }) => {
   const [isSlippageApplied, setIsSlippageApplied] = useState(false);
   const [isTokenVisible, setTokenVisible] = useState(false);
   const [order, setOrder] = useState(false);
-  const [selectedTokenA, setSelectedTokenA] = useState(Tokens[0]);
   const [isRateReversed, setIsRateReversed] = useState(false);
+  const [selectedTokenA, setSelectedTokenA] = useState(Tokens[0]);
   const [selectedTokenB, setSelectedTokenB] = useState(Tokens[1]);
   const [isSelectingTokenA, setIsSelectingTokenA] = useState(true);
   const [amountOut, setAmountOut] = useState("0");
@@ -47,9 +48,30 @@ const Emp = ({ setPadding }) => {
   const [usdValueTokenB, setUsdValueTokenB] = useState("0.00");
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
+  const {
+    chain: currentChain,
+    chainId,
+    tokenList,
+    adapters,
+    routerAddress,
+    wethAddress,
+    featureTokens,
+    blockExplorer,
+    blockExplorerName
+  } = useChainConfig();
+
+  // console.log("Chain Config:", { chain, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
+
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
+
+  useEffect(() => {
+    if (tokenList?.length > 0) {
+      setSelectedTokenA(tokenList[0]);
+      setSelectedTokenB(tokenList[1]);
+    }
+  }, [tokenList]);
 
   useEffect(() => {
     if (address && datas) {
@@ -129,7 +151,7 @@ const Emp = ({ setPadding }) => {
     return calculatedAmount.toFixed(6);
   };
 
-  const WETH_ADDRESS = "0xa1077a294dde1b09bb078844df40758a5d0f9a27";
+  // const WETH_ADDRESS = "0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990";
   const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
   const handleTokenSelect = (token) => {
@@ -169,21 +191,21 @@ const Emp = ({ setPadding }) => {
     error,
   } = useReadContract({
     abi: RouterABI,
-    address: "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52",
+    address: routerAddress,
     functionName: "findBestPath",
     args: [
       // Add validation for amountIn and selectedTokenA
       amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
         ? convertToBigInt(
-            parseFloat(amountIn),
-            parseInt(selectedTokenA.decimal) || 18 // Provide default decimal if missing
-          )
+          parseFloat(amountIn),
+          parseInt(selectedTokenA.decimal) || 18 // Provide default decimal if missing
+        )
         : BigInt(0),
       selectedTokenA?.address === EMPTY_ADDRESS
-        ? WETH_ADDRESS
+        ? wethAddress
         : selectedTokenA?.address || EMPTY_ADDRESS,
       selectedTokenB?.address === EMPTY_ADDRESS
-        ? WETH_ADDRESS
+        ? wethAddress
         : selectedTokenB?.address || EMPTY_ADDRESS,
       BigInt("3"),
     ],
@@ -191,17 +213,17 @@ const Emp = ({ setPadding }) => {
 
   const { data: singleToken, refetch: singleTokenRefresh } = useReadContract({
     abi: RouterABI,
-    address: "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52",
+    address: routerAddress,
     functionName: "findBestPath",
     args: [
       selectedTokenA?.decimal
         ? convertToBigInt(1, parseInt(selectedTokenA.decimal))
         : BigInt(0),
       selectedTokenA?.address === EMPTY_ADDRESS
-        ? WETH_ADDRESS
+        ? wethAddress
         : selectedTokenA?.address || EMPTY_ADDRESS,
       selectedTokenB?.address === EMPTY_ADDRESS
-        ? WETH_ADDRESS
+        ? wethAddress
         : selectedTokenB?.address || EMPTY_ADDRESS,
       BigInt("3"),
     ],
@@ -216,7 +238,7 @@ const Emp = ({ setPadding }) => {
 
   const { data: feeData } = useReadContract({
     abi: RouterABI,
-    address: "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52",
+    address: routerAddress,
     functionName: "findBestPath",
     args: [
       amountIn && selectedTokenA && parseFloat(amountIn)
@@ -257,11 +279,11 @@ const Emp = ({ setPadding }) => {
         // Determine which address to use for the API call
         const addressToFetch =
           selectedTokenA.address === EMPTY_ADDRESS
-            ? WETH_ADDRESS.toLowerCase()
+            ? wethAddress.toLowerCase()
             : selectedTokenA.address.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain.name.toLowerCase()}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -279,7 +301,7 @@ const Emp = ({ setPadding }) => {
         // Use the correct address to look up the price
         const tokenPrice =
           selectedTokenA.address === EMPTY_ADDRESS
-            ? tokenPrices[WETH_ADDRESS.toLowerCase()]
+            ? tokenPrices[wethAddress?.toLowerCase()]
             : tokenPrices[addressToFetch];
 
         setConversionRate(tokenPrice);
@@ -289,18 +311,18 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenA();
-  }, [selectedTokenA.address]);
+  }, [chainId,selectedTokenA.address, wethAddress]);
 
   useEffect(() => {
     const fetchConversionRateTokenB = async () => {
       try {
         const addressToFetch =
           selectedTokenB.address === EMPTY_ADDRESS
-            ? WETH_ADDRESS.toLowerCase()
+            ? wethAddress.toLowerCase()
             : selectedTokenB.address.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain.name.toLowerCase()}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -318,7 +340,7 @@ const Emp = ({ setPadding }) => {
         // Use the correct address to look up the price
         const tokenPrice =
           selectedTokenB.address === EMPTY_ADDRESS
-            ? tokenPrices[WETH_ADDRESS.toLowerCase()]
+            ? tokenPrices[wethAddress?.toLowerCase()]
             : tokenPrices[addressToFetch];
 
         setConversionRateTokenB(tokenPrice);
@@ -328,7 +350,7 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenB();
-  }, [selectedTokenB.address]);
+  }, [chainId,selectedTokenB.address, wethAddress]);
 
   useEffect(() => {
     if (!data || !data.amounts || data.amounts.length === 0) {
@@ -355,8 +377,8 @@ const Emp = ({ setPadding }) => {
   const handleValidData = () => {
     const isDirectRoute =
       (selectedTokenA?.address === EMPTY_ADDRESS &&
-        selectedTokenB?.address === WETH_ADDRESS) ||
-      (selectedTokenA?.address === WETH_ADDRESS &&
+        selectedTokenB?.address === wethAddress) ||
+      (selectedTokenA?.address === wethAddress &&
         selectedTokenB?.address === EMPTY_ADDRESS);
 
     if (isDirectRoute) {
@@ -451,7 +473,8 @@ const Emp = ({ setPadding }) => {
       selectedTokenA?.address,
       selectedTokenB?.address,
       address,
-      tradeInfo
+      tradeInfo,
+      chainId
     )
       .then(() => {
         setSwapSuccess(true); // Set success on transaction completion
@@ -502,13 +525,13 @@ const Emp = ({ setPadding }) => {
   //     return inputAmount > parseFloat(tokenBalance?.formatted || "0");
   //   }
   // };
-  
+
   const isInsufficientBalance = () => {
     const inputAmount = parseFloat(amountIn) || 0;
     const balance = selectedTokenA.address === EMPTY_ADDRESS
       ? parseFloat(formattedBalance)
       : parseFloat(tokenBalance?.formatted || "0");
-  
+
     //small precision difference
     return inputAmount > balance && Math.abs(inputAmount - balance) > 1e-6;
   };
@@ -517,8 +540,8 @@ const Emp = ({ setPadding }) => {
     return isInsufficientBalance()
       ? "Insufficient Balance"
       : quoteLoading
-      ? "Loading..."
-      : "Swap";
+        ? "Loading..."
+        : "Swap";
   };
 
   // Function to format the number with commas
@@ -555,9 +578,8 @@ const Emp = ({ setPadding }) => {
               setOrder(false);
               setPadding("lg:h-[295px] h-full");
             }}
-            className={`${
-              order ? "border-[#3b3c4e]" : "border-[#FF9900]"
-            } cursor-pointer md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
+            className={`${order ? "border-[#3b3c4e]" : "border-[#FF9900]"
+              } cursor-pointer md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
           >
             SWAP
           </div>
@@ -577,11 +599,10 @@ const Emp = ({ setPadding }) => {
               // setOrder(true);
               // setPadding("md:pb-[160px] pb-10");
             }}
-            className={`${
-              order
+            className={`${order
                 ? "border-[#FF9900]"
                 : "border-[#3b3c4e] opacity-50 cursor-not-allowed"
-            }  md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
+              }  md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
           >
             LIMIT ORDER
           </div>
@@ -614,13 +635,12 @@ const Emp = ({ setPadding }) => {
               {isLoading
                 ? "Loading.."
                 : selectedTokenA.address === EMPTY_ADDRESS
-                ? `${formatNumber(formattedBalance)}`
-                : `${
-                    tokenBalance
-                      ? formatNumber(
-                          parseFloat(tokenBalance.formatted).toFixed(6)
-                        )
-                      : "0.00"
+                  ? `${formatNumber(formattedBalance)}`
+                  : `${tokenBalance
+                    ? formatNumber(
+                      parseFloat(tokenBalance.formatted).toFixed(6)
+                    )
+                    : "0.00"
                   }`}
             </span>
           </div>
@@ -703,9 +723,8 @@ const Emp = ({ setPadding }) => {
             : "Fetching Rate..."}
         </div>
         <div
-          className={`lg:px-1 mt-3 flex gap-4 lg:flex-nowrap flex-wrap items-center ${
-            order ? "" : "hidden"
-          }`}
+          className={`lg:px-1 mt-3 flex gap-4 lg:flex-nowrap flex-wrap items-center ${order ? "" : "hidden"
+            }`}
         >
           <div className="md:w-[300px] w-full">
             <div className="text-center mb-2">
@@ -775,13 +794,12 @@ const Emp = ({ setPadding }) => {
               {isLoading
                 ? "Loading.."
                 : selectedTokenA.address === EMPTY_ADDRESS
-                ? `${formatNumber(formattedChainBalanceTokenB)}`
-                : `${
-                    tokenBBalance
-                      ? formatNumber(
-                          parseFloat(tokenBBalance.formatted).toFixed(6)
-                        )
-                      : "0.00"
+                  ? `${formatNumber(formattedChainBalanceTokenB)}`
+                  : `${tokenBBalance
+                    ? formatNumber(
+                      parseFloat(tokenBBalance.formatted).toFixed(6)
+                    )
+                    : "0.00"
                   }`}
             </span>
           </div>
@@ -860,11 +878,10 @@ const Emp = ({ setPadding }) => {
         <button
           onClick={() => setAmountVisible(true)}
           disabled={isInsufficientBalance()}
-          className={`w-full h-14 flex justify-center items-center rounded-xl ${
-            isInsufficientBalance()
+          className={`w-full h-14 flex justify-center items-center rounded-xl ${isInsufficientBalance()
               ? "bg-gray-500 cursor-not-allowed"
               : "bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent"
-          } roboto text-black text-base font-bold border border-[#FF9900]`}
+            } roboto text-black text-base font-bold border border-[#FF9900]`}
         >
           {getButtonText()}
         </button>
@@ -912,7 +929,7 @@ const Emp = ({ setPadding }) => {
 
       <div aria-label="Modal Success">
         {swapSuccess && (
-          <Transcation
+          <Transaction
             transactionHash={swapHash}
             onClose={() => setSwapSuccess(false)} // Close modal when clicked
           />

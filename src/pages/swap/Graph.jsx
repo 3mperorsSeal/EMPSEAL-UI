@@ -1,29 +1,35 @@
 import React, { useEffect, useState, useRef } from "react";
-import Refresh from "../../assets/images/refresh.svg";
-import { useStore } from "../../redux/store/routeStore";
 import axios from "axios";
-import { getTokenInfoByAddress } from "../../utils/utils";
-import { Chart } from "react-google-charts";
-import { useReadContract } from "wagmi";
-import { ERC20_ABI } from "./tokenFetch";
+import { createChart, LineSeries, LineStyle } from "lightweight-charts";
+import { useStore } from "../../redux/store/routeStore";
+import { useChainConfig } from '../../hooks/useChainConfig';
+import LoadingSpinner from "../../components/LoadingSpinner";
+import SpinnerImage from "../../assets/images/spinner_middle.svg";
 
+const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 const PRICE_CHART_ID = "price-chart-widget-container";
 
-export const PriceChartWidget = ({ tokenAddress }) => {
+// Chain to GeckoTerminal network mapping
+const CHAIN_TO_GECKO = {
+  'pulsechain': 'pulsechain',
+  'ethereumpow': 'ethw',
+};
+
+const PriceChartWidget = ({ tokenAddress }) => {
   const containerRef = useRef(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
+    
     const loadWidget = () => {
       try {
         if (typeof window.createMyWidget === "function") {
           window.createMyWidget(PRICE_CHART_ID, {
             autoSize: true,
-            chainId: "0x171",
+            chainId: "0x171", // Pulsechain
             tokenAddress,
             defaultInterval: "1D",
-            timeZone:
-              Intl.DateTimeFormat().resolvedOptions().timeZone ?? "Etc/UTC",
+            timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone ?? "Etc/UTC",
             theme: "moralis",
             locale: "en",
             backgroundColor: "#000000",
@@ -57,164 +63,212 @@ export const PriceChartWidget = ({ tokenAddress }) => {
     } else {
       loadWidget();
     }
+
+    return () => {
+      // Cleanup if needed
+      const script = document.getElementById("moralis-chart-widget");
+      if (script) {
+        script.remove();
+      }
+    };
   }, [tokenAddress]);
 
   return (
-    <div className="w-full max-w-[20rem] sm:max-w-[28rem] rounded-xl flex justify-center m-1 h-[25rem] md:mx-auto sm:px-4 ">
-      {/* <div style={{ width: "29rem", height: "17rem" }}> */}
-
-      <div
-        className="w-full md:max-w-[28rem] max-w-23 h-full"
-        id={PRICE_CHART_ID}
-        ref={containerRef}
-        // style={{ width: "100%", height: "150%" }}
-      />
-    </div>
+    <div className="w-full h-[400px]" id={PRICE_CHART_ID} ref={containerRef} />
   );
 };
 
-const Graph = ({ padding }) => {
-  const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
+const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error, setError }) => {
+  const chartContainerRef = useRef(null);
+  const chartRef = useRef(null);
+
+  useEffect(() => {
+    if (!finalTokenInfo || !chartContainerRef.current) return;
+
+    const cleanupChart = () => {
+      if (chartRef.current) {
+        chartRef.current.remove();
+        chartRef.current = null;
+      }
+    };
+
+    const fetchChartData = async () => {
+      setLoading(true);
+      setError(null);
+  
+      try {
+        const poolSearch = await axios.get(
+          `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/tokens/${finalTokenInfo.toLowerCase()}/pools?page=1`
+        );
+
+        if (!poolSearch.data.data || poolSearch.data.data.length === 0) {
+          throw new Error("No pool found for token");
+        }
+  
+        const poolAddress = poolSearch.data.data[0].id.replace(`${geckoNetwork}_`, "");
+        const ohlcvRes = await axios.get(
+          `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/pools/${poolAddress}/ohlcv/day?aggregate=1`
+        );
+        const ohlcvList = ohlcvRes.data.data.attributes.ohlcv_list;
+  
+        const candleData = ohlcvList
+          .map(candle => ({
+            time: new Date(candle[0]).getTime() / 1000,
+            value: parseFloat(candle[4]),
+          }))
+          .sort((a, b) => a.time - b.time);
+  
+        const container = chartContainerRef.current;
+        if (container) {
+          cleanupChart();
+
+          const chartOptions = {
+            layout: {
+              background: { type: 'solid', color: 'black' },
+              textColor: 'white',
+              fontSize: 12,
+              fontFamily: "'Roboto', sans-serif",
+            },
+            grid: {
+              vertLines: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                style: LineStyle.Dotted,
+              },
+              horzLines: {
+                color: 'rgba(255, 255, 255, 0.1)',
+                style: LineStyle.Dotted,
+              },
+            },
+            crosshair: {
+              mode: 1,
+              vertLine: {
+                width: 1,
+                color: 'rgba(255, 153, 0, 0.5)',
+                style: LineStyle.Solid,
+                labelVisible: true,
+                labelBackgroundColor: '#FF9900',
+              },
+              horzLine: {
+                width: 1,
+                color: 'rgba(255, 153, 0, 0.5)',
+                style: LineStyle.Solid,
+                labelBackgroundColor: '#FF9900',
+              },
+            },
+            timeScale: {
+              timeVisible: true,
+              secondsVisible: false,
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+            },
+            rightPriceScale: {
+              borderColor: 'rgba(255, 255, 255, 0.2)',
+              autoScale: true,
+            },
+            width: container.clientWidth,
+            height: 400,
+            localization: {
+              timeFormatter: (time) => {
+                const date = new Date(time * 1000);
+                return date.toLocaleTimeString([], { 
+                  hour: '2-digit', 
+                  minute: '2-digit',
+                  hour12: false 
+                });
+              },
+            },
+          };
+  
+          const chart = createChart(container, chartOptions);
+          chartRef.current = chart;
+
+          const series = chart.addSeries(LineSeries,{
+            color: '#00ff00',
+            lineWidth: 2,
+            crosshairMarkerVisible: true,
+            crosshairMarkerRadius: 4,
+            crosshairMarkerBorderColor: '#00ff00',
+            crosshairMarkerBackgroundColor: '#000000',
+            priceFormat: {
+              type: 'price',
+              precision: 6,
+              minMove: 0.000001,
+            },
+          });
+
+          series.setData(candleData);
+          chart.timeScale().fitContent();
+
+          const handleResize = () => {
+            if (chartRef.current) {
+              chartRef.current.applyOptions({
+                width: container.clientWidth,
+              });
+            }
+          };
+
+          window.addEventListener('resize', handleResize);
+          return () => {
+            window.removeEventListener('resize', handleResize);
+            cleanupChart();
+          };
+        }
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load chart");
+        cleanupChart();
+      } finally {
+        setLoading(false);
+      }
+    };
+  
+    fetchChartData();
+  
+    return () => {
+      cleanupChart();
+    };
+  }, [finalTokenInfo, geckoNetwork]);
+
+  return <div ref={chartContainerRef} className="w-full h-[400px]" />;
+};
+
+export const Graph = ({ padding }) => {
   const path = useStore((state) => state.path);
-  // const [ovhList, setOvhList] = useState([]);
-  const [loading, setLoading] = useState(false);
-  // const [error, setError] = useState(null);
-  // const [baseName, setBaseName] = useState("");
-  // const [quoteName, setQuoteName] = useState("");
-  // const [highValue, setHighValue] = useState(null);
-  // const [tokenSymbol, setTokenSymbol] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const {
+    chain: currentChain,
+  } = useChainConfig();
 
   const finalTokenInfo = path[0] === EMPTY_ADDRESS ? path[1] : path[0];
+  const geckoNetwork = CHAIN_TO_GECKO[currentChain.name.toLowerCase()] || 'pulsechain';
+  const isPulsechain = currentChain.name.toLowerCase() === 'pulsechain';
 
   return (
-    <>
-      <div
-        className={` border-[2px] border-[#FF9900] rounded-xl pt-4  bg-black ${padding}`}
-      >
-        {/* {loading && (
-          <div className="text-white text-center py-4">Loading Chart...</div>
-        )} */}
+    <div className={`border-[2px] border-[#FF9900] rounded-xl pt-4 bg-black ${padding}`}>
+      {/* {loading && <LoadingSpinner SpinnerImage={SpinnerImage} />} */}
+      {error && (
+        <div className="flex items-center justify-center py-4 text-red-500">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          {error}
+        </div>
+      )}
+      {isPulsechain ? (
         <PriceChartWidget tokenAddress={finalTokenInfo} />
-      </div>
-    </>
+      ) : (
+        <ManualChart
+          finalTokenInfo={finalTokenInfo}
+          geckoNetwork={geckoNetwork}
+          loading={loading}
+          setLoading={setLoading}
+          error={error}
+          setError={setError}
+        />
+      )}
+    </div>
   );
-
-  // useEffect(() => {
-  //   const fetchTokenData = async () => {
-  //     // Reset states
-  //     setLoading(true);
-  //     setError(null);
-
-  //     const finalTokenInfo = path[0] === EMPTY_ADDRESS ? path[1] : path[0];
-  //     try {
-  //       // Get token info from predefined list or fetch from contract
-  //       let tokenInfo = getTokenInfoByAddress(
-  //         path[0] === EMPTY_ADDRESS ? path[1] : path[0]
-  //       );
-
-  //       // Fetch pool info
-  //       const pairInfo = await axios.get(
-  //         // `https://api.geckoterminal.com/api/v2/search/pools?query=${searchQuery}&network=pulsechain&page=1`
-  //         `https://api.geckoterminal.com/api/v2/networks/pulsechain/tokens/${finalTokenInfo.toLowerCase()}/pools?page=1`
-  //       );
-
-  //       if (!pairInfo.data.data || pairInfo.data.data.length === 0) {
-  //         throw new Error("No pool data found");
-  //       }
-
-  //       const pairAddress = pairInfo.data.data[0].id.replace("pulsechain_", "");
-  //       // console.log("Pair address: ", pairAddress);
-
-  //       // Fetch OHLCV data
-  //       const response = await axios.get(
-  //         `https://api.geckoterminal.com/api/v2/networks/pulsechain/pools/${pairAddress.toLowerCase()}/ohlcv/day?aggregate=1`
-  //       );
-
-  //       if (response.data) {
-  //         setOvhList(transformData(response.data));
-
-  //         const ohlcvList = response.data.data.attributes.ohlcv_list;
-  //         const high = Math.max(...ohlcvList.map((item) => item[2]));
-  //         setHighValue(high);
-
-  //         const { base, quote } = response.data.meta;
-  //         setBaseName(base.name);
-  //         setQuoteName(quote.name);
-  //       }
-  //     } catch (error) {
-  //       console.error("Graph fetch error:", error);
-  //       setError("Failed to load graph data. Please try again.");
-  //     } finally {
-  //       setLoading(false);
-  //     }
-  //   };
-
-  //   const timeout = setTimeout(() => {
-  //     if (path && (path[0] || path[1])) {
-  //       fetchTokenData();
-  //     }
-  //   }, 1000);
-
-  //   // setOvhList([]);
-  //   // setBaseName("");
-  //   // setQuoteName("");
-  //   // setHighValue(null);
-  //   return () => clearTimeout(timeout);
-  // }, [path]);
-
-  // const transformData = (apiData) => {
-  //   const ohlcvList = apiData.data.attributes.ohlcv_list;
-  //   const chartData = [["Date", "Open", "High", "Low", "Close"]];
-
-  //   ohlcvList.forEach((item) => {
-  //     const date = new Date(item[0] * 1000);
-  //     chartData.push([date, item[1], item[2], item[3], item[4]]);
-  //   });
-
-  //   return chartData;
-  // };
-
-  // return (
-  //   <div
-  //     className={`w-full border-[2px] border-[#FF9900] rounded-xl pt-4  bg-black ${padding}`}
-  //   >
-  //     {loading && (
-  //       <div className="text-white text-center py-4">Loading Chart...</div>
-  //     )}
-  //     {error && <div className="text-red-500 text-center py-4">{error}</div>}
-
-  //     <div className="flex justify-start gap-2 px-4 mt-2">
-  //       <div className="text-white text-[14px] font-bold roboto leading-normal">
-  //         {baseName || "Loading..."}/WPLS
-  //       </div>
-  //     </div>
-
-  //     {highValue !== null && (
-  //       <div className="text-white text-[12px] px-4 pt-2 roboto">
-  //         <strong>Price:</strong> {highValue}
-  //         {/* <strong>Price High:</strong> {parseFloat(highValue).toFixed(18)} */}
-  //       </div>
-  //     )}
-
-  //     <Chart
-  //       width={"100%"}
-  //       height={"100%"}
-  //       chartType="AreaChart"
-  //       loader={<div>Loading Chart...</div>}
-  //       data={ovhList}
-  //       options={{
-  //         legend: "none",
-  //         vAxis: {
-  //           gridlines: { color: "transparent" },
-  //         },
-  //         hAxis: {
-  //           gridlines: { color: "transparent" },
-  //         },
-  //         backgroundColor: "transparent",
-  //       }}
-  //     />
-  //   </div>
-  // );
 };
 
 export default Graph;
