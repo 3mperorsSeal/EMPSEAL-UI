@@ -214,7 +214,11 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
         }
       } catch (err) {
         console.error(err);
-        setError("Failed to load chart");
+        if (!geckoNetwork) {
+          setError("Failed to load chart: unsupported chain");
+        } else {
+          setError(null);
+        }
         cleanupChart();
       } finally {
         setLoading(false);
@@ -241,12 +245,14 @@ export const Graph = ({ padding }) => {
   } = useChainConfig();
 
   const finalTokenInfo = path[0] === EMPTY_ADDRESS ? path[1] : path[0];
-  const geckoNetwork = CHAIN_TO_GECKO[currentChain.name.toLowerCase()] || 'pulsechain';
-  const isPulsechain = currentChain.name.toLowerCase() === 'pulsechain';
+  const chainName = currentChain?.name?.toLowerCase() || '';
+  const geckoNetwork = CHAIN_TO_GECKO[chainName] || '';
+  const isPulsechain = chainName === 'pulsechain';
 
   return (
     <div className={`border-[2px] border-[#FF9900] rounded-xl pt-4 bg-black ${padding}`}>
       {/* {loading && <LoadingSpinner SpinnerImage={SpinnerImage} />} */}
+      {loading && <div className="text-white roboto text-center">Loading...</div>}
       {error && (
         <div className="flex items-center justify-center py-4 text-red-500">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

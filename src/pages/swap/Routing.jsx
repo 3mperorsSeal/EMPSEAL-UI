@@ -7,9 +7,9 @@ const Routing = ({ routing }) => {
   const [tokenImages, setTokenImages] = useState({});
   const route = useStore((state) => state.route);
   const adapter = useStore((state) => state.adapter);
-  const { 
+  const {
     chainId,
-    tokenList, 
+    tokenList,
     adapters,
     isSupported,
     wethAddress // Assuming this is the wrapped token address
@@ -18,7 +18,7 @@ const Routing = ({ routing }) => {
   // Function to get token image from tokenList.json
   const getLocalTokenImage = (address) => {
     const token = tokenList.find(
-      (token) => token.address.toLowerCase() === address.toLowerCase()
+      (token) => token?.address?.toLowerCase() === address?.toLowerCase()
     );
     return token ? token.logoURI || token.image : null;
   };
@@ -78,7 +78,7 @@ const Routing = ({ routing }) => {
   const getAdapter = (address) => {
     if (!address) return "Unknown";
     const foundAdapter = adapters.find(
-      (a) => a.address.toLowerCase() === address.toLowerCase()
+      (a) => a?.address?.toLowerCase() === address?.toLowerCase()
     );
     return foundAdapter ? foundAdapter.name : "Unknown";
   };
@@ -86,14 +86,14 @@ const Routing = ({ routing }) => {
   // Get token symbol from chain-specific tokenList
   const getTokenSymbol = (address) => {
     const token = tokenList.find(
-      (token) => token.address.toLowerCase() === address.toLowerCase()
+      (token) => token?.address?.toLowerCase() === address?.toLowerCase()
     );
     return token ? token.symbol || token.ticker : "Unknown";
   };
 
-  if (!isSupported) {
-    return <div className="text-white text-center">Please switch to a supported chain</div>;
-  }
+  // if (!isSupported) {
+  //   return <div className="text-white text-center roboto">Please switch to a supported chain</div>;
+  // }
 
   if (!route || route.length === 0) {
     return null;
@@ -107,6 +107,12 @@ const Routing = ({ routing }) => {
         </p>
       </div>
 
+      {!isSupported && (
+        <span className="text-white text-center flex justify-center roboto mt-2">
+          Please switch to a supported chain
+        </span>
+      )}
+
       <div className="flex justify-between gap-2 items-center mt-6">
         {route.map((address, index) => (
           <React.Fragment key={`${address}-${index}`}>
@@ -115,10 +121,10 @@ const Routing = ({ routing }) => {
                 className="w-6 h-6"
                 src={tokenImages[address] || "/path/to/fallback/image.png"}
                 alt={getTokenSymbol(address)}
-                // onError={(e) => {
-                //   // console.log(`Failed to load image for ${address}`);
-                //   e.target.src = "/path/to/fallback/image.png";
-                // }}
+              // onError={(e) => {
+              //   // console.log(`Failed to load image for ${address}`);
+              //   e.target.src = "/path/to/fallback/image.png";
+              // }}
               />
             </div>
 

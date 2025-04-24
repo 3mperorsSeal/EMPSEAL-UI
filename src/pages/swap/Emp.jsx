@@ -276,14 +276,20 @@ const Emp = ({ setPadding }) => {
   useEffect(() => {
     const fetchConversionRateTokenA = async () => {
       try {
+        // Check if required values are available
+        if (!currentChain?.name || !selectedTokenA?.address) {
+          console.error("Missing required data for token A price fetch");
+          return;
+        }
+
         // Determine which address to use for the API call
         const addressToFetch =
-          selectedTokenA.address === EMPTY_ADDRESS
-            ? wethAddress.toLowerCase()
-            : selectedTokenA.address.toLowerCase();
+          selectedTokenA?.address === EMPTY_ADDRESS && wethAddress
+            ? wethAddress?.toLowerCase()
+            : selectedTokenA?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain.name.toLowerCase()}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain?.name?.toLowerCase()}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -300,7 +306,7 @@ const Emp = ({ setPadding }) => {
 
         // Use the correct address to look up the price
         const tokenPrice =
-          selectedTokenA.address === EMPTY_ADDRESS
+          selectedTokenA?.address === EMPTY_ADDRESS
             ? tokenPrices[wethAddress?.toLowerCase()]
             : tokenPrices[addressToFetch];
 
@@ -311,18 +317,25 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenA();
-  }, [chainId,selectedTokenA.address, wethAddress]);
+  }, [chainId,selectedTokenA?.address, wethAddress]);
 
   useEffect(() => {
     const fetchConversionRateTokenB = async () => {
       try {
+        // Check if required values are available
+        if (!currentChain?.name || !selectedTokenB?.address) {
+          console.error("Missing required data for token B price fetch");
+          return;
+        }
+
+        // Determine which address to use for the API call
         const addressToFetch =
-          selectedTokenB.address === EMPTY_ADDRESS
-            ? wethAddress.toLowerCase()
-            : selectedTokenB.address.toLowerCase();
+          selectedTokenB?.address === EMPTY_ADDRESS && wethAddress
+            ? wethAddress?.toLowerCase()
+            : selectedTokenB?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain.name.toLowerCase()}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain?.name?.toLowerCase()}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -339,7 +352,7 @@ const Emp = ({ setPadding }) => {
 
         // Use the correct address to look up the price
         const tokenPrice =
-          selectedTokenB.address === EMPTY_ADDRESS
+          selectedTokenB?.address === EMPTY_ADDRESS
             ? tokenPrices[wethAddress?.toLowerCase()]
             : tokenPrices[addressToFetch];
 
@@ -350,7 +363,7 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenB();
-  }, [chainId,selectedTokenB.address, wethAddress]);
+  }, [chainId,selectedTokenB?.address, wethAddress]);
 
   useEffect(() => {
     if (!data || !data.amounts || data.amounts.length === 0) {
