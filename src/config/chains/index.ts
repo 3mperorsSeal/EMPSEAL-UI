@@ -5,8 +5,9 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
   369: {
     chainId: 369,
     name: 'PulseChain',
+    symbol: "pulsechain",
     routerAddress: '0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52',
-    wethAddress: '0xa1077a294dde1b09bb078844df40758a5d0f9a27',
+    wethAddress: '0xA1077a294dDE1B09bB078844df40758a5D0f9a27',
     priceApi: {
       baseUrl: 'https://api.geckoterminal.com/api/v2',
       tokenPriceEndpoint: 'simple/networks/pulsechain/token_price',
@@ -15,11 +16,13 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorer: 'https://otter.pulsechain.com/tx/',
     blockExplorerName: 'Otterscan',
     rpcUrl: 'https://rpc.pulsechain.com',
+    maxHops: 3,
   },
   // ETHW
   10001: {
     chainId: 10001,
     name: 'EthereumPOW',
+    symbol: "ethw",
     routerAddress: '0x4bf29b3d063be84a8206fb65050da3e21239ff12',
     wethAddress: '0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990',
     priceApi: {
@@ -29,6 +32,24 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     },
     blockExplorer: 'https://www.oklink.com/ethereum-pow/tx/',
     blockExplorerName: "Oklink",
-    rpcUrl: 'https://mainnet.ethereumpow.org',
+    rpcUrl: 'https://ethw.public-rpc.com',
+    maxHops: 3,
+  },
+  //sonic
+  146: {
+    chainId: 146,
+    name: 'Sonic',
+    symbol: "sonic",
+    routerAddress: '0xd8016e376e15b20Fc321a37fD69DC42cfDf951Bb',
+    wethAddress: '0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38',
+    priceApi: {
+      baseUrl: 'https://api.geckoterminal.com/api/v2',
+      tokenPriceEndpoint: 'simple/networks/sonic/token_price',
+      graphEndpoint: 'networks/sonic/pools',
+    },
+    blockExplorer: 'https://sonicscan.org/tx/',
+    blockExplorerName: "sonicscan",
+    rpcUrl: 'https://rpc.soniclabs.com',
+    maxHops: 2,
   },
 };

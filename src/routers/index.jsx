@@ -8,6 +8,43 @@ import CollectionDetail from '../components/CollectionDetail';
 import ItemDetail from '../pages/Home/ItemDetail';
 import Bridge from '../pages/bridge/Main';
 import NativeBridge from '../pages/nativeBridge';
+import BridgeWrapper from '../components/BridgeWrapper';
+import WagmiProviderWrapper from '../Wagmi/WagmiProvider';
+import { Provider } from 'react-redux';
+import store from '../redux/store/store';
+import { ToastContainer } from 'react-toastify';
+import { useEffect } from 'react';
+import { useAccount, useChainId, useSwitchChain } from 'wagmi';
+import { pulsechain,sonic } from 'wagmi/chains';
+
+// This component will be rendered inside WagmiProvider
+const ChainSwitcher = ({ children }) => {
+  const chainId = useChainId();
+  const { switchChain } = useSwitchChain();
+  const { isConnected } = useAccount();
+
+  useEffect(() => {
+    if (isConnected && chainId) {
+      const swapChainIds = [pulsechain.id, 10001, sonic.id]; // pulsechain, ethw, sonic
+      if (!swapChainIds.includes(chainId)) {
+        switchChain({ chainId: pulsechain.id });
+      }
+    }
+  }, [chainId, isConnected, switchChain]);
+
+  return children;
+};
+
+const SwapWrapper = ({ children }) => (
+  <WagmiProviderWrapper appType="swap">
+    <Provider store={store}>
+      <ChainSwitcher>
+        {children}
+        <ToastContainer position="top-right" theme="dark" autoClose={5000} />
+      </ChainSwitcher>
+    </Provider>
+  </WagmiProviderWrapper>
+);
 
 function MyRoutes() {
   return (
@@ -17,25 +54,43 @@ function MyRoutes() {
         <div>
           <BreadCrumb />
           <Routes>
-            <Route path='/' element={<Home></Home>}></Route>
-            <Route path='/swap' element={<Swap></Swap>}></Route>
+            <Route path='/' element={<Home />} />
+            <Route
+              path='/swap'
+              element={
+                <SwapWrapper>
+                  <Swap />
+                </SwapWrapper>
+              }
+            />
             <Route
               path='/nft-marketplace/:name'
               element={<CollectionDetail />}
             />
             <Route
               path='/nft-marketplace'
-              element={<NFTMarketplace></NFTMarketplace>}
-            ></Route>
+              element={<NFTMarketplace />}
+            />
             <Route
               path='/item-detail'
-              element={<ItemDetail></ItemDetail>}
-            ></Route>
-            <Route path='/bridge' element={<Bridge></Bridge>}></Route>
+              element={<ItemDetail />}
+            />
+            <Route
+              path='/bridge'
+              element={
+                <BridgeWrapper>
+                  <Bridge />
+                </BridgeWrapper>
+              }
+            />
             <Route
               path='/native-bridge'
-              element={<NativeBridge></NativeBridge>}
-            ></Route>
+              element={
+                <BridgeWrapper>
+                  <NativeBridge />
+                </BridgeWrapper>
+              }
+            />
           </Routes>
         </div>
         {/* </Base> */}

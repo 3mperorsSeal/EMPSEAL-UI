@@ -46,11 +46,13 @@ export function useChainConfig() {
     tokenList,
     adapters,
     featureTokens,
+    symbol: currentChain?.symbol,
     routerAddress: currentChain?.routerAddress,
     wethAddress: currentChain?.wethAddress,
     priceApi: currentChain?.priceApi,
     blockExplorer: currentChain?.blockExplorer,
     blockExplorerName: currentChain?.blockExplorerName,
     isSupported: !!currentChain,
+    maxHops: currentChain?.maxHops || 2,
   };
 }

@@ -2,6 +2,7 @@
 export interface ChainConfig {
     chainId: number;
     name: string;
+    symbol: string;
     routerAddress: string;
     wethAddress: string;
     priceApi: {
@@ -12,4 +13,5 @@ export interface ChainConfig {
     blockExplorer: string;
     blockExplorerName: string;
     rpcUrl: string;
-  }
+    maxHops: number;
+}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Logo from "../../assets/images/swap-emp.png";
 import Sett from "../../assets/images/setting.png";
 import Ar from "../../assets/images/arrow.svg";
@@ -51,16 +51,19 @@ const Emp = ({ setPadding }) => {
   const {
     chain: currentChain,
     chainId,
+    symbol,
     tokenList,
     adapters,
     routerAddress,
     wethAddress,
     featureTokens,
     blockExplorer,
-    blockExplorerName
+    blockExplorerName,
+    maxHops
   } = useChainConfig();
+  // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
-  // console.log("Chain Config:", { chain, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
+  // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
@@ -184,6 +187,14 @@ const Emp = ({ setPadding }) => {
     }
   };
 
+  const isDirectRoute = useMemo(() => {
+    return (
+      selectedTokenA?.address === EMPTY_ADDRESS && selectedTokenB?.address === wethAddress
+    ) || (
+        selectedTokenA?.address === wethAddress && selectedTokenB?.address === EMPTY_ADDRESS
+      );
+  }, [selectedTokenA?.address, selectedTokenB?.address, wethAddress]);
+
   const {
     data,
     isLoading: quoteLoading,
@@ -207,9 +218,18 @@ const Emp = ({ setPadding }) => {
       selectedTokenB?.address === EMPTY_ADDRESS
         ? wethAddress
         : selectedTokenB?.address || EMPTY_ADDRESS,
-      BigInt("3"),
+      BigInt(maxHops.toString()),
     ],
+    enabled: !isDirectRoute, // call when not a direct route
   });
+
+  // Near your useReadContract for findBestPath
+  // console.log("Current isDirectRoute:", isDirectRoute, "findBestPath Data:", data, "Quote Loading:", quoteLoading);
+
+  // And perhaps rename the tradeInfo log if it's global
+  // console.log("Current TradeInfo:", tradeInfo);
+
+  // console.log("Data: ", data);
 
   const { data: singleToken, refetch: singleTokenRefresh } = useReadContract({
     abi: RouterABI,
@@ -225,16 +245,16 @@ const Emp = ({ setPadding }) => {
       selectedTokenB?.address === EMPTY_ADDRESS
         ? wethAddress
         : selectedTokenB?.address || EMPTY_ADDRESS,
-      BigInt("3"),
+      BigInt(maxHops.toString()),
     ],
   });
 
-  useWatchBlocks({
-    onBlock(block) {
-      singleTokenRefresh();
-      quoteRefresh();
-    },
-  });
+  // useWatchBlocks({
+  //   onBlock(block) {
+  //     singleTokenRefresh();
+  //     quoteRefresh();
+  //   },
+  // });
 
   const { data: feeData } = useReadContract({
     abi: RouterABI,
@@ -289,7 +309,7 @@ const Emp = ({ setPadding }) => {
             : selectedTokenA?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain?.name?.toLowerCase()}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -317,7 +337,7 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenA();
-  }, [chainId,selectedTokenA?.address, wethAddress]);
+  }, [chainId, selectedTokenA?.address, wethAddress]);
 
   useEffect(() => {
     const fetchConversionRateTokenB = async () => {
@@ -335,7 +355,7 @@ const Emp = ({ setPadding }) => {
             : selectedTokenB?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${currentChain?.name?.toLowerCase()}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
         );
 
         if (!response.ok) {
@@ -363,9 +383,14 @@ const Emp = ({ setPadding }) => {
     };
 
     fetchConversionRateTokenB();
-  }, [chainId,selectedTokenB?.address, wethAddress]);
+  }, [chainId, selectedTokenB?.address, wethAddress]);
 
   useEffect(() => {
+    if (isDirectRoute) {
+      setDirectRoute();
+      return;
+    }
+
     if (!data || !data.amounts || data.amounts.length === 0) {
       handleEmptyData();
       return;
@@ -377,8 +402,8 @@ const Emp = ({ setPadding }) => {
       return;
     }
 
-    handleValidData();
-  }, [data, selectedTokenA, selectedTokenB, amountIn]);
+    setCalculatedRoute();
+  }, [data, selectedTokenA, selectedTokenB, amountIn, isDirectRoute]);
 
   // Helper Functions
   const handleEmptyData = () => {
@@ -388,26 +413,83 @@ const Emp = ({ setPadding }) => {
   };
 
   const handleValidData = () => {
+    if (!data || !data.amounts || data.amounts.length === 0) {
+      handleEmptyData();
+      return;
+    }
+
+    if (!selectedTokenB) {
+      setAmountOut("0");
+      setTradeInfo(undefined);
+      return;
+    }
+
+    // Check for direct route (native token <-> wrapped token)
     const isDirectRoute =
       (selectedTokenA?.address === EMPTY_ADDRESS &&
         selectedTokenB?.address === wethAddress) ||
       (selectedTokenA?.address === wethAddress &&
         selectedTokenB?.address === EMPTY_ADDRESS);
 
+    // console.log("Chain:", currentChain?.name, "Is direct route:", isDirectRoute);
+
+    // Handle routing based on whether it's a direct route or not
     if (isDirectRoute) {
+      // For direct routes (native <-> wrapped) on all chains, use direct deposit/withdraw
       setDirectRoute();
     } else {
+      // For all other routes, use calculated route with hops
       setCalculatedRoute();
     }
   };
 
   const setDirectRoute = () => {
-    setRoute([selectedTokenA?.address, selectedTokenB?.address]);
-    setAdapter([]);
+    if (!amountIn || parseFloat(amountIn) <= 0) {
+      setAmountOut("0");
+      return;
+    }
+
+    const tokenAAddress = selectedTokenA?.address === EMPTY_ADDRESS
+      ? wethAddress
+      : selectedTokenA?.address || EMPTY_ADDRESS;
+
+    const tokenBAddress = selectedTokenB?.address === EMPTY_ADDRESS
+      ? wethAddress
+      : selectedTokenB?.address || EMPTY_ADDRESS;
+
+    // Set route with replaced native token address
+    setRoute([tokenAAddress, tokenBAddress]);
+    setAdapter([]); // No adapters needed for direct routes
+
+    // For direct routes, amount out should be same as amount in
     setAmountOut(amountIn);
+
+    // Create trade object directly without using findBestPath data
+    const amountInBigInt = amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+      ? convertToBigInt(parseFloat(amountIn), parseInt(selectedTokenA.decimal) || 18)
+      : BigInt(0);
+
+    const trade = {
+      amountIn: amountInBigInt,
+      amountOut: amountInBigInt, // Same as input for direct routes
+      amounts: [amountInBigInt, amountInBigInt], // Only start and end amounts
+      path: [tokenAAddress, tokenBAddress],
+      pathTokens: [selectedTokenA, selectedTokenB],
+      adapters: [], // No adapters for direct routes
+    };
+    
+    setTradeInfo(trade);
+    setIsSlippageApplied(false);
   };
 
+
   const setCalculatedRoute = () => {
+    if (isDirectRoute) return;
+    if (!data || !data.amounts || data.amounts.length === 0) {
+      console.error("Invalid swap data received");
+      return;
+    }
+
     const amountOutValue = formatUnits(
       data.amounts[data.amounts.length - 1],
       parseInt(selectedTokenB.decimal)
@@ -425,7 +507,7 @@ const Emp = ({ setPadding }) => {
       path: data.path,
       pathTokens: data.path.map(
         (pathAddress) =>
-          Tokens.find((token) => token.address === pathAddress) || Tokens[0]
+          tokenList.find((token) => token.address === pathAddress) || tokenList[0]
       ),
       adapters: data.adapters,
     };
@@ -434,17 +516,18 @@ const Emp = ({ setPadding }) => {
     setTradeInfo(trade);
     setIsSlippageApplied(false);
   };
-
-  // useEffect(() => {
-  //   quoteRefresh();
-  //   setPath([selectedTokenA.address, selectedTokenB.address]);
-  // }, [amountIn, selectedTokenA, selectedTokenB]);
+  // console.log("Trade info ", tradeInfo);
 
   useEffect(() => {
-    setTimeout(() => {
-      quoteRefresh();
-      setPath([selectedTokenA.address, selectedTokenB.address]);
-    }, 9000);
+    quoteRefresh();
+    setPath([selectedTokenA.address, selectedTokenB.address]);
+  }, [amountIn, selectedTokenA, selectedTokenB]);
+
+  useEffect(() => {
+    // setTimeout(() => {
+    // quoteRefresh();
+    setPath([selectedTokenA.address, selectedTokenB.address]);
+    // }, 9000);
   }, [amountIn, selectedTokenA, selectedTokenB]);
 
   useEffect(() => {
@@ -581,6 +664,12 @@ const Emp = ({ setPadding }) => {
 
   const minToReceive = amountOut * 0.0024;
   const minToReceiveAfterFee = amountOut - minToReceive;
+
+  // effect to clear amountOut when tokens are swapped
+  useEffect(() => {
+    setAmountOut("0");
+  }, [selectedTokenA, selectedTokenB]);
+
   return (
     <>
       <div className="w-full border border-white rounded-xl py-10 2xl:px-16 lg:px-12 md:px-8 px-4 bg-black md:mt-0 mt-4">
@@ -613,8 +702,8 @@ const Emp = ({ setPadding }) => {
               // setPadding("md:pb-[160px] pb-10");
             }}
             className={`${order
-                ? "border-[#FF9900]"
-                : "border-[#3b3c4e] opacity-50 cursor-not-allowed"
+              ? "border-[#FF9900]"
+              : "border-[#3b3c4e] opacity-50 cursor-not-allowed"
               }  md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
           >
             LIMIT ORDER
@@ -787,6 +876,7 @@ const Emp = ({ setPadding }) => {
             const _tokenB = selectedTokenB;
             setSelectedTokenA(_tokenB);
             setSelectedTokenB(_tokenA);
+            setAmountOut("0");
           }}
         >
           <img src={Ar} alt="Ar" className="mx-auto mt-6" />
@@ -892,8 +982,8 @@ const Emp = ({ setPadding }) => {
           onClick={() => setAmountVisible(true)}
           disabled={isInsufficientBalance()}
           className={`w-full h-14 flex justify-center items-center rounded-xl ${isInsufficientBalance()
-              ? "bg-gray-500 cursor-not-allowed"
-              : "bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent"
+            ? "bg-gray-500 cursor-not-allowed"
+            : "bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent"
             } roboto text-black text-base font-bold border border-[#FF9900]`}
         >
           {getButtonText()}

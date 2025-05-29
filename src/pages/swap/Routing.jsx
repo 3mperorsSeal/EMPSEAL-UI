@@ -51,12 +51,14 @@ const Routing = ({ routing }) => {
     }
 
     // Finally try GitHub
-    const githubImage = getGithubTokenImage(address);
-    setTokenImages((prev) => ({
-      ...prev,
-      [address]: githubImage,
-    }));
-    return githubImage;
+    if(chainId === 369){
+      const githubImage = getGithubTokenImage(address);
+      setTokenImages((prev) => ({
+        ...prev,
+        [address]: githubImage,
+      }));
+      return githubImage;
+    }
   };
 
   // Initialize and update token images whenever route or chainId changes

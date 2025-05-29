@@ -7,16 +7,79 @@ import {
 import { toast } from "react-toastify";
 import { SwapStatus, TradeInfo } from "./types/interface";
 import { WPLS } from "./abis/wplsABI";
+import { WETHW } from "./abis/wethwABI";
+import { WSONIC } from "./abis/wsonicABI";
 import { config } from "../Wagmi/config";
-import { EMPSEALROUTERABI } from "./abis/empSealRouterAbi";
+import { ETHW_ROUTER_ABI, PLS_ROUTER_ABI, SONIC_ROUTER_ABI } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
 import { getChainConfig } from "./getChainConfig";
 import { useChainId } from 'wagmi';
 
+// Chain-specific router function names
+const ROUTER_FUNCTION_NAMES = {
+  // Pulsechain (default)
+  369: {
+    swapFromNative: "swapNoSplitFromPLS",
+    swapToNative: "swapNoSplitToPLS",
+    swapWithPermit: "swapNoSplitToPLSWithPermit"
+  },
+  // ETHW
+  10001: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Sonic
+  146: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  }
+} as const;
+
+// Create a union type of all possible function names
+type RouterFunctionNames = typeof ROUTER_FUNCTION_NAMES[369] | typeof ROUTER_FUNCTION_NAMES[10001] | typeof ROUTER_FUNCTION_NAMES[146];
+
+// Extend the ABI type to include both ETH and PLS function names
+type ExtendedRouterABI = typeof ETHW_ROUTER_ABI & typeof SONIC_ROUTER_ABI & typeof PLS_ROUTER_ABI & {
+  [K in keyof RouterFunctionNames]: typeof ETHW_ROUTER_ABI[0] | typeof SONIC_ROUTER_ABI[0] | typeof PLS_ROUTER_ABI[0];
+};
+
+// Get the wrapped token ABI based on chain ID
+const getWrappedTokenABI = (chainId: number) => {
+  switch (chainId) {
+    case 10001: // ETHW
+      return WETHW;
+    case 146: // Sonic
+      return WSONIC;
+    case 369: // Pulsechain
+    default:
+      return WPLS;
+  }
+};
+
 const getCurrentChainConfig = (chainId: number) => {
   return getChainConfig(chainId);
 };
+
+const getRouterABI = (chainId: number) => {
+  switch (chainId) {
+    case 10001: // ETHW
+      return ETHW_ROUTER_ABI;
+    case 146: // Sonic
+      return SONIC_ROUTER_ABI;
+    case 369: // Pulsechain
+    default:
+      return PLS_ROUTER_ABI;
+  }
+};
+
+const getRouterFunctionName = (chainId: number, functionType: keyof RouterFunctionNames) => {
+  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] || 
+         ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
+};
+
 const EMPTY_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
 const checkAllowance = async (chainId: number, tokenInAddress: string, userAddress: Address) => {
@@ -59,20 +122,20 @@ const callApprove = async (chainId: number, tokenInAddress: string, amountIn: bi
 const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
     const {routerAddress} = getCurrentChainConfig(chainId);
+    const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
+      abi: routerABI,
       address: routerAddress,
-      functionName: "swapNoSplitFromPLS",
+      functionName: chainId === 369 ? "swapNoSplitFromPLS" : "swapNoSplitFromETH",
       args: [
         {
           adapters: tradeInfo.adapters,
           amountIn: tradeInfo.amountIn,
           amountOut: tradeInfo.amountOut,
-          // amountOut: BigInt("0"),
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
       value: tradeInfo.amountIn,
     });
@@ -90,10 +153,11 @@ const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: A
 const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
   try {
     const {routerAddress} = getCurrentChainConfig(chainId);
+    const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
+      abi: routerABI,
       address: routerAddress,
-      functionName: "swapNoSplitToPLS",
+      functionName: chainId === 369 ? "swapNoSplitToPLS" : "swapNoSplitToETH",
       args: [
         {
           adapters: tradeInfo.adapters,
@@ -102,7 +166,7 @@ const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Addr
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
     });
     await waitForTransaction(result);
@@ -118,8 +182,9 @@ const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Addr
 const swapNoSplitToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
     const {wethAddress} = getCurrentChainConfig(chainId);
+    const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
-      abi: WPLS,
+      abi: wrappedTokenABI,
       address: wethAddress,
       functionName: "withdraw",
       args: [tradeInfo.amountIn],
@@ -141,8 +206,9 @@ const swapNoSplitFromEth = async (
 ) => {
   try {
     const {wethAddress} = getCurrentChainConfig(chainId);
+    const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
-      abi: WPLS,
+      abi: wrappedTokenABI,
       address: wethAddress,
       functionName: "deposit",
       args: [],
@@ -162,7 +228,7 @@ const swap = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) 
   try {
     const {routerAddress} = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
+      abi: ETHW_ROUTER_ABI,
       address: routerAddress,
       functionName: "swapNoSplit",
       args: [
@@ -176,7 +242,7 @@ const swap = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) 
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
     });
     await waitForTransaction(result);

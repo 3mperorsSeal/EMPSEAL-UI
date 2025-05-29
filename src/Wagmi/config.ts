@@ -5,11 +5,9 @@ import {
   metaMaskWallet,
   coinbaseWallet,
   walletConnectWallet,
-  phantomWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { http, createConfig } from 'wagmi';
-import { pulsechain, bsc,arbitrum, avalanche, polygon, sei, mainnet, base, polygonZkEvm, moonriver, fantom, aurora, optimism, cronos, gnosis, linea, scroll, blast, fuse, moonbeam, celo, boba, mantle,manta, zetachain,telos, kava, zksync, arbitrumNova, tron,metis, bahamut, mode, rootstock, merlin, zkLinkNova, taiko, fraxtal, gravity,morph,sonic } from 'wagmi/chains';
-
+import { pulsechain, sonic } from 'wagmi/chains';
 import { defineChain } from 'viem';
 
 export const ethw = defineChain({
@@ -33,27 +31,26 @@ export const ethw = defineChain({
   },
 } as const);
 
-// Wallet configuration
-const connectors = connectorsForWallets(
+// Wallet configuration for swap
+const swapConnectors = connectorsForWallets(
   [
     {
       groupName: 'Suggested',
       wallets: [
         metaMaskWallet,
-        phantomWallet,
         rainbowWallet,
         coinbaseWallet,
         walletConnectWallet,
       ],
     },
   ],
-  { appName: 'RainbowKit App', projectId: 'YOUR_PROJECT_ID' },
+  { appName: 'RainbowKit Swap', projectId: 'YOUR_PROJECT_ID' },
 );
 
 export const config = getDefaultConfig({
-  appName: 'Emplseal',
+  appName: 'Empseal Swap',
   projectId: 'YOUR_PROJECT_ID',
-  chains: [pulsechain,ethw, mainnet, bsc, arbitrum, avalanche, polygon, optimism, cronos, base, sei, polygonZkEvm, moonriver, fantom, aurora, gnosis, linea, scroll, blast, fuse, moonbeam, celo, boba, mantle,manta, zetachain,telos, kava, zksync, arbitrumNova, tron,metis, bahamut, mode, rootstock, merlin, zkLinkNova, taiko, fraxtal, gravity,morph,sonic],
-  ssr: true, 
-  connectors,
+  chains: [pulsechain, ethw, sonic],
+  ssr: true,
+  swapConnectors,
 });

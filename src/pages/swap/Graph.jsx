@@ -13,6 +13,7 @@ const PRICE_CHART_ID = "price-chart-widget-container";
 const CHAIN_TO_GECKO = {
   'pulsechain': 'pulsechain',
   'ethereumpow': 'ethw',
+  'sonic': 'sonic',
 };
 
 const PriceChartWidget = ({ tokenAddress }) => {
@@ -20,7 +21,7 @@ const PriceChartWidget = ({ tokenAddress }) => {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    
+
     const loadWidget = () => {
       try {
         if (typeof window.createMyWidget === "function") {
@@ -95,7 +96,7 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
     const fetchChartData = async () => {
       setLoading(true);
       setError(null);
-  
+
       try {
         const poolSearch = await axios.get(
           `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/tokens/${finalTokenInfo.toLowerCase()}/pools?page=1`
@@ -104,20 +105,20 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
         if (!poolSearch.data.data || poolSearch.data.data.length === 0) {
           throw new Error("No pool found for token");
         }
-  
+
         const poolAddress = poolSearch.data.data[0].id.replace(`${geckoNetwork}_`, "");
         const ohlcvRes = await axios.get(
           `https://api.geckoterminal.com/api/v2/networks/${geckoNetwork}/pools/${poolAddress}/ohlcv/day?aggregate=1`
         );
         const ohlcvList = ohlcvRes.data.data.attributes.ohlcv_list;
-  
         const candleData = ohlcvList
           .map(candle => ({
-            time: new Date(candle[0]).getTime() / 1000,
-            value: parseFloat(candle[4]),
+            time: candle[0],
+            value: parseFloat(candle[4])
           }))
           .sort((a, b) => a.time - b.time);
-  
+
+
         const container = chartContainerRef.current;
         if (container) {
           cleanupChart();
@@ -128,16 +129,19 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
               textColor: 'white',
               fontSize: 12,
               fontFamily: "'Roboto', sans-serif",
+              padding: { top: 30, bottom: 20, left: 10, right: 50 }
             },
             grid: {
               vertLines: {
                 color: 'rgba(255, 255, 255, 0.1)',
                 style: LineStyle.Dotted,
+                visible: true
               },
               horzLines: {
                 color: 'rgba(255, 255, 255, 0.1)',
                 style: LineStyle.Dotted,
-              },
+                visible: true
+              }
             },
             crosshair: {
               mode: 1,
@@ -152,47 +156,107 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
                 width: 1,
                 color: 'rgba(255, 153, 0, 0.5)',
                 style: LineStyle.Solid,
+                labelVisible: true,
                 labelBackgroundColor: '#FF9900',
-              },
+              }
             },
             timeScale: {
               timeVisible: true,
               secondsVisible: false,
               borderColor: 'rgba(255, 255, 255, 0.2)',
+              rightOffset: 12,
+              barSpacing: 12,
+              fixLeftEdge: true,
+              fixRightEdge: true,
+              lockVisibleTimeRangeOnResize: true,
+              rightBarStaysOnScroll: true,
+              borderVisible: true,
+              visible: true,
+              tickMarkFormatter: (time) => {
+                const date = new Date(time * 1000);
+                return date.toLocaleDateString('en-US', {
+                  day: '2-digit',
+                  month: 'short'
+                });
+              },
             },
             rightPriceScale: {
               borderColor: 'rgba(255, 255, 255, 0.2)',
               autoScale: true,
+              mode: 1,
+              alignLabels: true,
+              borderVisible: true,
+              scaleMargins: {
+                top: 0.2,
+                bottom: 0.2,
+              },
+              entireTextOnly: true
+            },
+            handleScroll: {
+              mouseWheel: true,
+              pressedMouseMove: true,
+              horzTouchDrag: true,
+              vertTouchDrag: true
+            },
+            handleScale: {
+              axisPressedMouseMove: true,
+              mouseWheel: true,
+              pinch: true
             },
             width: container.clientWidth,
             height: 400,
             localization: {
-              timeFormatter: (time) => {
-                const date = new Date(time * 1000);
-                return date.toLocaleTimeString([], { 
-                  hour: '2-digit', 
-                  minute: '2-digit',
-                  hour12: false 
-                });
-              },
-            },
+              priceFormatter: price =>
+                new Intl.NumberFormat('en-US', {
+                  style: 'decimal',
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6
+                }).format(price)
+            }
           };
-  
+
           const chart = createChart(container, chartOptions);
           chartRef.current = chart;
 
-          const series = chart.addSeries(LineSeries,{
+          chart.applyOptions({
+            localization: {
+              priceFormatter: price =>
+                new Intl.NumberFormat('en-US', {
+                  style: 'decimal',
+                  minimumFractionDigits: 2,
+                  maximumFractionDigits: 6
+                }).format(price),
+              timeFormatter: businessDayOrTimestamp => {
+                const date = new Date(businessDayOrTimestamp * 1000);
+                return `${date.getDate()} ${date.toLocaleString('default', { month: 'short' })} '${String(date.getFullYear()).slice(-2)}`;
+              }
+            }
+          });
+
+          const series = chart.addSeries(LineSeries, {
             color: '#00ff00',
             lineWidth: 2,
             crosshairMarkerVisible: true,
             crosshairMarkerRadius: 4,
             crosshairMarkerBorderColor: '#00ff00',
             crosshairMarkerBackgroundColor: '#000000',
+            lastValueVisible: true,
+            priceLineVisible: true,
+            priceLineWidth: 1,
+            priceLineColor: 'rgba(0, 255, 0, 0.5)',
+            priceLineStyle: LineStyle.Dotted,
+            baseLineVisible: true,
+            baseLineColor: '#FF9900',
+            baseLineWidth: 1,
+            baseLineStyle: LineStyle.Solid,
             priceFormat: {
               type: 'price',
               precision: 6,
               minMove: 0.000001,
             },
+            title: 'Price',
+            visible: true,
+            lastPriceAnimation: 1
           });
 
           series.setData(candleData);
@@ -224,9 +288,9 @@ const ManualChart = ({ finalTokenInfo, geckoNetwork, loading, setLoading, error,
         setLoading(false);
       }
     };
-  
+
     fetchChartData();
-  
+
     return () => {
       cleanupChart();
     };
@@ -242,6 +306,7 @@ export const Graph = ({ padding }) => {
 
   const {
     chain: currentChain,
+    tokenList
   } = useChainConfig();
 
   const finalTokenInfo = path[0] === EMPTY_ADDRESS ? path[1] : path[0];
@@ -249,9 +314,11 @@ export const Graph = ({ padding }) => {
   const geckoNetwork = CHAIN_TO_GECKO[chainName] || '';
   const isPulsechain = chainName === 'pulsechain';
 
+  // Get token info from tokenList
+  const tokenInfo = tokenList.find(token => token.address.toLowerCase() === finalTokenInfo.toLowerCase());
+
   return (
     <div className={`border-[2px] border-[#FF9900] rounded-xl pt-4 bg-black ${padding}`}>
-      {/* {loading && <LoadingSpinner SpinnerImage={SpinnerImage} />} */}
       {loading && <div className="text-white roboto text-center">Loading...</div>}
       {error && (
         <div className="flex items-center justify-center py-4 text-red-500">
@@ -259,6 +326,11 @@ export const Graph = ({ padding }) => {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
           </svg>
           {error}
+        </div>
+      )}
+      {tokenInfo && (
+        <div className="text-white text-center roboto">
+          <h2 className="text-sm">{tokenInfo.name} ({tokenInfo.ticker})</h2>
         </div>
       )}
       {isPulsechain ? (

@@ -62,6 +62,7 @@ const Token = ({ onClose, onSelect }) => {
     switch (chainId) {
       case 369: return "https://rpc.pulsechain.com";
       case 10001: return "https://mainnet.ethereumpow.org";
+      case 146: return "https://rpc.soniclabs.com";
       default: return null;
     }
   };
@@ -143,20 +144,22 @@ const Token = ({ onClose, onSelect }) => {
 
     try {
       const tokenContract = new web3.eth.Contract(ERC20_ABI, address);
-      const [name, symbol, decimals] = await Promise.all([
+      const [name, symbol, decimalsRaw] = await Promise.all([
         tokenContract.methods.name().call(),
         tokenContract.methods.symbol().call(),
         tokenContract.methods.decimals().call(),
       ]);
 
+      const decimal = Number(decimalsRaw); // Convert BigInt to Number
       return {
         address,
         name,
         symbol,
-        decimals,
+        decimal,
         logoURI: null,
         ticker: symbol,
       };
+
     } catch (error) {
       console.error("Error fetching token details:", error);
       return null;
@@ -169,6 +172,18 @@ const Token = ({ onClose, onSelect }) => {
     setIsLoading(true);
 
     try {
+      // First check if token exists in tokenList
+      const existingToken = tokenList.find(
+        token => token.address.toLowerCase() === address.toLowerCase()
+      );
+
+      if (existingToken) {
+        setTokenDetails(existingToken);
+        setError(null);
+        return;
+      }
+
+      // Only proceed with ABI calls if token is not in tokenList
       const details = await lookupTokenByAddress(address);
       if (details) {
         setTokenDetails(details);
@@ -186,7 +201,17 @@ const Token = ({ onClose, onSelect }) => {
 
   useEffect(() => {
     if (web3.utils.isAddress(searchQuery)) {
-      handleTokenLookup(searchQuery);
+      // First check if token exists in tokenList
+      const existingToken = tokenList.find(
+        token => token.address.toLowerCase() === searchQuery.toLowerCase()
+      );
+
+      if (existingToken) {
+        setTokenDetails(existingToken);
+        setError(null);
+      } else {
+        handleTokenLookup(searchQuery);
+      }
     } else {
       setTokenDetails(null);
       setError(null);
