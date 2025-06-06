@@ -5,32 +5,52 @@ import {
   metaMaskWallet,
   coinbaseWallet,
   walletConnectWallet,
-  phantomWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { http, createConfig } from 'wagmi';
-import { pulsechain, bsc,arbitrum, avalanche, polygon, sei, mainnet, base, polygonZkEvm, moonriver, fantom, aurora, optimism, cronos, gnosis, linea, scroll, blast, fuse, moonbeam, celo, boba, mantle,manta, zetachain,telos, kava, zksync, arbitrumNova, tron,metis, bahamut, mode, rootstock, merlin, zkLinkNova, taiko, fraxtal, gravity,morph,sonic } from 'wagmi/chains';
+import { pulsechain, sonic } from 'wagmi/chains';
+import { defineChain } from 'viem';
 
-// Wallet configuration
-const connectors = connectorsForWallets(
+export const ethw = defineChain({
+  id: 10001,
+  name: 'EthereumPoW',
+  nativeCurrency: {
+    name: 'EthereumPoW',
+    symbol: 'ETHW',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://mainnet.ethereumpow.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'OKLink',
+      url: 'https://www.oklink.com/ethereum-pow',
+    },
+  },
+} as const);
+
+// Wallet configuration for swap
+const swapConnectors = connectorsForWallets(
   [
     {
       groupName: 'Suggested',
       wallets: [
         metaMaskWallet,
-        phantomWallet,
         rainbowWallet,
         coinbaseWallet,
         walletConnectWallet,
       ],
     },
   ],
-  { appName: 'RainbowKit App', projectId: 'YOUR_PROJECT_ID' },
+  { appName: 'RainbowKit Swap', projectId: 'YOUR_PROJECT_ID' },
 );
 
 export const config = getDefaultConfig({
-  appName: 'Emplseal',
+  appName: 'Empseal Swap',
   projectId: 'YOUR_PROJECT_ID',
-  chains: [pulsechain,mainnet, bsc, arbitrum, avalanche, polygon, optimism, cronos, base, sei, polygonZkEvm, moonriver, fantom, aurora, gnosis, linea, scroll, blast, fuse, moonbeam, celo, boba, mantle,manta, zetachain,telos, kava, zksync, arbitrumNova, tron,metis, bahamut, mode, rootstock, merlin, zkLinkNova, taiko, fraxtal, gravity,morph,sonic],
-  ssr: true, 
-  connectors,
+  chains: [pulsechain, ethw, sonic],
+  ssr: true,
+  swapConnectors,
 });

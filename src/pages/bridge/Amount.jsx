@@ -7,8 +7,7 @@ import { formatUnits } from "viem";
 import Transcation from "./Transcation";
 import {readContract, waitForTransactionReceipt, writeContract, sendTransaction} from "@wagmi/core";
 import { erc20Abi } from "viem";
-import { WPLS as TOKEN_ABI } from "../../utils/abis/wplsABI";
-import { config } from "../../Wagmi/config";
+import { bridgeConfig } from "../../Wagmi/bridgeConfig";
 import { toast } from "react-toastify";
 const Amount = ({
   onClose,
@@ -114,7 +113,7 @@ const Amount = ({
       // await executeSwap(swapDetails, swapDetails.quote.fromAddress);
   
       // If not a native token, proceed
-      let result = await writeContract(config, {
+      let result = await writeContract(bridgeConfig, {
         abi: erc20Abi,
         address: tokenAddress,
         functionName: "approve",
@@ -136,7 +135,7 @@ const Amount = ({
 
   const waitForTransaction = async (hash) => {
     try {
-      const transactionReceipt = await waitForTransactionReceipt(config, {
+      const transactionReceipt = await waitForTransactionReceipt(bridgeConfig, {
         confirmations: 2,
         hash,
       });
@@ -260,7 +259,7 @@ const Amount = ({
 
   const executeSwap = async (transactionDetails, walletDetails) => {
     try {
-      const txHash = await sendTransaction(config, {
+      const txHash = await sendTransaction(bridgeConfig, {
         account: walletDetails, // wallet account address
         to: transactionDetails?.transaction?.to,
         data: transactionDetails?.transaction?.data,

@@ -1,4 +1,5 @@
-export const EMPSEALROUTERABI = [
+// Base ABI with common functions
+const BASE_ROUTER_ABI = [
     {
         "inputs": [
             {
@@ -961,96 +962,6 @@ export const EMPSEALROUTERABI = [
                 "internalType": "uint256",
                 "name": "_fee",
                 "type": "uint256"
-            }
-        ],
-        "name": "swapNoSplitFromPLS",
-        "outputs": [],
-        "stateMutability": "payable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint256",
-                        "name": "amountIn",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amountOut",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "address[]",
-                        "name": "path",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "address[]",
-                        "name": "adapters",
-                        "type": "address[]"
-                    }
-                ],
-                "internalType": "struct Trade",
-                "name": "_trade",
-                "type": "tuple"
-            },
-            {
-                "internalType": "address",
-                "name": "_to",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_fee",
-                "type": "uint256"
-            }
-        ],
-        "name": "swapNoSplitToPLS",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "components": [
-                    {
-                        "internalType": "uint256",
-                        "name": "amountIn",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "uint256",
-                        "name": "amountOut",
-                        "type": "uint256"
-                    },
-                    {
-                        "internalType": "address[]",
-                        "name": "path",
-                        "type": "address[]"
-                    },
-                    {
-                        "internalType": "address[]",
-                        "name": "adapters",
-                        "type": "address[]"
-                    }
-                ],
-                "internalType": "struct Trade",
-                "name": "_trade",
-                "type": "tuple"
-            },
-            {
-                "internalType": "address",
-                "name": "_to",
-                "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_fee",
-                "type": "uint256"
             },
             {
                 "internalType": "uint256",
@@ -1073,7 +984,7 @@ export const EMPSEALROUTERABI = [
                 "type": "bytes32"
             }
         ],
-        "name": "swapNoSplitToPLSWithPermit",
+        "name": "swapNoSplitToETHWithPermit",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -1173,4 +1084,292 @@ export const EMPSEALROUTERABI = [
         "stateMutability": "payable",
         "type": "receive"
     }
-] as const
+] as const;
+
+// PLS-specific ABI (default)
+export const PLS_ROUTER_ABI = [
+    ...BASE_ROUTER_ABI,
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitFromPLS",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitToPLS",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] as const;
+
+// ETHW-specific ABI
+export const ETHW_ROUTER_ABI = [
+    ...BASE_ROUTER_ABI,
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitFromETH",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitToETH",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] as const;
+
+// Sonic-specific ABI
+export const SONIC_ROUTER_ABI = [
+    ...BASE_ROUTER_ABI,
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitFromETH",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitToETH",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] as const;
+
+// For backward compatibility
+export const EMPSEALROUTERABI = PLS_ROUTER_ABI;

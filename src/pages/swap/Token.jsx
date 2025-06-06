@@ -1,51 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
-import Tokens from "../tokenList.json";
-import FrequentlyUsedToken from "../frequentlyToken.json";
-import Web3 from "web3";
 import { ERC20_ABI } from "./tokenFetch";
 import { useBalance } from "wagmi";
-
-const RPC_URL = "https://rpc.pulsechain.com";
-const web3 = new Web3(RPC_URL);
-
-const isValidAddress = (address) => web3.utils.isAddress(address);
-
-const lookupTokenByAddress = async (address) => {
-  if (!isValidAddress(address)) {
-    console.error("Invalid address");
-    return null;
-  }
-
-  const getLogo = async (address) => {
-    return `https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/${address}.png`;
-  };
-
-  try {
-    const tokenContract = new web3.eth.Contract(ERC20_ABI, address);
-    const [name, symbol, decimals] = await Promise.all([
-      tokenContract.methods.name().call(),
-      tokenContract.methods.symbol().call(),
-      tokenContract.methods.decimals().call(),
-    ]);
-
-    const logoURI = await getLogo(address);
-
-    return {
-      address,
-      name,
-      symbol,
-      decimals,
-      logoURI,
-      ticker: symbol,
-      image: logoURI,
-      decimal: decimals,
-    };
-  } catch (error) {
-    console.error("Error fetching token details:", error);
-    return null;
-  }
-};
+import { useChainConfig } from "../../hooks/useChainConfig";
+import Web3 from "web3";
 
 const TokenListItem = ({ token, walletAddress, onClick }) => {
   const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
@@ -68,7 +26,7 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
     >
       <div className="flex items-center gap-2">
         <img
-          src={token.image}
+          src={token.logoURI || token.image}
           className="w-4 h-4"
           alt={token.name}
           onError={(e) => {
@@ -85,19 +43,31 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
         <div className="text-white text-sm font-normal roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
         </div>
-        <div className="text-gray-400 text-xs roboto mt-2">{token.ticker}</div>
+        <div className="text-gray-400 text-xs roboto mt-2">{token.symbol || token.ticker}</div>
       </div>
     </div>
   );
 };
 
 const Token = ({ onClose, onSelect }) => {
+  const { chainId, tokenList, featureTokens, isSupported } = useChainConfig();
   const [searchQuery, setSearchQuery] = useState("");
   const [tokenDetails, setTokenDetails] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [walletAddress, setWalletAddress] = useState(null);
   const modalRef = useRef(null);
+
+  const getRpcUrl = () => {
+    switch (chainId) {
+      case 369: return "https://rpc.pulsechain.com";
+      case 10001: return "https://mainnet.ethereumpow.org";
+      case 146: return "https://rpc.soniclabs.com";
+      default: return null;
+    }
+  };
+
+  const web3 = new Web3(getRpcUrl());
 
   useEffect(() => {
     const getAddress = async () => {
@@ -115,9 +85,10 @@ const Token = ({ onClose, onSelect }) => {
     getAddress();
   }, []);
 
-  const filteredTokens = Tokens.filter(
+  const filteredTokens = tokenList.filter(
     (token) =>
       (token.name && token.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+      (token.symbol && token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (token.ticker && token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (token.address && token.address.toLowerCase().includes(searchQuery.toLowerCase()))
   ).sort((a, b) => a.name.localeCompare(b.name));
@@ -165,12 +136,35 @@ const Token = ({ onClose, onSelect }) => {
     );
   };
 
-  const frequentlyUsedTokens = FrequentlyUsedToken.filter(
-    (token) =>
-      token.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.ticker.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      token.address.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const lookupTokenByAddress = async (address) => {
+    if (!web3.utils.isAddress(address)) {
+      console.error("Invalid address");
+      return null;
+    }
+
+    try {
+      const tokenContract = new web3.eth.Contract(ERC20_ABI, address);
+      const [name, symbol, decimalsRaw] = await Promise.all([
+        tokenContract.methods.name().call(),
+        tokenContract.methods.symbol().call(),
+        tokenContract.methods.decimals().call(),
+      ]);
+
+      const decimal = Number(decimalsRaw); // Convert BigInt to Number
+      return {
+        address,
+        name,
+        symbol,
+        decimal,
+        logoURI: null,
+        ticker: symbol,
+      };
+
+    } catch (error) {
+      console.error("Error fetching token details:", error);
+      return null;
+    }
+  };
 
   const handleTokenLookup = async (address) => {
     setError(null);
@@ -178,6 +172,18 @@ const Token = ({ onClose, onSelect }) => {
     setIsLoading(true);
 
     try {
+      // First check if token exists in tokenList
+      const existingToken = tokenList.find(
+        token => token.address.toLowerCase() === address.toLowerCase()
+      );
+
+      if (existingToken) {
+        setTokenDetails(existingToken);
+        setError(null);
+        return;
+      }
+
+      // Only proceed with ABI calls if token is not in tokenList
       const details = await lookupTokenByAddress(address);
       if (details) {
         setTokenDetails(details);
@@ -195,7 +201,17 @@ const Token = ({ onClose, onSelect }) => {
 
   useEffect(() => {
     if (web3.utils.isAddress(searchQuery)) {
-      handleTokenLookup(searchQuery);
+      // First check if token exists in tokenList
+      const existingToken = tokenList.find(
+        token => token.address.toLowerCase() === searchQuery.toLowerCase()
+      );
+
+      if (existingToken) {
+        setTokenDetails(existingToken);
+        setError(null);
+      } else {
+        handleTokenLookup(searchQuery);
+      }
     } else {
       setTokenDetails(null);
       setError(null);
@@ -228,6 +244,14 @@ const Token = ({ onClose, onSelect }) => {
     onSelect(token);
     onClose();
   };
+
+  if (!isSupported) {
+    return (
+      <div className="text-white text-center">
+        Please switch to a supported chain
+      </div>
+    );
+  }
 
   return (
     <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
@@ -285,23 +309,23 @@ const Token = ({ onClose, onSelect }) => {
             </button>
           </div>
           <div className="flex flex-wrap gap-4 mt-6">
-            {frequentlyUsedTokens.map((token, index) => (
+            {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer roboto  p-2 rounded-2xl border border-[#3b3c4e]"
+                className="flex flex-row items-center cursor-pointer roboto p-2 rounded-2xl border border-[#3b3c4e]"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
                 <img
-                  src={token.image}
+                  src={token.logoURI || token.image}
                   alt={token.name}
                   className="w-6 h-6 rounded-full"
                   onError={(e) => (e.target.src = "path/to/fallback/image.png")}
                 />
-                <p className="text-white text-xs mt-0 ms-2">{token.ticker}</p>
+                <p className="text-white text-xs mt-0 ms-2">{token.symbol || token.ticker}</p>
               </div>
             ))}
           </div>
-          <hr class="h-px my-8 bg-gray-200 border-[#3b3c4e] d" />
+          <hr className="h-px my-8 bg-gray-200 border-[#3b3c4e] d" />
 
           <div className="mt-6">
             <div className="flex justify-between gap-4 items-center">

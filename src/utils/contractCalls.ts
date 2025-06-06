@@ -7,21 +7,89 @@ import {
 import { toast } from "react-toastify";
 import { SwapStatus, TradeInfo } from "./types/interface";
 import { WPLS } from "./abis/wplsABI";
+import { WETHW } from "./abis/wethwABI";
+import { WSONIC } from "./abis/wsonicABI";
 import { config } from "../Wagmi/config";
-import { EMPSEALROUTERABI } from "./abis/empSealRouterAbi";
+import { ETHW_ROUTER_ABI, PLS_ROUTER_ABI, SONIC_ROUTER_ABI } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
-const RouterAddress = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
-const WETH_ADDRESS: Address = "0xa1077a294dde1b09bb078844df40758a5d0f9a27";
+import { getChainConfig } from "./getChainConfig";
+import { useChainId } from 'wagmi';
+
+// Chain-specific router function names
+const ROUTER_FUNCTION_NAMES = {
+  // Pulsechain (default)
+  369: {
+    swapFromNative: "swapNoSplitFromPLS",
+    swapToNative: "swapNoSplitToPLS",
+    swapWithPermit: "swapNoSplitToPLSWithPermit"
+  },
+  // ETHW
+  10001: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Sonic
+  146: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  }
+} as const;
+
+// Create a union type of all possible function names
+type RouterFunctionNames = typeof ROUTER_FUNCTION_NAMES[369] | typeof ROUTER_FUNCTION_NAMES[10001] | typeof ROUTER_FUNCTION_NAMES[146];
+
+// Extend the ABI type to include both ETH and PLS function names
+type ExtendedRouterABI = typeof ETHW_ROUTER_ABI & typeof SONIC_ROUTER_ABI & typeof PLS_ROUTER_ABI & {
+  [K in keyof RouterFunctionNames]: typeof ETHW_ROUTER_ABI[0] | typeof SONIC_ROUTER_ABI[0] | typeof PLS_ROUTER_ABI[0];
+};
+
+// Get the wrapped token ABI based on chain ID
+const getWrappedTokenABI = (chainId: number) => {
+  switch (chainId) {
+    case 10001: // ETHW
+      return WETHW;
+    case 146: // Sonic
+      return WSONIC;
+    case 369: // Pulsechain
+    default:
+      return WPLS;
+  }
+};
+
+const getCurrentChainConfig = (chainId: number) => {
+  return getChainConfig(chainId);
+};
+
+const getRouterABI = (chainId: number) => {
+  switch (chainId) {
+    case 10001: // ETHW
+      return ETHW_ROUTER_ABI;
+    case 146: // Sonic
+      return SONIC_ROUTER_ABI;
+    case 369: // Pulsechain
+    default:
+      return PLS_ROUTER_ABI;
+  }
+};
+
+const getRouterFunctionName = (chainId: number, functionType: keyof RouterFunctionNames) => {
+  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] || 
+         ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
+};
+
 const EMPTY_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
-const checkAllowance = async (tokenInAddress: string, userAddress: Address) => {
+const checkAllowance = async (chainId: number, tokenInAddress: string, userAddress: Address) => {
   try {
+    const {routerAddress} = getCurrentChainConfig(chainId);
     let result = await readContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
       functionName: "allowance",
-      args: [userAddress, RouterAddress],
+      args: [userAddress, routerAddress],
     });
     return {
       success: true,
@@ -32,13 +100,14 @@ const checkAllowance = async (tokenInAddress: string, userAddress: Address) => {
   }
 };
 
-const callApprove = async (tokenInAddress: string, amountIn: bigint) => {
+const callApprove = async (chainId: number, tokenInAddress: string, amountIn: bigint) => {
   try {
+    const {routerAddress} = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
       functionName: "approve",
-      args: [RouterAddress, amountIn],
+      args: [routerAddress, amountIn],
     });
     await waitForTransaction(result);
     return {
@@ -50,22 +119,23 @@ const callApprove = async (tokenInAddress: string, amountIn: bigint) => {
   }
 };
 
-const swapFromEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
+const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
+    const {routerAddress} = getCurrentChainConfig(chainId);
+    const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
-      address: RouterAddress,
-      functionName: "swapNoSplitFromPLS",
+      abi: routerABI,
+      address: routerAddress,
+      functionName: chainId === 369 ? "swapNoSplitFromPLS" : "swapNoSplitFromETH",
       args: [
         {
           adapters: tradeInfo.adapters,
           amountIn: tradeInfo.amountIn,
           amountOut: tradeInfo.amountOut,
-          // amountOut: BigInt("0"),
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
       value: tradeInfo.amountIn,
     });
@@ -80,12 +150,14 @@ const swapFromEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
   }
 };
 
-const swapToEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
+const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
   try {
+    const {routerAddress} = getCurrentChainConfig(chainId);
+    const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
-      address: RouterAddress,
-      functionName: "swapNoSplitToPLS",
+      abi: routerABI,
+      address: routerAddress,
+      functionName: chainId === 369 ? "swapNoSplitToPLS" : "swapNoSplitToETH",
       args: [
         {
           adapters: tradeInfo.adapters,
@@ -94,7 +166,7 @@ const swapToEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
     });
     await waitForTransaction(result);
@@ -107,11 +179,13 @@ const swapToEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
   }
 };
 
-const swapNoSplitToEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
+const swapNoSplitToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
+    const {wethAddress} = getCurrentChainConfig(chainId);
+    const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
-      abi: WPLS,
-      address: WETH_ADDRESS,
+      abi: wrappedTokenABI,
+      address: wethAddress,
       functionName: "withdraw",
       args: [tradeInfo.amountIn],
     });
@@ -126,13 +200,16 @@ const swapNoSplitToEth = async (tradeInfo: TradeInfo, userAddress: Address) => {
 };
 
 const swapNoSplitFromEth = async (
+  chainId: number,
   tradeInfo: TradeInfo,
   userAddress: Address
 ) => {
   try {
+    const {wethAddress} = getCurrentChainConfig(chainId);
+    const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
-      abi: WPLS,
-      address: WETH_ADDRESS,
+      abi: wrappedTokenABI,
+      address: wethAddress,
       functionName: "deposit",
       args: [],
       value: tradeInfo.amountIn,
@@ -147,11 +224,12 @@ const swapNoSplitFromEth = async (
   }
 };
 
-const swap = async (tradeInfo: TradeInfo, userAddress: Address) => {
+const swap = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
   try {
+    const {routerAddress} = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
-      abi: EMPSEALROUTERABI,
-      address: RouterAddress,
+      abi: ETHW_ROUTER_ABI,
+      address: routerAddress,
       functionName: "swapNoSplit",
       args: [
         {
@@ -164,7 +242,7 @@ const swap = async (tradeInfo: TradeInfo, userAddress: Address) => {
           path: tradeInfo.path,
         },
         userAddress,
-        BigInt("24"),
+        BigInt("28"),
       ],
     });
     await waitForTransaction(result);
@@ -201,9 +279,11 @@ export const swapTokens = async (
   tokenInAddress: Address,
   tokenOutAddress: Address,
   userAddress: Address,
-  tradeInfo: TradeInfo
+  tradeInfo: TradeInfo,
+  chainId: number,
 ) => {
   try {
+    const {wethAddress} = getCurrentChainConfig(chainId);
     setStatus("LOADING");
     const defaultResponse = {
       success: false,
@@ -211,11 +291,11 @@ export const swapTokens = async (
     };
     let swapResponse = defaultResponse;
     if (tokenInAddress !== EMPTY_ADDRESS) {
-      const approvedTokens = await checkAllowance(tokenInAddress, userAddress);
+      const approvedTokens = await checkAllowance(chainId, tokenInAddress, userAddress);
       if (approvedTokens.data < tradeInfo.amountIn) {
         try {
           setStatus("APPROVING");
-          await callApprove(tokenInAddress, tradeInfo.amountIn);
+          await callApprove(chainId, tokenInAddress, tradeInfo.amountIn);
           setStatus("APPROVED");
           toast.success("Token approved! Ready to confirm the transaction.");
         } catch (error) {
@@ -228,19 +308,19 @@ export const swapTokens = async (
     }
     // setStatus("APPROVED");
     setStatus("SWAPPING");
-    if (tokenInAddress === EMPTY_ADDRESS && tokenOutAddress === WETH_ADDRESS) {
-      swapResponse = await swapNoSplitFromEth(tradeInfo, userAddress);
+    if (tokenInAddress === EMPTY_ADDRESS && tokenOutAddress === wethAddress) {
+      swapResponse = await swapNoSplitFromEth(chainId, tradeInfo, userAddress);
     } else if (
-      tokenInAddress === WETH_ADDRESS &&
+      tokenInAddress === wethAddress &&
       tokenOutAddress === EMPTY_ADDRESS
     ) {
-      swapResponse = await swapNoSplitToEth(tradeInfo, userAddress);
+      swapResponse = await swapNoSplitToEth(chainId, tradeInfo, userAddress);
     } else if (tokenInAddress === EMPTY_ADDRESS) {
-      swapResponse = await swapFromEth(tradeInfo, userAddress);
+      swapResponse = await swapFromEth(chainId, tradeInfo, userAddress);
     } else if (tokenOutAddress === EMPTY_ADDRESS) {
-      swapResponse = await swapToEth(tradeInfo, userAddress);
+      swapResponse = await swapToEth(chainId, tradeInfo, userAddress);
     } else {
-      swapResponse = await swap(tradeInfo, userAddress);
+      swapResponse = await swap(chainId, tradeInfo, userAddress);
       toast.success("Transaction Successful");
     }
     setStatus("SWAPPED");
