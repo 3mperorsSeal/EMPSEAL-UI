@@ -121,7 +121,7 @@ const Routing = ({ routing }) => {
             <div className="flex flex-col items-center">
               <img
                 className="w-6 h-6"
-                src={tokenImages[address] || "/path/to/fallback/image.png"}
+                src={tokenImages[address] || "src/assets/images/emp-logo.png"}
                 alt={getTokenSymbol(address)}
               // onError={(e) => {
               //   // console.log(`Failed to load image for ${address}`);
