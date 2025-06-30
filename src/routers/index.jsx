@@ -15,7 +15,7 @@ import store from '../redux/store/store';
 import { ToastContainer } from 'react-toastify';
 import { useEffect } from 'react';
 import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { pulsechain,sonic } from 'wagmi/chains';
+import { pulsechain, base, sonic } from 'wagmi/chains';
 
 // This component will be rendered inside WagmiProvider
 const ChainSwitcher = ({ children }) => {
@@ -25,7 +25,7 @@ const ChainSwitcher = ({ children }) => {
 
   useEffect(() => {
     if (isConnected && chainId) {
-      const swapChainIds = [pulsechain.id, 10001, sonic.id]; // pulsechain, ethw, sonic
+      const swapChainIds = [pulsechain.id, base.id, 10001, sonic.id]; // pulsechain, base, ethw, sonic
       if (!swapChainIds.includes(chainId)) {
         switchChain({ chainId: pulsechain.id });
       }

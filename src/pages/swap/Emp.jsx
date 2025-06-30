@@ -19,6 +19,7 @@ import { useStore } from "../../redux/store/routeStore";
 import Transaction from "./Transaction";
 import { Copy, Check } from "lucide-react";
 import { useChainConfig } from '../../hooks/useChainConfig';
+import { usePriceMonitor } from '../../hooks/usePriceMonitor';
 
 const Emp = ({ setPadding }) => {
   const [isAmountVisible, setAmountVisible] = useState(false);
@@ -48,6 +49,10 @@ const Emp = ({ setPadding }) => {
   const [usdValueTokenB, setUsdValueTokenB] = useState("0.00");
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
+  const [initialQuote, setInitialQuote] = useState("");
+  const [showPriceAlert, setShowPriceAlert] = useState(true);
+  const [newQuote, setNewQuote] = useState("");
+  const [percentChange, setPercentChange] = useState(0);
   const {
     chain: currentChain,
     chainId,
@@ -59,12 +64,15 @@ const Emp = ({ setPadding }) => {
     featureTokens,
     blockExplorer,
     blockExplorerName,
-    maxHops
+    maxHops,
+    blockTime,
   } = useChainConfig();
   // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
   // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
+  console.log("blockTime", blockTime);
+  console.log("initialQuote", initialQuote);
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
@@ -665,10 +673,65 @@ const Emp = ({ setPadding }) => {
   const minToReceive = amountOut * 0.0024;
   const minToReceiveAfterFee = amountOut - minToReceive;
 
-  // effect to clear amountOut when tokens are swapped
+  // effect to clear amountOut and quotes when tokens are swapped
   useEffect(() => {
     setAmountOut("0");
+    setInitialQuote("");
+    setNewQuote("");
+    setShowPriceAlert(false);
   }, [selectedTokenA, selectedTokenB]);
+
+  // Use price monitor hook
+  const { hasChanged } = usePriceMonitor({
+    initialQuote,
+    currentQuote: amountOut,
+    enabled: !!initialQuote && !!amountOut && !isNaN(amountOut),
+    threshold: 0.1,
+    onPriceChange: (newQ, percent) => {
+      setNewQuote(newQ);
+      setPercentChange(percent);
+      setShowPriceAlert(true);
+    },
+    setShowPriceAlert: setShowPriceAlert,
+  });
+
+  const handleAcceptNewQuote = () => {
+    setInitialQuote(newQuote);
+    setShowPriceAlert(false);
+  };
+
+  const handleRejectNewQuote = () => {
+    setShowPriceAlert(false);
+  };
+
+  // Periodically refresh the quote based on blockTime
+  useEffect(() => {
+    if (!amountIn || parseFloat(amountIn) <= 0 || !blockTime) return;
+
+    const intervalId = setInterval(() => {
+      quoteRefresh();
+    }, blockTime * 1000); // blockTime is in seconds
+
+    return () => clearInterval(intervalId);
+  }, [amountIn, blockTime, quoteRefresh]);
+
+  const handleOpenConfirmSwap = () => {
+    // Capture the quote when opening the modal
+    if (amountOut && parseFloat(amountOut) > 0) {
+      setInitialQuote(amountOut);
+      setAmountVisible(true);
+    } else {
+      // Optionally handle the case where the quote isn't ready
+      console.error("Swap quote is not available yet.");
+    }
+  };
+
+  const handleCloseConfirmSwap = () => {
+    setAmountVisible(false);
+    setInitialQuote("");
+    setNewQuote("");
+    setShowPriceAlert(false);
+  };
 
   return (
     <>
@@ -979,7 +1042,7 @@ const Emp = ({ setPadding }) => {
           </div>
         </div>
         <button
-          onClick={() => setAmountVisible(true)}
+          onClick={handleOpenConfirmSwap}
           disabled={isInsufficientBalance()}
           className={`w-full h-14 flex justify-center items-center rounded-xl ${isInsufficientBalance()
             ? "bg-gray-500 cursor-not-allowed"
@@ -1042,7 +1105,7 @@ const Emp = ({ setPadding }) => {
       <div aria-label="Modal">
         {isAmountVisible && (
           <Amount
-            onClose={() => setAmountVisible(false)}
+            onClose={handleCloseConfirmSwap}
             amountIn={amountIn}
             amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
@@ -1050,16 +1113,21 @@ const Emp = ({ setPadding }) => {
             singleToken={singleToken}
             refresh={quoteRefresh}
             confirm={confirmSwap}
+            showPriceAlert={showPriceAlert}
+            newQuote={newQuote}
+            initialQuote={initialQuote}
+            percentChange={percentChange}
+            onAcceptNewQuote={handleAcceptNewQuote}
+            onRejectNewQuote={handleRejectNewQuote}
           />
         )}
       </div>
       <div aria-label="Modal1">
-        {isTokenVisible && (
-          <Token
-            onClose={() => setTokenVisible(false)}
-            onSelect={handleTokenSelect}
-          />
-        )}
+        <Token
+          visible={isTokenVisible}
+          onClose={() => setTokenVisible(false)}
+          onSelect={handleTokenSelect}
+        />
       </div>
     </>
   );

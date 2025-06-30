@@ -212,7 +212,7 @@ const BASE_ROUTER_ABI = [
                 "type": "uint256"
             }
         ],
-        "name": "YakSwap",
+        "name": "EmpXswap",
         "type": "event"
     },
     {
@@ -1278,6 +1278,100 @@ export const ETHW_ROUTER_ABI = [
 
 // Sonic-specific ABI
 export const SONIC_ROUTER_ABI = [
+    ...BASE_ROUTER_ABI,
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitFromETH",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint256",
+                        "name": "amountIn",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "uint256",
+                        "name": "amountOut",
+                        "type": "uint256"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "path",
+                        "type": "address[]"
+                    },
+                    {
+                        "internalType": "address[]",
+                        "name": "adapters",
+                        "type": "address[]"
+                    }
+                ],
+                "internalType": "struct Trade",
+                "name": "_trade",
+                "type": "tuple"
+            },
+            {
+                "internalType": "address",
+                "name": "_to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "_fee",
+                "type": "uint256"
+            }
+        ],
+        "name": "swapNoSplitToETH",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+] as const;
+// Base-specific ABI
+export const BASECHAIN_ROUTER_ABI = [
     ...BASE_ROUTER_ABI,
     {
         "inputs": [

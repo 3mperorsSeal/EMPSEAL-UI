@@ -7,10 +7,59 @@ import {
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { http, createConfig } from 'wagmi';
-import { pulsechain, sonic } from 'wagmi/chains';
+import { base, sei } from 'wagmi/chains';
 import { defineChain } from 'viem';
 
-export const ethw = defineChain({
+// Define custom chains with logo support
+const pulsechain = {
+  id: 369,
+  name: 'PulseChain',
+  network: 'pulsechain',
+  nativeCurrency: {
+    name: 'Pulse',
+    symbol: 'PLS',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.pulsechain.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'PulseScan',
+      url: 'https://oldscan.gopulse.com/#/',
+    },
+  },
+  iconUrl: 'src/assets/chains/pulsechain.png',
+  iconBackground: '#000000',
+};
+
+const sonic = {
+  id: 146,
+  name: 'Sonic',
+  network: 'sonic',
+  nativeCurrency: {
+    name: 'SONIC',
+    symbol: 'S',
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.soniclabs.com'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'SonicScan',
+      url: 'https://sonicscan.org',
+    },
+  },
+  iconUrl: 'src/assets/chains/sonic.png',
+  iconBackground: '#111',
+};
+
+const ethw = {
   id: 10001,
   name: 'EthereumPoW',
   nativeCurrency: {
@@ -29,9 +78,10 @@ export const ethw = defineChain({
       url: 'https://www.oklink.com/ethereum-pow',
     },
   },
-} as const);
+  iconUrl: 'src/assets/chains/ethereumpow.png',
+  iconBackground: '#222',
+};
 
-// Wallet configuration for swap
 const swapConnectors = connectorsForWallets(
   [
     {
@@ -50,7 +100,6 @@ const swapConnectors = connectorsForWallets(
 export const config = getDefaultConfig({
   appName: 'Empseal Swap',
   projectId: 'YOUR_PROJECT_ID',
-  chains: [pulsechain, ethw, sonic],
+  chains: [pulsechain, sonic, ethw, base, sei],
   ssr: true,
-  swapConnectors,
 });

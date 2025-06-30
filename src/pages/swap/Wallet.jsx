@@ -30,7 +30,7 @@ const Wallet = () => {
     : isError
     ? "Error fetching balance"
     : balance
-    ? `${parseFloat(balance).toFixed(2)}`
+    ? `${parseFloat(balance).toFixed(6)}`
     : "0.00";
 
   const formatNumber = (value) => {

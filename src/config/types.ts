@@ -14,4 +14,5 @@ export interface ChainConfig {
     blockExplorerName: string;
     rpcUrl: string;
     maxHops: number;
+    blockTime: number;
 }

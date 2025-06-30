@@ -9,8 +9,9 @@ import { SwapStatus, TradeInfo } from "./types/interface";
 import { WPLS } from "./abis/wplsABI";
 import { WETHW } from "./abis/wethwABI";
 import { WSONIC } from "./abis/wsonicABI";
+import { WETH } from "./abis/wethBaseABI";
 import { config } from "../Wagmi/config";
-import { ETHW_ROUTER_ABI, PLS_ROUTER_ABI, SONIC_ROUTER_ABI } from "./abis/empSealRouterAbi";
+import { ETHW_ROUTER_ABI, PLS_ROUTER_ABI, SONIC_ROUTER_ABI, BASECHAIN_ROUTER_ABI } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
 import { getChainConfig } from "./getChainConfig";
@@ -35,6 +36,12 @@ const ROUTER_FUNCTION_NAMES = {
     swapFromNative: "swapNoSplitFromETH",
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Base
+  8453: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
   }
 } as const;
 
@@ -42,8 +49,8 @@ const ROUTER_FUNCTION_NAMES = {
 type RouterFunctionNames = typeof ROUTER_FUNCTION_NAMES[369] | typeof ROUTER_FUNCTION_NAMES[10001] | typeof ROUTER_FUNCTION_NAMES[146];
 
 // Extend the ABI type to include both ETH and PLS function names
-type ExtendedRouterABI = typeof ETHW_ROUTER_ABI & typeof SONIC_ROUTER_ABI & typeof PLS_ROUTER_ABI & {
-  [K in keyof RouterFunctionNames]: typeof ETHW_ROUTER_ABI[0] | typeof SONIC_ROUTER_ABI[0] | typeof PLS_ROUTER_ABI[0];
+type ExtendedRouterABI = typeof ETHW_ROUTER_ABI & typeof SONIC_ROUTER_ABI & typeof BASECHAIN_ROUTER_ABI & typeof PLS_ROUTER_ABI & {
+  [K in keyof RouterFunctionNames]: typeof ETHW_ROUTER_ABI[0] | typeof SONIC_ROUTER_ABI[0] | typeof BASECHAIN_ROUTER_ABI[0] | typeof PLS_ROUTER_ABI[0];
 };
 
 // Get the wrapped token ABI based on chain ID
@@ -53,6 +60,8 @@ const getWrappedTokenABI = (chainId: number) => {
       return WETHW;
     case 146: // Sonic
       return WSONIC;
+    case 8453: // Base
+      return WETH;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -69,6 +78,8 @@ const getRouterABI = (chainId: number) => {
       return ETHW_ROUTER_ABI;
     case 146: // Sonic
       return SONIC_ROUTER_ABI;
+    case 8453: // Base
+      return BASECHAIN_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;
@@ -76,15 +87,15 @@ const getRouterABI = (chainId: number) => {
 };
 
 const getRouterFunctionName = (chainId: number, functionType: keyof RouterFunctionNames) => {
-  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] || 
-         ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
+  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] ||
+    ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
 };
 
 const EMPTY_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
 const checkAllowance = async (chainId: number, tokenInAddress: string, userAddress: Address) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     let result = await readContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
@@ -102,7 +113,7 @@ const checkAllowance = async (chainId: number, tokenInAddress: string, userAddre
 
 const callApprove = async (chainId: number, tokenInAddress: string, amountIn: bigint) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
@@ -121,7 +132,7 @@ const callApprove = async (chainId: number, tokenInAddress: string, amountIn: bi
 
 const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
       abi: routerABI,
@@ -150,9 +161,9 @@ const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: A
   }
 };
 
-const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
+const swapToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
       abi: routerABI,
@@ -181,7 +192,7 @@ const swapToEth = async (chainId: number,tradeInfo: TradeInfo, userAddress: Addr
 
 const swapNoSplitToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
     const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
@@ -205,7 +216,7 @@ const swapNoSplitFromEth = async (
   userAddress: Address
 ) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
     const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
@@ -224,9 +235,9 @@ const swapNoSplitFromEth = async (
   }
 };
 
-const swap = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
+const swap = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
       abi: ETHW_ROUTER_ABI,
       address: routerAddress,
@@ -283,7 +294,7 @@ export const swapTokens = async (
   chainId: number,
 ) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
     setStatus("LOADING");
     const defaultResponse = {
       success: false,

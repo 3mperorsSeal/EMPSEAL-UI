@@ -54,5 +54,6 @@ export function useChainConfig() {
     blockExplorerName: currentChain?.blockExplorerName,
     isSupported: !!currentChain,
     maxHops: currentChain?.maxHops || 2,
+    blockTime: currentChain?.blockTime || 15, // Default to 15 seconds
   };
 }

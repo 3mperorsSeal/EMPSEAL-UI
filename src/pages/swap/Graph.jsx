@@ -12,6 +12,7 @@ const PRICE_CHART_ID = "price-chart-widget-container";
 // Chain to GeckoTerminal network mapping
 const CHAIN_TO_GECKO = {
   'pulsechain': 'pulsechain',
+  'base': 'base',
   'ethereumpow': 'ethw',
   'sonic': 'sonic',
 };

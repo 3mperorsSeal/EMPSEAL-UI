@@ -17,6 +17,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: 'Otterscan',
     rpcUrl: 'https://rpc.pulsechain.com',
     maxHops: 3,
+    blockTime: 6, // 10 seconds block time
   },
   // ETHW
   10001: {
@@ -34,6 +35,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "Oklink",
     rpcUrl: 'https://ethw.public-rpc.com',
     maxHops: 3,
+    blockTime: 15,
   },
   //sonic
   146: {
@@ -51,5 +53,24 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "sonicscan",
     rpcUrl: 'https://rpc.soniclabs.com',
     maxHops: 2,
+    blockTime: 5,
+  },
+  //base
+  8453: {
+    chainId: 8453,
+    name: 'Base',
+    symbol: "base",
+    routerAddress: '0xB12b7C117434B58B7623f994F4D0b4af7BC0Ac37',
+    wethAddress: '0x4200000000000000000000000000000000000006',
+    priceApi: {
+      baseUrl: 'https://api.geckoterminal.com/api/v2',
+      tokenPriceEndpoint: 'simple/networks/base/token_price',
+      graphEndpoint: 'networks/base/pools',
+    },
+    blockExplorer: 'https://basescan.org/tx/',
+    blockExplorerName: "basescan",
+    rpcUrl: 'https://mainnet.base.org',
+    maxHops: 3,
+    blockTime: 5,
   },
 };

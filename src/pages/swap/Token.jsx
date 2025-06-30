@@ -1,24 +1,21 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
 import { ERC20_ABI } from "./tokenFetch";
-import { useBalance } from "wagmi";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import Web3 from "web3";
+import { SUPPORTED_CHAINS } from '../../config/chains';
+
+// Debounce hook
+function useDebounce(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const handler = setTimeout(() => setDebouncedValue(value), delay);
+    return () => clearTimeout(handler);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 const TokenListItem = ({ token, walletAddress, onClick }) => {
-  const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
-    address: walletAddress,
-    token:
-      token.address === "0x0000000000000000000000000000000000000000"
-        ? undefined
-        : token.address,
-    watch: true,
-  });
-
-  const formattedBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(4)
-    : "0.0000";
-
   return (
     <div
       className="flex justify-between items-center mt-4 cursor-pointer hover:bg-gray-800 p-2 rounded"
@@ -26,11 +23,11 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
     >
       <div className="flex items-center gap-2">
         <img
-          src={token.logoURI || token.image}
+          src={token?.logoURI || token?.image}
           className="w-4 h-4"
-          alt={token.name}
+          alt={token?.name}
           onError={(e) => {
-            e.target.src = "path/to/fallback/image.png";
+            e.target.src = "src/assets/images/emp-logo.png";
           }}
         />
         <div>
@@ -41,7 +38,7 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
       </div>
       <div className="text-right">
         <div className="text-white text-sm font-normal roboto tracking-wide">
-          {balanceLoading ? "Loading..." : formattedBalance}
+          {/* No balance shown */}
         </div>
         <div className="text-gray-400 text-xs roboto mt-2">{token.symbol || token.ticker}</div>
       </div>
@@ -49,7 +46,9 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
   );
 };
 
-const Token = ({ onClose, onSelect }) => {
+const Token = ({ onClose, onSelect, visible }) => {
+  if (!visible) return null;
+
   const { chainId, tokenList, featureTokens, isSupported } = useChainConfig();
   const [searchQuery, setSearchQuery] = useState("");
   const [tokenDetails, setTokenDetails] = useState(null);
@@ -63,11 +62,13 @@ const Token = ({ onClose, onSelect }) => {
       case 369: return "https://rpc.pulsechain.com";
       case 10001: return "https://mainnet.ethereumpow.org";
       case 146: return "https://rpc.soniclabs.com";
+      case 8453: return "https://mainnet.base.org";
       default: return null;
     }
   };
 
-  const web3 = new Web3(getRpcUrl());
+  const rpcUrl = getRpcUrl();
+  const web3 = useMemo(() => (rpcUrl ? new Web3(rpcUrl) : null), [rpcUrl]);
 
   useEffect(() => {
     const getAddress = async () => {
@@ -85,46 +86,20 @@ const Token = ({ onClose, onSelect }) => {
     getAddress();
   }, []);
 
+  // Debounced search query for address lookups
+  const debouncedSearchQuery = useDebounce(searchQuery, 500);
+
   const filteredTokens = tokenList.filter(
     (token) =>
       (token.name && token.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (token.symbol && token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (token.ticker && token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
       (token.address && token.address.toLowerCase().includes(searchQuery.toLowerCase()))
   ).sort((a, b) => a.name.localeCompare(b.name));
 
   const SortedTokenList = () => {
-    const tokenPromises = filteredTokens.map((token) => ({
-      token,
-      balancePromise: useBalance({
-        address: walletAddress,
-        token:
-          token.address === "0x0000000000000000000000000000000000000000"
-            ? undefined
-            : token.address,
-        watch: true,
-      }),
-    }));
-
-    // Sort based on balance
-    const sortedTokens = [...tokenPromises].sort((a, b) => {
-      const balanceA = parseFloat(a.balancePromise.data?.formatted || "0");
-      const balanceB = parseFloat(b.balancePromise.data?.formatted || "0");
-
-      if (balanceA > 0 && balanceB > 0) {
-        if (balanceA !== balanceB) {
-          return balanceB - balanceA; // Sort descending
-        }
-      }
-      if (balanceA > 0 && balanceB === 0) return -1;
-      if (balanceB > 0 && balanceA === 0) return 1;
-
-      return a.token.name.localeCompare(b.token.name);
-    });
-
     return (
       <div className="max-h-[400px] overflow-y-auto">
-        {sortedTokens.map(({ token }, index) => (
+        {filteredTokens.map((token, index) => (
           <TokenListItem
             key={index}
             token={token}
@@ -142,7 +117,28 @@ const Token = ({ onClose, onSelect }) => {
       return null;
     }
 
+    let imageUrl = null;
     try {
+      // Fetch token image from GeckoTerminal API
+      if (chainId && address) {
+        // Get the chain symbol for GeckoTerminal (e.g., 'base', 'pulsechain', etc.)
+        const chainSymbol = (typeof chainId === 'number' && chainId in SUPPORTED_CHAINS)
+          ? SUPPORTED_CHAINS[chainId].symbol
+          : null;
+        if (chainSymbol) {
+          const apiUrl = `https://api.geckoterminal.com/api/v2/networks/${chainSymbol}/tokens/${address}`;
+          try {
+            const response = await fetch(apiUrl);
+            if (response.ok) {
+              const data = await response.json();
+              imageUrl = data?.data?.attributes?.image_url || null;
+            }
+          } catch (apiErr) {
+            console.error('Failed to fetch image from GeckoTerminal:', apiErr);
+          }
+        }
+      }
+
       const tokenContract = new web3.eth.Contract(ERC20_ABI, address);
       const [name, symbol, decimalsRaw] = await Promise.all([
         tokenContract.methods.name().call(),
@@ -156,7 +152,8 @@ const Token = ({ onClose, onSelect }) => {
         name,
         symbol,
         decimal,
-        logoURI: null,
+        logoURI: imageUrl, // Use fetched image if available
+        image: imageUrl || "src/assets/images/emp-logo.png", // Fallback to default image
         ticker: symbol,
       };
 
@@ -200,23 +197,22 @@ const Token = ({ onClose, onSelect }) => {
   };
 
   useEffect(() => {
-    if (web3.utils.isAddress(searchQuery)) {
+    if (web3 && web3.utils.isAddress(debouncedSearchQuery)) {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        token => token.address.toLowerCase() === searchQuery.toLowerCase()
+        token => token.address.toLowerCase() === debouncedSearchQuery.toLowerCase()
       );
-
       if (existingToken) {
         setTokenDetails(existingToken);
         setError(null);
       } else {
-        handleTokenLookup(searchQuery);
+        handleTokenLookup(debouncedSearchQuery);
       }
     } else {
       setTokenDetails(null);
       setError(null);
     }
-  }, [searchQuery]);
+  }, [debouncedSearchQuery]);
 
   const handleTokenSelect = (token) => {
     if (tokenDetails && token.address === tokenDetails.address) {

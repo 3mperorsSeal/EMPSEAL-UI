@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import Arrow from "../../assets/images/arrow-2.svg";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import { useStore } from "../../redux/store/routeStore";
+import { SUPPORTED_CHAINS } from '../../config/chains';
 
 const Routing = ({ routing }) => {
   const [tokenImages, setTokenImages] = useState({});
@@ -12,7 +13,7 @@ const Routing = ({ routing }) => {
     tokenList,
     adapters,
     isSupported,
-    wethAddress // Assuming this is the wrapped token address
+    wethAddress
   } = useChainConfig();
 
   // Function to get token image from tokenList.json
@@ -21,11 +22,6 @@ const Routing = ({ routing }) => {
       (token) => token?.address?.toLowerCase() === address?.toLowerCase()
     );
     return token ? token.logoURI || token.image : null;
-  };
-
-  // Function to get token image from GitHub
-  const getGithubTokenImage = (address) => {
-    return `https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/${address}.png`;
   };
 
   // Combined function to get token image from any source
@@ -50,14 +46,24 @@ const Routing = ({ routing }) => {
       return localImage;
     }
 
-    // Finally try GitHub
-    if(chainId === 369){
-      const githubImage = getGithubTokenImage(address);
-      setTokenImages((prev) => ({
-        ...prev,
-        [address]: githubImage,
-      }));
-      return githubImage;
+    // Try GeckoTerminal API for any supported chain
+    if (chainId && SUPPORTED_CHAINS[chainId]) {
+      const chainSymbol = SUPPORTED_CHAINS[chainId].symbol;
+      const apiUrl = `https://api.geckoterminal.com/api/v2/networks/${chainSymbol}/tokens/${address}`;
+      fetch(apiUrl)
+        .then((response) => response.ok ? response.json() : null)
+        .then((data) => {
+          const imageUrl = data?.data?.attributes?.image_url;
+          if (imageUrl) {
+            setTokenImages((prev) => ({
+              ...prev,
+              [address]: imageUrl,
+            }));
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to fetch image:', err);
+        });
     }
   };
 
