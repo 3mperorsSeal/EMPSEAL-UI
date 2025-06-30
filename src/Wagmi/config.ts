@@ -7,7 +7,7 @@ import {
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { http, createConfig } from 'wagmi';
-import { base, sei } from 'wagmi/chains';
+import { base } from 'wagmi/chains';
 import { defineChain } from 'viem';
 
 // Define custom chains with logo support
@@ -31,7 +31,7 @@ const pulsechain = {
       url: 'https://oldscan.gopulse.com/#/',
     },
   },
-  iconUrl: 'src/assets/chains/pulsechain.png',
+  iconUrl: 'src/assets/chains/pulsechain.svg',
   iconBackground: '#000000',
 };
 
@@ -55,7 +55,7 @@ const sonic = {
       url: 'https://sonicscan.org',
     },
   },
-  iconUrl: 'src/assets/chains/sonic.png',
+  iconUrl: 'src/assets/chains/sonic.svg',
   iconBackground: '#111',
 };
 
@@ -78,7 +78,7 @@ const ethw = {
       url: 'https://www.oklink.com/ethereum-pow',
     },
   },
-  iconUrl: 'src/assets/chains/ethereumpow.png',
+  iconUrl: 'src/assets/chains/ethereumpow.svg',
   iconBackground: '#222',
 };
 
@@ -100,6 +100,6 @@ const swapConnectors = connectorsForWallets(
 export const config = getDefaultConfig({
   appName: 'Empseal Swap',
   projectId: 'YOUR_PROJECT_ID',
-  chains: [pulsechain, sonic, ethw, base, sei],
+  chains: [pulsechain, sonic, ethw, base],
   ssr: true,
 });
