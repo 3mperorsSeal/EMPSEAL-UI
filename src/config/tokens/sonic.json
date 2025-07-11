@@ -39,6 +39,13 @@
         "image": "https://sonicscan.org/token/images/spookytoken2_32.png"
     },
     {
+        "name": "Silver",
+        "address": "0x005851f943ee2957b1748957f26319e4f9edebc1",
+        "ticker": "$AG",
+        "decimal": 18,
+        "image": "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F52967%2Flarge%2FSS_logo.png%3F1734881325&w=32&q=75"
+    },
+    {
         "name": "9MM",
         "address": "0xc5cb0b67d24d72b9d86059344c88fb3ce93bf37c",
         "ticker": "9MM",

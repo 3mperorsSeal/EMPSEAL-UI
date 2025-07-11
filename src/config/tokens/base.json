@@ -117,7 +117,6 @@
         "address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
         "chainId": 8453,
         "decimal": 6,
-        "featured":true,
         "image": "https://raw.githubusercontent.com/9mm-exchange/app-tokens/main/base-logos/0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA.png"
     },
     {
@@ -160,6 +159,15 @@
         "chainId": 8453,
         "decimal": 8,
         "image": "https://raw.githubusercontent.com/9mm-exchange/app-tokens/main/base-logos/0x60B407479ef0ddF6Cc146ceD609aa07d4296F204.png"
+    },
+    {
+        "name":"The Rise of Cock",
+        "ticker":"COCK",
+        "address": "0xC450f0887A94D1B2ad4b1b05734bEfe860919A2B",
+        "chainId": 8453,
+        "decimal": 18,
+        "image": "https://raw.githubusercontent.com/TheRiseofCOCK/Media/refs/heads/main/30px%20logo.png",
+        "featured": true
     },
     {
         "name": "9mm on Base",
