@@ -131,7 +131,7 @@ const Home = () => {
               <Link target='_blank' to='https://github.com/3mperorsSeal'>
                 <img src={Git} alt='Git' />
               </Link>
-              <Link target='_blank' to='https://x.com/EmperorsSeal'>
+              <Link target='_blank' to='https://x.com/3mp_X_'>
                 <img src={X} alt='X' />
               </Link>
               <Link
