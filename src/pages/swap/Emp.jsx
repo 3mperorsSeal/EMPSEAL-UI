@@ -548,6 +548,7 @@ const Emp = ({ setPadding }) => {
         parseFloat(amountIn || 0) * parseFloat(conversionRate)
       ).toFixed(3);
       setUsdValue(valueInUSD);
+      setUsdValueTokenA(valueInUSD);
     } else {
       console.error("Missing or invalid conversion rate:", conversionRate);
     }
