@@ -731,7 +731,7 @@ const Emp = ({ setPadding }) => {
     // This input is read-only, so we don't need an onChange handler
   };
   // For Price Impact
-   const priceImpact =
+  const priceImpact =
     usdValueTokenA > 0
       ? (
           ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
@@ -739,7 +739,15 @@ const Emp = ({ setPadding }) => {
           100
         ).toFixed(2)
       : 0;
-  // 
+  // Determine color based on value
+  const getPriceImpactColor = (impact) => {
+    const value = parseFloat(impact);
+
+    if (value < 2) return "text-black";
+    if (value >= 2 && value <= 5) return "text-yellow-500"; 
+    return "text-red-500";
+  };
+  //
   return (
     <>
       {/* <div
@@ -1353,10 +1361,10 @@ const Emp = ({ setPadding }) => {
         <h6 className="font-orbitron text-sm">
           <span>
             <span className="font-semibold">Price Impact:</span>{" "}
-            <span className="font-bold truncate">
+            <span className={`font-bold truncate ${getPriceImpactColor(priceImpact)}`}>
               {" "}
               {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
-               {priceImpact} %
+              {priceImpact} %
             </span>
           </span>
         </h6>
