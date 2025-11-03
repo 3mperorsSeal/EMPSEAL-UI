@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import Arrow from '../assets/images/arrow-2.svg';
+import Logo from '../assets/images/swap-emp.png';
 
 const BreadCrumb = () => {
   const location = useLocation();
@@ -13,9 +14,9 @@ const BreadCrumb = () => {
 
   return (
     <nav aria-label="breadcrumb ">
-      <ol className="breadcrumb flex container mx-auto px-24 pt-4">
+      <ol className="breadcrumb flex container mx-auto lg:px-24 pt-4 md:justify-start justify-center">
         {/* Home link always appears */}
-        <li className="breadcrumb-item text-[#FF9900] roboto">
+        {/* <li className="breadcrumb-item text-[#FF9900] roboto">
           <Link className="me-2" to="/">
             Home
           </Link>
@@ -27,10 +28,12 @@ const BreadCrumb = () => {
               style={{ width: '21px', height: '21px' }}
             />
           )}
-        </li>
+            
+        </li> */}
+        <img src={Logo} alt='Logo' className='mx-aut 2xl:w-[193px] md:w-[150px]' />
 
         {/* Generate breadcrumb links for each path segment */}
-        {pathnames.map((value, index) => {
+        {/* {pathnames.map((value, index) => {
           const to = `/${pathnames.slice(0, index + 1).join('/')}`;
           const isLast = index === pathnames.length - 1;
           return isLast ? (
@@ -46,10 +49,10 @@ const BreadCrumb = () => {
               <Link className="pe-2" to={to}>
                 {formatBreadcrumb(value)}
               </Link>
-              <span> &gt; </span> {/* Separator for intermediate segments */}
+              <span> &gt; </span>
             </li>
           );
-        })}
+        })} */}
       </ol>
     </nav>
   );

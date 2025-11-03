@@ -1,4 +1,4 @@
-"use client";
+// "use client";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import React, { useEffect } from "react";
 import ChainImg from "../../../assets/images/select_chain.svg";
@@ -54,12 +54,11 @@ export default function WalletConnect({
         if (!connected) {
           return (
             <button
-              className="px-6 py-2 text-white rounded-md shadow-sm cursor-pointer bg-accent font-semibold flex items-center gap-2 roboto"
+              className="flex items-center justify-center bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-normal w-full font-orbitron"
               onClick={openConnectModal}
               type="button"
             >
-              {icon && <span>{icon}</span>}
-              Connect Wallet
+              <span className="ps-3">Connect</span>
             </button>
           );
         }
@@ -67,7 +66,7 @@ export default function WalletConnect({
         if (chain.unsupported) {
           return (
             <button
-              className="bg-[#FF494A] px-4 py-2 rounded text-white flex items-center gap-2 roboto"
+              className="bg-[#FF494A] px-4 py-2 rounded text-white flex items-center gap-2 font-orbitron"
               onClick={openChainModal}
               type="button"
             >
@@ -79,21 +78,18 @@ export default function WalletConnect({
         return (
           <div className="flex flex-col justify-center items-center gap-4">
             <button
-              className="px-4 xl:px-4 py-2 text-white rounded-full shadow-sm cursor-pointer bg-secondary font-semibold flex items-center gap-2 roboto xl:justify-start justify-center"
+              className="px-4 xl:ps-8 xl:pe-4 py-2 text-white rounded-full shadow-sm cursor-pointer bg-secondary font-normal flex items-center font-orbitron justify-center"
               onClick={openAccountModal}
               type="button"
             >
-              {icon && <span>{icon}</span>}
-              Disconnect
+              <span className="ps-3">Disconnect</span>
             </button>
             <button
-              className="px-4 py-2 text-white bg-primary rounded-full font-semibold flex items-center gap-2 roboto xl:justify-start justify-center"
+              className="px-4 py-2 text-white bg-primary rounded-full font-normal flex items-center font-orbitron justify-center"
               onClick={openChainModal}
               type="button"
             >
-             
-             <img src={ChainImg} alt="chain" />
-             Select Chain
+             <span className="ps-3">Select Chain</span>
             </button>
           </div>
         );

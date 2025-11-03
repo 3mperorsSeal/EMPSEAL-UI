@@ -4,14 +4,17 @@ import Wallet from "./Wallet";
 import Routing from "./Routing";
 import Graph from "./Graph";
 import Table from "./Table";
+import X from "../../assets/images/x.svg";
+import L from "../../assets/images/linked.svg";
+import Y from "../../assets/images/youtube.svg";
 
 const Normal = () => {
   const [padding, setPadding] = React.useState("lg:min-h-[429px] h-full");
   return (
     <>
-      <div className="bg-[#121214] py-3 relative">
-        <div className="md:max-w-[1100px] mx-auto w-full px-4 flex justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2 md:flex-nowrap flex-wrap">
-          <div className="md:max-w-[620px] w-full">
+      <div className="pt-3 pb-10 relative">
+        <div className="md:max-w-[818px] mx-auto w-full px-4 flex flex-col justify-start xl:gap-4 gap-4 items-start 2xl:pt-1 py-2 md:flex-nowrap flex-wrap">
+          <div className="w-full">
             <div className="md:hidden block">
               <Wallet />
             </div>
@@ -21,13 +24,25 @@ const Normal = () => {
             <div className="md:block hidden">
               <Wallet />
             </div>
-            <div className="mt-3">
+            <div className="mt-3 absolute md:left-0 lefts bottom-[275px]">
               <Routing />
             </div>
-            <div className="mt-3">
+            <div className="mt-3 hidden">
               <Graph padding={padding} />
             </div>
           </div>
+        </div>
+        {/*  */}
+        <div className="flex lg:justify-end justify-center gap-4 items-center md:max-w-[1400px] w-full mx-auto px-4">
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+            <img src={X} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
+          </button>
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+            <img src={L} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
+          </button>
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+            <img src={Y} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
+          </button>
         </div>
         {/* <div className="md:max-w-[1030px] mx-auto w-full px-4 flex justify-center xl:gap-9 gap-4 items-start mt-1 md:flex-nowrap flex-wrap h-full">
           <div className="w-full h-full">

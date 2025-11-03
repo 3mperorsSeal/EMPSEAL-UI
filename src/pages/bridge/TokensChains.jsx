@@ -61,7 +61,7 @@ const TokensChains = ({ onClose, onSelect, onChainSelect }) => {
       <div className='w-full flex justify-center my-auto items-center'>
         <div
           ref={modalRef}
-          className='md:max-w-[564px] w-full bg-[#222222]  rounded-2xl relative py-6 px-5 mx-auto'
+          className='md:max-w-[564px] w-full bg-[#222222]  rounded-2xl relative py-6 px-5 mx-auto clip-bg'
         >
           <svg
             onClick={onClose}

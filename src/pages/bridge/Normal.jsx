@@ -147,9 +147,12 @@ const Normal = () => {
   };
   return (
     <>
-      <div className='bg-[#121214] py-3 relative'>
-        <div className='md:max-w-[1100px] mx-auto w-full flex justify-center gap-10 items-center md:flex-nowrap flex-wrap my-6 px-3'>
-          <div
+      <div className=' py-3 relative'>
+        <div className='md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap mt-6 px-3 mb-8'>
+          <h1 className='text-4xl text-[#FF9900] font-orbitron font-bold mb-2'>Seamless</h1>
+          <h1 className='text-4xl text-white font-orbitron font-bold'>Cross Chain Swaps</h1>
+                    <div className='flex justify-center gap-4 w-full mt-7'>
+                      <div
             onClick={() => setActiveTab('cross')}
             className={`${
               activeTab === 'cross' ? 'border-[#FF9900]' : 'border-[#3b3c4e]'
@@ -157,21 +160,21 @@ const Normal = () => {
           >
             Cross Chain Swap
           </div>
-          <Link to={'/native-bridge'}>
+          <Link className='md:max-w-[200px] w-full' to={'/native-bridge'}>
             <div
-              // onClick={handleClick}
               className={`${
                 activeTab === 'native'
                   ? 'border-[#FF9900]'
                   : 'border-[#3b3c4e] '
-              }   opacity-50 px-3 py-2 md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
+              }   opacity-50 px-3 py-2 md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border border-white text-white text-[15px] font-bold roboto`}
             >
               Native Bridge
             </div>
           </Link>
+          </div>
         </div>
-        <div className='md:max-w-[1100px] mx-auto w-full px-4 flex justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2 md:flex-nowrap flex-wrap'>
-          <div className='md:max-w-[620px] w-full'>
+        <div className='md:max-w-[818px] mx-auto w-full px-4  justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2'>
+          <div className=' w-full'>
             <div className='md:hidden block'>
               {activeTab === 'cross' ? <Wallet /> : <div></div>}
             </div>
@@ -188,7 +191,7 @@ const Normal = () => {
               <div></div>
             )}
           </div>
-          <div className='md:max-w-[474px] w-full'>
+          <div className='w-full'>
             <div className='md:block hidden'>
               {activeTab === 'cross' ? <Wallet /> : <div></div>}
             </div>

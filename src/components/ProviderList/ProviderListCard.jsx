@@ -69,7 +69,7 @@ const ProvidersListCard = ({
               </div>
             )}
           </div>
-          <div className='flex justify-end items-center'>
+          <div className='flex justify-end items-center gap-1'>
             <img src={Clock} alt='Loading' className='w-3 h-4' />
 
             <span className=' text-sm font-base  roboto '>{timeDuration}M</span>

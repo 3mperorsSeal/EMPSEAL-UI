@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import Logo from '../../assets/images/swap-emp.png';
 import Sett from '../../assets/images/setting.png';
-import UpDownAr from '../../assets/images/up-down-arrow.svg';
+import UpDownAr from '../../assets/images/reverse.svg';
 import Usdc from '../../assets/images/usdc.svg';
 import Refresh from '../../assets/images/refresh.svg';
 import Info from '../../assets/images/info.svg';
@@ -22,6 +22,7 @@ import Tokens from '../tokenList.json';
 import { useStore } from '../../redux/store/routeStore';
 import Transcation from './Transcation';
 import { Copy, Check } from 'lucide-react';
+import TradeDataCard from './TradeDataCard';
 
 const Emp = ({
   setPadding,
@@ -603,7 +604,7 @@ const Emp = ({
   useEffect(() => {
     if (selectedRoute) {
       let amountOutValue;
-  
+
       if (symbiosisRoute) {
         // Symbiosis route
         amountOutValue = formatTokenAmount(selectedRoute?.tokenAmountOut?.amount, selectedRoute?.tokenAmountOut?.decimals);
@@ -658,7 +659,7 @@ const Emp = ({
     const [integerPart, decimalPart] = value.split('.'); // Split into integer and decimal parts
     const formattedInteger = integerPart
       .replace(/\D/g, '') // Allow only digits
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ','); // Add commas to integer part
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ''); // Add commas to integer part
 
     // If there's a decimal part, return formatted integer + decimal
     return decimalPart !== undefined
@@ -720,8 +721,8 @@ const Emp = ({
   // };
   return (
     <>
-      <div className='w-full border border-white rounded-xl py-10  lg:px-10 md:px-8 px-4 bg-black md:mt-0 mt-4'>
-        <img src={Logo} alt='Logo' className=' mx-auto' />
+      <div className='w-full rounded-xl pb-10 pt-0  lg:px-10 md:px-8 px-4 md:mt-0 mt-4'>
+        {/* <img src={Logo} alt='Logo' className=' mx-auto' /> */}
 
         {isTokenVisible ? (
           <TokensChains
@@ -731,8 +732,8 @@ const Emp = ({
           />
         ) : (
           <div>
-            <div className='flex md:justify-between justify-center gap-3 items-center md:flex-nowrap flex-wrap my-6 lg:px-1 px-0'>
-              {/* <div
+            {/* <div className='flex md:justify-between justify-center gap-3 items-center md:flex-nowrap flex-wrap my-6 lg:px-1 px-0'>
+              <div
                 onClick={() => {
                   setOrder(false);
                   setPadding('lg:h-[295px] h-full');
@@ -746,8 +747,8 @@ const Emp = ({
 
               <div
                 onClick={() => {
-                  // setOrder(true);
-                  // setPadding("md:pb-[160px] pb-10");
+                  setOrder(true);
+                  setPadding("md:pb-[160px] pb-10");
                 }}
                 className={`${
                   order
@@ -756,128 +757,131 @@ const Emp = ({
                 }  md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
               >
                 Native Bridge
-              </div> */}
-            </div>
-            <div className='flex justify-between gap-3 items-center mt-10'>
-              <div className='text-center'>
-                <span className='text-gray-400 text-base font-normal roboto leading-normal'>
-                  From
-                </span>
               </div>
-              <div className='text-zinc-200 text-base font-normal roboto  leading-normal flex gap-2'>
-                <span>Bal:</span>
-                {[25, 50, 100].map((value) => (
-                  <button
-                    key={value}
-                    className={`w-full border border-[#FF9900] flex justify-center  items-center rounded-xl text-sm font-normal  roboto px-4
-          ${
-            selectedPercentage === value
-              ? ' text-black bg-[#FF9900]'
-              : 'bg-transparent text-white hover:bg-[#FF9900] hover:text-black'
-          }`}
-                    onClick={() => handlePercentageChange(value)}
-                    disabled={isLoading}
-                  >
-                    {value}%
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className='flex w-full border border-[#3b3c4e]  rounded-2xl mt-2 p-2'>
-              <div
-                onClick={() => {
-                  setIsSelectingTokenA(true);
-                  setTokenVisible(true);
-                  setSelectedPercentage('');
-                  setAmountIn('');
-                }}
-                className='flex justify-between gap-4 items-center cursor-pointer bg-[#191919] px-3 py-2 rounded-lg'
-              >
-                <div
-                  className={`relative flex gap-2 items-center ${
-                    selectedChainA.image ? 'pe-3' : ''
-                  }`}
-                >
-                  {/* Chain Image */}
-                  {selectedChainA.image && (
-                    <div className='absolute top-0 left-0'>
-                      <img
-                        className='w-10 h-8' // Chain image slightly bigger
-                        src={selectedChainA.image}
-                        alt={selectedChainA.name}
-                      />
-                    </div>
-                  )}
-
-                  {/* Token Image */}
-                  {selectedTokenA.image && (
-                    <div
-                      className={`relative ${
-                        selectedChainA.image ? 'left-5' : ''
-                      }`}
-                    >
-                      <img
-                        className='w-9 h-7' // Token image smaller
-                        src={selectedTokenA.image}
-                        alt={selectedTokenA.name}
-                      />
-                    </div>
-                  )}
+            </div> */}
+             <h4 className='text-[#FF9900] font-orbitron font-bold text-lg'>Cross Chain Swap</h4>
+            <div className='relative z-0'>
+              <img className='bg-sell' src='src/assets/images/sell-box.png' />
+              <div className='flex justify-between gap-3 items-center mt-4'>
+                <div className='text-center pt-5 ps-4'>
+                  <span className='font-orbitron text-dark-400 ps-2 text-2xl font-semibold leading-normal'>
+                    You Sell
+                  </span>
                 </div>
 
-                <svg
-                  className='pointer-events-none'
-                  width={11}
-                  height={7}
-                  viewBox='0 0 11 7'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M1.5 1.56934L5.5 5.56934L9.5 1.56934'
-                    stroke='white'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                </svg>
               </div>
 
-              <input
-                type='text' // Changed from "number" to "text" for better formatting control
-                placeholder={
-                  formattedChainBalance === '0.000000'
-                    ? '0'
-                    : calculateAmount(selectedPercentage)
-                }
-                value={formatNumber(amountIn)}
-                onChange={(e) => handleInputChange(e.target.value)}
-                className='text-white text-xl font-bold roboto text-start w-full leading-7 outline-none border-none bg-transparent token_input ps-3'
-              />
-            </div>
-            <div className='flex justify-between gap-3 items-center lg:px-2 mt-2'>
-              <div className='text-center'>
-                <span className='text-gray-400 text-base font-normal roboto leading-normal'>
-                  Bal
-                </span>
-                <span className='text-gray-400 text-base font-normal roboto leading-normal'>
-                  {' '}
-                  :{' '}
-                </span>
-                <span className='text-white text-base font-normal roboto leading-normal'>
-                  {isLoading
-                    ? 'Loading..'
-                    : selectedTokenA.address === EMPTY_ADDRESS
-                    ? `${formatNumber(formattedBalance)}`
-                    : `${
-                        tokenBalance
-                          ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(6)
-                            )
-                          : '0.00'
+              <div className='flex w-full justify-between  rounded-2xl mt-4 py-4 px-8'>
+                <div
+                  onClick={() => {
+                    setIsSelectingTokenA(true);
+                    setTokenVisible(true);
+                    setSelectedPercentage('');
+                    setAmountIn('');
+                  }}
+                  className='flex justify-center gap-4 items-center cursor-pointer h-[56px] bg-[#FFE6C0] px-3 py-0 rounded-lg w-[28%] margin_left mt-7'
+                >
+                  <div
+                    className={`relatve flex gap-2 items-center ${selectedChainA.image ? 'pe-0' : ''
                       }`}
-                </span>
+                  >
+                    {/* Chain Image */}
+                    {selectedChainA.image && (
+                      <div className='absolute -left-8 flex items-center gap-3'>
+                        <img
+                          className='w-10' // Chain image slightly bigger
+                          src={selectedChainA.image}
+                          alt={selectedChainA.name}
+                        />
+                        <h3 className='font-bold'>{selectedChainA.name}</h3>
+                      </div>
+                    )}
+                    <img src='src/assets/images/rec-token.svg' className=' w-[19px] h-[40px] left-bg-ele' />
+                    {/* Token Image */}
+                    {selectedTokenA.image && (
+                      <div
+                        className={`relative bg-black border border-white rounded-lg ${selectedChainA.image ? 'left-40-box' : 'left-40-box'
+                          }`}
+                      >
+                        <img
+                          className='h-[55px] p-2' // Token image smaller
+                          src={selectedTokenA.image}
+                          alt={selectedTokenA.name}
+                        />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* <svg
+                    className='pointer-events-none'
+                    width={11}
+                    height={7}
+                    viewBox='0 0 11 7'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M1.5 1.56934L5.5 5.56934L9.5 1.56934'
+                      stroke='white'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg> */}
+                </div>
+                <div className='w-1/2'>
+                  <div className='text-zinc-200 text-base font-normal roboto  leading-normal flex gap-2'>
+                    <span></span>
+                    {[25, 50, 75, 100].map((value) => (
+                      <button
+                        key={value}
+                        className={` py-1 w-full border border-[#FF9900] flex justify-center  items-center rounded-xl text-xs font-semibold font-normal  font-orbitron px-2
+          ${selectedPercentage === value
+                            ? ' text-white bg-black'
+                            : 'bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black'
+                          }`}
+                        onClick={() => handlePercentageChange(value)}
+                        disabled={isLoading}
+                      >
+                        {value}%
+                      </button>
+                    ))}
+                  </div>
+                  <input
+                    type='text' // Changed from "number" to "text" for better formatting control
+                    placeholder={
+                      formattedChainBalance === '0.000000'
+                        ? '0'
+                        : calculateAmount(selectedPercentage)
+                    }
+                    value={formatNumber(amountIn)}
+                    onChange={(e) => handleInputChange(e.target.value)}
+                    className='text-[#000000] py-2 text-4xl font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-0 font-orbitron place-holder-bg'
+                  />
+                </div>
+              </div>
+              <div className='absolute -top-4 right-0 gap-3 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0]'>
+                <div className='text-center'>
+                  <span className=' font-bold font-orbitron leading-normal'>
+                    Balance
+                  </span>
+                  <span className='font-bold font-orbitron leading-normal'>
+                    {' '}
+                    :{' '}
+                  </span>
+                  <span className='font-bold font-orbitron leading-normal'>
+                    {isLoading
+                      ? 'Loading..'
+                      : selectedTokenA.address === EMPTY_ADDRESS
+                        ? `${formatNumber(formattedBalance)}`
+                        : `${tokenBalance
+                          ? formatNumber(
+                            parseFloat(tokenBalance.formatted).toFixed(6)
+                          )
+                          : '0.00'
+                        }`}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -894,108 +898,112 @@ const Emp = ({
                 setSelectedChainB(_chainA);
               }}
             >
-              <img src={UpDownAr} alt='Ar' className='mx-auto mt-6' />
+              <img src={UpDownAr} alt='Ar' className='mx-auto my-5 pt-4' />
             </div>
-            <div className='flex justify-between gap-3 items-center'>
-              <div className='text-zinc-200 text-base font-normal roboto leading-normal'>
-                To
-              </div>
-            </div>
-
-            <div className='flex w-full border border-[#3b3c4e] p-2 rounded-2xl mt-3 p-2'>
-              <div
-                onClick={() => {
-                  setIsSelectingTokenA(false);
-                  setTokenVisible(true);
-                }}
-                className='flex justify-between gap-4 items-center cursor-pointer bg-[#191919] px-3 py-2 rounded-lg'
-              >
-                <div
-                  className={`relative flex gap-2 items-center ${
-                    selectedChainB.image ? 'pe-3' : ''
-                  }`}
-                >
-                  {/* Chain Image */}
-                  {selectedChainB.image && (
-                    <div className='absolute top-0 left-0'>
-                      <img
-                        className='w-10 h-8' // Chain image slightly bigger
-                        src={selectedChainB.image}
-                        alt={selectedChainB.name}
-                      />
-                    </div>
-                  )}
-
-                  {/* Token Image */}
-                  {selectedTokenB.image && (
-                    <div
-                      className={`relative ${
-                        selectedChainB.image ? 'left-5' : ''
-                      }`}
-                    >
-                      <img
-                        className='w-9 h-7' // Token image smaller
-                        src={selectedTokenB.image}
-                        alt={selectedTokenB.name}
-                      />
-                    </div>
-                  )}
+                         <h4 className='text-[#FF9900] font-orbitron font-bold text-lg mb-4'>Cross Chain Swap</h4>
+            <div className='relative z-0'>
+              <img className='bg-sell' src='src/assets/images/buy-bg.png' />
+              <div className='pt-5 ps-4'>
+                <div className='text-white ps-2 font-semibold text-2xl font-orbitron leading-normal'>
+                  You Buy
                 </div>
-                <svg
-                  className='pointer-events-none'
-                  width={11}
-                  height={7}
-                  viewBox='0 0 11 7'
-                  fill='none'
-                  xmlns='http://www.w3.org/2000/svg'
-                >
-                  <path
-                    d='M1.5 1.56934L5.5 5.56934L9.5 1.56934'
-                    stroke='white'
-                    strokeWidth='1.5'
-                    strokeLinecap='round'
-                    strokeLinejoin='round'
-                  />
-                </svg>
               </div>
 
-              <input
-                type='text'
-                placeholder='0'
-                value={
-                  amountOut === '0' || !amountOut
-                    ? ''
-                    : parseFloat(amountOut).toFixed(6)
-                } // Ensure 0 or empty will display a blank field
-                className='text-white text-xl font-bold roboto text-start w-full leading-7 outline-none border-none bg-transparent ps-3'
-              />
-            </div>
-            <div className='flex justify-between gap-3 items-center mt-2'>
-              <div className='text-center'>
-                <span className='text-gray-400 text-base font-normal roboto leading-normal'>
-                  Bal
-                </span>
-                <span className='text-gray-400 text-base font-normal roboto leading-normal'>
-                  {' '}
-                  :{' '}
-                </span>
-                <span className='text-white text-base font-normal roboto leading-normal'>
-                  {isLoading
-                    ? 'Loading..'
-                    : selectedTokenA.address === EMPTY_ADDRESS
-                    ? `${formatNumber(formattedChainBalanceTokenB)}`
-                    : `${
-                        tokenBBalance
-                          ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(2)
-                            )
-                          : '0.00'
+              <div className='flex w-full justify-between  rounded-2xl mt-4 px-8 py-4'>
+                <div
+                  onClick={() => {
+                    setIsSelectingTokenA(false);
+                    setTokenVisible(true);
+                  }}
+                  className='flex justify-center gap-4 items-center cursor-pointer h-[56px] bg-[#FFE6C0] px-3 py-0 rounded-lg w-[28%] margin_left'
+                >
+                  <div
+                    className={` flex gap-2 items-center ${selectedChainB.image ? 'pe-0' : ''
                       }`}
-                </span>
+                  >
+                    {/* Chain Image */}
+                    {selectedChainB.image && (
+                      <div className='absolute -left-8 flex items-center gap-3'>
+                        <img
+                          className='w-10' // Chain image slightly bigger
+                          src={selectedChainB.image}
+                          alt={selectedChainB.name}
+                        />
+                        <h3 className='font-bold'>{selectedChainB.name}</h3>
+                      </div>
+                    )}
+  <img src='src/assets/images/rec-token.svg' className=' w-[19px] h-[40px] left-bg-ele' />
+                    {/* Token Image */}
+                    {selectedTokenB.image && (
+                      <div
+                        className={`relative bg-[#FF9900] border border-white rounded-lg ${selectedChainB.image ? 'left-40-box' : 'left-40-box'
+                          }`}
+                      >
+                        <img
+                          className='h-[55px] p-2' // Token image smaller
+                          src={selectedTokenB.image}
+                          alt={selectedTokenB.name}
+                        />
+                      </div>
+                    )}
+                  </div>
+                  {/* <svg
+                    className='pointer-events-none'
+                    width={11}
+                    height={7}
+                    viewBox='0 0 11 7'
+                    fill='none'
+                    xmlns='http://www.w3.org/2000/svg'
+                  >
+                    <path
+                      d='M1.5 1.56934L5.5 5.56934L9.5 1.56934'
+                      stroke='white'
+                      strokeWidth='1.5'
+                      strokeLinecap='round'
+                      strokeLinejoin='round'
+                    />
+                  </svg> */}
+                </div>
+
+                  <div className='w-1/2'>
+                                    <input
+                  type='text'
+                  placeholder='0'
+                  value={
+                    amountOut === '0' || !amountOut
+                      ? ''
+                      : parseFloat(amountOut).toFixed(6)
+                  } // Ensure 0 or empty will display a blank field
+                  className='text-white text-4xl font-bold font-orbitron text-end w-full leading-7 outline-none border-none bg-transparent ps-0 py-2 input-bridge'
+                />
+                  </div>
+              </div>
+              <div className='absolute -top-4 right-0 gap-3 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0]'>
+                <div className='text-center'>
+                  <span className='font-bold font-orbitron leading-normal'>
+                    Balance
+                  </span>
+                  <span className='font-bold font-orbitron leading-normal'>
+                    {' '}
+                    :{' '}
+                  </span>
+                  <span className='font-bold font-orbitron leading-normal'>
+                    {isLoading
+                      ? 'Loading..'
+                      : selectedTokenA.address === EMPTY_ADDRESS
+                        ? `${formatNumber(formattedChainBalanceTokenB)}`
+                        : `${tokenBBalance
+                          ? formatNumber(
+                            parseFloat(tokenBBalance.formatted).toFixed(2)
+                          )
+                          : '0.00'
+                        }`}
+                  </span>
+                </div>
               </div>
             </div>
-            <div className='grid grid-cols-[65%_30%] justify-between w-full my-6'>
-              <div className=' border border-[#3b3c4e] p-3 rounded-2xl  '>
+            <div className='grid grid-cols-[65%_30%] justify-between w-full my-9 pt-10 wallet-bg-bridge'>
+              <div className=' border border-white p-3 rounded-2xl  '>
                 <input
                   type='text'
                   placeholder='To Address'
@@ -1007,14 +1015,29 @@ const Emp = ({
               </div>
               <button
                 className={` flex justify-center items-center rounded-xl px-2 
-                   bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent
+                   bg-[#FF9900] hover:text-black hover:bg-[#FF9900]
                  roboto text-black text-base font-bold border border-[#FF9900]`}
                 onClick={handleSelfButtonClick}
               >
                 Self
               </button>
             </div>
-            <button
+           <div className='wallet-bg-brige button'>
+                    {/* <div className="relative flex  justify-center flex-row mt-28">
+
+          <button
+            onClick={() => setAmountVisible(true)}
+            disabled={isInsufficientBalance()}
+            className={`w-full button-trans mt-12 h- flex justify-center items-center rounded-xl ${isInsufficientBalance()
+              ? "opacity-50 cursor-not-allowed"
+              : " hover:text-black hover:bg-transparent"
+              } font-orbitron text-black text-3xl font-bold`}
+          >
+            <img className="absolute swap-button" src="src/assets/images/swap-button.svg" />
+            <span className="ps-7">{getButtonText()}</span>
+          </button>
+        </div> */}
+                        <button
               onClick={() =>
                 quoteAll(
                   selectedTokenA,
@@ -1027,25 +1050,27 @@ const Emp = ({
               disabled={
                 loading || amountIn === '0' || !amountIn || !selfAddress
               }
-              className={`w-full h-14 flex justify-center items-center rounded-xl  ${
-                loading || amountIn === '0' || !amountIn || !selfAddress
-                  ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent'
-              } roboto text-black text-base font-bold border border-[#FF9900]`}
+              className={`w-full button-trans mt-12 h- flex justify-center items-center rounded-xl  ${loading || amountIn === '0' || !amountIn || !selfAddress
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:text-black hover:bg-transparent'
+                } font-orbitron text-black text-3xl font-bold`}
             >
+              <img className="absolute swap-button" src="src/assets/images/swap-button.svg" />
               {loading ? 'Processing...' : 'Estimate Trade'}
             </button>
             <button
               onClick={() => setAmountVisible(true)}
               disabled={isInsufficientBalance()}
-              className={`w-full h-14 flex justify-center items-center rounded-xl mt-4 ${
-                isInsufficientBalance() || !amountOut || amountOut === '0'
-                  ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-[#FF9900] hover:text-[#FF9900] hover:bg-transparent'
-              } roboto text-black text-base font-bold border border-[#FF9900]`}
+              className={`w-full button-trans mt-24 mb-10 h- flex justify-center items-center rounded-xl ${isInsufficientBalance() || !amountOut || amountOut === '0'
+                ? 'opacity-50 cursor-not-allowed'
+                : 'hover:text-black hover:bg-transparent'
+                } font-orbitron text-black text-3xl font-bold`}
             >
-              {getButtonText()}
+              <img className="absolute swap-button" src="src/assets/images/swap-button.svg" />
+              <span className='ps-7'>{getButtonText()}</span>
             </button>
+           {/* <img className='bg-border-img' src='src/assets/images/border-bg.svg'/> */}
+           </div>
           </div>
         )}
       </div>
@@ -1073,12 +1098,34 @@ const Emp = ({
           />
         )}
       </div>
+      <TradeDataCard
+       amountIn={amountIn}
+            tokenA={selectedTokenA}
+            tokenB={selectedTokenB}
+            fromAddress={address}
+            selectedRoute={selectedRoute}
+            quoteData={quoteData}
+            toAddress={selfAddress}
+      />
+
       {/* <div aria-label='Modal1'>
         {isTokenVisible && (
           <Token
            
           />
         )}
+      </div> */}
+                  {/* <div className='absolute bg-white left-0 bottom-20 border-4 border-l-2 border-[#FF9900] p-10 rounded-lg'>
+        <h6 className='font-orbitron text-sm'>
+          <span><span className='font-semibold'>Min Received</span> : <span className='font-bold'>{formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
+</span>{selectedTokenB.ticker}</span>
+        </h6>
+                <h6 className='font-orbitron text-sm py-1'>
+          <span><span className='font-semibold'>Rate :</span> <span className='font-bold'>1</span> {isRateReversed ? selectedTokenB.ticker : selectedTokenA.ticker} = <span className='font-bold'>{getRateDisplay()}</span>             {isRateReversed ? selectedTokenA.ticker : selectedTokenB.ticker}</span>
+        </h6>
+                <h6 className='font-orbitron text-sm'>
+          <span><span className='font-semibold'>Price Impact :</span> <span className='font-bold'>1%</span></span>
+        </h6>
       </div> */}
     </>
   );
