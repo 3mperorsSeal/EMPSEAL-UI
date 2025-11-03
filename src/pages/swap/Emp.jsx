@@ -50,6 +50,7 @@ const Emp = ({ setPadding }) => {
   const [activeTokenAddress, setActiveTokenAddress] = useState(null);
   const [usdValue, setUsdValue] = useState("0.00");
   const [usdValueTokenB, setUsdValueTokenB] = useState("0.00");
+  const [usdValueTokenA, setUsdValueTokenA] = useState("0.00");
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
   const {
@@ -728,6 +729,16 @@ const Emp = ({ setPadding }) => {
   const handleOutputChange = () => {
     // This input is read-only, so we don't need an onChange handler
   };
+  // For Price Impact
+   const priceImpact =
+    usdValueTokenA > 0
+      ? (
+          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
+            parseFloat(usdValueTokenA)) *
+          100
+        ).toFixed(2)
+      : 0;
+  // 
   return (
     <>
       {/* <div
@@ -1340,10 +1351,11 @@ const Emp = ({ setPadding }) => {
         </h6>
         <h6 className="font-orbitron text-sm">
           <span>
-            <span className="font-semibold">Price Impact :</span>{" "}
+            <span className="font-semibold">Price Impact:</span>{" "}
             <span className="font-bold truncate">
               {" "}
-              {((amountOut / 1000) * 0.01).toFixed(3)} %
+              {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
+               {priceImpact} %
             </span>
           </span>
         </h6>
