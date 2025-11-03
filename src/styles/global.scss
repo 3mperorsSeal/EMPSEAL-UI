@@ -421,6 +421,23 @@ body.bg-pattern {
   letter-spacing: 0.5px;
   transition: background 0.25s ease;
 }
+.s_chain {
+  background: linear-gradient(
+    180deg,
+    rgba(0, 0, 0, 0.6) 0%,
+    rgba(56, 43, 25, 0.6) 100%
+  );
+  // overflow: hidden;
+  backdrop-filter: blur(25px);
+}
+.sc1 {
+  background: #060606;
+  // overflow: hidden;
+  border-radius: 10px;
+  // outline: 1px #ff9900 solid;
+  // outline-offset: -1px;
+  border: 1px solid #ff9900;
+}
 
 @media (max-width: 1024px) and (min-width: 768px) {
   .h_grid {
