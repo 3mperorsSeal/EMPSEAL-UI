@@ -795,8 +795,8 @@ const Emp = ({
                     }`}
                   >
                     {selectedChainA.image && (
-                      <div className="absolute px-3 left-0 flex items-center gap-3 z-10">
-                        <img
+                      <div className="absolute px-3 left-0 right-0 mx-auto flex items-center gap-3 z-10 justify-center text-center">
+                        {/* <img
                           className={`${
                             selectedChainA?.name?.length > 10
                               ? "w-3 md:w-6"
@@ -806,11 +806,11 @@ const Emp = ({
                           }`}
                           src={selectedChainA?.image}
                           alt={selectedChainA?.name}
-                        />
+                        /> */}
                         <h3
-                          className={`font-bold font-orbitron ${
+                          className={`font-bold font-orbitron text-center ${
                             selectedChainA?.name?.length > 10
-                              ? "text-[8px] lg:text-[10px]"
+                              ? "text-[8px] lg:text-[12px]"
                               : selectedChainA?.name?.length > 6
                               ? "text-[10px] lg:text-sm"
                               : "text-xs lg:text-base"
@@ -966,7 +966,6 @@ const Emp = ({
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex w-full justify-between rounded-2xl mt-4 lg:px-8 px-4 py-4">
-                    {/* md:w-[220px] w-[160px] */}
                     <div
                       onClick={() => {
                         setIsSelectingTokenA(false);
@@ -981,8 +980,8 @@ const Emp = ({
                       >
                         {/* Chain Image */}
                         {selectedChainB.image && (
-                          <div className="absolute px-3 left-0 flex items-center gap-3 z-10">
-                            <img
+                          <div className="absolute px-3 left-0 right-0 mx-auto flex items-center justify-center gap-3 z-10">
+                            {/* <img
                               className={`${
                                 selectedChainB?.name?.length > 10
                                   ? "w-3 md:w-6"
@@ -992,11 +991,11 @@ const Emp = ({
                               }`}
                               src={selectedChainB?.image}
                               alt={selectedChainB?.name}
-                            />
+                            /> */}
                             <h3
-                              className={`font-bold font-orbitron ${
+                              className={`font-bold font-orbitron text-center ${
                                 selectedChainB?.name?.length > 10
-                                  ? "text-[8px] lg:text-[10px]"
+                                  ? "text-[8px] lg:text-[12px]"
                                   : selectedChainB?.name?.length > 6
                                   ? "text-[10px] lg:text-sm"
                                   : "text-xs lg:text-base"
@@ -1046,9 +1045,8 @@ const Emp = ({
                   </div>
                 </div>
               </div>
-              <div className="md:max-w-1/2 w-full me-3">
-                {/*  */}
-                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-10px] mb-2 md:ml-0 ml-[-40px] justify-end">
+              <div className="md:max-w-1/2 w-full me-3 flex items-center">
+                {/* <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-10px] mb-2 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
                     <button
@@ -1066,8 +1064,7 @@ const Emp = ({
                       {value}%
                     </button>
                   ))}
-                </div>
-                {/*  */}
+                </div> */}
                 <input
                   type="text"
                   placeholder="0"
@@ -1097,6 +1094,26 @@ const Emp = ({
                 : "Fetching Rate..."}
             </div> */}
           </div>
+            <div className="grid grid-cols-[65%_30%] justify-between w-full my-9 pt-10 wallet-bg-bridge">
+              <div className=" border border-white p-3 rounded-2xl  ">
+                <input
+                  type="text"
+                  placeholder="To Address"
+                  value={selfAddress}
+                  // value={address} // Bind the input field to the state
+                  onChange={(e) => setSelfAddress(e.target.value)}
+                  className="text-white text-sm font-bold roboto text-start w-full leading-7 outline-none border-none bg-transparent ps-3"
+                />
+              </div>
+              <button
+                className={` flex justify-center items-center rounded-xl px-2 
+                   bg-[#FF9900] hover:text-black hover:bg-[#FF9900]
+                 roboto text-black text-base font-bold border border-[#FF9900]`}
+                onClick={handleSelfButtonClick}
+              >
+                Self
+              </button>
+            </div>
           <div
             className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${
               order
@@ -1164,6 +1181,7 @@ const Emp = ({
           </div>
         </div>
       </div>
+      
       {isTokenVisible && (
         <TokensChains
           onClose={() => setTokenVisible(false)}

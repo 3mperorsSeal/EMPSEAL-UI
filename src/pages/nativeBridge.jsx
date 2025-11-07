@@ -72,9 +72,9 @@ const NativeBridge = () => {
           width: "100%",
           height: "100vh",
           border: "none",
-          display: loading ? "none" : "block", // Hide iframe while loading
+          display: loading ? "none" : "block",
         }}
-        onLoad={() => setLoading(false)} // Hide loader when iframe loads
+        onLoad={() => setLoading(false)}
       ></iframe>
     </div>
   );

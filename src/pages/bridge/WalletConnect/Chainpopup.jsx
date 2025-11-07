@@ -14,7 +14,7 @@ const ChainPopup = ({
   );
 
   return (
-    <div className="fixed inset-0 s_chain flex items-center justify-center z-50 px-4 overflow-y-auto md:pt-10 md:pb-10 pt-[30rem] pb-20">
+    <div className="fixed inset-0 s_chain flex items-center justify-center z-50 px-4 overflow-y-auto md:pt-10 md:pb-10 pt-[10rem] pb-20">
       <div className="relative text-white md:p-10 p-6 rounded-2xl flex flex-col items-center gap-6 md:max-w-[810px] w-full">
         <svg
           onClick={() => setShowChainPopup(false)}
@@ -49,7 +49,7 @@ const ChainPopup = ({
         />
 
         {/* Chain cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full overflow-y-auto h-[48vh] chain_scroll">
           {filteredChains.map((c) => {
             const isActive = chain?.id === c.id;
             return (

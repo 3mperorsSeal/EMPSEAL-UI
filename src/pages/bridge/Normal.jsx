@@ -197,9 +197,9 @@ const Normal = () => {
         </div>
         <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2  justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2">
           <div className=" w-full">
-            <div className="md:hidden block">
+            {/* <div className="md:hidden block">
               {activeTab === "cross" ? <Wallet /> : <div></div>}
-            </div>
+            </div> */}
             {activeTab === "cross" ? (
               <Emp
                 setPadding={setPadding}
@@ -214,7 +214,7 @@ const Normal = () => {
             )}
           </div>
         </div>
-        <div className="md:block hidden">
+        <div className="md:block block">
           {activeTab === "cross" ? <Wallet /> : <div></div>}
         </div>
       </div>

@@ -55,7 +55,7 @@ const Wallet = () => {
 
   return (
     <div>
-      <div className="flex justify-center gap-4 flex-col wallet_bg z-10 md:mt-0 mt-3 absolute wallet-bg-bridge wallet-bg-bridge01 lefts1">
+      <div className="flex justify-center gap-4 flex-col wallet_bg z-50 md:mt-0 mt-3 absolute wallet-bg-bridge wallet-bg-bridge01 lefts1">
         <WalletConnect
           icon={<img src={WalletImg} alt="Wallet Icon" />}
           onChainChange={handleChainChange}
