@@ -744,7 +744,7 @@ const Emp = ({ setPadding }) => {
     const value = parseFloat(impact);
 
     if (value < 2) return "text-black";
-    if (value >= 2 && value <= 5) return "text-yellow-500"; 
+    if (value >= 2 && value <= 5) return "text-yellow-500";
     return "text-red-500";
   };
   //
@@ -779,12 +779,12 @@ const Emp = ({ setPadding }) => {
                 Native Bridge
               </div>
             </Link> */}
-            <h1 className="md:text-5xl text-3xl text-center  text-[#FF9900] font-orbitron font-bold mb-2">
+            <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
               Seamless
             </h1>
-            <h1 className="md:text-5xl text-3xl text-center  text-white font-orbitron font-bold">
+            <h2 className="md:text-5xl text-3xl text-center text-white font-orbitron font-bold">
               Cross Chain Swaps
-            </h1>
+            </h2>
           </div>
           <div className="flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex-wrap my-6 lg:px-1 px-0">
             <div
@@ -1361,7 +1361,11 @@ const Emp = ({ setPadding }) => {
         <h6 className="font-orbitron text-sm">
           <span>
             <span className="font-semibold">Price Impact:</span>{" "}
-            <span className={`font-bold truncate ${getPriceImpactColor(priceImpact)}`}>
+            <span
+              className={`font-bold truncate ${getPriceImpactColor(
+                priceImpact
+              )}`}
+            >
               {" "}
               {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
               {priceImpact} %

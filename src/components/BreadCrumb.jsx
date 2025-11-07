@@ -14,7 +14,7 @@ const BreadCrumb = () => {
 
   return (
     <nav aria-label="breadcrumb ">
-      <ol className="breadcrumb flex container mx-auto lg:px-24 pt-4 md:justify-start justify-center">
+      <ol className="breadcrumb flex container mx-auto lg:px-24 pt-4 lg:justify-start justify-center">
         {/* Home link always appears */}
         {/* <li className="breadcrumb-item text-[#FF9900] roboto">
           <Link className="me-2" to="/">
