@@ -49,7 +49,7 @@ const ChainPopup = ({
         />
 
         {/* Chain cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full overflow-y-auto h-[48vh] chain_scroll">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4 w-full overflow-y-auto h-[48vh] chain_scroll md:px-0 px-2">
           {filteredChains.map((c) => {
             const isActive = chain?.id === c.id;
             return (
