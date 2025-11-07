@@ -10,6 +10,8 @@ import Ar from "../../assets/images/reverse.svg";
 import Sellbox from "../../assets/images/sell-box.png";
 import Buybox from "../../assets/images/buy-bg.png";
 import Swapbutton from "../../assets/images/swap-button.svg";
+import CPatch from "../../assets/images/rec-token.svg";
+import Arrow2 from "../../assets/images/arrow-2.svg";
 import Amount from "./Amount";
 import TokensChains from "./TokensChains";
 import { formatEther } from "viem";
@@ -819,7 +821,7 @@ const Emp = ({
                       </div>
                     )}
                     <img
-                      src="src/assets/images/rec-token.svg"
+                      src={CPatch}
                       className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                     />
                     {selectedTokenA.image && (
@@ -1005,7 +1007,7 @@ const Emp = ({
                           </div>
                         )}
                         <img
-                          src="src/assets/images/rec-token.svg"
+                          src={CPatch}
                           className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                         />
                         {selectedTokenB.image && (
@@ -1113,7 +1115,7 @@ const Emp = ({
               : " hover:text-black hover:bg-transparent"
               } font-orbitron text-black text-3xl font-bold`}
           >
-            <img className="absolute swap-button" src="src/assets/images/swap-button.svg" />
+            <img className="absolute swap-button" src={Swapbutton} />
             <span className="ps-7">{getButtonText()}</span>
           </button>
         </div> */}
@@ -1138,7 +1140,7 @@ const Emp = ({
               >
                 <img
                   className="absolute swap-button"
-                  src="src/assets/images/swap-button.svg"
+                  src={Swapbutton}
                 />
                 {loading ? "Processing..." : "Estimate Trade"}
               </button>
@@ -1153,7 +1155,7 @@ const Emp = ({
               >
                 <img
                   className="absolute swap-button"
-                  src="src/assets/images/swap-button.svg"
+                  src={Swapbutton}
                 />
                 <span className="ps-7">{getButtonText()}</span>
               </button>
@@ -1205,7 +1207,7 @@ const Emp = ({
                 <div className="flex flex-col gap-1">
                   <img
                     className="w-4 h-4 flex flex-shrink-0 object-contain"
-                    src="/src/assets/images/arrow-2.svg"
+                    src={Arrow2}
                     alt="Arrow"
                   />
                 </div>
