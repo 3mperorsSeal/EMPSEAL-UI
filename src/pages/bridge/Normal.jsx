@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Emp from "./Emp";
 import Wallet from "./Wallet";
 import ProvidersList from "./ProvidersList";
+import ProvidersListNew from "./ProvidersList-new";
 import { Link } from "react-router-dom";
 import chainsData from "../chainsList.json";
 import Routing from "../swap/Routing";
@@ -221,10 +222,26 @@ const Normal = () => {
       <div className="mt-3 absolute ">
         <Routing />
       </div>
-      <div className="w-full md:pb-20 pb-10">
+      <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto">
         <div className="mt-3">
           {activeTab === "cross" ? (
             <ProvidersList
+              padding={padding}
+              quoteData={quoteData}
+              loading={loading}
+              setSelectedRoute={setSelectedRoute}
+              selectedRoute={selectedRoute}
+            />
+          ) : (
+            <div></div>
+          )}
+        </div>
+      </div>
+      {/* For Limit Order */}
+      <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto">
+        <div className="mt-3">
+          {activeTab === "cross" ? (
+            <ProvidersListNew
               padding={padding}
               quoteData={quoteData}
               loading={loading}

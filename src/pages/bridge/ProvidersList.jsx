@@ -1,142 +1,257 @@
-import { useState, useEffect, useRef } from "react";
-import { Copy, Check, Bitcoin } from "lucide-react";
-
-const tabs = ["Ongoing", "Past", "Market"];
-
-const data = Array(6).fill({
-  name: "WBTC",
-  address: "0x05...2b9cui",
-  price: "$112,397.43",
-  change: "-0.65%",
-  logo: <Bitcoin className="text-[#FF9900]" size={24} />,
-});
-
-export default function App() {
-  const [activeTab, setActiveTab] = useState("Ongoing");
-  const [copiedIndex, setCopiedIndex] = useState(null);
-  const [animateLine, setAnimateLine] = useState(false);
-
-  const sectionRef = useRef(null);
+import { useEffect, useState } from "react";
+import { useStore } from "../../redux/store/routeStore";
+import ProvidersListCard from "../../components/ProviderList/ProviderListCard";
+import LoadingSpinner from "../../components/LoadingSpinner";
+import SpinnerImage from "../../assets/images/spinner_middle.svg";
+const ProvidersList = ({
+  padding,
+  quoteData,
+  loading,
+  setSelectedRoute,
+  selectedRoute,
+}) => {
+  const path = useStore((state) => state.path);
+  const [rubicRoutes, setRubicRoutes] = useState([]);
+  const [rangoRoutes, setRangoRoutes] = useState([]);
+  // const [symbiosisRoutes, setSymbiosisRoutes] = useState(null);
+  const [selectedProvider, setSelectedProvider] = useState("rubic");
 
   useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry.isIntersecting) {
-          setAnimateLine(true);
-        } else {
-          setAnimateLine(false);
-        }
-      },
-      { threshold: 0.3 }
-    );
+    if (quoteData) {
+      setRubicRoutes(quoteData.rubic?.routes || []);
+      setRangoRoutes(quoteData.rango?.results || []);
+      // setSymbiosisRoutes(quoteData.symbiosis || null);
 
-    if (sectionRef.current) observer.observe(sectionRef.current);
-    return () => observer.disconnect();
-  }, []);
-  const handleCopy = (text, idx) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(idx);
-    setTimeout(() => setCopiedIndex(null), 1500);
+      // console.log("rubicQuoteData", quoteData.rubic?.routes || 'No Rubic routes available');
+      // console.log("rangoRoutesData:", quoteData.rango?.results || 'No Rango routes available');
+      // console.log("rangoRoutesData:", quoteData.rango || 'No Rango data available');
+      // console.log("symbiosisRoutesData:", quoteData.symbiosis || 'No Symbiosis data available');
+      // console.log("symbiosisRoutesData:", quoteData.symbiosis?.estimatedTime || 'No Symbiosis time estimate available');
+    } else {
+      setRubicRoutes([]);
+      setRangoRoutes([]);
+      // setSymbiosisRoutes(null);
+    }
+  }, [quoteData]);
+
+  const formatTokenAmount = (amount, decimals) => {
+    if (!amount || !decimals) return "0";
+    try {
+      return (parseFloat(amount) / 10 ** decimals).toFixed(6);
+    } catch (error) {
+      console.warn("Error formatting token amount:", error);
+      return "0";
+    }
+  };
+
+  const getProviderAvailability = () => {
+    const available = {
+      rubic: rubicRoutes?.length > 0,
+      rango: rangoRoutes?.length > 0,
+      // symbiosis: !!symbiosisRoutes
+    };
+
+    if (!available.rubic && !available.rango && !available.symbiosis) {
+      return {
+        rubic: false,
+        rango: false,
+        // symbiosis: false,
+        allUnavailable: true,
+      };
+    }
+
+    return { ...available, allUnavailable: false };
   };
 
   return (
-    <div
-      ref={sectionRef}
-      className="text-white flex justify-center items-center md:max-w-[1140px] w-full mx-auto sctable"
-    >
-      <div className="lg:px-20 md:px-10 px-4 w-full">
-        {/* Tabs */}
-        <div className="flex">
-          {tabs.map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`px-6 py-2 md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200 ${
-                activeTab === tab
-                  ? "bg-[#FF9900] text-black md:w-[220px] h-[70px]"
-                  : "text-orange-400 hover:bg-[#FF9900]/20 md:w-[160px] h-[70px]"
-              }`}
-            >
-              {tab}
-            </button>
-          ))}
+    <div className="relative sctable">
+      {/* Toggle Buttons */}
+      <div className="flex justify-center absolute top-[-71px] z-20">
+        <button
+          className={`px-6 py-2 md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200
+            ${
+              selectedProvider === "rubic"
+                ? "bg-[#FF9900] text-black md:w-[220px] h-[70px]"
+                : "text-orange-400 md:w-[160px] h-[70px]  "
+            }
+            ${
+              !getProviderAvailability().rubic
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:border-[#FF9900]"
+            }`}
+          onClick={() =>
+            getProviderAvailability().rubic && setSelectedProvider("rubic")
+          }
+          disabled={!getProviderAvailability().rubic}
+        >
+          Rubic
+        </button>
+        <button
+          className={`px-6 py-2 md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200
+            ${
+              selectedProvider === "rango"
+                ? "bg-[#FF9900] text-black md:w-[220px] h-[70px]"
+                : "text-orange-400 md:w-[160px] h-[70px]  "
+            }
+            ${
+              !getProviderAvailability().rango
+                ? "opacity-50 cursor-not-allowed"
+                : "hover:border-[#FF9900]"
+            }`}
+          onClick={() =>
+            getProviderAvailability().rango && setSelectedProvider("rango")
+          }
+          disabled={!getProviderAvailability().rango}
+        >
+          Rango
+        </button>
+        {/*  <button
+          className={`w-[100px] h-[35px] flex justify-center items-center rounded-md bg-black roboto text-[12px] font-bold border
+            ${selectedProvider === "symbiosis" ? "border-[#FF9900] text-[#FF9900]" : "border-[#3b3c4e] text-white"}
+            ${!getProviderAvailability().symbiosis ? "opacity-50 cursor-not-allowed" : "hover:border-[#FF9900] hover:text-[#FF9900]"}`}
+          onClick={() => getProviderAvailability().symbiosis && setSelectedProvider("symbiosis")}
+          disabled={!getProviderAvailability().symbiosis}
+        >
+          Symbiosis
+        </button> */}
+      </div>
+      <div
+        className={`clip-bg1 border-[2px] border-[#FF9900] rounded-b-xl rounded-tr-xl bg-black ${padding}`}
+      >
+        <div className="w-full flex justify-center p-5">
+          <p className="w-[100px] h-[35px] flex justify-center items-center rounded-md bg-black roboto text-[#FF9900] text-[12px] font-bold border border-[#FF9900]">
+            Providers
+          </p>
         </div>
 
-        <div className="clip-bg1 w-full rounded-tr-2xl rounded-b-2xl lg:py-16 lg:px-20 md:px-10 px-4 md:py-12 py-10">
-          <div className="space-y-3">
-            {data.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex md:justify-between justify-center items-center md:flex-nowrap md:gap-2 gap-4 flex-wrap bg-black border border-[#FF9900] rounded-[10px] lg:px-10 lg:py-6 md:px-6 py-4 px-3 hover:bg-[#FF9900]/10 transition"
-              >
-                <div className="flex items-center space-x-4">
-                  <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center">
-                    {item.logo}
-                  </div>
-                  <div className="flex gap-3 items-center">
-                    <div className="font-semibold">{item.name}</div>
-                    <div className="flex items-center space-x-1 py-1 text-[#D9D9D9] text-sm bg-[#1b1a17] px-3 md:max-w-[200px] w-full gap-2 justify-between rounded-full">
-                      <span>{item.address}</span>
-                      {copiedIndex === idx ? (
-                        <Check className="w-4 h-4 text-green-400" />
-                      ) : (
-                        <Copy
-                          className="w-4 h-4 cursor-pointer hover:text-orange-400"
-                          onClick={() => handleCopy(item.address, idx)}
-                        />
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-2">
-                    <div className="font-semibold text-[#D9D9D9] text-sm">
-                      {item.price}
-                    </div>
-                    <div className="text-[#FF4D4F] text-sm p-[2px] bg-[#FF7875]/15 rounded-full">
-                      {item.change}
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 mt-2 justify-center">
-                    <svg
-                      width={135}
-                      height={12}
-                      viewBox="0 0 135 12"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M0.0488281 3.93336C1.91507 4.05432 3.78227 4.17528 5.64851 4.54584C7.5157 4.9164 9.38194 6.04536 11.2491 6.15576C13.1154 6.26616 14.9826 6.21144 16.8488 6.32184C18.7151 6.4332 20.5823 6.60792 22.4485 6.87576C24.3157 7.14264 26.1819 7.926 28.0491 7.926C29.9154 7.926 31.7826 6.98616 33.6488 6.76536C35.515 6.5436 37.3822 6.4332 39.2485 6.4332C41.1157 6.4332 42.9819 6.4332 44.8491 6.4332C46.7154 6.4332 48.5826 6.51576 50.4488 6.5436C52.315 6.57144 54.1822 6.56184 56.0485 6.59928C57.9157 6.63576 59.7819 9.96503 61.6491 9.96503C63.5154 9.96503 65.3826 9.06552 67.2488 8.8092C69.115 8.55192 70.9822 8.42328 72.8485 8.42328C74.7157 8.42328 76.5819 8.42328 78.4491 8.42328C80.3153 8.42328 82.1825 2.5404 84.0488 2.42808C85.915 2.31672 87.7822 2.29752 89.6485 2.26104C91.5157 2.2236 93.3819 2.24184 95.2491 2.2044C97.1153 2.16792 98.9825 1.31064 100.849 1.086C102.715 0.86232 104.582 0.75 106.448 0.75C108.316 0.75 110.182 0.76824 112.049 0.80568C113.915 0.84312 115.783 2.15832 117.649 2.59608C119.515 3.03384 121.382 2.87448 123.248 3.43224C125.116 3.99 126.982 8.69976 128.849 9.36023C130.715 10.0198 132.583 10.1849 134.449 10.35"
-                        stroke="url(#paint0_linear_1853_247)"
-                        strokeWidth="1.5"
-                        strokeDasharray="150"
-                        style={{
-                          strokeDashoffset: animateLine ? 0 : 150,
-                          transition: "stroke-dashoffset 1.8s ease-out",
-                        }}
-                      />
-                      <defs>
-                        <linearGradient
-                          id="paint0_linear_1853_247"
-                          x1="69.1688"
-                          y1="-3.07149"
-                          x2="69.1711"
-                          y2="4.59005"
-                          gradientUnits="userSpaceOnUse"
-                        >
-                          <stop stopColor="#FF4B00" />
-                          <stop offset={1} stopColor="#FF9F2E" />
-                        </linearGradient>
-                      </defs>
-                    </svg>
-                  </div>
-                </div>
+        <div className="p-4">
+          {loading ? (
+            <LoadingSpinner SpinnerImage={SpinnerImage} />
+          ) : getProviderAvailability().allUnavailable ? (
+            <div className="text-center">
+              <p className="text-gray-400 mb-2">
+                No providers are currently available.
+              </p>
+              <p className="text-gray-500 text-sm">
+                Please try again later or adjust your swap parameters.
+              </p>
+            </div>
+          ) : selectedProvider === "rubic" ? (
+            rubicRoutes?.length > 0 ? (
+              <div className="max-h-[535px] overflow-y-auto flex flex-col gap-4">
+                {rubicRoutes.map((route, index) => (
+                  <ProvidersListCard
+                    key={index}
+                    tokenAmount={parseFloat(
+                      route.estimate.destinationTokenAmount
+                    ).toFixed(6)}
+                    tokenSymbol={route.tokens.to.symbol}
+                    tokenRouter={route.providerType}
+                    tokenAmountUsd={parseFloat(
+                      route.estimate.destinationUsdAmount
+                    ).toFixed(2)}
+                    protocolFee={
+                      route.fees.gasTokenFees.protocol.fixedUsdAmount
+                    }
+                    providerFee={
+                      route.fees.gasTokenFees.provider?.fixedUsdAmount
+                    }
+                    percentFee={route.fees.percentFees.percent}
+                    fees={(
+                      parseFloat(
+                        route.fees.gasTokenFees.protocol.fixedUsdAmount
+                      ) +
+                      parseFloat(
+                        route.fees.gasTokenFees.provider?.fixedUsdAmount || 0
+                      )
+                    ).toFixed(2)}
+                    timeDuration={route.estimate.durationInMinutes}
+                    onSelect={() => setSelectedRoute(route)}
+                    isSelected={selectedRoute === route}
+                  />
+                ))}
               </div>
-            ))}
-          </div>
+            ) : (
+              <p className="text-gray-400 text-center">
+                No providers available.
+              </p>
+            )
+          ) : selectedProvider === "rango" ? (
+            rangoRoutes?.length > 0 ? (
+              <div className="max-h-[535px] overflow-y-auto flex flex-col gap-4">
+                {rangoRoutes.map((route, index) => {
+                  const lastSwap = route.swaps[route.swaps.length - 1];
+
+                  const totalTime = route.swaps.reduce(
+                    (total, swap) => total + (swap.estimatedTimeInSeconds || 0),
+                    0
+                  );
+
+                  const totalFees = route.swaps.reduce((total, swap) => {
+                    const swapFees =
+                      swap.fee?.reduce(
+                        (acc, fee) => acc + (parseFloat(fee.amount) || 0),
+                        0
+                      ) || 0;
+                    return total + swapFees;
+                  }, 0);
+
+                  return (
+                    <ProvidersListCard
+                      key={index}
+                      tokenAmount={parseFloat(route.outputAmount).toFixed(6)}
+                      tokenSymbol={lastSwap.to.symbol}
+                      tokenRouter={route.swaps[0]?.swapperId || "Unknown"}
+                      tokenAmountUsd={(
+                        parseFloat(route.outputAmount) *
+                        parseFloat(lastSwap.to.usdPrice || 0)
+                      ).toFixed(2)}
+                      protocolFee={totalFees.toFixed(5)}
+                      providerFee="0"
+                      percentFee={"0"}
+                      fees={totalFees.toFixed(2)}
+                      timeDuration={Math.ceil(totalTime / 60)}
+                      onSelect={() => setSelectedRoute(route)}
+                      isSelected={selectedRoute === route}
+                    />
+                  );
+                })}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-center">
+                No providers available.
+              </p>
+            )
+          ) : (
+            /* symbiosisRoutes ? (
+            <div className="max-h-[535px] overflow-y-auto flex flex-col gap-4">
+              <ProvidersListCard
+                key="symbiosis"
+                tokenAmount={formatTokenAmount(symbiosisRoutes?.tokenAmountOut?.amount, symbiosisRoutes?.tokenAmountOut?.decimals)}
+                tokenSymbol={symbiosisRoutes?.tokenAmountOut?.symbol || ""}
+                tokenRouter={"Symbiosis"}
+                tokenAmountUsd={(parseFloat(symbiosisRoutes?.amountInUsd?.amount || 0) / 10 ** symbiosisRoutes?.amountInUsd?.decimals).toFixed(2)}
+                protocolFee={formatTokenAmount(symbiosisRoutes?.fee?.amount, symbiosisRoutes?.fee?.decimals)}
+                providerFee={symbiosisRoutes?.fees?.[1] ? formatTokenAmount(symbiosisRoutes?.fees[1]?.amount, symbiosisRoutes?.fees[1]?.decimals) : "0"}
+                percentFee={"0"}
+                fees={(
+                  parseFloat(formatTokenAmount(symbiosisRoutes?.fees?.[0]?.amount || "0", symbiosisRoutes?.fees?.[0]?.decimals || 0)) +
+                  parseFloat(formatTokenAmount(symbiosisRoutes?.fees?.[1]?.amount || "0", symbiosisRoutes?.fees?.[1]?.decimals || 0))
+                ).toFixed(6)}
+                timeDuration={symbiosisRoutes?.estimatedTime || "Unknown"}
+                onSelect={() => setSelectedRoute(symbiosisRoutes)}
+                isSelected={selectedRoute === symbiosisRoutes}
+              />
+            </div>
+          ) : (
+            <p className="text-gray-400 text-center">No providers available.</p>
+          ) */
+            <p className="text-gray-400 text-center">No providers available.</p>
+          )}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default ProvidersList;

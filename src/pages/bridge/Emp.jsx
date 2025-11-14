@@ -1094,26 +1094,26 @@ const Emp = ({
                 : "Fetching Rate..."}
             </div> */}
           </div>
-            <div className="grid grid-cols-[65%_30%] justify-between w-full my-9 pt-10 wallet-bg-bridge">
-              <div className=" border border-white p-3 rounded-2xl  ">
-                <input
-                  type="text"
-                  placeholder="To Address"
-                  value={selfAddress}
-                  // value={address} // Bind the input field to the state
-                  onChange={(e) => setSelfAddress(e.target.value)}
-                  className="text-white text-sm font-bold roboto text-start w-full leading-7 outline-none border-none bg-transparent ps-3"
-                />
-              </div>
-              <button
-                className={` flex justify-center items-center rounded-xl px-2 
+          <div className="grid grid-cols-[65%_30%] justify-between w-full my-9 pt-10 wallet-bg-bridge">
+            <div className=" border border-white p-3 rounded-2xl  ">
+              <input
+                type="text"
+                placeholder="To Address"
+                value={selfAddress}
+                // value={address} // Bind the input field to the state
+                onChange={(e) => setSelfAddress(e.target.value)}
+                className="text-white text-sm font-bold roboto text-start w-full leading-7 outline-none border-none bg-transparent ps-3"
+              />
+            </div>
+            <button
+              className={` flex justify-center items-center rounded-xl px-2 
                    bg-[#FF9900] hover:text-black hover:bg-[#FF9900]
                  roboto text-black text-base font-bold border border-[#FF9900]`}
-                onClick={handleSelfButtonClick}
-              >
-                Self
-              </button>
-            </div>
+              onClick={handleSelfButtonClick}
+            >
+              Self
+            </button>
+          </div>
           <div
             className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${
               order
@@ -1153,12 +1153,9 @@ const Emp = ({
                   loading || amountIn === "0" || !amountIn || !selfAddress
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black text-3xl font-bold`}
+                } font-orbitron text-black lg:text-3xl text-lg font-bold`}
               >
-                <img
-                  className="absolute swap-button"
-                  src={Swapbutton}
-                />
+                <img className="absolute swap-button" src={Swapbutton} />
                 {loading ? "Processing..." : "Estimate Trade"}
               </button>
               <button
@@ -1168,12 +1165,9 @@ const Emp = ({
                   isInsufficientBalance() || !amountOut || amountOut === "0"
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black text-3xl font-bold`}
+                } font-orbitron text-black lg:text-3xl text-lg font-bold`}
               >
-                <img
-                  className="absolute swap-button"
-                  src={Swapbutton}
-                />
+                <img className="absolute swap-button" src={Swapbutton} />
                 <span className="ps-7">{getButtonText()}</span>
               </button>
               {/* <img className='bg-border-img' src='src/assets/images/border-bg.svg'/> */}
@@ -1181,7 +1175,7 @@ const Emp = ({
           </div>
         </div>
       </div>
-      
+
       {isTokenVisible && (
         <TokensChains
           onClose={() => setTokenVisible(false)}
