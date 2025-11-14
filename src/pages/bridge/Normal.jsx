@@ -237,22 +237,6 @@ const Normal = () => {
           )}
         </div>
       </div>
-      {/* For Limit Order */}
-      <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto">
-        <div className="mt-3">
-          {activeTab === "cross" ? (
-            <ProvidersListNew
-              padding={padding}
-              quoteData={quoteData}
-              loading={loading}
-              setSelectedRoute={setSelectedRoute}
-              selectedRoute={selectedRoute}
-            />
-          ) : (
-            <div></div>
-          )}
-        </div>
-      </div>
     </>
   );
 };
