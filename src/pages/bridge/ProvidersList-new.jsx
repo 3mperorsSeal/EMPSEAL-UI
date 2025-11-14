@@ -95,7 +95,7 @@ export default function App() {
   };
 
   return (
-    <div className="text-white max-w-[1140px] mx-auto p-4 sctable">
+    <div className="text-white w-full sctable">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <button className="font-orbitron px-6 py-2 bg-[#FF9900] text-black md:w-[220px] h-[70px] md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200">
           Your Orders
@@ -119,9 +119,9 @@ export default function App() {
         {filteredData.map((item, idx) => (
           <div
             key={idx}
-            className="border border-[#FF9900] rounded-lg md:px-8 md:py-6 px-4 py-4 hover:bg-[#FF9900]/10 transition"
+            className="border border-[#FF9900] rounded-lg md:px-6 md:py-6 px-4 py-4 hover:bg-[#FF9900]/10 transition"
           >
-            <div className="flex justify-between items-center flex-wrap md:gap-1 gap-4">
+            <div className="flex justify-between items-center md:flex-nowrap flex-wrap md:gap-1 gap-4">
               <div className="flex items-center gap-4 md:max-w-[350px] w-full">
                 <div className="w-8 h-8 flex items-center justify-center bg-white rounded-full flex-shrink-0">
                   <Bitcoin className="text-[#FF9900]" size={24} />
@@ -130,7 +130,7 @@ export default function App() {
                   <div className="font-medium whitespace-nowrap">
                     {item.name}
                   </div>
-                  <div className="flex items-center justify-between gap-2 text-sm mt-1 bg-[#1b1a17] md:w-[200px] w-full px-3 py-1 rounded-full">
+                  <div className="flex items-center justify-between gap-2 text-sm mt-1 bg-[#1b1a17] md:w-[180px] w-full px-3 py-1 rounded-full">
                     <span>{item.address}</span>
                     {copiedIndex === idx ? (
                       <Check className="w-4 h-4 text-green-400" />
