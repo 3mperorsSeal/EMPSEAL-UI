@@ -830,12 +830,12 @@ const Emp = ({
                           selectedChainA.image ? "left-40-box " : "left-40-box"
                         }`}
                       >
-                        {/* <img
+                        <img
                           className="md:h-10 h-8 md:p-2 p-1"
                           src={selectedTokenA.image}
                           alt={selectedTokenA.name}
-                        /> */}
-                        <img
+                        />
+                        {/* <img
                           className={`${
                             selectedChainA?.name?.length > 10
                               ? "md:h-10 h-8 md:p-2 p-1"
@@ -845,7 +845,7 @@ const Emp = ({
                           }`}
                           src={selectedChainA?.image}
                           alt={selectedChainA?.name}
-                        /> 
+                        />  */}
                       </div>
                     )}
                   </div>
@@ -1028,12 +1028,12 @@ const Emp = ({
                                 : "left-40-box"
                             }`}
                           >
-                            {/* <img
+                            <img
                               className="md:h-10 h-8 md:p-2 p-1"
                               src={selectedTokenB.image}
                               alt={selectedTokenB.name}
-                            /> */}
-                             <img
+                            />
+                             {/* <img
                               className={`${
                                 selectedChainB?.name?.length > 10
                                   ? "md:h-10 h-8 md:p-2 p-1"
@@ -1043,7 +1043,7 @@ const Emp = ({
                               }`}
                               src={selectedChainB?.image}
                               alt={selectedChainB?.name}
-                            />
+                            /> */}
                           </div>
                         )}
                       </div>
