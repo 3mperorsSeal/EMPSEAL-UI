@@ -7,7 +7,6 @@ import {
   type StatusMessage,
   OrderStrategy,
 } from "./schema";
-import { ERC20_ABI } from "../../utils/abis/limitOrderEscrowABI";
 import { EMPSEAL_ROUTER_ABI } from "../../utils/abis/dexRouterABI";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 import { TOKENS, getTokenInfo } from "./tokens";
@@ -42,14 +41,14 @@ import {
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { SlippageCalculator } from "./SlippageCalculator";
+import { useAccount, useBalance } from "wagmi";
 import {
-  useAccount,
-  useBalance,
-  useReadContract,
-  useWriteContract,
-  useWaitForTransactionReceipt,
-} from "wagmi";
-import { isAddress, parseUnits, formatUnits, zeroAddress } from "viem";
+  writeContract,
+  waitForTransactionReceipt,
+} from "@wagmi/core";
+import { config } from "../../Wagmi/config";
+import { isAddress, parseUnits, formatUnits, zeroAddress, decodeEventLog, erc20Abi } from "viem";
+import { formatErrorMessage } from "../../utils/utils";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
 const CONTRACT_ADDRESS = "0xCfA7562553e6BC466a60aA93079495A829221305";
@@ -68,12 +67,8 @@ export function CreateOrderForm({
   onOrderCreated,
 }: CreateOrderFormProps) {
   const { address: userAddress } = useAccount();
-  const {
-    data: writeContractHash,
-    writeContract,
-    isPending: isCreating,
-  } = useWriteContract();
-
+  const [isApproving, setIsApproving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [tokenInMode, setTokenInMode] = useState<"select" | "custom">("select");
   const [tokenOutMode, setTokenOutMode] = useState<"select" | "custom">(
     "select"
@@ -339,77 +334,129 @@ export function CreateOrderForm({
       return;
     }
 
-    const decimals = tokenInInfo?.decimals || 18;
-    const amount = parseUnits(amountIn, decimals);
+    setIsApproving(true);
+    onStatusMessage({ type: "info", message: "Requesting approval..." });
 
-    writeContract({
-      address: tokenIn as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: "approve",
-      args: [CONTRACT_ADDRESS, amount],
-    });
+    try {
+      const decimals = tokenInInfo?.decimals || 18;
+      const amount = parseUnits(amountIn, decimals);
+
+      const hash = await writeContract(config, {
+        address: tokenIn as `0x${string}`,
+        abi: erc20Abi,
+        functionName: "approve",
+        args: [CONTRACT_ADDRESS, amount],
+      });
+
+      onStatusMessage({
+        type: "info",
+        message: "Approval transaction sent, waiting for confirmation...",
+        txHash: hash,
+      });
+
+      await waitForTransactionReceipt(config, { hash });
+
+      onStatusMessage({
+        type: "success",
+        message: "Tokens approved successfully!",
+      });
+    } catch (error: any) {
+      console.error("Approval failed:", error);
+      onStatusMessage({
+        type: "error",
+        message: formatErrorMessage(error, "Failed to approve tokens"),
+      });
+    } finally {
+      setIsApproving(false);
+    }
   };
 
   const onSubmit = async (data: CreateOrderInput) => {
-    const amountIn = parseUnits(data.amountIn, tokenInInfo?.decimals || 18);
-    const minAmountOut = parseUnits(
-      data.minAmountOut,
-      tokenOutInfo?.decimals || 18
-    );
-    const limitPrice = parseUnits(data.limitPrice, 18);
-    const deadline = BigInt(
-      Math.floor(new Date(data.deadline).getTime() / 1000)
-    );
-    const mode = partialFillEnabled ? fillMode : 0;
-    const orderType = data.strategy === OrderStrategy.SELL ? 0 : 1; // 0 for SELL, 1 for BUY
+    setIsCreating(true);
+    onStatusMessage({ type: "info", message: "Creating order..." });
 
-    writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: LIMIT_ORDER_ABI,
-      functionName: "createOrder",
-      args: [
-        data.tokenIn as `0x${string}`,
-        data.tokenOut as `0x${string}`,
-        amountIn,
-        minAmountOut,
-        limitPrice,
-        deadline,
-        mode,
-        orderType,
-      ],
-    });
-  };
+    try {
+      const amountIn = parseUnits(data.amountIn, tokenInInfo?.decimals || 18);
+      const minAmountOut = parseUnits(
+        data.minAmountOut,
+        tokenOutInfo?.decimals || 18
+      );
+      const limitPrice = parseUnits(data.limitPrice, 18);
+      const deadline = BigInt(
+        Math.floor(new Date(data.deadline).getTime() / 1000)
+      );
+      const mode = partialFillEnabled ? fillMode : 0;
+      const orderType = data.strategy === OrderStrategy.SELL ? 0 : 1; // 0 for SELL, 1 for BUY
 
-  const { isLoading: isConfirming, isSuccess: isConfirmed } =
-    useWaitForTransactionReceipt({
-      hash: writeContractHash,
-    });
+      const hash = await writeContract(config, {
+        address: CONTRACT_ADDRESS,
+        abi: LIMIT_ORDER_ABI,
+        functionName: "createOrder",
+        args: [
+          data.tokenIn as `0x${string}`,
+          data.tokenOut as `0x${string}`,
+          amountIn,
+          minAmountOut,
+          limitPrice,
+          deadline,
+          mode,
+          orderType,
+        ],
+      });
 
-  useEffect(() => {
-    if (isConfirming) {
       onStatusMessage({
         type: "info",
-        message: "Transaction confirming...",
-        txHash: writeContractHash,
+        message: "Order creation transaction sent, waiting for confirmation...",
+        txHash: hash,
       });
-    }
-    if (isConfirmed) {
+
+      const receipt = await waitForTransactionReceipt(config, { hash });
+
+      let newOrderId = "new";
+      try {
+        const event = receipt.logs
+          .map((log) => {
+            try {
+              return decodeEventLog({
+                abi: LIMIT_ORDER_ABI,
+                ...log,
+              });
+            } catch {
+              return null;
+            }
+          })
+          .find((decoded) => decoded?.eventName === "OrderCreated");
+
+        if (event && event.args) {
+          newOrderId = (event.args as any).orderId.toString();
+        }
+      } catch (e) {
+        console.error("Error decoding event log", e);
+      }
+
       onStatusMessage({
         type: "success",
-        message: "Transaction successful!",
+        message: "Order created successfully!",
       });
+
       form.reset();
       setTokenInMode("select");
       setTokenOutMode("select");
-      // Note: Order ID extraction from logs would be needed here.
-      // This is a simplified version.
       onOrderCreated({
-        orderId: "new",
-        txHash: writeContractHash as string,
-        strategy: form.getValues("strategy"),
+        orderId: newOrderId,
+        txHash: hash,
+        strategy: data.strategy,
       });
+    } catch (error: any) {
+      console.error("Order creation failed:", error);
+      onStatusMessage({
+        type: "error",
+        message: formatErrorMessage(error, "Failed to create order"),
+      });
+    } finally {
+      setIsCreating(false);
     }
-  }, [isConfirming, isConfirmed]);
+  };
 
   const now = new Date();
   const threeMonthsFromNow = new Date(new Date().setMonth(now.getMonth() + 3));
@@ -860,11 +907,11 @@ export function CreateOrderForm({
               type="button"
               variant="secondary"
               onClick={handleApproveTokens}
-              disabled={isCreating || isConfirming || !!tradeError}
+              disabled={isApproving || isCreating || !!tradeError}
               className="h-12 flex-1"
               data-testid="button-approve-tokens"
             >
-              {isConfirming ? (
+              {isApproving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Approving...
@@ -876,7 +923,7 @@ export function CreateOrderForm({
             <Button
               type="submit"
               disabled={
-                isCreating || isConfirming || !!tradeError || !!limitPriceError
+                isApproving || isCreating || !!tradeError || !!limitPriceError
               }
               className="h-12 flex-1"
               data-testid="button-create-order"
