@@ -40,7 +40,6 @@ import {
   Settings,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
-import { SlippageCalculator } from "./SlippageCalculator";
 import { useAccount, useBalance } from "wagmi";
 import { writeContract, waitForTransactionReceipt } from "@wagmi/core";
 import { config } from "../../Wagmi/config";
@@ -64,11 +63,13 @@ interface CreateOrderFormProps {
     txHash: string;
     strategy: OrderStrategy;
   }) => void;
+  slippage: number;
 }
 
 export function CreateOrderForm({
   onStatusMessage,
   onOrderCreated,
+  slippage,
 }: CreateOrderFormProps) {
   const { address: userAddress } = useAccount();
   const [isApproving, setIsApproving] = useState(false);
@@ -85,7 +86,6 @@ export function CreateOrderForm({
   const [quoteReversed, setQuoteReversed] = useState(false);
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [limitPriceError, setLimitPriceError] = useState<string | null>(null);
-  const [slippage, setSlippage] = useState(0.5);
 
   const form = useForm<CreateOrderInput>({
     resolver: zodResolver(createOrderSchema) as any,
@@ -203,7 +203,9 @@ export function CreateOrderForm({
         const expectedAmountOut = amountInFloat * limitPriceFloat;
 
         // Apply slippage
-        const slippageAdjustedAmount = expectedAmountOut * (1 - slippage / 100);
+        const numericSlippage = typeof slippage === "number" ? slippage : 0.5;
+        const slippageAdjustedAmount =
+          expectedAmountOut * (1 - numericSlippage / 100);
 
         form.setValue("minAmountOut", slippageAdjustedAmount.toFixed(6));
       }
@@ -487,7 +489,6 @@ export function CreateOrderForm({
               </CardDescription>
             </div>
           </div> */}
-          <SlippageCalculator onSlippageChange={setSlippage} />
         </div>
       </CardHeader>
       <CardContent>

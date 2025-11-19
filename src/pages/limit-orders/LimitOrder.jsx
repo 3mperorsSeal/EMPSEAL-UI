@@ -15,7 +15,7 @@ const ToastContent = ({ message }) => (
   </div>
 );
 
-export default function LimitOrder() {
+export default function LimitOrder({ slippage }) {
   const { address, isConnected } = useAccount();
 
   const [newOrderCounter, setNewOrderCounter] = useState(0);
@@ -57,6 +57,7 @@ export default function LimitOrder() {
             <CreateOrderForm
               onStatusMessage={handleStatusMessage}
               onOrderCreated={handleOrderCreated}
+              slippage={slippage}
             />
             <OrderList
               userAddress={address}

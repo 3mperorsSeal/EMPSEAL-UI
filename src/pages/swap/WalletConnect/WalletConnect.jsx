@@ -24,7 +24,6 @@ export default function WalletConnect({ onChainChange }) {
   const [showPopup, setShowPopup] = useState(false);
   const [showChainPopup, setShowChainPopup] = useState(false);
   const [showConnectPopup, setShowConnectPopup] = useState(false);
-  const [activeChain, setActiveChain] = useState(null);
 
   useEffect(() => {
     if (address && !sessionStorage.getItem("walletReloaded")) {
@@ -32,20 +31,6 @@ export default function WalletConnect({ onChainChange }) {
       window.location.reload();
     }
   }, [address]);
-
-  // Notify parent on chain change
-  useEffect(() => {
-    if (onChainChange && activeChain) {
-      onChainChange(activeChain.iconUrl, activeChain.name);
-    }
-  }, [activeChain, onChainChange]);
-
-  // Auto-switch unsupported chain
-  useEffect(() => {
-    if (activeChain?.unsupported && chains?.length > 0) {
-      switchChain({ chainId: chains[0].id });
-    }
-  }, [activeChain, chains, switchChain]);
 
   return (
     <ConnectButton.Custom>
@@ -59,9 +44,19 @@ export default function WalletConnect({ onChainChange }) {
         const ready = mounted && authenticationStatus !== "loading";
         const connected = ready && account && chain;
 
+        // Effects moved inside render prop to correctly access `chain`
+        // and avoid infinite loops.
         useEffect(() => {
-          setActiveChain(chain);
-        }, [chain]);
+          if (onChainChange) {
+            onChainChange(chain?.iconUrl, chain?.name);
+          }
+        }, [chain, onChainChange]);
+
+        useEffect(() => {
+          if (chain?.unsupported && chains?.length > 0) {
+            switchChain({ chainId: chains[0].id });
+          }
+        }, [chain, chains, switchChain]);
 
         if (!ready) return null;
         if (!connected) {

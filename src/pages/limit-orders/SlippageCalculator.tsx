@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Settings } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import {
@@ -13,22 +13,33 @@ import { Input } from "../../components/ui/input";
 
 interface SlippageCalculatorProps {
   onSlippageChange: (slippage: number) => void;
+  isOpen: boolean;
+  onOpenChange: (isOpen: boolean) => void;
+  slippage: number;
 }
 
 export function SlippageCalculator({
   onSlippageChange,
+  isOpen,
+  onOpenChange,
+  slippage = 0.5,
 }: SlippageCalculatorProps) {
-  const [isOpen, setIsOpen] = useState(false);
-  const [currentSlippage, setCurrentSlippage] = useState(0.5);
-  const [customSlippage, setCustomSlippage] = useState("");
+  const [customSlippage, setCustomSlippage] = useState(
+    [0.5, 1.0, 2.0].includes(slippage) ? "" : String(slippage)
+  );
 
-  const presets = [0.5, 1.0, 2.0];
+  useEffect(() => {
+    const isPreset = [0.5, 1.0, 2.0].includes(slippage);
+    if (!isPreset) {
+      setCustomSlippage(String(slippage));
+    } else {
+      setCustomSlippage("");
+    }
+  }, [slippage]);
 
   const handleSelect = (value: number) => {
-    setCurrentSlippage(value);
-    setCustomSlippage("");
     onSlippageChange(value);
-    setIsOpen(false);
+    onOpenChange(false);
   };
 
   const handleCustomChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -36,30 +47,22 @@ export function SlippageCalculator({
     setCustomSlippage(value);
     const parsedValue = parseFloat(value);
     if (!isNaN(parsedValue) && parsedValue >= 0 && parsedValue <= 5) {
-      setCurrentSlippage(parsedValue);
       onSlippageChange(parsedValue);
     }
   };
 
   const handleReset = () => {
-    setCurrentSlippage(0);
-    setCustomSlippage("");
-    onSlippageChange(0);
-    setIsOpen(false);
+    const defaultValue = 0.5;
+    onSlippageChange(defaultValue);
+    onOpenChange(false);
   };
 
   const handleDone = () => {
-    onSlippageChange(currentSlippage);
-    setIsOpen(false);
+    onOpenChange(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button variant="ghost" size="icon">
-          <Settings className="h-5 w-5" />
-        </Button>
-      </DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Slippage Tolerance</DialogTitle>
@@ -70,13 +73,11 @@ export function SlippageCalculator({
             are willing to accept for your order to be executed.
           </p>
           <div className="flex items-center justify-between gap-2">
-            {presets.map((preset) => (
+            {[0.5, 1.0, 2.0].map((preset) => (
               <Button
                 key={preset}
                 variant={
-                  currentSlippage === preset && !customSlippage
-                    ? "default"
-                    : "outline"
+                  slippage === preset && !customSlippage ? "default" : "outline"
                 }
                 onClick={() => handleSelect(preset)}
                 className="flex-1"

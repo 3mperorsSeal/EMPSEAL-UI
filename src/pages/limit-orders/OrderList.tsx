@@ -64,6 +64,9 @@ export function OrderList({
   onStatusMessage,
   newOrderCounter,
 }: OrderListProps) {
+  const { chainId } = useAccount();
+  const isPulseChain = chainId === 369;
+
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
     null
   );
@@ -81,6 +84,7 @@ export function OrderList({
       abi: LIMIT_ORDER_ABI,
       functionName: "getUserActiveOrders",
       args: [userAddress as `0x${string}`],
+      query: { enabled: isPulseChain },
     });
 
   const {
@@ -93,6 +97,7 @@ export function OrderList({
     abi: LIMIT_ORDER_ABI,
     functionName: "getOrders",
     args: [activeOrderIds || []],
+    query: { enabled: isPulseChain && !!activeOrderIds },
   });
 
   const activeOrders = activeOrdersData
@@ -119,13 +124,13 @@ export function OrderList({
     : [];
 
   useEffect(() => {
-    if (newOrderCounter > 0) {
+    if (newOrderCounter > 0 && isPulseChain) {
       refetchActiveOrderIds();
     }
-  }, [newOrderCounter, refetchActiveOrderIds]);
+  }, [newOrderCounter, refetchActiveOrderIds, isPulseChain]);
 
   useEffect(() => {
-    if (activeOrders) {
+    if (activeOrders && isPulseChain) {
       const mergedOrdersMap = new Map<string, Order>(
         allOrders.map((o) => [o.id, o])
       );
@@ -142,6 +147,9 @@ export function OrderList({
             ...newActiveOrder,
             txHash: shellOrder.txHash,
             strategy: shellOrder.strategy,
+            fillMode: 0,
+            maxSplits: 0,
+            fillCount: 0,
           };
           mergedOrdersMap.set(newActiveOrder.id, completeOrder);
           mergedOrdersMap.delete("unknown");
@@ -181,7 +189,7 @@ export function OrderList({
         setAllOrders(newAllOrders);
       }
     }
-  }, [activeOrders, allOrders]);
+  }, [activeOrders, allOrders, isPulseChain]);
 
   useEffect(() => {
     if (userAddress && allOrders.length > 0) {
@@ -190,11 +198,20 @@ export function OrderList({
   }, [allOrders, userAddress]);
 
   const handleRefresh = async () => {
+    if (!isPulseChain) {
+      onStatusMessage({
+        type: "warning",
+        message: "Please switch to PulseChain to refresh orders.",
+      });
+      return;
+    }
     const result = await refetchActiveOrders();
     if (result.isSuccess) {
       onStatusMessage({
         type: "success",
-        message: `Fetched ${result.data.length} active order(s)`,
+        message: `Fetched ${
+          (result.data as any[])?.length ?? 0
+        } active order(s)`,
       });
     }
   };
@@ -227,10 +244,17 @@ export function OrderList({
         type: "success",
         message: "Transaction successful!",
       });
-      refetchActiveOrders();
+      if (isPulseChain) refetchActiveOrders();
       setCancellingOrderId(null);
     }
-  }, [isConfirming, isConfirmed]);
+  }, [
+    isConfirming,
+    isConfirmed,
+    isPulseChain,
+    onStatusMessage,
+    refetchActiveOrders,
+    writeContractHash,
+  ]);
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
     setAllOrders((prevOrders) =>
@@ -296,13 +320,13 @@ export function OrderList({
   }, [addClientDataToOrder]);
 
   useEffect(() => {
-    if (error) {
+    if (error && isPulseChain) {
       onStatusMessage({
         type: "error",
         message: (error as Error).message,
       });
     }
-  }, [error, onStatusMessage]);
+  }, [error, onStatusMessage, isPulseChain]);
 
   const filteredOrders = allOrders.filter((order) => {
     if (filterStatus === "All") return true;
@@ -346,19 +370,31 @@ export function OrderList({
             <Button
               variant="secondary"
               onClick={handleRefresh}
-              disabled={isLoading}
+              disabled={isLoading && isPulseChain}
               data-testid="button-fetch-orders"
             >
               <RefreshCw
-                className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`}
+                className={`mr-2 h-4 w-4 ${
+                  isLoading && isPulseChain ? "animate-spin" : ""
+                }`}
               />
-              {isLoading ? "Fetching..." : "Refresh"}
+              {isLoading && isPulseChain ? "Fetching..." : "Refresh"}
             </Button>
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {!isPulseChain ? (
+          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
+            <p className="text-sm font-medium text-foreground">
+              Incorrect Network
+            </p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              The limit order system is only available on PulseChain. Please
+              switch your network to continue.
+            </p>
+          </div>
+        ) : isLoading ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
             <RefreshCw className="mb-3 h-12 w-12 animate-spin text-muted-foreground/50" />
             <p className="text-sm font-medium text-foreground">

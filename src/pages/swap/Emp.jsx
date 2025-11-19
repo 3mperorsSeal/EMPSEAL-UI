@@ -24,6 +24,7 @@ import Transaction from "./Transaction";
 import { Copy, Check } from "lucide-react";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import ProvidersListNew from "../bridge/ProvidersList-new";
+import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 import LimitOrder from "../limit-orders/LimitOrder";
 
 const Emp = ({ setPadding }) => {
@@ -56,6 +57,7 @@ const Emp = ({ setPadding }) => {
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
   const [isPartialFill, setIsPartialFill] = useState(false);
+  const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
   // Toggle function
   const togglePartialFill = () => {
     setIsPartialFill((prev) => !prev);
@@ -1210,7 +1212,7 @@ const Emp = ({ setPadding }) => {
               </div>
             </>
           ) : (
-            <LimitOrder />
+            <LimitOrder slippage={limitOrderSlippage} />
           )}
         </div>
         {/* <div className="md:max-w-[403px] w-full mx-auto my-5 h-px relative bg-gray-700" /> */}
@@ -1246,11 +1248,20 @@ const Emp = ({ setPadding }) => {
             </div>
           </div> */}
       </div>
-      {isSlippageVisible && (
+      {isSlippageVisible && !order && (
         <SlippageCalculator
           tradeInfo={tradeInfo}
           onSlippageCalculated={handleSlippageCalculated}
           onClose={() => setSlippageVisible(false)}
+        />
+      )}
+
+      {isSlippageVisible && order && (
+        <LimitOrderSlippageCalculator
+          isOpen={isSlippageVisible}
+          onOpenChange={setSlippageVisible}
+          slippage={limitOrderSlippage}
+          onSlippageChange={setLimitOrderSlippage}
         />
       )}
 
