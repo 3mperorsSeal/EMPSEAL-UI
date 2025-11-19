@@ -54,6 +54,11 @@ const Emp = ({ setPadding }) => {
   const [usdValueTokenA, setUsdValueTokenA] = useState("0.00");
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
+  const [isPartialFill, setIsPartialFill] = useState(false);
+  // Toggle function
+  const togglePartialFill = () => {
+    setIsPartialFill((prev) => !prev);
+  };
   const {
     chain: currentChain,
     chainId,
@@ -1179,7 +1184,7 @@ const Emp = ({ setPadding }) => {
           <div
             className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${
               order
-                ? "xl:pt-[0px] lg:pt-[20px] pt-[550px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
                 : "pt-0 top-0"
             }`}
           >
@@ -1235,7 +1240,7 @@ const Emp = ({ setPadding }) => {
           </div> */}
       </div>
       {order && (
-        <div className="absolute 2xl:right-[12vw] xl:right-[3vw] md:right-2 lefts11 2xl:top-[40%] xl:top-[30%] md:top-[60%] mdlg top-[59%] w-[245px] h-[200px] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white">
+        <div className={`${isPartialFill ? "w-[245px]" : "w-[160px]"} absolute 2xl:right-[12vw] xl:right-[3vw] md:right-2 lefts11 2xl:top-[25%] xl:top-[25%] md:top-[40%] mdlg top-[54%] h-[200px] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}>
           <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] text-black p-4">
             <div className="w-[120px] relative top-8">
               <p className="text-base text-center">Link</p>
@@ -1249,53 +1254,78 @@ const Emp = ({ setPadding }) => {
                 {selectedTokenB.ticker}
               </span>{" "}
             </div>
-            <div className="text-right realtive z-20 w-[75px] ml-auto">
-              <p className="text-[10px] font-semibold uppercase text-center">
-                Expiry
-              </p>
-              <p className="text-xs font-bold text-center">
-                {calculateExpiryDays1()} DAYS
-              </p>
+            {isPartialFill && (
+              <div className="text-right realtive z-20 w-[75px] ml-auto">
+                <p className="text-[10px] font-semibold uppercase text-center">
+                  Expiry
+                </p>
+                <p className="text-xs font-bold text-center">
+                  {calculateExpiryDays1()} DAYS
+                </p>
+              </div>
+            )}
+            {/* <button
+              onClick={togglePartialFill}
+              className="mb-4 px-4 py-2 bg-black text-white rounded hover:bg-gray-800 transition"
+            >
+              {isPartialFill ? "Hide Partial Fill" : "Show Partial Fill"}
+            </button> */}
+            <div className="absolute bottom-4 flex items-center gap-2 left-6">
+              <p className="font-orbitron text-xs font-medium">Partial Fill :</p>
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={isPartialFill}
+                  onChange={togglePartialFill}
+                />
+                <span className="slider"></span>
+              </label>
             </div>
           </div>
-          <div className="absolute top-0 right-0 h-full w-[40%] bg-white flex flex-col justify-start pt-4 items-center space-y-2 rounded-r-lg">
-            {[25, 50, 75, 100].map((percentage1) => (
-              <button
-                key={percentage1}
-                onClick={() => handlePercentageChange1(percentage1)}
-                className={`bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition ${
-                  selectedPercentage1 === percentage1 ? "ring-2 ring-black" : ""
-                }`}
-              >
-                {percentage1}%
-              </button>
-            ))}
-          </div>
-          <div className="absolute top-1/2 left-[60%] transform -translate-x-1/2 -translate-y-1/2 bg-black text-[#FF9900] rounded-md w-[27px] h-12 flex justify-center items-center font-bold">
-            <svg
-              width={24}
-              height={24}
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M19.4928 12.5951C19.8051 12.8673 19.8375 13.3411 19.5653 13.6533L14.4744 19.4929C14.2689 19.7286 13.9387 19.812 13.6459 19.7023C13.3531 19.5926 13.1591 19.3127 13.1591 19V5C13.1591 4.58579 13.4949 4.25 13.9091 4.25C14.3233 4.25 14.6591 4.58579 14.6591 5V16.9984L18.4347 12.6676C18.7069 12.3554 19.1806 12.3229 19.4928 12.5951Z"
-                fill="#FF9900"
-              />
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M4.50712 11.4049C4.19482 11.1327 4.16242 10.6589 4.43462 10.3467L9.52552 4.50719C9.73102 4.27148 10.0612 4.188 10.354 4.29772C10.6468 4.40745 10.8408 4.68733 10.8408 5.00004L10.8408 19C10.8408 19.4142 10.505 19.75 10.0908 19.75C9.67662 19.75 9.34082 19.4142 9.34082 19V7.00165L5.56522 11.3324C5.29302 11.6446 4.81932 11.6771 4.50712 11.4049Z"
-                fill="#FF9900"
-              />
-            </svg>
-          </div>
-          <div className="absolute top-1/2 right-[-56px] transform -translate-y-1/2 bg-white text-black border border-white rounded-t-md w-[80px] h-[32px] flex justify-center items-center rotate-90 font-bold text-sm cursor-pointer">
-            Market
-          </div>
+          {isPartialFill && (
+            <>
+              <div className="absolute top-0 right-0 h-full w-[40%] bg-white flex flex-col justify-start pt-4 items-center space-y-2 rounded-r-lg">
+                {[25, 50, 75, 100].map((percentage1) => (
+                  <button
+                    key={percentage1}
+                    onClick={() => handlePercentageChange1(percentage1)}
+                    className={`bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition ${
+                      selectedPercentage1 === percentage1
+                        ? "ring-2 ring-black"
+                        : ""
+                    }`}
+                  >
+                    {percentage1}%
+                  </button>
+                ))}
+              </div>
+              <div className="absolute top-1/2 left-[60%] transform -translate-x-1/2 -translate-y-1/2 bg-black text-[#FF9900] rounded-md w-[27px] h-12 flex justify-center items-center font-bold">
+                <svg
+                  width={24}
+                  height={24}
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M19.4928 12.5951C19.8051 12.8673 19.8375 13.3411 19.5653 13.6533L14.4744 19.4929C14.2689 19.7286 13.9387 19.812 13.6459 19.7023C13.3531 19.5926 13.1591 19.3127 13.1591 19V5C13.1591 4.58579 13.4949 4.25 13.9091 4.25C14.3233 4.25 14.6591 4.58579 14.6591 5V16.9984L18.4347 12.6676C18.7069 12.3554 19.1806 12.3229 19.4928 12.5951Z"
+                    fill="#FF9900"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    clipRule="evenodd"
+                    d="M4.50712 11.4049C4.19482 11.1327 4.16242 10.6589 4.43462 10.3467L9.52552 4.50719C9.73102 4.27148 10.0612 4.188 10.354 4.29772C10.6468 4.40745 10.8408 4.68733 10.8408 5.00004L10.8408 19C10.8408 19.4142 10.505 19.75 10.0908 19.75C9.67662 19.75 9.34082 19.4142 9.34082 19V7.00165L5.56522 11.3324C5.29302 11.6446 4.81932 11.6771 4.50712 11.4049Z"
+                    fill="#FF9900"
+                  />
+                </svg>
+              </div>
+              <div className="absolute top-1/2 right-[-56px] transform -translate-y-1/2 bg-white text-black border border-white rounded-t-md w-[80px] h-[32px] flex justify-center items-center rotate-90 font-bold text-sm cursor-pointer">
+                Market
+              </div>
+            </>
+          )}
         </div>
       )}
       {order && (

@@ -118,7 +118,7 @@ const Emp = ({
   }, [address, datas]);
 
   const formattedBalance = balanceAddress
-    ? `${parseFloat(balanceAddress).toFixed(3)}`
+    ? `${parseFloat(balanceAddress).toFixed(6)}`
     : "0.00";
 
   function setRoute(path) {
@@ -141,8 +141,8 @@ const Emp = ({
 
   // Format the chain balance
   const formattedChainBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(3) // Format to 6 decimal places
-    : "0.000";
+    ? parseFloat(tokenBalance.formatted).toFixed(6) // Format to 6 decimal places
+    : "0.000000";
 
   const { data: tokenBBalance } = useBalance({
     address: address, // Use the connected wallet address
@@ -152,8 +152,8 @@ const Emp = ({
 
   // Format the chain balance
   const formattedChainBalanceTokenB = tokenBBalance
-    ? parseFloat(tokenBBalance.formatted).toFixed(3) // Format to 6 decimal places
-    : "0.000";
+    ? parseFloat(tokenBBalance.formatted).toFixed(6) // Format to 6 decimal places
+    : "0.000000";
 
   const handlePercentageChange = (e) => {
     const percentage = e === "" ? "" : parseInt(e);
@@ -182,10 +182,10 @@ const Emp = ({
       percentage === 100
     ) {
       // Leave some balance for gas fees (e.g., 0.01 units)
-      return Math.max(0, calculatedAmount - 0.01).toFixed(3);
+      return Math.max(0, calculatedAmount - 0.01).toFixed(6);
     }
 
-    return calculatedAmount.toFixed(3);
+    return calculatedAmount.toFixed(6);
   };
 
   const WETH_ADDRESS = "0xa1077a294dde1b09bb078844df40758a5d0f9a27";
@@ -524,7 +524,7 @@ const Emp = ({
   //   if (conversionRate && !isNaN(conversionRate)) {
   //     const valueInUSD = (
   //       parseFloat(amountIn || 0) * parseFloat(conversionRate)
-  //     ).toFixed(3);
+  //     ).toFixed(6);
   //     setUsdValue(valueInUSD);
   //   } else {
   //     console.error('Missing or invalid conversion rate:', conversionRate);
@@ -535,7 +535,7 @@ const Emp = ({
   //   if (conversionRateTokenB && !isNaN(conversionRateTokenB)) {
   //     const valueInUSD = (
   //       parseFloat(amountOut || 0) * parseFloat(conversionRateTokenB)
-  //     ).toFixed(3);
+  //     ).toFixed(6);
   //     setUsdValueTokenB(valueInUSD);
   //   } else {
   //     console.error(
@@ -580,7 +580,7 @@ const Emp = ({
   //     )
   //   );
 
-  //   return isRateReversed ? (1 / rate).toFixed(3) : rate.toFixed(3);
+  //   return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
   // };
 
   useEffect(() => {
@@ -598,7 +598,7 @@ const Emp = ({
   // console.log("rubicRouteCheck: ", rubicRoute);
 
   const formatTokenAmount = (amount, decimals) => {
-    return (parseFloat(amount) / 10 ** decimals).toFixed(3);
+    return (parseFloat(amount) / 10 ** decimals).toFixed(6);
   };
 
   // useEffect(() => {
@@ -767,7 +767,7 @@ const Emp = ({
                     : `${
                         tokenBalance
                           ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(3)
+                              parseFloat(tokenBalance.formatted).toFixed(6)
                             )
                           : "0.00"
                       }`}
@@ -835,6 +835,17 @@ const Emp = ({
                           src={selectedTokenA.image}
                           alt={selectedTokenA.name}
                         />
+                        {/* <img
+                          className={`${
+                            selectedChainA?.name?.length > 10
+                              ? "md:h-10 h-8 md:p-2 p-1"
+                              : selectedChainA?.name?.length > 6
+                              ? "md:h-10 h-8 md:p-2 p-1"
+                              : "md:h-10 h-8 md:p-2 p-1"
+                          }`}
+                          src={selectedChainA?.image}
+                          alt={selectedChainA?.name}
+                        />  */}
                       </div>
                     )}
                   </div>
@@ -878,7 +889,7 @@ const Emp = ({
                     <input
                       type="text"
                       placeholder={
-                        formattedChainBalance === "0.000"
+                        formattedChainBalance === "0.000000"
                           ? "0"
                           : calculateAmount(selectedPercentage)
                       }
@@ -954,7 +965,7 @@ const Emp = ({
                     : `${
                         tokenBBalance
                           ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(3)
+                              parseFloat(tokenBBalance.formatted).toFixed(6)
                             )
                           : "0.00"
                       }`}
@@ -1022,6 +1033,17 @@ const Emp = ({
                               src={selectedTokenB.image}
                               alt={selectedTokenB.name}
                             />
+                             {/* <img
+                              className={`${
+                                selectedChainB?.name?.length > 10
+                                  ? "md:h-10 h-8 md:p-2 p-1"
+                                  : selectedChainB?.name?.length > 6
+                                  ? "md:h-10 h-8 md:p-2 p-1"
+                                  : "md:h-10 h-8 md:p-2 p-1"
+                              }`}
+                              src={selectedChainB?.image}
+                              alt={selectedChainB?.name}
+                            /> */}
                           </div>
                         )}
                       </div>
@@ -1071,7 +1093,7 @@ const Emp = ({
                   value={
                     amountOut === "0" || !amountOut
                       ? ""
-                      : parseFloat(amountOut).toFixed(3)
+                      : parseFloat(amountOut).toFixed(6)
                   }
                   readOnly
                   className="truncate text-white font-bold font-orbitron text-end w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
@@ -1080,7 +1102,7 @@ const Emp = ({
                       12,
                       40 -
                         formatNumber(
-                          parseFloat(amountOut).toFixed(3)
+                          parseFloat(amountOut).toFixed(6)
                         ).toString().length *
                           1.5
                     )}px`,
