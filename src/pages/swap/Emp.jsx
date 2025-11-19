@@ -55,6 +55,11 @@ const Emp = ({ setPadding }) => {
   const [usdValueTokenA, setUsdValueTokenA] = useState("0.00");
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
+  const [isPartialFill, setIsPartialFill] = useState(false);
+  // Toggle function
+  const togglePartialFill = () => {
+    setIsPartialFill((prev) => !prev);
+  };
   const {
     chain: currentChain,
     chainId,

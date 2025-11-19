@@ -42,12 +42,16 @@ import {
 import { Badge } from "../../components/ui/badge";
 import { SlippageCalculator } from "./SlippageCalculator";
 import { useAccount, useBalance } from "wagmi";
-import {
-  writeContract,
-  waitForTransactionReceipt,
-} from "@wagmi/core";
+import { writeContract, waitForTransactionReceipt } from "@wagmi/core";
 import { config } from "../../Wagmi/config";
-import { isAddress, parseUnits, formatUnits, zeroAddress, decodeEventLog, erc20Abi } from "viem";
+import {
+  isAddress,
+  parseUnits,
+  formatUnits,
+  zeroAddress,
+  decodeEventLog,
+  erc20Abi,
+} from "viem";
 import { formatErrorMessage } from "../../utils/utils";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
@@ -472,7 +476,7 @@ export function CreateOrderForm({
     <Card data-testid="card-create-order">
       <CardHeader>
         <div className="flex items-start justify-between gap-3">
-          <div className="flex items-center gap-3">
+          {/* <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-primary/10">
               <FileText className="h-5 w-5 text-primary" />
             </div>
@@ -482,7 +486,7 @@ export function CreateOrderForm({
                 Set up a new limit order for token exchange
               </CardDescription>
             </div>
-          </div>
+          </div> */}
           <SlippageCalculator onSlippageChange={setSlippage} />
         </div>
       </CardHeader>

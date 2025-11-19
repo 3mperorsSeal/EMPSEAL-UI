@@ -48,9 +48,9 @@ const ProvidersListCard = ({
             </span>
           </div>
         </div>
-        <div className="grid grid-cols-[40%_40%] justify-between bg-transparent gap-4 items-center text-[#FF9900] p-3">
+        <div className="grid grid-cols-[40%_40%] justify-between bg-transparent gap-4 items-center text-[#FF9900] p-3 relative">
           <div
-            className="relative flex items-center"
+            className=" flex items-center"
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
           >
@@ -58,7 +58,7 @@ const ProvidersListCard = ({
             <span className="text-sm font-base roboto">~${fees}</span>
 
             {hovered && (
-              <div className="absolute bottom-full mb-2 left-0 p-3 bg-[#3D3D3D] text-white text-xs rounded-lg shadow-lg">
+              <div className="absolute bottom mb-2 z-50 md:-left-36 left-0 p-3 bg-[#FF9900]/90 text-white text-xs rounded-lg shadow-lg">
                 <p>
                   <strong>Protocol Fee:</strong> {protocolFee}
                 </p>
