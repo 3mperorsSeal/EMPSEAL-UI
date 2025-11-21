@@ -396,9 +396,9 @@ body.bg-pattern {
   padding: 14px 10px 14px 32px;
   cursor: pointer;
   letter-spacing: 0.5px;
-  clip-path: polygon(5% 0%, 97% 0%, 100% 22%, 100% 100%, 27% 217%, 5% 62%);
+  clip-path: polygon(0% 0%, 97% 0%, 100% 22%, 100% 100%, 27% 217%, 0% 72%);
   transition: background 0.25s ease;
-  width: 95%;
+  width: 100%;
 }
 .w-auto-search {
   width: auto !important;
@@ -515,7 +515,7 @@ body.bg-pattern {
 }
 @media (min-width: 1024px) and (max-width: 1536px) {
   .mdlg {
-    top: 20% !important;
+    top: 25% !important;
     scale: 0.9;
   }
   .ttt {
@@ -527,7 +527,7 @@ body.bg-pattern {
 }
 @media (min-width: 1024px) and (max-width: 1280px) {
   .mdlg {
-    top: 20% !important;
+    top: 25% !important;
     scale: 0.8;
   }
 }
@@ -703,7 +703,7 @@ body.bg-pattern {
   height: 10px;
   width: 10px;
   left: 1.5px;
-  bottom: 1.5px;
+  bottom:2px;
   background-color: #ff9900;
   border-radius: 50%;
   transition: 0.4s;
@@ -715,4 +715,16 @@ input:checked + .slider {
 
 input:checked + .slider:before {
   transform: translateX(9px);
+}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  opacity: 1;
+}
+// .color-w{
+//   color: white!important;
+//   color: #fff!important;
+// }
+.bgs{
+  background-color: transparent!important;
+  background: transparent!important;
 }

@@ -96,6 +96,7 @@ export default function App() {
 
   return (
     <div className="text-white w-full sctable">
+      <h1>Note:Static Table</h1>
       <div className="flex justify-between items-center flex-wrap gap-4">
         <button className="font-orbitron px-6 py-2 bg-[#FF9900] text-black md:w-[220px] h-[70px] md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200">
           Your Orders

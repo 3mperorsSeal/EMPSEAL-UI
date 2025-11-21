@@ -809,6 +809,17 @@ const Emp = ({
                         /> */}
                         <h3
                           className={`font-bold font-orbitron text-center ${
+                            selectedTokenA?.name?.length > 10
+                              ? "text-[8px] lg:text-[12px]"
+                              : selectedTokenA?.name?.length > 6
+                              ? "text-[10px] lg:text-sm"
+                              : "text-xs lg:text-base"
+                          }`}
+                        >
+                          {selectedTokenA?.name}
+                        </h3>
+                        {/* <h3
+                          className={`font-bold font-orbitron text-center ${
                             selectedChainA?.name?.length > 10
                               ? "text-[8px] lg:text-[12px]"
                               : selectedChainA?.name?.length > 6
@@ -817,37 +828,26 @@ const Emp = ({
                           }`}
                         >
                           {selectedChainA?.name}
-                        </h3>
+                        </h3> */}
                       </div>
                     )}
                     <img
                       src={CPatch}
                       className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                     />
-                    {selectedTokenA.image && (
+                    {/* {selectedChainA.image && ( */}
                       <div
-                        className={`relative bg-black border h-[55px] md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                        className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
                           selectedChainA.image ? "left-40-box " : "left-40-box"
                         }`}
                       >
                         <img
                           className="md:h-10 h-8 md:p-2 p-1"
-                          src={selectedTokenA.image}
-                          alt={selectedTokenA.name}
+                          src={selectedChainA.image}
+                          alt={selectedChainA.name}
                         />
-                        {/* <img
-                          className={`${
-                            selectedChainA?.name?.length > 10
-                              ? "md:h-10 h-8 md:p-2 p-1"
-                              : selectedChainA?.name?.length > 6
-                              ? "md:h-10 h-8 md:p-2 p-1"
-                              : "md:h-10 h-8 md:p-2 p-1"
-                          }`}
-                          src={selectedChainA?.image}
-                          alt={selectedChainA?.name}
-                        />  */}
                       </div>
-                    )}
+                    {/* )} */}
                   </div>
                 </div>
               </div>
@@ -990,29 +990,29 @@ const Emp = ({
                         }`}
                       >
                         {/* Chain Image */}
-                        {selectedChainB.image && (
+                        {selectedTokenB.image && (
                           <div className="absolute px-3 left-0 right-0 mx-auto flex items-center justify-center gap-3 z-10">
                             {/* <img
                               className={`${
-                                selectedChainB?.name?.length > 10
+                                selectedTokenB?.name?.length > 10
                                   ? "w-3 md:w-6"
-                                  : selectedChainB?.name?.length > 6
+                                  : selectedTokenB?.name?.length > 6
                                   ? "w-4 md:w-7"
                                   : "w-4 md:w-8"
                               }`}
-                              src={selectedChainB?.image}
-                              alt={selectedChainB?.name}
+                              src={selectedTokenB?.image}
+                              alt={selectedTokenB?.name}
                             /> */}
                             <h3
                               className={`font-bold font-orbitron text-center ${
-                                selectedChainB?.name?.length > 10
+                                selectedTokenB?.name?.length > 10
                                   ? "text-[8px] lg:text-[12px]"
-                                  : selectedChainB?.name?.length > 6
+                                  : selectedTokenB?.name?.length > 6
                                   ? "text-[10px] lg:text-sm"
                                   : "text-xs lg:text-base"
                               }`}
                             >
-                              {selectedChainB?.name}
+                              {selectedTokenB?.name}
                             </h3>
                           </div>
                         )}
@@ -1020,9 +1020,9 @@ const Emp = ({
                           src={CPatch}
                           className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                         />
-                        {selectedTokenB.image && (
+                        {/* {selectedChainB.image && ( */}
                           <div
-                            className={`relative bg-black border h-[55px] md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                            className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
                               selectedChainB.image
                                 ? "left-40-box "
                                 : "left-40-box"
@@ -1030,8 +1030,8 @@ const Emp = ({
                           >
                             <img
                               className="md:h-10 h-8 md:p-2 p-1"
-                              src={selectedTokenB.image}
-                              alt={selectedTokenB.name}
+                              src={selectedChainB.image}
+                              alt={selectedChainB.name}
                             />
                              {/* <img
                               className={`${
@@ -1045,7 +1045,7 @@ const Emp = ({
                               alt={selectedChainB?.name}
                             /> */}
                           </div>
-                        )}
+                        {/* // )} */}
                       </div>
                       {/* <svg
                     className='pointer-events-none'
