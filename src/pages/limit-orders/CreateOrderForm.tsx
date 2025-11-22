@@ -1029,7 +1029,7 @@ export function CreateOrderForm({
           <div
             className={`${
               isPartialFill ? "w-[245px]" : "w-[160px]"
-            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:-right-[20vw] lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[54%] h-[200px] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:-right-[20vw] lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[52%] h-[200px] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] text-black p-4">
               <div className="w-[120px] relative top-8">

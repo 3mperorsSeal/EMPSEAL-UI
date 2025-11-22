@@ -142,12 +142,12 @@ export function OrderListItem({
   //
 
   return (
-    <div className="border border-[#FF9900] rounded-lg p-4 bg-black hover:bg-[#FF9900]/5 transition text-white w-full">
+    <div className="border border-[#FF9900] rounded-lg p-4 bg-black hover:bg-[#FF9900]/10 transition text-white w-full">
       {/* Header Row */}
       <div className="flex justify-between items-center flex-wrap gap-4">
         {/* Left Section */}
         <div className="flex items-center gap-4">
-          <div className="text-lg font-bold">Order #{order.id}</div>
+          <div className="text-base font-bold">Order #{order.id}</div>
 
           <div
             className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColorClass}`}
@@ -155,20 +155,42 @@ export function OrderListItem({
             {order.status.toUpperCase()}
           </div>
         </div>
-
-        {/* Right Section */}
-        <button
-          className={`w-[32px] h-[32px] rounded-full border-2 flex justify-center items-center ${
-            expanded ? "border-[#FF9900]" : "border-[#4a3a1a] bg-[#402806]"
-          }`}
-          onClick={() => setExpanded(!expanded)}
-        >
-          <ChevronDown
-            className={`text-[#FF9900] transition-transform ${
-              expanded ? "rotate-0" : "-rotate-90"
+        {/* Bottom Buttons */}
+        <div className="flex justify-end gap-3">
+          {order.status === "active" || order.status === "none" ? (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onCancel(order.id)}
+              disabled={isCancelling}
+              className="hover:bg-[#402806] rounded-full"
+            >
+              <X className="mr-1 h-4 w-4" /> Cancel
+            </Button>
+          ) : (
+            <Button
+              variant="destructive"
+              size="sm"
+              onClick={() => onRemove(order.id)}
+              className="hover:bg-[#402806] rounded-full"
+            >
+              <Trash2 className="mr-1 h-4 w-4" /> Remove
+            </Button>
+          )}
+          {/* Right Section */}
+          <button
+            className={`w-[32px] h-[32px] rounded-full border-2 flex justify-center items-center ${
+              expanded ? "border-[#FF9900]" : "border-[#4a3a1a] bg-[#402806]"
             }`}
-          />
-        </button>
+            onClick={() => setExpanded(!expanded)}
+          >
+            <ChevronDown
+              className={`text-[#FF9900] transition-transform ${
+                expanded ? "rotate-0" : "-rotate-90"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Expanded Content */}
@@ -246,30 +268,6 @@ export function OrderListItem({
           </div>
         </div>
       )}
-
-      {/* Bottom Buttons */}
-      <div className="mt-4 flex justify-end">
-        {order.status === "active" || order.status === "none" ? (
-          <Button
-            variant="destructive"
-            size="sm"
-            onClick={() => onCancel(order.id)}
-            disabled={isCancelling}
-            className="bg-red-600 hover:bg-red-700"
-          >
-            <X className="mr-1 h-4 w-4" /> Cancel
-          </Button>
-        ) : (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => onRemove(order.id)}
-            className="text-gray-300 hover:text-white hover:bg-red-600/20"
-          >
-            <Trash2 className="mr-1 h-4 w-4" /> Remove
-          </Button>
-        )}
-      </div>
     </div>
     // <div
     //   className="flex flex-col gap-4 rounded-lg transition-colors hover-elevate sm:flex-row sm:items-center sm:justify-between"

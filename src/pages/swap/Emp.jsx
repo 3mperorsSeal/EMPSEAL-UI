@@ -1199,14 +1199,13 @@ const Emp = ({ setPadding }) => {
           )}
         </div>
       )} */}
-      {order && (
-        // {/* For Limit Order */}
+      {/* {order && (
         <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto">
           <div className="mt-3 w-full">
             <ProvidersListNew />
           </div>
         </div>
-      )}
+      )} */}
 
       {isSlippageVisible && !order && (
         <SlippageCalculator

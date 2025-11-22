@@ -47,7 +47,7 @@ export default function LimitOrder({ slippage }) {
   };
 
   return (
-    <div className="w-full pt-8 pb-16 text-white rounded-lg font-orbitron">
+    <div className="w-full pt-8 lg:pb-16 pb-[20rem] text-white rounded-lg font-orbitron">
       <div className="space-y-8">
         {isConnected && address ? (
           <>
