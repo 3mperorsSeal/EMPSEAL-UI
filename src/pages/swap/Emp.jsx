@@ -1221,6 +1221,7 @@ const Emp = ({ setPadding }) => {
           onOpenChange={setSlippageVisible}
           slippage={limitOrderSlippage}
           onSlippageChange={setLimitOrderSlippage}
+          onClose={() => setSlippageVisible(false)}
         />
       )}
 

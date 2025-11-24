@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import BG1 from "../../assets/images/bg.png";
 
 interface SlippageCalculatorProps {
   onSlippageChange: (slippage: number) => void;
@@ -52,14 +53,42 @@ export function SlippageCalculator({
     onOpenChange(false);
   };
 
+  const modalRef = useRef<HTMLDivElement | null>(null);
+
+  const handleModalClose = () => {
+    // setSlippageApplied(false);
+    // setError("");
+    // originalAmountRef.current = null;
+    onClose();
+  };
+  // Close modal if clicked outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        modalRef.current &&
+        event.target instanceof Node &&
+        !modalRef.current.contains(event.target)
+      ) {
+        handleModalClose();
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 roboto px-4">
       {" "}
-      <div className="bg-black clip-bg rounded-xl lg:px-12 lg:py-10 p-6 md:max-w-[700px] w-full relative">
+      <div
+        ref={modalRef}
+        className="bg-black clip-bg rounded-xl lg:px-12 lg:py-10 p-6 md:max-w-[700px] w-full relative"
+      >
         {/* Close Button */}
-        {/* <button
+        <button
           className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 flex flex-shrink-0"
-          onClick={() => onClose()}
+          onClick={() => handleModalClose()}
         >
           {" "}
           <svg
@@ -78,7 +107,7 @@ export function SlippageCalculator({
               strokeLinejoin="round"
             ></path>{" "}
           </svg>{" "}
-        </button> */}
+        </button>
         <h2 className="text-white text-xl font-bold mb-4 roboto text-center">
           Slippage Settings
         </h2>
@@ -91,10 +120,11 @@ export function SlippageCalculator({
           {[0.5, 1.0, 2.0].map((preset) => (
             <button
               key={preset}
-              className={`px-4 py-1.5 rounded justify-center md:w-[100px] w-20 relative md:text-base text-sm`}
+              className={`px-4 py-1.5 rounded justify-center md:w-[100px] w-20 relative md:text-base text-sm text-white`}
               onClick={() => handleSelect(preset)}
             >
               {preset}%
+              <img src={BG1} alt="BG1" className="absolute top-0 left-0" />
             </button>
           ))}
           <input

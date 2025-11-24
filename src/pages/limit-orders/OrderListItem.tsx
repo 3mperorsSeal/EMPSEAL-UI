@@ -31,19 +31,28 @@ export function OrderListItem({
   tokenOutDecimals,
 }: OrderListItemProps) {
   const [fillTxHashes, setFillTxHashes] = useState<string[]>([]);
-
-  const [expanded, setExpanded] = useState(false);
-  const [copied, setCopied] = useState<string | null>(null);
-
   const tokenInInfo = getTokenInfo(order.tokenIn);
   const tokenOutInfo = getTokenInfo(order.tokenOut);
 
-  const { data: orderProgressData } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: LIMIT_ORDER_ABI,
-    functionName: "getOrderProgress",
-    args: [BigInt(order.id)],
-  });
+  const validOrderId =
+    order.id && !isNaN(Number(order.id)) && Number(order.id) >= 0;
+
+  const { data: orderProgressData } = useReadContract(
+    validOrderId
+      ? {
+          address: CONTRACT_ADDRESS,
+          abi: LIMIT_ORDER_ABI,
+          functionName: "getOrderProgress",
+          args: [BigInt(order.id)],
+        }
+      : undefined
+  );
+  // const { data: orderProgressData } = useReadContract({
+  //   address: CONTRACT_ADDRESS,
+  //   abi: LIMIT_ORDER_ABI,
+  //   functionName: "getOrderProgress",
+  //   args: [BigInt(order.id)],
+  // });
 
   const orderProgress = orderProgressData
     ? {
@@ -125,12 +134,7 @@ export function OrderListItem({
     return deadlineDate.toLocaleString(undefined, options);
   };
 
-  //
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(text);
-    setTimeout(() => setCopied(null), 1500);
-  };
+  const [expanded, setExpanded] = useState(false);
 
   const statusColorClass =
     {
@@ -142,18 +146,45 @@ export function OrderListItem({
   //
 
   return (
-    <div className="border border-[#FF9900] rounded-lg p-4 bg-black hover:bg-[#FF9900]/10 transition text-white w-full">
+    <div
+      data-testid={`card-order-${order.id}`}
+      className="border border-[#FF9900] rounded-lg p-4 bg-black hover:bg-[#FF9900]/10 transition text-white w-full"
+    >
       {/* Header Row */}
       <div className="flex justify-between items-center flex-wrap gap-4">
         {/* Left Section */}
         <div className="flex items-center gap-4">
-          <div className="text-base font-bold">Order #{order.id}</div>
+          <div
+            data-testid={`badge-order-id-${order.id}`}
+            className="text-base font-bold"
+          >
+            Order #{order.id}
+          </div>
 
           <div
             className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColorClass}`}
           >
-            {order.status.toUpperCase()}
+            {/* {order.status.toUpperCase()} */}
+            {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
           </div>
+          <div
+            className={`px-3 py-1 rounded-full text-xs font-semibold ${statusColorClass}`}
+          >
+            {order.strategy === OrderStrategy.BUY ? "Buy Order" : "Sell Order"}
+          </div>
+          {order.allowPartialFill && (
+            <>
+              <Badge variant="secondary" className="text-xs">
+                Partial Fill
+              </Badge>
+              {orderProgress && (
+                <Badge variant="outline" className="text-xs">
+                  Fills: {orderProgress.fills}/{orderProgress.maxFills} (
+                  {orderProgress.percentComplete}%)
+                </Badge>
+              )}
+            </>
+          )}
         </div>
         {/* Bottom Buttons */}
         <div className="flex justify-end gap-3">
@@ -162,8 +193,9 @@ export function OrderListItem({
               variant="destructive"
               size="sm"
               onClick={() => onCancel(order.id)}
-              disabled={isCancelling}
+              disabled={isCancelling || order.id === "unknown"}
               className="hover:bg-[#402806] rounded-full"
+              data-testid={`button-cancel-${order.id}`}
             >
               <X className="mr-1 h-4 w-4" /> Cancel
             </Button>
@@ -200,19 +232,27 @@ export function OrderListItem({
           <div className="space-y-2">
             <div>
               <span className="text-[#FF9900]">Token In: </span>
-              {truncateAddress(order.tokenIn)}
+              <span data-testid={`text-token-in-${order.id}`}>
+                {truncateAddress(order.tokenIn)}
+              </span>
             </div>
             <div>
               <span className="text-[#FF9900]">Token Out: </span>
-              {truncateAddress(order.tokenOut)}
+              <span data-testid={`text-token-out-${order.id}`}>
+                {truncateAddress(order.tokenOut)}
+              </span>
             </div>
             <div>
               <span className="text-[#FF9900]">Amount In: </span>
-              {formatAmount(order.amountIn, tokenInInfo?.decimals)}
+              <span data-testid={`text-amount-in-${order.id}`}>
+                {formatAmount(order.amountIn, tokenInInfo?.decimals)}
+              </span>
             </div>
             <div>
               <span className="text-[#FF9900]">Min Out: </span>
-              {formatAmount(order.minAmountOut, tokenOutInfo?.decimals)}
+              <span data-testid={`text-min-out-${order.id}`}>
+                {formatAmount(order.minAmountOut, tokenOutInfo?.decimals)}
+              </span>
             </div>
           </div>
 
@@ -220,11 +260,15 @@ export function OrderListItem({
           <div className="space-y-2">
             <div>
               <span className="text-[#FF9900]">Limit Price: </span>
-              {formatAmount(order.limitPrice)}
+              <span data-testid={`text-price-${order.id}`}>
+                {formatAmount(order.limitPrice)}
+              </span>
             </div>
             <div>
               <span className="text-[#FF9900]">Expiry Date: </span>
-              {formatExpiryDate(order.deadline)}
+              <span data-testid={`text-deadline-${order.id}`}>
+                {formatExpiryDate(order.deadline)}
+              </span>
             </div>
 
             {/* Creation Tx */}
@@ -234,9 +278,11 @@ export function OrderListItem({
                 <a
                   href={getExplorerUrl(order.txHash)}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="underline ml-1"
                 >
                   {truncateAddress(order.txHash)}
+                  <ExternalLink className="ml-1 h-3 w-3" />
                 </a>
               ) : (
                 "N/A"
@@ -248,20 +294,24 @@ export function OrderListItem({
               <span className="text-[#FF9900]">Execution Tx: </span>
               {fillTxHashes.length > 0 ? (
                 <div className="flex flex-col ml-1">
-                  {fillTxHashes.map((tx, i) => (
+                  {fillTxHashes.map((txHash, index) => (
                     <a
-                      key={i}
-                      href={getExplorerUrl(tx)}
+                      key={index}
+                      href={getExplorerUrl(txHash)}
                       target="_blank"
+                      rel="noopener noreferrer"
                       className="underline"
                     >
-                      {truncateAddress(tx)}
+                      {truncateAddress(txHash)}
+                      <ExternalLink className="ml-1 h-3 w-3" />
                     </a>
                   ))}
                 </div>
               ) : (
                 <span>
-                  {order.status === "active" ? "Awaiting execution…" : "N/A"}
+                  {order.status === "active" || order.status === "none"
+                    ? "Awaiting execution..."
+                    : "N/A"}
                 </span>
               )}
             </div>
