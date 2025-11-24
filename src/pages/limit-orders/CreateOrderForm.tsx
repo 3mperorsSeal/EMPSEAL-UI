@@ -755,7 +755,7 @@ export function CreateOrderForm({
                           >
                             <SelectTrigger
                               className="h-12 border-none !bg-[#FFE6C0] focus:none px-0 !w-full outline-none text-black"
-                              data-testid="select-token-in"
+                              data-testid="select-token-out"
                             >
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
@@ -793,10 +793,10 @@ export function CreateOrderForm({
                           <Input
                             {...form.register("tokenOut")}
                             placeholder="0x..."
-                            className="h-12 bg-transparent !border-none !text-white"
-                            data-testid="input-token-in-custom"
+                            className="h-12 bg-transparent !border-none !text-black"
+                            data-testid="input-token-out-custom"
                             disabled={
-                              tokenInMode === "custom" &&
+                              tokenInMode === "custom" && 
                               !getTokenInfo(selectedTokenIn) &&
                               isAddress(selectedTokenIn)
                             }
@@ -806,10 +806,10 @@ export function CreateOrderForm({
                             variant="ghost"
                             size="sm"
                             onClick={() => {
-                              setTokenInMode("select");
+                              setTokenOutMode("select");
                               form.setValue("tokenOut", "");
                             }}
-                            className="text-xs border-none"
+                            className="text-xs border-none text-black"
                           >
                             Back to token list
                           </Button>
