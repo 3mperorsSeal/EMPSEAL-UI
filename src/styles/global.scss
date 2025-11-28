@@ -253,8 +253,21 @@ body {
   z-index: -1;
   height: 215px;
 }
+.bg-rb {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 113px;
+}
 .margin_left {
   margin-left: -86px;
+}
+.scales81 {
+  // top: -110px!important;
+}
+.scales812 {
+  top: -50px !important;
 }
 .left-40-box {
   left: 8.1rem;
@@ -381,6 +394,16 @@ body.bg-pattern {
   top: -19px;
   z-index: -1;
   min-width: 26rem;
+}
+.swap-button1 {
+  left: auto;
+  right: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: -20px;
+  z-index: -1;
+  min-width: 30rem;
 }
 .h-hr {
   width: 31rem;
@@ -536,8 +559,16 @@ body.bg-pattern {
   position: relative;
   top: 0px;
 }
+.scales811 {
+  scale: 1;
+  position: relative;
+  top: 0px;
+}
 @media (min-width: 1536px) and (max-width: 1920px) {
   .scales8 {
+    scale: 0.9;
+  }
+  .scales811 {
     scale: 0.9;
   }
   // .scale8 {
@@ -563,9 +594,24 @@ body.bg-pattern {
     position: relative;
     top: -90px;
   }
+  .top0 {
+    top: 0px !important;
+  }
+  .scales811 {
+    scale: 0.8;
+    position: relative;
+    top: 0px;
+  }
   .scale8 {
     scale: 0.8;
     left: -29px !important;
+  }
+  .scales811 {
+    scale: 0.8;
+    // left: -29px !important;
+  }
+  .scales812 {
+    top: -100px !important;
   }
   .scale81 {
     scale: 0.8;
@@ -624,6 +670,9 @@ body.bg-pattern {
   .swap-button {
     min-width: 18rem;
   }
+  .swap-button1 {
+    min-width: 18rem;
+  }
   .lefts1 {
     top: 0px;
     left: 0px;
@@ -647,6 +696,9 @@ body.bg-pattern {
     width: 100%;
     margin: auto;
     border-radius: 10px !important;
+  }
+  .scales812 {
+    top: -0px !important;
   }
 }
 @media (max-width: 768px) {
@@ -703,7 +755,7 @@ body.bg-pattern {
   height: 10px;
   width: 10px;
   left: 1.5px;
-  bottom:2px;
+  bottom: 2px;
   background-color: #ff9900;
   border-radius: 50%;
   transition: 0.4s;
@@ -724,7 +776,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 //   color: white!important;
 //   color: #fff!important;
 // }
-.bgs{
-  background-color: transparent!important;
-  background: transparent!important;
+.bgs {
+  background-color: transparent !important;
+  background: transparent !important;
 }
