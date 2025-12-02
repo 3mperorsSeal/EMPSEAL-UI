@@ -254,6 +254,18 @@ const BridgeInterface = () => {
     }
     return null;
   };
+  const [selectedPercentage, setSelectedPercentage] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const handlePercentageChange = (value) => {
+    if (!tokenBalance) return;
+
+    setSelectedPercentage(value);
+
+    const bal = Number(formatEther(tokenBalance));
+    const calculatedAmount = (bal * value) / 100;
+
+    setAmount(calculatedAmount.toString());
+  };
 
   return (
     <>
@@ -320,6 +332,25 @@ const BridgeInterface = () => {
 
               <div className="md:w-1/2 w-full md:me-3">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
+                  <span></span>
+                  {[25, 50, 75, 100].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2
+                ${
+                  selectedPercentage === value
+                    ? " text-white bg-black"
+                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                }`}
+                      onClick={() => handlePercentageChange(value)}
+                      disabled={isLoading}
+                    >
+                      {value}%
+                    </button>
+                  ))}
+                </div>
+                {/* <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
                   <span />
                   <button
                     type="button"
@@ -345,7 +376,7 @@ const BridgeInterface = () => {
                   >
                     100%
                   </button>
-                </div>
+                </div> */}
 
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
                   {(() => {
@@ -379,9 +410,12 @@ const BridgeInterface = () => {
                           }}
                         />
                         <button
-                          onClick={() =>
-                            tokenBalance && setAmount(tokenBalance.formatted)
-                          }
+                          onClick={() => {
+                            if (tokenBalance) {
+                              setAmount(formatEther(tokenBalance));
+                              setSelectedPercentage(100);
+                            }
+                          }}
                           className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
                         >
                           MAX AMOUNT
