@@ -257,14 +257,14 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2 scales8 scales81 scales812 mt-12">
+      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
         {/* <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-white">Bridge</h2>
           <p className="text-sm text-gray-400">Transfer tokens across chains</p>
         </div> */}
 
         {!isCorrectChain && address && (
-          <div className="mb-4 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3 scales8">
+          <div className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-[#FF9900] mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-[#FF9900]">
@@ -276,7 +276,7 @@ const BridgeInterface = () => {
             </div>
           </div>
         )}
-        <div className="scales8">
+        <div className="w-full">
           <div className="relative">
             <img className="bg-sell" src={Sellbox} alt="sellbox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
@@ -486,7 +486,7 @@ const BridgeInterface = () => {
             </div>
           </div>
         </div>
-        <div className="mt-20 mb-20 relative scales8">
+        <div className="mt-20 mb-20 relative">
           <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
             Recipient Address
           </label>
@@ -502,7 +502,7 @@ const BridgeInterface = () => {
             />
           </div>
         </div>
-        <div className="md:px-1 px-4 scales8">
+        <div className="md:px-1 px-4">
           <button
             type="button"
             className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
@@ -515,25 +515,6 @@ const BridgeInterface = () => {
             {renderButton()}
           </button>
         </div>
-
-        {bridgeHash && (
-          <div className="mt-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-            <p className="text-sm font-medium text-green-800 dark:text-green-200 mb-2">
-              Bridge transaction submitted!
-            </p>
-            <p className="text-xs text-green-700 dark:text-green-300 mb-2">
-              Your tokens will arrive in 2-10 minutes
-            </p>
-            <a
-              href={`https://scan.vialabs.io/transaction/${bridgeHash}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-            >
-              Track on VIA Scanner →
-            </a>
-          </div>
-        )}
       </div>
       {/*  */}
       <SelectionModal
@@ -570,11 +551,99 @@ const BridgeInterface = () => {
         title="Select Token"
       />
       {/*  */}
-      <div className="md:max-w-[1300px] w-full mx-auto px-4 md:mt-0 mt-28">
+      <div className="md:max-w-[1300px] w-full mx-auto px-4 md:mt-0 mt-28 scales-b scales-top">
+        {/* {bridgeHash && ( */}
+        <div className="clip-bg1 rounded-lg p-4 w-full">
+          <p className="text-lg text-[#FBB025] font-medium  mb-2 v">
+            Bridge transaction submitted!
+          </p>
+          <p className="text-xs text-[#FBB025] mb-2 roboto">
+            Your tokens will arrive in 2-10 minutes
+          </p>
+          <a
+            href={`https://scan.vialabs.io/transaction/${bridgeHash}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-white hover:underline"
+          >
+            Track on VIA Scanner →
+          </a>
+        </div>
+        {/* )} */}
         <RecentTransactions
           transactions={transactions}
           clearTransactions={clearTransactions}
         />
+        <hr className="mt-20" />
+        {/* Info Section */}
+        <div className="w-full md:px-0 px-4 md:pb-20 pb-10">
+          <div className="mt-16 md:max-w-[1300px] w-full mx-auto bg-[#100C06] border border-[#100C06] rounded-xl lg:px-12 px-6 lg:py-12 py-10">
+            <h2 className="md:text-[40px] text-[32px] font-extrabold text-white mb-10 font-orbitron">
+              How It Works
+            </h2>
+
+            <ol className="space-y-6">
+              {/* Step 1 */}
+              <li className="flex items-center gap-4">
+                <span className="w-8 h-8 bg-[#FBB025] text-black rounded-md flex items-center justify-center text-base font-bold">
+                  1
+                </span>
+                <span className="text-white text-sm">
+                  Connect your wallet and select the source chain
+                </span>
+              </li>
+
+              {/* Step 2 */}
+              <li className="flex items-center gap-4">
+                <span className="w-8 h-8 bg-[#FBB025] text-black rounded-md flex items-center justify-center text-base font-bold">
+                  2
+                </span>
+                <span className="text-white text-sm">
+                  Approve USDC for the protocol fee (0.30 USDC)
+                </span>
+              </li>
+
+              {/* Step 3 */}
+              <li className="flex items-center gap-4">
+                <span className="w-8 h-8 bg-[#FBB025] text-black rounded-md flex items-center justify-center text-base font-bold">
+                  3
+                </span>
+                <span className="text-white text-sm">
+                  Approve the tokens you want to bridge
+                </span>
+              </li>
+
+              {/* Step 4 */}
+              <li className="flex items-center gap-4">
+                <span className="w-8 h-8 bg-[#FBB025] text-black rounded-md flex items-center justify-center text-base font-bold">
+                  4
+                </span>
+                <span className="text-white text-sm">
+                  Execute the bridge and wait 2–10 minutes for cross-chain
+                  processing
+                </span>
+              </li>
+
+              {/* Step 5 */}
+              <li className="flex items-center gap-4">
+                <span className="w-8 h-8 bg-[#FBB025] text-black rounded-md flex items-center justify-center text-base font-bold">
+                  5
+                </span>
+                <span className="text-white text-sm">
+                  Track your transaction on{" "}
+                  <a
+                    href="https://scan.vialabs.io"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[#FF9900] underline"
+                  >
+                    VIA Scanner
+                  </a>
+                </span>
+              </li>
+            </ol>
+          </div>
+        </div>
       </div>
     </>
   );
