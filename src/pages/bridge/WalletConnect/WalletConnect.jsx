@@ -23,6 +23,7 @@ export default function WalletConnect({ onChainChange }) {
   const [showPopup, setShowPopup] = useState(false);
   const [showChainPopup, setShowChainPopup] = useState(false);
   const [showConnectPopup, setShowConnectPopup] = useState(false);
+
   useEffect(() => {
     if (address && !sessionStorage.getItem("walletReloaded")) {
       sessionStorage.setItem("walletReloaded", "true");

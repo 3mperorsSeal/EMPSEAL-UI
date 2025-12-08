@@ -174,7 +174,7 @@ const Normal = () => {
           <h2 className="md:text-5xl text-3xl text-center text-white font-orbitron font-bold">
             Cross Chain Swaps
           </h2>
-          <div className="flex justify-center gap-4 w-full mt-7">
+          <div className="flex justify-center gap-4 w-full mt-7 md:flex-nowrap flex-wrap">
             <div
               onClick={() => setActiveTab("cross")}
               className={`${
@@ -192,6 +192,17 @@ const Normal = () => {
                 }   opacity-50 px-3 py-2 md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border border-white text-white text-[15px] font-bold roboto`}
               >
                 Native Bridge
+              </div>
+            </Link>
+            <Link className="md:max-w-[200px] w-full" to={"/via-bridge"}>
+              <div
+                className={`${
+                  activeTab === "native"
+                    ? "border-[#FF9900]"
+                    : "border-[#3b3c4e] "
+                }   opacity-50 px-3 py-2 md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border border-white text-white text-[15px] font-bold roboto`}
+              >
+                Via Bridge
               </div>
             </Link>
           </div>
