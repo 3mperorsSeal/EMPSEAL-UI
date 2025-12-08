@@ -104,7 +104,7 @@ const Emp = ({ setPadding }) => {
       router.loadAdapters().then(() => {
         setSmartRouter(router);
       });
-      router.setMaxAdapters(8);
+      router.setMaxAdapters(6);
       router.setGranularity(1);
     }
   }, [publicClient, routerAddress]);
