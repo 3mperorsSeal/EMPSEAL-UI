@@ -435,8 +435,8 @@ const BridgeInterface = () => {
               className="mx-auto my-4 md:pt-7 pt-[44px] pb-5 md:w-[70px] w-12"
             />
           </div>
-          <div className="relative">
-            <img className="bg-sell" src={Sellbox} alt="sellbox" />
+          <div className="relative text-white">
+            <img className="bg-sell" src={Buybox} alt="Buybox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
                 To
@@ -488,10 +488,10 @@ const BridgeInterface = () => {
 
                     const fontSizeClass =
                       inputLength > 12
-                        ? "md:text-[24px] text-xl !text-[#000000]"
+                        ? "md:text-[24px] text-xl !text-[#fff]"
                         : inputLength > 8
-                        ? "md:text-[32px] text-2xl !text-[#000000]"
-                        : "md:text-[40px] text-2xl !text-[#000000]";
+                        ? "md:text-[32px] text-2xl !text-[#fff]"
+                        : "md:text-[40px] text-2xl !text-[#fff]";
 
                     return (
                       <>
@@ -504,7 +504,7 @@ const BridgeInterface = () => {
                               ? "0"
                               : "0.00"
                           }
-                          className={`text-[#000000] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
+                          className={`text-[#fff] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
                           style={{
                             fontSize: `${Math.max(
                               12,
@@ -536,7 +536,7 @@ const BridgeInterface = () => {
             />
           </div>
         </div>
-        <div className="md:px-1 px-4">
+        <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
             className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
