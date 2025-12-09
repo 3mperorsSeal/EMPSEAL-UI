@@ -352,13 +352,21 @@ const ChainSelector = ({ onSwitch }) => {
       .toLowerCase()
       .replace(/\s+/g, "")}.svg`;
 
+  const getFontSizeClass = (text) => {
+    const length = text?.toString().length || 0;
+
+    if (length > 14) return "text-[10px]";
+    if (length > 11) return "text-sm";
+    return "text-base";
+  };
+
   return (
     <>
       <div className="space-y-4 md:h-[425px] h_cs h-[400px] flex flex-col justify-between">
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}
-          className="bg-black border border-white rounded-lg md:px-4 px-2 py-4 flex items-center gap-3 md:text-base text-xs"
+          className="bg-black border border-white rounded-lg md:px-4 px-2 py-4 flex items-center gap-2 w-full"
         >
           {fromChain ? (
             <>
@@ -370,7 +378,13 @@ const ChainSelector = ({ onSwitch }) => {
                   e.target.src = `https://defillama.com/chain-icons/rsz/${fromChain.name.toLowerCase()}.jpg`;
                 }}
               />
-              <span className="text-white">{fromChain.name}</span>
+              <span
+                className={`text-white whitespace-nowrap ${getFontSizeClass(
+                  fromChain.name
+                )}`}
+              >
+                {fromChain.name}
+              </span>
             </>
           ) : (
             <span className="text-white">Select From Chain</span>
@@ -380,7 +394,7 @@ const ChainSelector = ({ onSwitch }) => {
         {/* TO */}
         <button
           onClick={() => setActiveModal("to")}
-          className="bg-[#FFE6C0] rounded-lg md:px-4 px-2 md:text-base text-xs py-4 flex items-center gap-3"
+          className="bg-[#FFE6C0] rounded-lg md:px-4 px-2 py-4 flex items-center gap-2"
         >
           {toChain ? (
             <>
@@ -392,7 +406,13 @@ const ChainSelector = ({ onSwitch }) => {
                   e.target.src = `https://defillama.com/chain-icons/rsz/${fromChain.name.toLowerCase()}.jpg`;
                 }}
               />
-              <span className="text-black">{toChain.name}</span>
+              <span
+                className={`text-black whitespace-nowrap ${getFontSizeClass(
+                  toChain.name
+                )}`}
+              >
+                {toChain.name}
+              </span>
             </>
           ) : (
             <span className="text-black">Select To Chain</span>

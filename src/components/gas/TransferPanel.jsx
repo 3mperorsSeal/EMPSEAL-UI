@@ -161,7 +161,7 @@ const TransferPanel = () => {
             <div className="flex w-full justify-between rounded-2xl py-4 scales-b scales-top-1 ">
               <img className="bg-sell" src={Sellbox} alt="sellbox" />
               <div className="flex justify-between gap-3 items-center md:pl-8 pl-4">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-20px] top-[-40px]">
+                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-35px] top-[-40px]">
                   From
                 </h2>
                 <div className="text-center absolute top-[-30px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
