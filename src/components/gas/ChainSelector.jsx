@@ -3,7 +3,13 @@ import { useGetChains } from "../../hooks/useGasBridgeAPI";
 import { useGasBridgeStore } from "../../redux/store/gasBridgeStore";
 import { ChevronDown, Search, ArrowUpDown } from "lucide-react";
 
-const ChainDropdown = ({ chains, selectedChainId, onSelectChain, label }) => {
+const ChainDropdown = ({
+  chains,
+  selectedChainId,
+  onSelectChain,
+  label,
+  bgColor = "bg-black",
+}) => {
   const [isOpen, setIsOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
@@ -65,22 +71,49 @@ const ChainDropdown = ({ chains, selectedChainId, onSelectChain, label }) => {
 
   return (
     <div className="relative" ref={dropdownRef}>
-      <label className="block text-sm font-medium text-gray-300 mb-1">
-        {label}
-      </label>
+      {/* <label className="block text-sm font-medium text-gray-300 mb-1">
+          {label}
+        </label> */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="w-full bg-gray-700 p-2 rounded-md flex justify-between items-center text-white"
+        className={`${bgColor} border border-white rounded-lg md:px-3 px-2 md:py-4 py-2 flex gap-1 items-center transition-all duration-200`}
       >
-        {selectedChain ? renderChain(selectedChain, true) : "Select Chain"}
+        {(() => {
+          const text = selectedChain
+            ? selectedChain.name || selectedChain
+            : "Select Chain";
+
+          const length = text.toString().length;
+
+          const fontSizeClass =
+            length > 11 ? "text-xs" : length > 14 ? "text-sm" : "text-base";
+
+          return (
+            <span className={`whitespace-nowrap ${fontSizeClass}`}>
+              {selectedChain ? renderChain(selectedChain, true) : text}
+            </span>
+          );
+        })()}
+
         <ChevronDown
           size={20}
           className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
         />
       </button>
 
+      {/* <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="bg-black border border-white rounded-lg md:px-4 px-2 md:py-3 py-2 flex gap-2 items-center text-white"
+      >
+        {selectedChain ? renderChain(selectedChain, true) : "Select Chain"}
+        <ChevronDown
+          size={20}
+          className={`transition-transform ${isOpen ? "rotate-180" : ""}`}
+        />
+      </button> */}
+
       {isOpen && (
-        <div className="absolute z-10 mt-1 w-full bg-gray-800 border border-gray-700 rounded-lg shadow-lg max-h-60 flex flex-col">
+        <div className="absolute z-10 mt-1 w-full bg-black rounded-lg shadow-lg max-h-60 flex flex-col">
           <div className="p-2 border-b border-gray-700">
             <div className="relative">
               <Search
@@ -92,7 +125,7 @@ const ChainDropdown = ({ chains, selectedChainId, onSelectChain, label }) => {
                 placeholder="Search chain..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-gray-900 text-white rounded-md pl-10 pr-4 py-2 focus:outline-none"
+                className="w-full bg-black text-white rounded-md pl-10 pr-4 py-2 focus:outline-none"
               />
             </div>
           </div>
@@ -101,7 +134,7 @@ const ChainDropdown = ({ chains, selectedChainId, onSelectChain, label }) => {
               <div
                 key={chain.chain}
                 onClick={() => handleSelect(chain.chain)}
-                className="p-2 hover:bg-gray-700 cursor-pointer text-white"
+                className="p-2 hover:bg-[#FF9900]/10 cursor-pointer text-white"
               >
                 {renderChain(chain)}
               </div>
@@ -113,17 +146,27 @@ const ChainDropdown = ({ chains, selectedChainId, onSelectChain, label }) => {
   );
 };
 
-const ChainSelector = () => {
+const ChainSelector = ({ onSwitch }) => {
   const { data: chains, isLoading, error } = useGetChains();
   const { fromChainId, toChainId, setFromChain, setToChain } =
     useGasBridgeStore();
 
-  const handleSwitch = () => {
-    const currentFrom = fromChainId;
-    const currentTo = toChainId;
-    setFromChain(currentTo);
-    setToChain(currentFrom);
-  };
+  // const handleSwitch = () => {
+  //   const currentFrom = fromChainId;
+  //   const currentTo = toChainId;
+  //   setFromChain(currentTo);
+  //   setToChain(currentFrom);
+  // };
+  useEffect(() => {
+    if (onSwitch) {
+      onSwitch(() => {
+        const currentFrom = fromChainId;
+        const currentTo = toChainId;
+        setFromChain(currentTo);
+        setToChain(currentFrom);
+      });
+    }
+  }, [fromChainId, toChainId]);
 
   if (isLoading)
     return <div className="text-center text-gray-400">Loading chains...</div>;
@@ -141,15 +184,16 @@ const ChainSelector = () => {
   }));
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-xl font-semibold text-white">Select Chains</h2>
+    <div className="space-y-4 md:h-[455px] h-[400px] flex justify-between flex-col">
+      {/* <h2 className="text-xl font-semibold text-white">Select Chains</h2> */}
       <ChainDropdown
-        label="From"
+        // label="From"
         chains={formattedChains}
         selectedChainId={fromChainId}
         onSelectChain={setFromChain}
+        bgColor="bg-black text-white"
       />
-      <div className="flex justify-center items-center -my-2">
+      {/* <div className="flex justify-center items-center -my-2">
         <button
           onClick={handleSwitch}
           disabled={!fromChainId && !toChainId}
@@ -158,12 +202,13 @@ const ChainSelector = () => {
         >
           <ArrowUpDown size={18} />
         </button>
-      </div>
+      </div> */}
       <ChainDropdown
-        label="To"
+        // label="To"
         chains={formattedChains.filter((c) => c.chain !== fromChainId)}
         selectedChainId={toChainId}
         onSelectChain={setToChain}
+        bgColor="bg-[#FFE6C0] text-black border-black"
       />
     </div>
   );
