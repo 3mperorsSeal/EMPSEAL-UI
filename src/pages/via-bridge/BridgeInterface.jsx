@@ -350,33 +350,7 @@ const BridgeInterface = () => {
                     </button>
                   ))}
                 </div>
-                {/* <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
-                  <span />
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    25%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    50%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    75%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    100%
-                  </button>
-                </div> */}
+            
 
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
                   {(() => {

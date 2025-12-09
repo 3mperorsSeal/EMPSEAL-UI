@@ -114,6 +114,45 @@ const TransferPanel = () => {
   }
   const switchRef = useRef(null);
 
+  const [selectedPercentage, setSelectedPercentage] = useState(null);
+  const balance = balanceData ? Number(balanceData.formatted) : 0;
+
+  const handlePercentageChange = (percentage) => {
+    if (!balance || balance <= 0) return;
+
+    const calculatedAmount = (balance * percentage) / 100;
+
+    setSelectedPercentage(percentage);
+    setAmount(calculatedAmount.toString());
+  };
+
+  const handleAmountChange = (e) => {
+    const value = e.target.value;
+    setAmount(value);
+
+    if (!balance || !value || isNaN(value)) {
+      setSelectedPercentage(null);
+      return;
+    }
+
+    const numericValue = Number(value);
+
+    // Clamp amount to balance
+    if (numericValue > balance) {
+      setAmount(balance.toString());
+      setSelectedPercentage(100);
+      return;
+    }
+
+    const percent = Math.round((numericValue / balance) * 100);
+
+    if ([25, 50, 75, 100].includes(percent)) {
+      setSelectedPercentage(percent);
+    } else {
+      setSelectedPercentage(null);
+    }
+  };
+
   return (
     <>
       <div className="w-full md;px-0 px-4">
@@ -147,6 +186,26 @@ const TransferPanel = () => {
               </div>
               <div>
                 <div className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full md:top-12 md:mt-0 mt-10">
+                  <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
+                    {[25, 50, 75, 100].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        // disabled={isLoading}
+                        disabled={isBalanceLoading || !balance}
+                        onClick={() => handlePercentageChange(value)}
+                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2
+        ${
+          selectedPercentage === value
+            ? "bg-black text-white"
+            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+        }`}
+                      >
+                        {value}%
+                      </button>
+                    ))}
+                  </div>
+
                   {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
@@ -164,7 +223,8 @@ const TransferPanel = () => {
                           id="amount"
                           type="text"
                           value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
+                          // onChange={(e) => setAmount(e.target.value)}
+                          onChange={handleAmountChange}
                           placeholder="0.1"
                           className={`w-full text-[#000] py-2 font-bold text-end leading-7 outline-none border-none bg-transparent px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
                           style={{
@@ -179,15 +239,21 @@ const TransferPanel = () => {
                   })()}
                 </div>
                 <div
+                  // onClick={() => {
+                  //   if (!isBalanceLoading && balanceData) {
+                  //     setAmount(balanceData.formatted);
+                  //   }
+                  // }}
                   onClick={() => {
                     if (!isBalanceLoading && balanceData) {
-                      setAmount(balanceData.formatted);
+                      setAmount(balance.toString());
+                      setSelectedPercentage(100);
                     }
                   }}
                   className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full cursor-pointer md:top-12"
                 >
-                  <p className="roboto uppercase text-black font-semibold text-right">
-                    (max)
+                  <p className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
+                    Max Amount
                   </p>
                 </div>
               </div>
@@ -205,7 +271,7 @@ const TransferPanel = () => {
         <button
           onClick={() => switchRef.current && switchRef.current()}
           className="cursor-pointer md:mt-20 md:mb-8 mt-16 mb-8 mx-auto flex scales-b scales-top-2"
-        > 
+        >
           <img src={UpDownAr} alt="Ar" className="mx-auto md:w-[70px] w-12" />
         </button>
         {/*  */}
