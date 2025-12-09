@@ -41,7 +41,7 @@ const TransactionHistory = () => {
       </div>
       <div className="clip-bg1 w-full rounded-tr-2xl rounded-b-2xl lg:py-8 lg:px-8 md:px-6 px-4 md:py-6 py-6 space-y-3">
         <>
-          <div className="flex items-center gap-4 w-full md:flex-nowrap flex-wrap">
+          {/* <div className="flex items-center gap-4 w-full md:flex-nowrap flex-wrap">
             <div className="flex items-center bg-[#3A2E1F] rounded-xl px-4 w-full h-[65px] roboto">
               <input
                 type="text"
@@ -71,7 +71,7 @@ const TransactionHistory = () => {
                 Explorer
               </button>
             </div>
-          </div>
+          </div> */}
           {isOpen && (
             <>
               {!address ? (

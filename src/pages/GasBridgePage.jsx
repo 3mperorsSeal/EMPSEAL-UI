@@ -4,31 +4,32 @@ import TransactionHistory from "../components/gas/TransactionHistory";
 
 export default function GasBridgePage() {
   return (
-    <div className="md:max-w-[1100px] w-full mx-auto p-4 text-white">
-      <div className="text-center mb-4">
-        <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
-          Gas Bridge
-        </h1>
-        <p className="text-lg text-gray-400 text-center">
-          Instantly refuel gas on any chain.
-        </p>
-      </div>
-
-      {/* Main Bridge UI */}
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
-        {/* Left Side */}
-        {/* <div className="md:col-span-1 bg-gray-800 p-6 rounded-lg">
-          <ChainSelector />
-        </div> */}
-        {/* Right Side */}
-        <div className="w-full">
-          <TransferPanel />
+    <>
+      <div className="md:max-w-[1100px] w-full mx-auto p-4 text-white">
+        <div className="text-center mb-4">
+          <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
+            Gas Bridge
+          </h1>
+          <p className="text-lg text-gray-400 text-center">
+            Instantly refuel gas on any chain.
+          </p>
         </div>
       </div>
+      {/* Main Bridge UI */}
+      {/* <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top"> */}
+      {/* Left Side */}
+      {/* <div className="md:col-span-1 bg-gray-800 p-6 rounded-lg">
+          <ChainSelector />
+        </div> */}
+      {/* Right Side */}
+      {/* <div className="w-full"> */}
+      <TransferPanel />
+      {/* </div> */}
+      {/* </div> */}
       {/* Bottom Section */}
-      <div className="md:mt-20 mt-8">
+      <div className="md:mt-20 mt-8 md:max-w-[1100px] w-full mx-auto p-4">
         <TransactionHistory />
       </div>
-    </div>
+    </>
   );
 }

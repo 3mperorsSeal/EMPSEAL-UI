@@ -116,17 +116,16 @@ const TransferPanel = () => {
 
   return (
     <>
-      <div className="w-full">
-        <div className="relative h-[200px] flex justify-center items-center">
-          <img className="bg-sell" src={Sellbox} alt="sellbox" />
-
-          <div className="flex md:max-w-[730px] w-full px-4 py-4 mt-2 relative">
-            <div className="flex w-full justify-between rounded-2xl py-4 px-1">
-              <div className="flex justify-between gap-3 items-center lg:px-1">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative top-[-60px]">
+      <div className="w-full md;px-0 px-4">
+        <div className="relative h-[200px] flex justify-center items-center md:max-w-[730px] w-full py-4 mt-2 mx-auto">
+          <div className="flex md:max-w-[730px] w-full py-4 mt-2 relative">
+            <div className="flex w-full justify-between rounded-2xl py-4 scales-b scales-top-1 ">
+              <img className="bg-sell" src={Sellbox} alt="sellbox" />
+              <div className="flex justify-between gap-3 items-center md:pl-8 pl-4">
+                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-20px] top-[-40px]">
                   From
                 </h2>
-                <div className="text-center absolute top-[-50px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
+                <div className="text-center absolute top-[-30px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
                   <span className="font-bold font-orbitron leading-normal">
                     BAL
                   </span>
@@ -147,7 +146,7 @@ const TransferPanel = () => {
                 </div>
               </div>
               <div>
-                <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end w-full">
+                <div className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full md:top-12 md:mt-0 mt-10">
                   {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
@@ -185,33 +184,32 @@ const TransferPanel = () => {
                       setAmount(balanceData.formatted);
                     }
                   }}
-                  className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end w-full cursor-pointer"
+                  className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full cursor-pointer md:top-12"
                 >
                   <p className="roboto uppercase text-black font-semibold text-right">
                     (max)
                   </p>
                 </div>
               </div>
-
-              <div className="absolute md:left-[-50px] left-[-20px] top-14 z-20">
-                <ChainSelector
-                  onSwitch={(fn) => {
-                    switchRef.current = fn;
-                  }}
-                />
-              </div>
+            </div>
+            <div className="absolute md:left-[-50px] left-[-10px] top-20 z-20">
+              <ChainSelector
+                onSwitch={(fn) => {
+                  switchRef.current = fn;
+                }}
+              />
             </div>
           </div>
         </div>
         {/*  */}
         <button
           onClick={() => switchRef.current && switchRef.current()}
-          className="cursor-pointer md:mt-16 md:mb-12 mt-10 mb-8 mx-auto flex"
-        >
+          className="cursor-pointer md:mt-20 md:mb-8 mt-16 mb-8 mx-auto flex scales-b scales-top-2"
+        > 
           <img src={UpDownAr} alt="Ar" className="mx-auto md:w-[70px] w-12" />
         </button>
         {/*  */}
-        <div className="relative h-[200px] flex justify-center items-center text-white">
+        <div className="relative h-[200px] flex justify-center items-center text-white scales-b scales-top">
           <img className="bg-sell" src={Buybox} alt="Buybox" />
 
           <div className="md:max-w-[730px] w-full px-4 py-4 mt-2">
@@ -235,7 +233,7 @@ const TransferPanel = () => {
                   : "md:text-[40px] text-2xl";
 
               return (
-                <div className="w-full py-2 text-end px-1 font-orbitron transition-all duration-200">
+                <div className="w-full py-2 text-end px-1 font-orbitron transition-all duration-200 ">
                   <span
                     className={`font-bold text-white ${fontSizeClass}`}
                     style={{
@@ -258,43 +256,45 @@ const TransferPanel = () => {
             })()}
           </div>
         </div>
-        <div className="md:my-14 my-7 relative">
-          <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
-            Recipient Address
-          </label>
-          <div className="relative w-full h-[120px]">
-            <img className="bg-rb" src={Rbox} alt="Rbox" />
-            <input
-              type="text"
-              id="recipient"
-              value={recipientAddress}
-              onChange={(e) => setRecipientAddress(e.target.value)}
-              placeholder="0x..."
-              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full pl-10 pr-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
-            />
+        <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
+          <div className="md:my-14 my-7 relative">
+            <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
+              Recipient Address
+            </label>
+            <div className="relative w-full h-[120px]">
+              <img className="bg-rb" src={Rbox} alt="Rbox" />
+              <input
+                type="text"
+                id="recipient"
+                value={recipientAddress}
+                onChange={(e) => setRecipientAddress(e.target.value)}
+                placeholder="0x..."
+                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full pl-10 pr-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
+              />
+            </div>
           </div>
-        </div>
-        <div className="md:px-1 px-4 md:pt-10 pt-5">
-          <button
-            onClick={handleBridgeClick}
-            disabled={!quoteData || isSending || isConfirming}
-            type="button"
-            className="w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
-          >
-            <img
-              className="absolute swap-button1 top-0 bottom-0 my-auto"
-              src={Swapbutton}
-              alt="Swap"
-            />
-            <span className="h-20">
-              {" "}
-              {isSending
-                ? "Check Wallet..."
-                : isConfirming
-                ? "Bridging..."
-                : "Bridge"}
-            </span>
-          </button>
+          <div className="md:px-1 px-4 md:pt-10 pt-5">
+            <button
+              onClick={handleBridgeClick}
+              disabled={!quoteData || isSending || isConfirming}
+              type="button"
+              className="w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
+            >
+              <img
+                className="absolute swap-button1 top-0 bottom-0 my-auto"
+                src={Swapbutton}
+                alt="Swap"
+              />
+              <span className="h-20">
+                {" "}
+                {isSending
+                  ? "Check Wallet..."
+                  : isConfirming
+                  ? "Bridging..."
+                  : "Bridge"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
       {/*  */}
