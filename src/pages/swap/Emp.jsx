@@ -36,9 +36,25 @@ import {
 } from "../../utils/contractCalls";
 import { toast } from "react-toastify";
 
+import { WPLS } from "../../utils/abis/wplsABI";
+import { WETHW } from "../../utils/abis/wethwABI";
+import { WSONIC } from "../../utils/abis/wsonicABI";
+
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
 import OrderListItems from "../limit-orders/LimitOrder";
+
+const getWrappedTokenABI = (chainId) => {
+  switch (chainId) {
+    case 10001:
+      return WETHW;
+    case 146:
+      return WSONIC;
+    case 369:
+    default:
+      return WPLS;
+  }
+};
 
 const Emp = ({ setPadding }) => {
   const [isAmountVisible, setAmountVisible] = useState(false);
@@ -104,8 +120,9 @@ const Emp = ({ setPadding }) => {
       router.loadAdapters().then(() => {
         setSmartRouter(router);
       });
+      router.setMaxHops(maxHops || 3);
       router.setMaxAdapters(6);
-      router.setGranularity(1);
+      router.setGranularity(5);
     }
   }, [publicClient, routerAddress]);
 
@@ -135,6 +152,7 @@ const Emp = ({ setPadding }) => {
         return;
       }
       setIsQuoting(true);
+      setAmountOut("0"); // Reset previous quote state
       const amountInBigInt = convertToBigInt(amountIn, selectedTokenA.decimal);
       if (amountInBigInt <= 0) {
         setAmountOut("0");
@@ -152,7 +170,7 @@ const Emp = ({ setPadding }) => {
       );
 
       setBestRoute(route);
-      console.log("Best route:", route);
+      // console.log("Best route:", route);
 
       if (route) {
         let path = [];
@@ -164,6 +182,8 @@ const Emp = ({ setPadding }) => {
           ];
         } else if (route.type === "SPLIT" && route.payload.length > 0) {
           path = route.payload[0].path;
+        } else if (route.type === "WRAP" || route.type === "UNWRAP") {
+          path = [route.payload.tokenIn, route.payload.tokenOut];
         }
         setRoute(path);
 
@@ -191,7 +211,7 @@ const Emp = ({ setPadding }) => {
   }, [address, datas]);
 
   const formattedBalance = balanceAddress
-    ? `${parseFloat(balanceAddress).toFixed(3)}`
+    ? `${parseFloat(balanceAddress).toFixed(6)}`
     : "0.00";
 
   function setRoute(path) {
@@ -214,7 +234,7 @@ const Emp = ({ setPadding }) => {
 
   // Format the chain balance
   const formattedChainBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(3) // Format to 6 decimal places
+    ? parseFloat(tokenBalance.formatted).toFixed(6) // Format to 6 decimal places
     : "0.000";
 
   const { data: tokenBBalance } = useBalance({
@@ -225,7 +245,7 @@ const Emp = ({ setPadding }) => {
 
   // Format the chain balance
   const formattedChainBalanceTokenB = tokenBBalance
-    ? parseFloat(tokenBBalance.formatted).toFixed(3) // Format to 6 decimal places
+    ? parseFloat(tokenBBalance.formatted).toFixed(6) // Format to 6 decimal places
     : "0.000";
 
   const handlePercentageChange = (e) => {
@@ -255,9 +275,9 @@ const Emp = ({ setPadding }) => {
       percentage === 100
     ) {
       // Leave some balance for gas fees (e.g., 0.01 units)
-      return Math.max(0, calculatedAmount).toFixed(3);
+      return Math.max(0, calculatedAmount).toFixed(6);
     }
-    return calculatedAmount.toFixed(3);
+    return calculatedAmount.toFixed(6);
   };
 
   // const WETH_ADDRESS = "0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990";
@@ -408,7 +428,7 @@ const Emp = ({ setPadding }) => {
     if (conversionRate && !isNaN(conversionRate)) {
       const valueInUSD = (
         parseFloat(amountIn || 0) * parseFloat(conversionRate)
-      ).toFixed(3);
+      ).toFixed(6);
       setUsdValue(valueInUSD);
       setUsdValueTokenA(valueInUSD);
     } else {
@@ -420,7 +440,7 @@ const Emp = ({ setPadding }) => {
     if (conversionRateTokenB && !isNaN(conversionRateTokenB)) {
       const valueInUSD = (
         parseFloat(amountOut || 0) * parseFloat(conversionRateTokenB)
-      ).toFixed(3);
+      ).toFixed(6);
       setUsdValueTokenB(valueInUSD);
     } else {
       console.error(
@@ -438,7 +458,7 @@ const Emp = ({ setPadding }) => {
       // Handle approval
       if (selectedTokenA.address !== EMPTY_ADDRESS) {
         const amountInBigInt =
-          bestRoute.type === "CONVERGE"
+          bestRoute.type === "CONVERGE" || bestRoute.type === "UNWRAP"
             ? bestRoute.payload.amountIn
             : convertToBigInt(amountIn, selectedTokenA.decimal);
 
@@ -468,7 +488,21 @@ const Emp = ({ setPadding }) => {
       // const minAmountOut = bestRoute.amountOut; // 0.5% slippage
 
       let tx;
-      if (bestRoute.type === "CONVERGE") {
+      if (bestRoute.type === "WRAP") {
+        tx = await writeContractAsync({
+          address: wethAddress,
+          abi: getWrappedTokenABI(chainId),
+          functionName: "deposit",
+          value: bestRoute.payload.amountIn,
+        });
+      } else if (bestRoute.type === "UNWRAP") {
+        tx = await writeContractAsync({
+          address: wethAddress,
+          abi: getWrappedTokenABI(chainId),
+          functionName: "withdraw",
+          args: [bestRoute.payload.amountIn],
+        });
+      } else if (bestRoute.type === "CONVERGE") {
         tx = await writeContractAsync({
           address: routerAddress,
           abi: EmpsealRouterLiteV3,
@@ -496,19 +530,32 @@ const Emp = ({ setPadding }) => {
         });
       }
       setSwapHash(tx);
-      setSwapStatus("SWAPPED");
-      setSwapSuccess(true);
-      setAmountVisible(false);
+
+      toast.info("Waiting for transaction confirmation...");
+      const receipt = await publicClient.waitForTransactionReceipt({
+        hash: tx,
+      });
+
+      if (receipt.status === "success") {
+        setAmountVisible(false); // Close Amount modal on success
+        setSwapStatus("SWAPPED");
+        setSwapSuccess(true); // Now show the final success modal
+        toast.success("Transaction Confirmed!");
+      } else {
+        setAmountVisible(false); // Close Amount modal on failure
+        throw new Error("Transaction reverted on-chain.");
+      }
     } catch (error) {
+      setAmountVisible(false); // Close Amount modal on other errors
       setSwapStatus("ERROR");
-      toast.error("Transaction failed");
+      toast.error(error.message || "Transaction failed");
       console.error("Swap failed", error);
     }
   };
   const getRateDisplay = () => {
     if (!amountIn || !amountOut || +amountOut === 0) return "0";
     const rate = parseFloat(amountOut) / parseFloat(amountIn);
-    return isRateReversed ? (1 / rate).toFixed(3) : rate.toFixed(3);
+    return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
   };
 
   useEffect(() => {
@@ -730,7 +777,7 @@ const Emp = ({ setPadding }) => {
                         : `${
                             tokenBalance
                               ? formatNumber(
-                                  parseFloat(tokenBalance.formatted).toFixed(3)
+                                  parseFloat(tokenBalance.formatted).toFixed(6)
                                 )
                               : "0.00"
                           }`}
@@ -875,7 +922,7 @@ const Emp = ({ setPadding }) => {
                         : `${
                             tokenBBalance
                               ? formatNumber(
-                                  parseFloat(tokenBBalance.formatted).toFixed(3)
+                                  parseFloat(tokenBBalance.formatted).toFixed(6)
                                 )
                               : "0.00"
                           }`}
@@ -947,7 +994,11 @@ const Emp = ({ setPadding }) => {
                     <input
                       type="text"
                       placeholder="0"
-                      value={formatNumber(parseFloat(amountOut).toFixed(3))}
+                      value={
+                        isQuoting
+                          ? "Loading..."
+                          : formatNumber(parseFloat(amountOut).toFixed(6))
+                      }
                       onChange={handleOutputChange}
                       readOnly
                       className="truncate text-white font-bold font-orbitron text-end w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
@@ -955,9 +1006,11 @@ const Emp = ({ setPadding }) => {
                         fontSize: `${Math.max(
                           12,
                           40 -
-                            formatNumber(
-                              parseFloat(amountOut).toFixed(3)
-                            ).toString().length *
+                            (isQuoting
+                              ? "Loading...".length
+                              : formatNumber(
+                                  parseFloat(amountOut).toFixed(6)
+                                ).toString().length) *
                               1.5
                         )}px`,
                       }}
@@ -1129,7 +1182,7 @@ const Emp = ({ setPadding }) => {
           <Amount
             onClose={() => setAmountVisible(false)}
             amountIn={amountIn}
-            amountOut={parseFloat(amountOut).toFixed(3)}
+            amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
             tokenB={selectedTokenB}
             confirm={confirmSwap}
@@ -1151,7 +1204,7 @@ const Emp = ({ setPadding }) => {
           <span>
             <span className="font-semibold">Min Received</span> :{" "}
             <span className="font-bold truncate">
-              {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(3))}{" "}
+              {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
             </span>
             {selectedTokenB.ticker}
           </span>

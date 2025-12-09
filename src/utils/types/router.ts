@@ -22,10 +22,17 @@ export type SplitPath = {
   proportion: number;
 };
 
+// NEW type for WRAP/UNWRAP payload
+export type WrapUnwrapTrade = {
+  tokenIn: `0x${string}`;
+  tokenOut: `0x${string}`;
+  amountIn: bigint;
+};
+
 // Internal type for the Router result
 export type BestRouteResult = {
-  type: "CONVERGE" | "SPLIT";
+  type: "CONVERGE" | "SPLIT" | "WRAP" | "UNWRAP";
   amountOut: bigint;
-  payload: ConvergeTrade | SplitPath[]; // The data to pass to the contract write function
+  payload: ConvergeTrade | SplitPath[] | WrapUnwrapTrade; // The data to pass to the contract write function
   gasEstimate: bigint;
 };
