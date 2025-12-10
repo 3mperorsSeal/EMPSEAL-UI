@@ -258,7 +258,7 @@ const TransferPanel = () => {
                 </div>
               </div>
             </div>
-            <div className="absolute md:left-[-50px] left-[-10px] top-20 z-20">
+            <div className="absolute md:left-[-40px] left-[-10px] top-20 z-20">
               <ChainSelector
                 onSwitch={(fn) => {
                   switchRef.current = fn;
