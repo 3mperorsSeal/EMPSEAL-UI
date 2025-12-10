@@ -591,7 +591,7 @@ export function CreateOrderForm({
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-7">
                     {/* md:w-[220px] w-[160px] */}
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[140px] items-center bg-black border border-white rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center bg-black border border-white rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
                       {tokenInMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -762,7 +762,7 @@ export function CreateOrderForm({
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-7">
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[140px] items-center !bg-[#FFE6C0] border border-[#FFE6C0] rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center !bg-[#FFE6C0] border border-[#FFE6C0] rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
