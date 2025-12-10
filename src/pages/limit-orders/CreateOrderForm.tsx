@@ -967,7 +967,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(15)}
-                  className="btn"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
                 >
                   15%
                 </button>
@@ -975,7 +975,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(25)}
-                  className="btn"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
                 >
                   25%
                 </button>
@@ -983,7 +983,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(50)}
-                  className="btn"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
                 >
                   50%
                 </button>
@@ -991,7 +991,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(75)}
-                  className="btn"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
                 >
                   75%
                 </button>
@@ -999,7 +999,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(100)}
-                  className="btn"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
                 >
                   100%
                 </button>
