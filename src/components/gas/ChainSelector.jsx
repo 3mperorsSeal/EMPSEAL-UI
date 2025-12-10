@@ -362,7 +362,7 @@ const ChainSelector = ({ onSwitch }) => {
 
   return (
     <>
-      <div className="space-y-4 md:h-[425px] h_cs h-[400px] flex flex-col justify-between">
+      <div className="space-y-4 md:h-[435px] h_cs h-[400px] flex flex-col justify-between">
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}

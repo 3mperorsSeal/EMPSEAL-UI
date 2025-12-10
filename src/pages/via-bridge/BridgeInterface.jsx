@@ -269,7 +269,7 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
+      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via"> 
         {/* <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-white">Bridge</h2>
           <p className="text-sm text-gray-400">Transfer tokens across chains</p>

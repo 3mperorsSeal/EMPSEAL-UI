@@ -770,7 +770,9 @@ const Emp = ({ setPadding }) => {
           order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
         }`}
       >
-        <div className="scales8">
+        <div
+          className={`scales8 ${order ? "scales-top scales-top_limit" : ""}`}
+        >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
               Seamless

@@ -253,6 +253,21 @@ body {
   z-index: -1;
   height: 215px;
 }
+.bg-sell-1 {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 100%;
+  // height: 215px;
+}
+.bg-sell {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: -1;
+  height: 215px;
+}
 .bg-rb {
   position: absolute;
   top: 0;
@@ -593,6 +608,19 @@ body.bg-pattern {
   //   right: 80px;
   // }
 }
+@media (min-width: 1900px) {
+  .scales-top_via {
+    top: -10px;
+  }
+  .scales-top_limit {
+    top: -40px;
+  }
+}
+@media (min-width: 1024px) and (max-width: 1700px) {
+  .scales-top_limit {
+    top: -180px !important;
+  }
+}
 @media (min-width: 1024px) and (max-width: 1536px) {
   .wallet-bg-bridge button {
     font-size: 14px !important;
@@ -792,7 +820,7 @@ input:checked + .slider {
 }
 
 input:checked + .slider:before {
-  transform: translateX(9px);
+  transform: translateX(8px);
 }
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
@@ -805,4 +833,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .bgs {
   background-color: transparent !important;
   background: transparent !important;
+}
+input[type="datetime-local"] {
+  color-scheme: dark;
+}
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+  filter: invert(0);
 }
