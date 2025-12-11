@@ -52,5 +52,5 @@ export const config = getDefaultConfig({
   projectId: 'YOUR_PROJECT_ID',
   chains: [pulsechain, ethw, sonic],
   ssr: true,
-  swapConnectors,
+  connectors: swapConnectors,
 });

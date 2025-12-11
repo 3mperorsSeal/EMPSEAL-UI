@@ -5,7 +5,6 @@ import {
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
-import { useConnectModal } from "@rainbow-me/rainbowkit";
 import { parseEther, formatEther } from "viem";
 import { toast } from "react-toastify";
 import { ArrowDownUp, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -30,7 +29,6 @@ import ERC20_ABI from "../../utils/via-bridge-abis/ERC20";
 
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
-  const { openConnectModal } = useConnectModal();
   const { transactions, addTransaction, clearTransactions } =
     useRecentTransactions();
 
@@ -189,7 +187,7 @@ const BridgeInterface = () => {
   const renderButton = () => {
     if (!address) {
       return (
-        <button onClick={openConnectModal} className="w-full">
+        <button disabled className="w-full">
           Connect Wallet
         </button>
       );
@@ -269,7 +267,7 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via"> 
+      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
         {/* <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-white">Bridge</h2>
           <p className="text-sm text-gray-400">Transfer tokens across chains</p>
@@ -350,7 +348,6 @@ const BridgeInterface = () => {
                     </button>
                   ))}
                 </div>
-            
 
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
                   {(() => {

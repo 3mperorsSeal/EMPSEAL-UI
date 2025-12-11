@@ -1,3 +1,4 @@
+// NEW
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import ChainPopup from "./Chainpopup";
@@ -9,9 +10,6 @@ import {
   useChains,
 } from "wagmi";
 import AddressCard from "./AddressCard";
-// import Dis from "../../../assets/images/dis.png";
-// import Copy from "../../../assets/images/copy.png";
-// import Sbg from "../../../assets/images/sbg.png";
 
 const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain }) => {
   useEffect(() => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Logo from "../../assets/images/emp-logo.png";
-import WalletImg from "../../assets/images/wallet-2.svg";
-import Home from "../../assets/images/house.svg";
+import Logo from "../../../assets/images/emp-logo.png";
+import WalletImg from "../../../assets/images/wallet-2.svg";
+import Home from "../../../assets/images/house.svg";
 import { Link } from "react-router-dom";
 import WalletConnect from "./WalletConnect/WalletConnect";
 import { useBalance, useAccount } from "wagmi";
@@ -19,7 +19,6 @@ const Wallet = () => {
 
   useEffect(() => {
     if (address && data) {
-      // console.log('data.value', data.value);
       setBalance(formatEther(data.value));
     } else if (!address) {
       setBalance("0.00");
@@ -54,8 +53,8 @@ const Wallet = () => {
   }, []);
 
   return (
-    <div>
-      <div className="flex justify-center gap-4 flex-col wallet_bg z-50 md:mt-0 mt-3 absolute wallet-bg-bridge wallet-bg-bridge01 lefts1">
+    <>
+      <div className="flex justify-center gap-4 flex-col wallet_bg z-10 md:mt-0 mt-3 absolute wallet-bg-bridge lefts1">
         <WalletConnect
           icon={<img src={WalletImg} alt="Wallet Icon" />}
           onChainChange={handleChainChange}
@@ -66,39 +65,7 @@ const Wallet = () => {
           </button>
         </Link>
       </div>
-      {/* <div className="w-full border border-white hidden rounded-xl py-4 2xl:px-6 lg:px-5 px-4 bg-black gap-8"> */}
-      {/* <div className='flex flex-col bg-[#161616] p-5 rounded-lg w-full md:max-w-[202px]'>
-        <div className='flex items-center gap-2 mb-4 text-white font-mono text-sm truncate roboto'>
-          <img src={Logo} alt='Logo' className='h-8' />
-          {address ? 
-            truncateAddress(address)
-          : 
-            <span className='text-gray-400'>Not Connected</span>
-          }
-        </div>
-        {chainName ? (
-          <div className='text-white text-sm font-medium mb-2 flex items-center roboto'>
-            {chainIconUrl && (
-              <img
-                src={chainIconUrl}
-                alt={`${chainName} icon`}
-                className='w-6 h-6 mt-1 me-2'
-              />
-            )}
-            {chainName}
-          </div>
-        ) : (
-          <div className='text-gray-400 text-sm'>No chain found</div>
-        )}
-        <div className='flex items-center gap-2'>
-          <div className='text-white text-lg font-bold roboto'>
-            {formatNumber(formattedBalance)}{' '}
-            {chain?.nativeCurrency?.symbol || 'ETH'}
-          </div>
-        </div>
-      </div> */}
-      {/* </div> */}
-    </div>
+    </>
   );
 };
 

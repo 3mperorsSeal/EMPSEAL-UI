@@ -14,6 +14,22 @@ import AddressCard from "./AddressCard";
 // import Copy from "../../../assets/images/copy.png";
 // import Sbg from "../../../assets/images/sbg.png";
 
+const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain }) => {
+  useEffect(() => {
+    if (onChainChange) {
+      onChainChange(chain?.iconUrl, chain?.name);
+    }
+  }, [chain, onChainChange]);
+
+  useEffect(() => {
+    if (chain?.unsupported && chains?.length > 0) {
+      switchChain({ chainId: chains[0].id });
+    }
+  }, [chain, chains, switchChain]);
+
+  return null; // This component doesn't render anything visible
+};
+
 export default function WalletConnect({ onChainChange }) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
@@ -46,17 +62,7 @@ export default function WalletConnect({ onChainChange }) {
 
         // Effects moved inside render prop to correctly access `chain`
         // and avoid infinite loops.
-        useEffect(() => {
-          if (onChainChange) {
-            onChainChange(chain?.iconUrl, chain?.name);
-          }
-        }, [chain, onChainChange]);
 
-        useEffect(() => {
-          if (chain?.unsupported && chains?.length > 0) {
-            switchChain({ chainId: chains[0].id });
-          }
-        }, [chain, chains, switchChain]);
 
         if (!ready) return null;
         if (!connected) {
@@ -182,6 +188,12 @@ export default function WalletConnect({ onChainChange }) {
         }
         return (
           <>
+            <ChainChangeHandler
+              chain={chain}
+              onChainChange={onChainChange}
+              chains={chains}
+              switchChain={switchChain}
+            />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
                 className="wallet-bg-bridge1 text-[#FF9900] text-center"

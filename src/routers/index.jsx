@@ -51,6 +51,15 @@ const SwapWrapper = ({ children }) => (
   </WagmiProviderWrapper>
 );
 
+const ViaBridgeWrapper = ({ children }) => (
+  <WagmiProviderWrapper appType="via-bridge">
+    <Provider store={store}>
+      {children}
+      <ToastContainer position="top-right" theme="dark" autoClose={5000} />
+    </Provider>
+  </WagmiProviderWrapper>
+);
+
 function MyRoutes() {
   return (
     <>
@@ -93,9 +102,9 @@ function MyRoutes() {
             <Route
               path="/via-bridge"
               element={
-                <BridgeWrapper>
+                <ViaBridgeWrapper>
                   <ViaBridge />
-                </BridgeWrapper>
+                </ViaBridgeWrapper>
               }
             />
             <Route

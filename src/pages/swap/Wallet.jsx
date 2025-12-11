@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Logo from "../../assets/images/emp-logo.png";
 import WalletImg from "../../assets/images/wallet-2.svg";
 import Home from "../../assets/images/house.svg";
@@ -47,10 +47,10 @@ const Wallet = () => {
       : formattedInteger;
   };
 
-  const handleChainChange = (iconUrl, name) => {
+  const handleChainChange = useCallback((iconUrl, name) => {
     setChainIconUrl(iconUrl);
     setChainName(name);
-  };
+  }, []);
 
   return (
     <>
