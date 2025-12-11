@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import Sellbox from "../../assets/images/sell-box.png";
-import Buybox from "../../assets/images/buy-bg.png";
+// import LimitBg from "../../assets/images/buy-bg.png";
+import LimitBg from "../../assets/images/limit-bg.png";
 import Ar from "../../assets/images/reverse.svg";
 import Swapbutton from "../../assets/images/swap-button.svg";
 
@@ -44,6 +45,7 @@ import {
   ArrowUpDown,
   Settings,
   Cog,
+  Info,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { useAccount, useBalance } from "wagmi";
@@ -487,18 +489,39 @@ export function CreateOrderForm({
   const togglePartialFill = () => {
     setIsPartialFill((prev) => !prev);
   };
+
+  // For Limit Price
+  // Apply limit price by +/- percentage from market
+  const applyLimitPriceByPercent = (percent: number | "market") => {
+    if (!marketPrice) return;
+
+    const market = Number(marketPrice);
+    if (!Number.isFinite(market) || market <= 0) return;
+
+    let newPrice = market;
+
+    if (percent !== "market") {
+      const multiplier =
+        currentStrategy === OrderStrategy.SELL
+          ? 1 + percent / 100
+          : 1 - percent / 100;
+
+      newPrice = market * multiplier;
+    }
+
+    form.setValue("limitPrice", newPrice.toFixed(8), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+
+  // For Limit Price
   return (
     <>
       <div data-testid="card-create-order">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
-            {/* <div
-              onClick={() => setIsModalOpen(true)}
-              className="flex items-start justify-between gap-3"
-            >
-              <Cog />
-            </div> */}
             <div>
               <Label className="text-sm font-medium mb-5 block">
                 Order Strategy
@@ -536,7 +559,7 @@ export function CreateOrderForm({
             <img className="bg-sell" src={Sellbox} alt="sellbox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-black">
-                Token In Address
+                In Address
               </div>
               <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
                 <span className="font-bold font-orbitron leading-normal">
@@ -568,7 +591,7 @@ export function CreateOrderForm({
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-7">
                     {/* md:w-[220px] w-[160px] */}
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[140px] items-center bg-black border border-white rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center bg-black border border-white rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
                       {tokenInMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -706,10 +729,10 @@ export function CreateOrderForm({
           {/*  */}
           {/*  */}
           <div className="relative pb-7">
-            <img className="bg-sell" src={Buybox} alt="Buybox" />
+            <img className="bg-sell-1" src={LimitBg} alt="LimitBg" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-white">
-                Token Out Address
+                Out Address
               </div>
               <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
                 <span className="font-bold font-orbitron leading-normal">
@@ -724,7 +747,6 @@ export function CreateOrderForm({
                     ? tokenOutBalance && (
                         <span className="font-bold font-orbitron leading-normal">
                           {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                          {/* {tokenOutInfo?.symbol || "Tokens"} */}
                         </span>
                       )
                     : tokenOutBalance && (
@@ -740,8 +762,7 @@ export function CreateOrderForm({
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-7">
-                    {/* md:w-[220px] w-[160px] */}
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[140px] items-center !bg-[#FFE6C0] border border-[#FFE6C0] rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center !bg-[#FFE6C0] border border-[#FFE6C0] rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -796,7 +817,7 @@ export function CreateOrderForm({
                             className="h-12 bg-transparent !border-none !text-black"
                             data-testid="input-token-out-custom"
                             disabled={
-                              tokenInMode === "custom" && 
+                              tokenInMode === "custom" &&
                               !getTokenInfo(selectedTokenIn) &&
                               isAddress(selectedTokenIn)
                             }
@@ -860,98 +881,164 @@ export function CreateOrderForm({
                 </p>
               )}
             </div>
+            <div className="md:px-5 px-4 md:mt-8 mt-6">
+              {/* Limit Price */}
+              <div className="font-orbitron relative flex gap-2 items-center">
+                <input
+                  id="limitPrice"
+                  {...form.register("limitPrice")}
+                  placeholder="Limit Price"
+                  type="text"
+                  className="!border !border-[#FF9900] h-[54px] flex gap-2 items-center !bg-transparent bgs rounded-lg w-full px-4 outline-none text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                  data-testid="input-limit-price"
+                />
+                {marketPrice && tokenInInfo && tokenOutInfo && (
+                  <button
+                    onClick={() => setQuoteReversed((prev) => !prev)}
+                    className="w-[54px] h-[54px] shrink-0 flex items-center justify-center rounded-lg !border !border-[#FF9900]"
+                  >
+                    <svg
+                      width={38}
+                      height={38}
+                      viewBox="0 0 38 38"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M18.0574 30.8637C17.6264 31.3581 16.8763 31.4094 16.3819 30.9785L7.13591 22.9179C6.76272 22.5925 6.63068 22.0697 6.80437 21.6061C6.97806 21.1425 7.42123 20.8353 7.91634 20.8353L30.083 20.8353C30.7388 20.8353 31.2705 21.367 31.2705 22.0228C31.2705 22.6786 30.7388 23.2103 30.083 23.2103L11.0855 23.2103L17.9426 29.1883C18.437 29.6192 18.4884 30.3694 18.0574 30.8637Z"
+                        fill="#FF9900"
+                      />
+                      <path
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                        d="M19.9419 7.13644C20.3728 6.64196 21.123 6.59066 21.6173 7.02165L30.8633 15.0822C31.2365 15.4076 31.3687 15.9304 31.195 16.394C31.0212 16.8576 30.5781 17.1648 30.083 17.1648L7.91628 17.1648C7.26047 17.1648 6.72878 16.6331 6.72878 15.9773C6.72878 15.3215 7.26047 14.7898 7.91628 14.7898L26.9137 14.7898L20.0567 8.81176C19.5623 8.38078 19.5109 7.63076 19.9419 7.13644Z"
+                        fill="#FF9900"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              <div className="flex justify-between gap-4 items-center flex-wrap">
+                <div className="mt-1 text-xs text-muted-foreground flex items-center justify-left">
+                  <span className="text-white roboto">
+                    {marketPrice && tokenInInfo && tokenOutInfo
+                      ? quoteReversed
+                        ? `Market: 1 ${tokenOutInfo.symbol} ≈ ${(
+                            1 / parseFloat(marketPrice)
+                          ).toFixed(8)} ${tokenInInfo.symbol}`
+                        : `Market: 1 ${tokenInInfo.symbol} ≈ ${marketPrice} ${tokenOutInfo.symbol}`
+                      : "Price per token (decimal value)"}
+                  </span>
+                  {/* {marketPrice && tokenInInfo && tokenOutInfo && (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      className="h-4 w-4 ml-1"
+                      onClick={() => setQuoteReversed((prev) => !prev)}
+                    >
+                      <ArrowLeftRight className="h-3 w-3" />
+                    </Button>
+                  )} */}
+                </div>
+                {form.formState.errors.limitPrice && (
+                  <p className="mt-1 text-sm text-destructive">
+                    {form.formState.errors.limitPrice.message}
+                  </p>
+                )}
+                {limitPriceError && (
+                  <p className="mt-1 text-sm text-destructive">
+                    {limitPriceError}
+                  </p>
+                )}
+              </div>
+              {/* Limit Price Ends Here */}
+              <div className="mt-6 flex lg:gap-6 gap-2 lg:flex-nowrap flex-wrap md:justify-between font-orbitron md:px-2">
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent("market")}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  Market
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent(15)}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  15%
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent(25)}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  25%
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent(50)}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  50%
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent(75)}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  75%
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => applyLimitPriceByPercent(100)}
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                >
+                  100%
+                </button>
+              </div>
+
+              <div className="px-3">
+                <hr className="my-5 border border-white border-opacity-30" />
+              </div>
+              <div className="flex justify-between gap-2 items-center mt-4 px-4">
+                <div className="flex gap-2 items-center">
+                  Expiry{" "}
+                  <span title="Expired">
+                    <Info size={18} className="text-[#FF9900] mt-1" />
+                  </span>
+                </div>
+                {/* Deadline */}
+                <input
+                  id="deadline"
+                  {...form.register("deadline")}
+                  type="datetime-local"
+                  className="bg-[#604824] md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+                  placeholder="Deadline"
+                  data-testid="input-deadline"
+                  min={minDeadline}
+                  max={maxDeadline}
+                />
+              </div>
+            </div>
           </div>
-          <div className="pb-10">
-            {form.formState.errors.tokenOut && (
+          {form.formState.errors.tokenOut && (
+            <div className="pb-10">
               <p className="mt-1 text-sm text-destructive text-white">
                 {form.formState.errors.tokenOut.message}
               </p>
-            )}
-          </div>
-          {/* Partial Fill Section */}
-          {/* <div
-            className="space-y-4 rounded-md border p-4"
-            data-testid="partial-fill-section"
-          >
-            <div className="flex items-center justify-between">
-              <Label htmlFor="partial-fill-switch" className="font-medium">
-                Enable Partial Fill
-              </Label>
-              <Switch
-                id="partial-fill-switch"
-                checked={partialFillEnabled}
-                onCheckedChange={setPartialFillEnabled}
-                data-testid="switch-partial-fill"
-              />
             </div>
-            {partialFillEnabled && (
-              <div className="space-y-3 pt-2">
-                <Label htmlFor="fill-mode-slider">Fill Mode</Label>
-                <Slider
-                  id="fill-mode-slider"
-                  value={[fillMode]}
-                  onValueChange={(value) => setFillMode(value[0])}
-                  min={1}
-                  max={3}
-                  step={1}
-                  data-testid="slider-fill-mode"
-                />
-                <div className="flex justify-between text-xs text-muted-foreground">
-                  <span>Split 3</span>
-                  <span>Split 5</span>
-                  <span>Split 10</span>
-                </div>
-                <p className="text-sm text-center font-medium text-primary pt-2">
-                  Selected: {["Split 3", "Split 5", "Split 10"][fillMode - 1]}
-                </p>
-              </div>
-            )}
-          </div> */}
-          {/* Limit Price */}
-          <div className="mt-6 relative px-[54px] h-[54px] flex gap-2 items-center bg-search !w-full">
-            <input
-              id="limitPrice"
-              {...form.register("limitPrice")}
-              placeholder="Limit Price"
-              type="text"
-              className="!bg-transparent bgs text-right rounded-[4.83px] h-[43px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
-              data-testid="input-limit-price"
-            />
-          </div>
-          <div className="flex justify-between gap-4 items-center flex-wrap">
-            <div className="mt-1 text-xs text-muted-foreground flex items-center justify-left">
-              <span className="text-white">
-                {marketPrice && tokenInInfo && tokenOutInfo
-                  ? quoteReversed
-                    ? `Market: 1 ${tokenOutInfo.symbol} ≈ ${(
-                        1 / parseFloat(marketPrice)
-                      ).toFixed(8)} ${tokenInInfo.symbol}`
-                    : `Market: 1 ${tokenInInfo.symbol} ≈ ${marketPrice} ${tokenOutInfo.symbol}`
-                  : "Price per token (decimal value)"}
-              </span>
-              {marketPrice && tokenInInfo && tokenOutInfo && (
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-4 w-4 ml-1"
-                  onClick={() => setQuoteReversed((prev) => !prev)}
-                >
-                  <ArrowLeftRight className="h-3 w-3" />
-                </Button>
-              )}
-            </div>
-            {form.formState.errors.limitPrice && (
-              <p className="mt-1 text-sm text-destructive">
-                {form.formState.errors.limitPrice.message}
-              </p>
-            )}
-            {limitPriceError && (
-              <p className="mt-1 text-sm text-destructive">{limitPriceError}</p>
-            )}
-          </div>
+          )}
+
           {/* Deadline */}
-          <div className="mt-6 relative px-[54px] h-[54px] flex gap-2 items-center bg-search !w-full">
+          {/* <div className="mt-6 relative px-[54px] h-[54px] flex gap-2 items-center bg-search !w-full">
             <input
               id="deadline"
               {...form.register("deadline")}
@@ -962,7 +1049,7 @@ export function CreateOrderForm({
               min={minDeadline}
               max={maxDeadline}
             />
-          </div>
+          </div> */}
           {form.formState.errors.deadline && (
             <p className="mt-1 text-sm text-destructive">
               {form.formState.errors.deadline.message}
@@ -980,7 +1067,7 @@ export function CreateOrderForm({
               </p>
             </div>
           )}
-          <div className="flex flex-col gap-14 lg:pt-2 pt-[300px] pb-20">
+          <div className="flex flex-col gap-14 lg:pt-2 pt-[250px] pb-20">
             <button
               type="button"
               onClick={handleApproveTokens}
@@ -1028,15 +1115,11 @@ export function CreateOrderForm({
           {/*  */}
           <div
             className={`${
-              isPartialFill ? "w-[245px]" : "w-[160px]"
-            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:-right-[20vw] lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[52%] h-[200px] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+              isPartialFill ? "w-[200px]" : "w-[200px]"
+            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:-right-[20vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[52%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
-            <div className="absolute inset-0 grid grid-rows-[auto_1fr_auto] text-black p-4">
-              <div className="w-[120px] relative top-8">
-                <p className="text-base text-center">Link</p>
-                <p className="text-base text-center">Limit Price</p>
-              </div>
-              <div className="absolute bottom-4 flex items-center gap-2 left-6">
+            <div className="text-black p-4">
+              <div className="flex gap-2 justify-center items-center">
                 <p className="font-orbitron text-xs font-medium">
                   Partial Fill :
                 </p>
@@ -1052,10 +1135,10 @@ export function CreateOrderForm({
             </div>
             {isPartialFill && (
               <>
-                <div className="absolute top-0 right-0 h-full w-[40%] bg-white flex flex-col justify-start pt-4 items-center space-y-2 rounded-r-lg">
+                <div className="h-full w-full bg-white flex gap-2 flex-wrap justify-center items-center pt-3">
                   <button
                     onClick={() => setFillMode(1)}
-                    className="bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition mt-4"
+                    className="bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition"
                   >
                     Split 3
                   </button>
@@ -1071,36 +1154,9 @@ export function CreateOrderForm({
                   >
                     Split 10
                   </button>
-
-                  <p className="text-xs text-center font-medium text-black pt-5">
-                    Selected: <br />{" "}
-                    {["Split 3", "Split 5", "Split 10"][fillMode - 1]}
-                  </p>
                 </div>
-                <div className="absolute top-1/2 left-[60%] transform -translate-x-1/2 -translate-y-1/2 bg-black text-[#FF9900] rounded-md w-[27px] h-12 flex justify-center items-center font-bold">
-                  <svg
-                    width={24}
-                    height={24}
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M19.4928 12.5951C19.8051 12.8673 19.8375 13.3411 19.5653 13.6533L14.4744 19.4929C14.2689 19.7286 13.9387 19.812 13.6459 19.7023C13.3531 19.5926 13.1591 19.3127 13.1591 19V5C13.1591 4.58579 13.4949 4.25 13.9091 4.25C14.3233 4.25 14.6591 4.58579 14.6591 5V16.9984L18.4347 12.6676C18.7069 12.3554 19.1806 12.3229 19.4928 12.5951Z"
-                      fill="#FF9900"
-                    />
-                    <path
-                      fillRule="evenodd"
-                      clipRule="evenodd"
-                      d="M4.50712 11.4049C4.19482 11.1327 4.16242 10.6589 4.43462 10.3467L9.52552 4.50719C9.73102 4.27148 10.0612 4.188 10.354 4.29772C10.6468 4.40745 10.8408 4.68733 10.8408 5.00004L10.8408 19C10.8408 19.4142 10.505 19.75 10.0908 19.75C9.67662 19.75 9.34082 19.4142 9.34082 19V7.00165L5.56522 11.3324C5.29302 11.6446 4.81932 11.6771 4.50712 11.4049Z"
-                      fill="#FF9900"
-                    />
-                  </svg>
-                </div>
-                <div className="absolute top-1/2 right-[-56px] transform -translate-y-1/2 bg-white text-black border border-white rounded-t-md w-[80px] h-[32px] flex justify-center items-center rotate-90 font-bold text-sm cursor-pointer">
-                  Market
+                <div className="text-xs text-center font-medium text-black pt-5 pb-2 bg-white rounded-b-lg">
+                  Selected: {["Split 3", "Split 5", "Split 10"][fillMode - 1]}
                 </div>
               </>
             )}

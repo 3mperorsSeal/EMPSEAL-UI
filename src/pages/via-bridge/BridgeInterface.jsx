@@ -269,7 +269,7 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
+      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via"> 
         {/* <div className="mb-6 text-center">
           <h2 className="text-2xl font-bold text-white">Bridge</h2>
           <p className="text-sm text-gray-400">Transfer tokens across chains</p>
@@ -350,33 +350,7 @@ const BridgeInterface = () => {
                     </button>
                   ))}
                 </div>
-                {/* <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
-                  <span />
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    25%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    50%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    75%
-                  </button>
-                  <button
-                    type="button"
-                    className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                  >
-                    100%
-                  </button>
-                </div> */}
+            
 
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
                   {(() => {
@@ -435,8 +409,8 @@ const BridgeInterface = () => {
               className="mx-auto my-4 md:pt-7 pt-[44px] pb-5 md:w-[70px] w-12"
             />
           </div>
-          <div className="relative">
-            <img className="bg-sell" src={Sellbox} alt="sellbox" />
+          <div className="relative text-white">
+            <img className="bg-sell" src={Buybox} alt="Buybox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
                 To
@@ -488,10 +462,10 @@ const BridgeInterface = () => {
 
                     const fontSizeClass =
                       inputLength > 12
-                        ? "md:text-[24px] text-xl !text-[#000000]"
+                        ? "md:text-[24px] text-xl !text-[#fff]"
                         : inputLength > 8
-                        ? "md:text-[32px] text-2xl !text-[#000000]"
-                        : "md:text-[40px] text-2xl !text-[#000000]";
+                        ? "md:text-[32px] text-2xl !text-[#fff]"
+                        : "md:text-[40px] text-2xl !text-[#fff]";
 
                     return (
                       <>
@@ -504,7 +478,7 @@ const BridgeInterface = () => {
                               ? "0"
                               : "0.00"
                           }
-                          className={`text-[#000000] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
+                          className={`text-[#fff] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
                           style={{
                             fontSize: `${Math.max(
                               12,
@@ -536,7 +510,7 @@ const BridgeInterface = () => {
             />
           </div>
         </div>
-        <div className="md:px-1 px-4">
+        <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
             className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
