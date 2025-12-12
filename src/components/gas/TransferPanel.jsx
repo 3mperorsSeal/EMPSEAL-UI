@@ -42,14 +42,14 @@ const TransferPanel = () => {
     chainId: fromChainId,
   });
 
-  console.log(
-    "calldata input data: ",
-    fromChainId,
-    toChainId,
-    amount,
-    recipientAddress,
-    connectedAddress
-  );
+  // console.log(
+  //   "calldata input data: ",
+  //   fromChainId,
+  //   toChainId,
+  //   amount,
+  //   recipientAddress,
+  //   connectedAddress
+  // );
 
   // Set recipient to connected address by default
   useEffect(() => {
@@ -72,7 +72,7 @@ const TransferPanel = () => {
     fromAddress: connectedAddress,
   });
 
-  console.log("Calldata quote data: ", quoteData);
+  // console.log("Calldata quote data: ", quoteData);
 
   const { executeBridge, isSending, isConfirming } = useGasBridgeTx();
 
