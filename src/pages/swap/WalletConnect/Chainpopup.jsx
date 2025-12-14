@@ -19,7 +19,7 @@ const ChainPopup = ({
         <div className="md:max-w-[618px] w-full rounded-3xl relative py-6 md:px-10 px-4 mx-auto clip-bg">
           <svg
             onClick={() => setShowChainPopup(false)}
-            className="absolute cursor-pointer md:right-10 right-7 top-14"
+            className="absolute cursor-pointer md:right-10 right-7 top-14 tilt"
             width={20}
             height={20}
             viewBox="0 0 18 19"

@@ -59,21 +59,19 @@ export default function WalletConnect({ onChainChange }) {
         const ready = mounted && authenticationStatus !== "loading";
         const connected = ready && account && chain;
 
-
-
         if (!ready) return null;
         if (!connected) {
           return (
             <>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center"
+                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
                 Connect
               </button>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center"
+                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -98,7 +96,7 @@ export default function WalletConnect({ onChainChange }) {
                   <div className="relative text-white md:p-8 p-6 rounded-2xl md:max-w-[520px] w-full clip-bg roboto">
                     <svg
                       onClick={() => setShowConnectPopup(false)}
-                      className="absolute cursor-pointer md:right-10 right-4 md:top-11 top-4 hover:scale-110 transition-transform"
+                      className="absolute cursor-pointer md:right-10 right-4 md:top-11 top-4 tilt"
                       width={18}
                       height={19}
                       viewBox="0 0 18 19"
@@ -114,7 +112,7 @@ export default function WalletConnect({ onChainChange }) {
                       />
                     </svg>
 
-                    <h2 className="md:text-2xl text-xl font-bold text-white mb-2 text-center">
+                    <h2 className="md:text-2xl text-xl font-extrabold text-white mb-2 text-center">
                       Connect a Wallet
                     </h2>
                     <p className="text-gray-400 text-sm text-left mt-12 mb-6">
@@ -175,7 +173,7 @@ export default function WalletConnect({ onChainChange }) {
         if (chain.unsupported) {
           return (
             <button
-              className="wallet-bg-bridge1 text-[#FF494A]"
+              className="wallet-bg-bridge1 text-[#FF494A] font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
@@ -193,7 +191,7 @@ export default function WalletConnect({ onChainChange }) {
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center"
+                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowPopup(true)}
                 type="button"
               >
@@ -202,7 +200,7 @@ export default function WalletConnect({ onChainChange }) {
             </div>
 
             <button
-              className="wallet-bg-bridge1 text-[#FF9900] text-center"
+              className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >

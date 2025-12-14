@@ -516,6 +516,40 @@ export function CreateOrderForm({
   };
 
   // For Limit Price
+  // Percentage selection
+  const [selectedPercentage, setSelectedPercentage] = useState<number | null>(
+    null
+  );
+
+  const handlePercentageChange = (value: number) => {
+    if (!tokenInBalance) return;
+
+    setSelectedPercentage(value);
+
+    const balance = parseFloat(tokenInBalance);
+    const percentValue = (balance * value) / 100;
+
+    // Update input visually
+    form.setValue("amountIn", percentValue.toFixed(4), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+  };
+  //
+  // Function to format the number with commas
+  const formatNumber = (value: string | undefined): string => {
+    if (!value) return "";
+
+    const [integerPart, decimalPart] = value.split(".");
+    const formattedInteger = integerPart
+      .replace(/\D/g, "")
+      .replace(/\B(?=(\d{3})+(?!\d))/g, "");
+
+    return decimalPart !== undefined
+      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
+      : formattedInteger;
+  };
+
   return (
     <>
       <div data-testid="card-create-order">
@@ -562,23 +596,23 @@ export function CreateOrderForm({
                 In Address
               </div>
               <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="font-extrabold font-orbitron leading-normal">
                   BAL
                 </span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
                   :{" "}
                 </span>
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="rigamesh leading-normal">
                   {tokenInMode === "select"
                     ? tokenInBalance && (
-                        <span className="font-bold font-orbitron leading-normal">
+                        <span className="rigamesh leading-normal">
                           {parseFloat(tokenInBalance).toFixed(4)}{" "}
                           {/* {tokenInInfo?.symbol || "Tokens"} */}
                         </span>
                       )
                     : tokenInBalance && (
-                        <span className="font-bold font-orbitron leading-normal">
+                        <span className="rigamesh leading-normal">
                           {parseFloat(tokenInBalance).toFixed(4)}{" "}
                           {/* {customTokenIn?.symbol || "Tokens"} */}
                         </span>
@@ -682,28 +716,58 @@ export function CreateOrderForm({
               </div>
 
               <div className="md:max-w-1/2 w-full me-3">
-                <input
-                  id="amountIn"
-                  {...form.register("amountIn")}
-                  placeholder="0.0"
-                  type="text"
-                  className="text-[#000000] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 font-orbitron placeholder-black transition-all duration-200 ease-in-out"
-                  data-testid="input-amount-in"
-                  style={{
-                    fontSize: `${Math.max(
-                      12,
-                      40 - amountIn.toString().length * 1.5
-                    )}px`,
-                  }}
-                />
-                <p className="mt-1 text-xs text-black text-right">
+                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex gap-2 md:ml-0 ml-[-40px] justify-end">
+                  <span></span>
+                  {[25, 50, 75, 100].map((value) => (
+                    <button
+                      key={value}
+                      type="button"
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+      ${
+        selectedPercentage === value
+          ? "text-white bg-black"
+          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+      }`}
+                      onClick={() => handlePercentageChange(value)}
+                      // disabled={isLoading}
+                    >
+                      {value}%
+                    </button>
+                  ))}
+                </div>
+                {(() => {
+                  const inputLength =
+                    formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const dynamicFontSize = Math.max(
+                    12,
+                    defaultFontSize - inputLength * 1.5
+                  );
+                  return (
+                    <input
+                      id="amountIn"
+                      {...form.register("amountIn")}
+                      placeholder="0.0"
+                      type="text"
+                      className="text-[#000000] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 rigamesh placeholder-black transition-all duration-200 ease-in-out"
+                      data-testid="input-amount-in"
+                      onChange={(e) =>
+                        form.setValue("amountIn", e.target.value)
+                      }
+                      style={{
+                        fontSize: `${dynamicFontSize}px`,
+                      }}
+                    />
+                  );
+                })()}
+                <p className="mt-1 text-xs text-black text-right font-extrabold">
                   {tokenInInfo
                     ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
                 </p>
               </div>
             </div>
-            <div className="text-right text-white font-bold text-sm -mt-[14px] pe-8 roboto truncate">
+            <div className="text-right text-white font-extrabold text-sm -mt-[14px] pe-8 roboto truncate">
               {form.formState.errors.amountIn && (
                 <p className="mt-1 text-sm text-destructive">
                   {form.formState.errors.amountIn.message}
@@ -711,7 +775,7 @@ export function CreateOrderForm({
               )}
             </div>
           </div>
-          <div className="md:pt-4 pt-[44px]">
+          <div className="md:pt-4 pt-2 font-extrabold">
             {form.formState.errors.tokenIn && (
               <p className="mt-1 text-sm text-destructive">
                 {form.formState.errors.tokenIn.message}
@@ -720,11 +784,15 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div
-            className="cursor-pointer relative md:pb-2"
+            className="cursor-pointer relative md:pb-2 mx-auto !mt-4 mb-4 md:w-[70px] w-12"
             onClick={handleSwapTokens}
             data-testid="button-swap-tokens"
           >
-            <img src={Ar} alt="Ar" className="mx-auto my-4 md:w-[70px] w-12" />
+            <img
+              src={Ar}
+              alt="Ar"
+              className="hoverswap transition-all rounded-xl"
+            />
           </div>
           {/*  */}
           {/*  */}
@@ -734,23 +802,21 @@ export function CreateOrderForm({
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-white">
                 Out Address
               </div>
-              <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
-                <span className="font-bold font-orbitron leading-normal">
-                  BAL
-                </span>
+              <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2  border border-white bg-[#FFBF5E] md:text-sm text-xs px-2 py-2 text-black">
+                <span className="font-extrabold leading-normal">BAL</span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
                   :{" "}
                 </span>
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="rigamesh leading-normal">
                   {tokenOutBalance === "select"
                     ? tokenOutBalance && (
-                        <span className="font-bold font-orbitron leading-normal">
+                        <span className="rigamesh leading-normal">
                           {parseFloat(tokenOutBalance).toFixed(4)}{" "}
                         </span>
                       )
                     : tokenOutBalance && (
-                        <span className="font-bold font-orbitron leading-normal">
+                        <span className="rigamesh leading-normal">
                           {parseFloat(tokenOutBalance).toFixed(4)}{" "}
                           {/* {customTokenOut?.symbol || "Tokens"} */}
                         </span>
@@ -853,21 +919,29 @@ export function CreateOrderForm({
               </div>
 
               <div className="md:max-w-1/2 w-full me-3">
-                <input
-                  id="minAmountOut"
-                  {...form.register("minAmountOut")}
-                  placeholder="0.0"
-                  type="text"
-                  className="!text-white py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent ps-3 font-orbitron !placeholder-white transition-all duration-200 ease-in-out"
-                  data-testid="input-amount-in"
-                  style={{
-                    fontSize: `${Math.max(
-                      12,
-                      40 - amountIn.toString().length * 1.5
-                    )}px`,
-                  }}
-                />
-                <p className="mt-1 text-xs text-white text-right">
+                {(() => {
+                  const inputLength =
+                    formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const dynamicFontSize = Math.max(
+                    12,
+                    defaultFontSize - inputLength * 1.5
+                  );
+                  return (
+                    <input
+                      id="minAmountOut"
+                      {...form.register("minAmountOut")}
+                      placeholder="0.0"
+                      type="text"
+                      className="!text-white py-2 text-end w-full leading-7 outline-none border-none bg-transparent ps-3 rigamesh !placeholder-white transition-all duration-200 ease-in-out"
+                      data-testid="input-amount-in"
+                      style={{
+                        fontSize: `${dynamicFontSize}px`,
+                      }}
+                    />
+                  );
+                })()}
+                <p className="mt-1 text-xs text-white text-right font-extrabold">
                   {tokenOutInfo
                     ? `In ${tokenOutInfo.symbol} (${tokenOutInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
@@ -959,7 +1033,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent("market")}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   Market
                 </button>
@@ -967,7 +1041,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(15)}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   15%
                 </button>
@@ -975,7 +1049,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(25)}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   25%
                 </button>
@@ -983,7 +1057,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(50)}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   50%
                 </button>
@@ -991,7 +1065,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(75)}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   75%
                 </button>
@@ -999,7 +1073,7 @@ export function CreateOrderForm({
                 <button
                   type="button"
                   onClick={() => applyLimitPriceByPercent(100)}
-                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-semibold text-black"
+                  className="md:px-5 px-2 md:py-2 py-1.5 rounded-full bg-[#FFE6C0] md:text-xs text-[9px] font-extrabold text-black"
                 >
                   100%
                 </button>
@@ -1067,12 +1141,12 @@ export function CreateOrderForm({
               </p>
             </div>
           )}
-          <div className="flex flex-col gap-14 lg:pt-2 pt-[250px] pb-20">
+          <div className="flex flex-col gap-14 lg:pt-2 md:pt-[250px] pt-[200px] pb-20">
             <button
               type="button"
               onClick={handleApproveTokens}
               disabled={isApproving || isCreating || !!tradeError}
-              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-bold"
+              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-approve-tokens"
             >
               <img
@@ -1094,7 +1168,7 @@ export function CreateOrderForm({
               disabled={
                 isApproving || isCreating || !!tradeError || !!limitPriceError
               }
-              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-bold"
+              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-create-order"
             >
               <img
@@ -1116,11 +1190,11 @@ export function CreateOrderForm({
           <div
             className={`${
               isPartialFill ? "w-[200px]" : "w-[200px]"
-            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:-right-[20vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[52%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[46%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">
-                <p className="font-orbitron text-xs font-medium">
+                <p className="font-orbitron text-xs font-extrabold">
                   Partial Fill :
                 </p>
                 <label className="toggle-switch">

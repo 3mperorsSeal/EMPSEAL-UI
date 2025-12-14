@@ -152,7 +152,26 @@ const TransferPanel = () => {
       setSelectedPercentage(null);
     }
   };
+  // Function to format the number with commas
+  const formatNumber = (value) => {
+    if (!value) return ""; // Handle empty input
 
+    const [integerPart, decimalPart] = value.split("."); // Split into integer and decimal parts
+    const formattedInteger = integerPart
+      .replace(/\D/g, "") // Allow only digits
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ""); // Add commas to integer part
+
+    // If there's a decimal part, return formatted integer + decimal
+    return decimalPart !== undefined
+      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
+      : formattedInteger;
+  };
+  const getDynamicFontSize = (value, desktop = 48, mobile = 36) => {
+    const length = value?.replace(/\D/g, "").length || 0;
+    const baseSize = window.innerWidth >= 768 ? desktop : mobile;
+
+    return Math.max(12, baseSize - length * 1.5);
+  };
   return (
     <>
       <div className="w-full md;px-0 px-4">
@@ -165,14 +184,14 @@ const TransferPanel = () => {
                   From
                 </h2>
                 <div className="text-center absolute top-[-30px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
-                  <span className="font-bold font-orbitron leading-normal">
+                  <span className="font-extrabold font-orbitron leading-normal">
                     BAL
                   </span>
                   <span className="font-bold font-orbitron leading-normal">
                     {" "}
                     :{" "}
                   </span>
-                  <span className="font-bold font-orbitron leading-normal">
+                  <span className="rigamesh leading-normal">
                     {isBalanceLoading ? (
                       <span>Fetching balance...</span>
                     ) : balanceData ? (
@@ -194,7 +213,7 @@ const TransferPanel = () => {
                         // disabled={isLoading}
                         disabled={isBalanceLoading || !balance}
                         onClick={() => handlePercentageChange(value)}
-                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2
+                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
         ${
           selectedPercentage === value
             ? "bg-black text-white"
@@ -205,8 +224,33 @@ const TransferPanel = () => {
                       </button>
                     ))}
                   </div>
-
                   {(() => {
+                    const formattedValue = formatNumber(
+                      amount?.toString() || ""
+                    );
+                    const dynamicFontSize = getDynamicFontSize(
+                      formattedValue,
+                      40,
+                      28
+                    );
+
+                    return (
+                      <>
+                        <input
+                          id="amount"
+                          type="text"
+                          value={amount}
+                          onChange={handleAmountChange}
+                          placeholder="0.1"
+                          className="text-[#000000] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 rigamesh placeholder-black transition-all duration-200 ease-in-out"
+                          style={{
+                            fontSize: `${dynamicFontSize}px`,
+                          }}
+                        />
+                      </>
+                    );
+                  })()}
+                  {/* {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
 
@@ -223,7 +267,6 @@ const TransferPanel = () => {
                           id="amount"
                           type="text"
                           value={amount}
-                          // onChange={(e) => setAmount(e.target.value)}
                           onChange={handleAmountChange}
                           placeholder="0.1"
                           className={`w-full text-[#000] py-2 font-bold text-end leading-7 outline-none border-none bg-transparent px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
@@ -236,7 +279,7 @@ const TransferPanel = () => {
                         />
                       </>
                     );
-                  })()}
+                  })()} */}
                 </div>
                 <div
                   // onClick={() => {
@@ -270,9 +313,13 @@ const TransferPanel = () => {
         {/*  */}
         <button
           onClick={() => switchRef.current && switchRef.current()}
-          className="cursor-pointer md:mt-20 md:mb-8 mt-16 mb-8 mx-auto flex scales-b scales-top-2"
+          className="cursor-pointer md:mt-20 md:mb-8 mt-16 mb-8 flex scales-b scales-top-2 mx-auto md:w-[70px] w-12"
         >
-          <img src={UpDownAr} alt="Ar" className="mx-auto md:w-[70px] w-12" />
+          <img
+            src={UpDownAr}
+            alt="Ar"
+            className="hoverswap transition-all rounded-xl"
+          />
         </button>
         {/*  */}
         <div className="relative h-[200px] flex justify-center items-center text-white scales-b scales-top">
@@ -287,26 +334,42 @@ const TransferPanel = () => {
                 {/*  */}
               </div>
             </div>
+            <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
+              {[25, 50, 75, 100].map((value) => (
+                <button
+                  key={value}
+                  type="button"
+                  // disabled={isLoading}
+                  disabled={isBalanceLoading || !balance}
+                  onClick={() => handlePercentageChange(value)}
+                  className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+        ${
+          selectedPercentage === value
+            ? "bg-black text-white"
+            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+        }`}
+                >
+                  {value}%
+                </button>
+              ))}
+            </div>
             {(() => {
               const value = formattedExpectedAmount || "";
-              const length = value.toString().replace(/\D/g, "").length;
+              const dynamicFontSize = getDynamicFontSize(value, 40, 28);
 
-              const fontSizeClass =
-                length > 12
-                  ? "md:text-[24px] text-xl"
-                  : length > 8
-                  ? "md:text-[32px] text-2xl"
-                  : "md:text-[40px] text-2xl";
+              // const fontSizeClass =
+              //   length > 12
+              //     ? "md:text-[24px] text-xl"
+              //     : length > 8
+              //     ? "md:text-[32px] text-2xl"
+              //     : "md:text-[40px] text-2xl";
 
               return (
                 <div className="w-full py-2 text-end px-1 font-orbitron transition-all duration-200 ">
                   <span
-                    className={`font-bold text-white ${fontSizeClass}`}
+                    className={`font-bold text-white`}
                     style={{
-                      fontSize: `${Math.max(
-                        12,
-                        40 - value.toString().length * 1.5
-                      )}px`,
+                      fontSize: `${dynamicFontSize}px`,
                     }}
                   >
                     {isQuoteLoading ? "Loading quote..." : value}
@@ -344,7 +407,7 @@ const TransferPanel = () => {
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}
               type="button"
-              className="w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
+              className="w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
             >
               <img
                 className="absolute swap-button1 top-0 bottom-0 my-auto"

@@ -63,7 +63,7 @@ const TokensChains = ({ onClose, onSelect, onChainSelect }) => {
       <div ref={modalRef} className="relative py-10 md:px-12 clip-bg bg-black/70 z-50 px-4 md:max-w-[530px] w-full mx-auto rounded-2xl">
         <svg
           onClick={onClose}
-          className="absolute cursor-pointer right-8 top-9"
+          className="absolute cursor-pointer right-8 top-9 tilt"
           width={12}
           height={12}
           viewBox="0 0 18 19"
@@ -78,15 +78,14 @@ const TokensChains = ({ onClose, onSelect, onChainSelect }) => {
             strokeLinejoin="round"
           />
         </svg>
-
-        <div className="flex gap-4 items-center justify-start md:justify-center cursor-pointer mt-2">
-          <p className="md:text-base text-sm font-sm text-white roboto text-start md:text-center ">
+        <div className="flex gap-4 items-center justify-start md:justify-center cursor-pointer my-2">
+          <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
             Select Chain and Token{" "}
           </p>
         </div>
         <div className="grid grid-cols-[48%_48%] justify-between mt-4">
           <div className="bg-[#191919] rounded-xl">
-            <div className=" w-full flex  items-center p-3 ">
+            <div className=" w-full flex items-center p-3 ">
               <button onClick={() => setChainSearchQuery(chainSearchQuery)}>
                 <svg
                   className="flex flex-shrink-0 cursor-pointer"
@@ -105,7 +104,7 @@ const TokensChains = ({ onClose, onSelect, onChainSelect }) => {
               <input
                 type="text"
                 placeholder="Search Chain"
-                className="bg-transparent text-[#575757]  w-full px-2 text-sm font-normal roboto "
+                className="bg-transparent text-[#575757] w-full px-2 text-sm font-normal roboto "
                 value={chainSearchQuery}
                 onChange={(e) => setChainSearchQuery(e.target.value)}
               />
