@@ -276,7 +276,7 @@ const ChainModal = ({
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 text-white text-xl"
+          className="absolute right-6 top-6 text-white text-xl tilt"
         >
           ✕
         </button>
