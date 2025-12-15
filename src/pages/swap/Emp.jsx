@@ -920,9 +920,21 @@ const Emp = ({ setPadding }) => {
                         formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                       const defaultFontSize =
                         window.innerWidth >= 768 ? 48 : 36;
+                      // const dynamicFontSize = Math.max(
+                      //   12,
+                      //   defaultFontSize - inputLength * 1.5
+                      // );
+                      const FREE_DIGITS = 5;
+                      const SHRINK_RATE = 3;
+
+                      const excessDigits = Math.max(
+                        0,
+                        inputLength - FREE_DIGITS
+                      );
+
                       const dynamicFontSize = Math.max(
                         12,
-                        defaultFontSize - inputLength * 1.5
+                        defaultFontSize - excessDigits * SHRINK_RATE
                       );
                       return (
                         <input
@@ -1055,28 +1067,43 @@ const Emp = ({ setPadding }) => {
                     </div>
                     {/*  */}
                     {(() => {
+                      const numericValue = Number(amountOut);
+
+                      const formattedValue = isNaN(numericValue)
+                        ? ""
+                        : formatNumber(numericValue.toFixed(2));
+
                       const outputLength =
-                        formatNumber(parseFloat(amountOut).toFixed(3))?.replace(
-                          /\D/g,
-                          ""
-                        ).length || 0;
+                        formattedValue.replace(/,/g, "").length || 0;
 
                       const defaultFontSize =
                         window.innerWidth >= 768 ? 48 : 36;
 
+                      // const dynamicFontSize = Math.max(
+                      //   12,
+                      //   defaultFontSize - outputLength * 1.5
+                      // );
+                      const FREE_DIGITS = 5;
+                      const SHRINK_RATE = 3;
+
+                      const excessDigits = Math.max(
+                        0,
+                        outputLength - FREE_DIGITS
+                      );
+
                       const dynamicFontSize = Math.max(
                         12,
-                        defaultFontSize - outputLength * 1.5
+                        defaultFontSize - excessDigits * SHRINK_RATE
                       );
 
                       return (
                         <input
                           type="text"
-                          placeholder="0"
-                          value={formatNumber(parseFloat(amountOut).toFixed(0))}
+                          placeholder="0.00"
+                          value={formattedValue}
                           onChange={handleOutputChange}
                           readOnly
-                          className="truncate text-sh rigamesh text-white text-end w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
+                          className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 rigamesh placeholder-white transition-all duration-200 ease-in-out"
                           style={{
                             fontSize: `${dynamicFontSize}px`,
                           }}
