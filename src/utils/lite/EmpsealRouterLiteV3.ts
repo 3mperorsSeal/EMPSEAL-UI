@@ -2,19 +2,6 @@ export const EmpsealRouterLiteV3 = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "addedMaintainer",
-        type: "address",
-      },
-    ],
-    name: "addMaintainer",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address[]",
         name: "_adapters",
         type: "address[]",
@@ -70,6 +57,319 @@ export const EmpsealRouterLiteV3 = [
     type: "event",
   },
   {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "_asset",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+    ],
+    name: "Recovered",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "previousAdminRole",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "newAdminRole",
+        type: "bytes32",
+      },
+    ],
+    name: "RoleAdminChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleGranted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "account",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "sender",
+        type: "address",
+      },
+    ],
+    name: "RoleRevoked",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address[]",
+        name: "_newAdapters",
+        type: "address[]",
+      },
+    ],
+    name: "UpdatedAdapters",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address",
+        name: "_oldFeeClaimer",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "_newFeeClaimer",
+        type: "address",
+      },
+    ],
+    name: "UpdatedFeeClaimer",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_oldMinFee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_newMinFee",
+        type: "uint256",
+      },
+    ],
+    name: "UpdatedMinFee",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "address[]",
+        name: "_newTrustedTokens",
+        type: "address[]",
+      },
+    ],
+    name: "UpdatedTrustedTokens",
+    type: "event",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "ADAPTERS",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "DEFAULT_ADMIN_ROLE",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "FEE_CLAIMER",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "FEE_DENOMINATOR",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "MAINTAINER_ROLE",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "MIN_FEE",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "NATIVE",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    name: "TRUSTED_TOKENS",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "WNATIVE",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "adaptersCount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "addedMaintainer",
+        type: "address",
+      },
+    ],
+    name: "addMaintainer",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         components: [
@@ -111,7 +411,7 @@ export const EmpsealRouterLiteV3 = [
                 type: "bytes",
               },
             ],
-            internalType: "struct EmpsealRouterLiteFinal.Hop[]",
+            internalType: "struct EmpsealRouter.Hop[]",
             name: "inputHops",
             type: "tuple[]",
           },
@@ -133,12 +433,12 @@ export const EmpsealRouterLiteV3 = [
                 type: "bytes",
               },
             ],
-            internalType: "struct EmpsealRouterLiteFinal.Hop",
+            internalType: "struct EmpsealRouter.Hop",
             name: "outputHop",
             type: "tuple",
           },
         ],
-        internalType: "struct EmpsealRouterLiteFinal.ConvergeTrade",
+        internalType: "struct EmpsealRouter.ConvergeTrade",
         name: "_trade",
         type: "tuple",
       },
@@ -155,6 +455,11 @@ export const EmpsealRouterLiteV3 = [
       {
         internalType: "uint256",
         name: "_fee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_deadline",
         type: "uint256",
       },
     ],
@@ -213,6 +518,11 @@ export const EmpsealRouterLiteV3 = [
         name: "_fee",
         type: "uint256",
       },
+      {
+        internalType: "uint256",
+        name: "_deadline",
+        type: "uint256",
+      },
     ],
     name: "executeSplitSwap",
     outputs: [
@@ -226,35 +536,140 @@ export const EmpsealRouterLiteV3 = [
     type: "function",
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "address",
-        name: "user",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "extension",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "tokenIn",
-        type: "address",
-      },
-      {
-        indexed: false,
         internalType: "uint256",
-        name: "amountIn",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "b",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "c",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "d",
         type: "uint256",
       },
     ],
-    name: "ExtensionExecuted",
-    type: "event",
+    name: "findBestPath",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256[]",
+            name: "amounts",
+            type: "uint256[]",
+          },
+          {
+            internalType: "address[]",
+            name: "adapters",
+            type: "address[]",
+          },
+          {
+            internalType: "address[]",
+            name: "path",
+            type: "address[]",
+          },
+          {
+            internalType: "uint256",
+            name: "gasEstimate",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct FormattedOffer",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "b",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "c",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "d",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "e",
+        type: "uint256",
+      },
+    ],
+    name: "findBestPathWithGas",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint256[]",
+            name: "amounts",
+            type: "uint256[]",
+          },
+          {
+            internalType: "address[]",
+            name: "adapters",
+            type: "address[]",
+          },
+          {
+            internalType: "address[]",
+            name: "path",
+            type: "address[]",
+          },
+          {
+            internalType: "uint256",
+            name: "gasEstimate",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct FormattedOffer",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+    ],
+    name: "getRoleAdmin",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -275,23 +690,188 @@ export const EmpsealRouterLiteV3 = [
     type: "function",
   },
   {
-    anonymous: false,
     inputs: [
       {
-        indexed: true,
+        internalType: "bytes32",
+        name: "role",
+        type: "bytes32",
+      },
+      {
         internalType: "address",
-        name: "_asset",
+        name: "account",
+        type: "address",
+      },
+    ],
+    name: "hasRole",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    name: "isTrustedAdapter",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "b",
         type: "address",
       },
       {
-        indexed: false,
+        internalType: "address",
+        name: "c",
+        type: "address",
+      },
+      {
+        internalType: "uint8",
+        name: "d",
+        type: "uint8",
+      },
+    ],
+    name: "queryAdapter",
+    outputs: [
+      {
         internalType: "uint256",
-        name: "amount",
+        name: "",
         type: "uint256",
       },
     ],
-    name: "Recovered",
-    type: "event",
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "a",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "b",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "c",
+        type: "address",
+      },
+      {
+        internalType: "uint8[]",
+        name: "d",
+        type: "uint8[]",
+      },
+    ],
+    name: "queryNoSplit",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "adapter",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "tokenIn",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "tokenOut",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "amountOut",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct Query",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_amountIn",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "_tokenIn",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_tokenOut",
+        type: "address",
+      },
+    ],
+    name: "queryNoSplit",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "address",
+            name: "adapter",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "tokenIn",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "tokenOut",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "amountOut",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct Query",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
   },
   {
     inputs: [
@@ -387,81 +967,6 @@ export const EmpsealRouterLiteV3 = [
     type: "function",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "bytes32",
-        name: "role",
-        type: "bytes32",
-      },
-      {
-        indexed: true,
-        internalType: "bytes32",
-        name: "previousAdminRole",
-        type: "bytes32",
-      },
-      {
-        indexed: true,
-        internalType: "bytes32",
-        name: "newAdminRole",
-        type: "bytes32",
-      },
-    ],
-    name: "RoleAdminChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "bytes32",
-        name: "role",
-        type: "bytes32",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "sender",
-        type: "address",
-      },
-    ],
-    name: "RoleGranted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "bytes32",
-        name: "role",
-        type: "bytes32",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "sender",
-        type: "address",
-      },
-    ],
-    name: "RoleRevoked",
-    type: "event",
-  },
-  {
     inputs: [
       {
         internalType: "address[]",
@@ -483,24 +988,6 @@ export const EmpsealRouterLiteV3 = [
       },
     ],
     name: "setAllowanceForWrapping",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_extension",
-        type: "address",
-      },
-      {
-        internalType: "bool",
-        name: "_status",
-        type: "bool",
-      },
-    ],
-    name: "setExtensionStatus",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -547,25 +1034,20 @@ export const EmpsealRouterLiteV3 = [
   {
     inputs: [
       {
-        internalType: "bytes",
-        name: "data",
-        type: "bytes",
-      },
-      {
-        internalType: "address",
-        name: "receiver",
-        type: "address",
+        internalType: "bytes4",
+        name: "interfaceId",
+        type: "bytes4",
       },
     ],
-    name: "swap",
+    name: "supportsInterface",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "bool",
         name: "",
-        type: "uint256",
+        type: "bool",
       },
     ],
-    stateMutability: "payable",
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -847,542 +1329,6 @@ export const EmpsealRouterLiteV3 = [
     type: "function",
   },
   {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address[]",
-        name: "_newAdapters",
-        type: "address[]",
-      },
-    ],
-    name: "UpdatedAdapters",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "_oldFeeClaimer",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "_newFeeClaimer",
-        type: "address",
-      },
-    ],
-    name: "UpdatedFeeClaimer",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "_oldMinFee",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "_newMinFee",
-        type: "uint256",
-      },
-    ],
-    name: "UpdatedMinFee",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address[]",
-        name: "_newTrustedTokens",
-        type: "address[]",
-      },
-    ],
-    name: "UpdatedTrustedTokens",
-    type: "event",
-  },
-  {
-    stateMutability: "payable",
-    type: "receive",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "ADAPTERS",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "adaptersCount",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "DEFAULT_ADMIN_ROLE",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "FEE_CLAIMER",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "FEE_DENOMINATOR",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "a",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "b",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "c",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "d",
-        type: "uint256",
-      },
-    ],
-    name: "findBestPath",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256[]",
-            name: "amounts",
-            type: "uint256[]",
-          },
-          {
-            internalType: "address[]",
-            name: "adapters",
-            type: "address[]",
-          },
-          {
-            internalType: "address[]",
-            name: "path",
-            type: "address[]",
-          },
-          {
-            internalType: "uint256",
-            name: "gasEstimate",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct FormattedOffer",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "a",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "b",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "c",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "d",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "e",
-        type: "uint256",
-      },
-    ],
-    name: "findBestPathWithGas",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256[]",
-            name: "amounts",
-            type: "uint256[]",
-          },
-          {
-            internalType: "address[]",
-            name: "adapters",
-            type: "address[]",
-          },
-          {
-            internalType: "address[]",
-            name: "path",
-            type: "address[]",
-          },
-          {
-            internalType: "uint256",
-            name: "gasEstimate",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct FormattedOffer",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "role",
-        type: "bytes32",
-      },
-    ],
-    name: "getRoleAdmin",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes32",
-        name: "role",
-        type: "bytes32",
-      },
-      {
-        internalType: "address",
-        name: "account",
-        type: "address",
-      },
-    ],
-    name: "hasRole",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    name: "isAuthorizedExtension",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "MAINTAINER_ROLE",
-    outputs: [
-      {
-        internalType: "bytes32",
-        name: "",
-        type: "bytes32",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "MIN_FEE",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "NATIVE",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "a",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "b",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "c",
-        type: "address",
-      },
-      {
-        internalType: "uint8",
-        name: "d",
-        type: "uint8",
-      },
-    ],
-    name: "queryAdapter",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "a",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "b",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "c",
-        type: "address",
-      },
-      {
-        internalType: "uint8[]",
-        name: "d",
-        type: "uint8[]",
-      },
-    ],
-    name: "queryNoSplit",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "adapter",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "tokenIn",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "tokenOut",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "amountOut",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct Query",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_amountIn",
-        type: "uint256",
-      },
-      {
-        internalType: "address",
-        name: "_tokenIn",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_tokenOut",
-        type: "address",
-      },
-    ],
-    name: "queryNoSplit",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "address",
-            name: "adapter",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "tokenIn",
-            type: "address",
-          },
-          {
-            internalType: "address",
-            name: "tokenOut",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "amountOut",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct Query",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes4",
-        name: "interfaceId",
-        type: "bytes4",
-      },
-    ],
-    name: "supportsInterface",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "TRUSTED_TOKENS",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "trustedTokensCount",
     outputs: [
@@ -1396,16 +1342,7 @@ export const EmpsealRouterLiteV3 = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "WNATIVE",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
+    stateMutability: "payable",
+    type: "receive",
   },
 ];

@@ -11,34 +11,37 @@ import "../lib/Maintainable.sol";
 import "../lib/EmpsealViewUtils.sol";
 import "../lib/Recoverable.sol";
 import "../interface/IEmpsealStructs.sol";
+import "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
 /**
- * @title EmpsealRouterLiteFinal
+ * @title EmpsealRouter
  * @notice Gas-optimized router with off-chain pathfinding
- * @dev Supports both Standard Split and Converge Split strategies
+ * @dev Supports both Standard Split and Converge Split strategies.
  */
-contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IEmpsealStructs {
+contract EmpsealRouter is Maintainable, Recoverable, ReentrancyGuard, IEmpsealRouter, IEmpsealStructs {
     using SafeERC20 for IERC20;
     using OfferUtils for Offer;
 
+    // -- Constants & Immutables --
     address public immutable WNATIVE;
     address public constant NATIVE = address(0);
     uint256 public constant FEE_DENOMINATOR = 1e4;
+    
+    // -- State Variables --
     uint256 public MIN_FEE = 0;
     address public FEE_CLAIMER;
 
-    // Kept for view compatibility
+    // -- Storage --
     address[] public TRUSTED_TOKENS;
     address[] public ADAPTERS;
+    
+    // O(1) Lookup for security check during swaps
+    mapping(address => bool) public isTrustedAdapter;
 
-    mapping(address => bool) public isAuthorizedExtension;
-
-    event ExtensionExecuted(address indexed user, address indexed extension, address tokenIn, uint256 amountIn);
-
-    // Structs for the Converge Strategy
+    // -- Structs --
     struct Hop {
         address adapter;
-        uint256 proportion; // Base 10000
+        uint256 proportion;
         bytes data;
     }
 
@@ -51,6 +54,7 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         Hop outputHop;
     }
 
+    // -- Constructor --
     constructor(
         address[] memory _adapters,
         address[] memory _trustedTokens,
@@ -64,27 +68,40 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         WNATIVE = _wrapped_native;
     }
 
-    // -- SETTERS & ADMIN --
+    // -- Admin Functions --
+    
     function setAllowanceForWrapping(address _wnative) public onlyMaintainer {
         IERC20(_wnative).safeApprove(_wnative, type(uint256).max);
     }
+
     function setTrustedTokens(address[] memory _trustedTokens) public override onlyMaintainer {
         TRUSTED_TOKENS = _trustedTokens;
     }
+
     function setAdapters(address[] memory _adapters) public override onlyMaintainer {
+        // Clear old adapters
+        for (uint256 i = 0; i < ADAPTERS.length; i++) {
+            isTrustedAdapter[ADAPTERS[i]] = false;
+        }
+
         ADAPTERS = _adapters;
+
+        // Whitelist new adapters
+        for (uint256 i = 0; i < _adapters.length; i++) {
+            isTrustedAdapter[_adapters[i]] = true;
+        }
     }
+
     function setMinFee(uint256 _fee) external override onlyMaintainer {
         MIN_FEE = _fee;
     }
+
     function setFeeClaimer(address _claimer) public override onlyMaintainer {
         FEE_CLAIMER = _claimer;
     }
-    function setExtensionStatus(address _extension, bool _status) external onlyMaintainer {
-        isAuthorizedExtension[_extension] = _status;
-    }
 
-    // -- HELPERS --
+    // -- Internal Helpers --
+    
     receive() external payable {}
 
     function _applyFee(uint256 _amountIn, uint256 _fee) internal view returns (uint256) {
@@ -108,7 +125,9 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
     function _returnTokensTo(address _token, uint256 _amount, address _to) internal {
         if (address(this) != _to) {
             if (_token == NATIVE) {
-                payable(_to).transfer(_amount);
+                // Fix H-4: Use call instead of transfer
+                (bool success, ) = payable(_to).call{value: _amount}("");
+                require(success, "Native transfer failed");
             } else {
                 IERC20(_token).safeTransfer(_to, _amount);
             }
@@ -119,27 +138,29 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
     // STRATEGY 1: CONVERGE SWAP (Split -> Merge)
     // =============================================================
 
-    /**
-     * @notice Executes the "Split -> Merge" strategy
-     * @dev Splits input across multiple adapters to intermediate token, then merges to output
-     */
     function executeConvergeSwap(
         ConvergeTrade calldata _trade,
         uint256 _minAmountOut,
         address _to,
-        uint256 _fee
-    ) external payable returns (uint256) {
+        uint256 _fee,
+        uint256 _deadline // Fix H-3/M-3
+    ) external payable nonReentrant returns (uint256) {
+        require(block.timestamp <= _deadline, "Transaction expired");
+        // Fix M-6: Basic input validation
+        require(_trade.inputHops.length > 0, "No input hops");
+        require(_trade.amountIn > 0, "Zero amount");
+
         uint256 amountIn = _trade.amountIn;
         address from = msg.sender;
 
-        // Handle native wrapping
+        // 1. Handle native wrapping
         if (_trade.tokenIn == WNATIVE && msg.value > 0) {
             require(msg.value == amountIn, "Value mismatch");
             _wrap(amountIn);
             from = address(this);
         }
 
-        // Apply fee ONCE before splitting
+        // 2. Apply fee
         if (_fee > 0) {
             uint256 feeAmount = amountIn - _applyFee(amountIn, _fee);
             if (feeAmount > 0) {
@@ -148,29 +169,38 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
             }
         }
 
-        // Move funds to router if needed
+        // 3. Move funds to router
         if (from != address(this)) {
             IERC20(_trade.tokenIn).safeTransferFrom(from, address(this), amountIn);
         }
 
-        // FIRST LEG: Input -> Intermediate (Split across adapters)
+        // 4. FIRST LEG: Input -> Intermediate (Split)
         uint256 midBalBefore = IERC20(_trade.intermediate).balanceOf(address(this));
+        
+        // Fix M-2: Handle dust by assigning remainder to last hop
+        uint256 remainingAmount = amountIn;
 
         for (uint256 i = 0; i < _trade.inputHops.length; i++) {
-            uint256 hopAmount = (amountIn * _trade.inputHops[i].proportion) / FEE_DENOMINATOR;
+            // Fix C-3/C-4: Trusted adapter check
+            require(isTrustedAdapter[_trade.inputHops[i].adapter], "Untrusted Adapter");
+
+            uint256 hopAmount;
+            if (i == _trade.inputHops.length - 1) {
+                hopAmount = remainingAmount; // Last hop takes all remaining dust
+            } else {
+                hopAmount = (amountIn * _trade.inputHops[i].proportion) / FEE_DENOMINATOR;
+                remainingAmount -= hopAmount;
+            }
+            
             if (hopAmount == 0) continue;
 
-            // Query adapter for expected output
             uint256 expectedOut = IAdapter(_trade.inputHops[i].adapter).query(
                 hopAmount,
                 _trade.tokenIn,
                 _trade.intermediate
             );
 
-            // Transfer tokens to adapter
             IERC20(_trade.tokenIn).safeTransfer(_trade.inputHops[i].adapter, hopAmount);
-
-            // Execute swap
             IAdapter(_trade.inputHops[i].adapter).swap(
                 hopAmount,
                 expectedOut,
@@ -184,19 +214,18 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         uint256 collectedIntermediate = midBalAfter - midBalBefore;
         require(collectedIntermediate > 0, "No intermediate tokens");
 
-        // SECOND LEG: Intermediate -> Output (Single adapter)
+        // 5. SECOND LEG: Intermediate -> Output (Merge)
+        require(isTrustedAdapter[_trade.outputHop.adapter], "Untrusted Adapter");
+
         uint256 expectedFinalOut = IAdapter(_trade.outputHop.adapter).query(
             collectedIntermediate,
             _trade.intermediate,
             _trade.tokenOut
         );
 
-        // Transfer intermediate tokens to output adapter
-        IERC20(_trade.intermediate).safeTransfer(_trade.outputHop.adapter, collectedIntermediate);
-
-        // Measure actual output
         uint256 balBefore = IERC20(_trade.tokenOut).balanceOf(_to);
-
+        
+        IERC20(_trade.intermediate).safeTransfer(_trade.outputHop.adapter, collectedIntermediate);
         IAdapter(_trade.outputHop.adapter).swap(
             collectedIntermediate,
             expectedFinalOut,
@@ -210,7 +239,8 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
 
         require(finalAmount >= _minAmountOut, "Slippage exceeded");
 
-        emit EmpXswap(_trade.tokenIn, _trade.tokenOut, _trade.amountIn, finalAmount);
+        // Fix M-5: Event uses amountIn (after fee logic applied above, amountIn variable holds actual swapped amt)
+        emit EmpXswap(_trade.tokenIn, _trade.tokenOut, amountIn, finalAmount);
         return finalAmount;
     }
 
@@ -218,31 +248,29 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
     // STRATEGY 2: STANDARD SPLIT (Parallel Paths)
     // =============================================================
 
-    /**
-     * @notice Executes parallel swap paths
-     * @dev Splits input amount across different routing paths
-     */
     function executeSplitSwap(
         SplitPath[] calldata _paths,
         uint256 _amountIn,
         uint256 _minAmountOut,
         address _to,
-        uint256 _fee
-    ) external payable returns (uint256 totalOut) {
-        require(_paths.length > 0, "Empty paths");
-        
+        uint256 _fee,
+        uint256 _deadline // Fix H-3/M-3
+    ) external payable nonReentrant returns (uint256 totalOut) {
+        require(block.timestamp <= _deadline, "Transaction expired");
+        require(_paths.length > 0, "Empty paths"); // Fix M-6
+
         address tokenIn = _paths[0].path[0];
         address tokenOut = _paths[0].path[_paths[0].path.length - 1];
         address from = msg.sender;
 
-        // Handle native wrapping
+        // 1. Handle wrapping
         if (tokenIn == WNATIVE && msg.value > 0) {
             require(msg.value == _amountIn, "Value mismatch");
             _wrap(msg.value);
             from = address(this);
         }
 
-        // Apply fee ONCE before splitting
+        // 2. Apply Fee
         uint256 amountAfterFee = _amountIn;
         if (_fee > 0) {
             uint256 feeAmount = _amountIn - _applyFee(_amountIn, _fee);
@@ -252,21 +280,32 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
             }
         }
 
-        // Move funds to router if needed
         if (from != address(this)) {
             IERC20(tokenIn).safeTransferFrom(from, address(this), amountAfterFee);
         }
 
-        // Execute each path
+        // 3. Execute Paths
+        uint256 remainingAmount = amountAfterFee;
+
         for (uint256 i = 0; i < _paths.length; i++) {
-            uint256 pathAmount = (amountAfterFee * _paths[i].proportion) / FEE_DENOMINATOR;
+            // Fix M-2: Handle dust
+            uint256 pathAmount;
+            if (i == _paths.length - 1) {
+                pathAmount = remainingAmount;
+            } else {
+                pathAmount = (amountAfterFee * _paths[i].proportion) / FEE_DENOMINATOR;
+                remainingAmount -= pathAmount;
+            }
+
             if (pathAmount == 0) continue;
 
-            // Build amounts array by querying each adapter
             uint256[] memory amounts = new uint256[](_paths[i].path.length);
             amounts[0] = pathAmount;
 
             for (uint256 j = 0; j < _paths[i].adapters.length; j++) {
+                // Fix C-3/C-4: Trusted adapter check
+                require(isTrustedAdapter[_paths[i].adapters[j]], "Untrusted Adapter");
+                
                 amounts[j + 1] = IAdapter(_paths[i].adapters[j]).query(
                     amounts[j],
                     _paths[i].path[j],
@@ -274,14 +313,12 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
                 );
             }
 
-            // Transfer initial tokens to first adapter
             IERC20(tokenIn).safeTransfer(_paths[i].adapters[0], amounts[0]);
 
-            // Execute swaps through each adapter
             for (uint256 j = 0; j < _paths[i].adapters.length; j++) {
                 address target = (j < _paths[i].adapters.length - 1) 
-                    ? _paths[i].adapters[j + 1]  // Next adapter
-                    : _to;                        // Final destination
+                    ? _paths[i].adapters[j + 1] 
+                    : _to;
 
                 IAdapter(_paths[i].adapters[j]).swap(
                     amounts[j],
@@ -296,11 +333,12 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         }
 
         require(totalOut >= _minAmountOut, "Slippage exceeded");
-        emit EmpXswap(tokenIn, tokenOut, _amountIn, totalOut);
+        // Fix M-5: Emit amountAfterFee
+        emit EmpXswap(tokenIn, tokenOut, amountAfterFee, totalOut);
     }
 
     // =============================================================
-    // V1 COMPATIBILITY (swapNoSplit functions)
+    // V1 COMPATIBILITY
     // =============================================================
 
     function _swapNoSplit(
@@ -309,9 +347,11 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         address _to,
         uint256 _fee
     ) internal returns (uint256) {
+        // Fix M-6: Input validation
+        require(_trade.adapters.length > 0, "No adapters");
+        
         uint256[] memory amounts = new uint256[](_trade.path.length);
         
-        // Apply fee
         if (_fee > 0 || MIN_FEE > 0) {
             amounts[0] = _applyFee(_trade.amountIn, _fee);
             _transferFrom(_trade.path[0], _from, FEE_CLAIMER, _trade.amountIn - amounts[0]);
@@ -319,10 +359,13 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
             amounts[0] = _trade.amountIn;
         }
 
-        // Transfer to first adapter
+        // Fix C-3/C-4: Validate all adapters
+        for(uint256 i=0; i < _trade.adapters.length; i++) {
+            require(isTrustedAdapter[_trade.adapters[i]], "Untrusted Adapter");
+        }
+
         _transferFrom(_trade.path[0], _from, _trade.adapters[0], amounts[0]);
 
-        // Query all adapters to get expected amounts
         for (uint256 i = 0; i < _trade.adapters.length; i++) {
             amounts[i + 1] = IAdapter(_trade.adapters[i]).query(
                 amounts[i],
@@ -333,12 +376,11 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
 
         require(amounts[amounts.length - 1] >= _trade.amountOut, "Insufficient output");
 
-        // Execute swaps
         for (uint256 i = 0; i < _trade.adapters.length; i++) {
             address targetAddress = (i < _trade.adapters.length - 1) 
                 ? _trade.adapters[i + 1] 
                 : _to;
-
+            
             IAdapter(_trade.adapters[i]).swap(
                 amounts[i],
                 amounts[i + 1],
@@ -352,17 +394,17 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         return amounts[amounts.length - 1];
     }
 
-    function swapNoSplit(Trade calldata t, address to, uint256 f) public override {
+    function swapNoSplit(Trade calldata t, address to, uint256 f) public override nonReentrant {
         _swapNoSplit(t, msg.sender, to, f);
     }
 
-    function swapNoSplitFromPLS(Trade calldata t, address to, uint256 f) external payable override {
+    function swapNoSplitFromPLS(Trade calldata t, address to, uint256 f) external payable override nonReentrant {
         require(t.path[0] == WNATIVE, "Not WPLS");
         _wrap(t.amountIn);
         _swapNoSplit(t, address(this), to, f);
     }
 
-    function swapNoSplitToPLS(Trade calldata t, address to, uint256 f) public override {
+    function swapNoSplitToPLS(Trade calldata t, address to, uint256 f) public override nonReentrant {
         require(t.path[t.path.length - 1] == WNATIVE, "Not WPLS");
         uint256 ret = _swapNoSplit(t, msg.sender, address(this), f);
         _unwrap(ret);
@@ -377,7 +419,7 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override {
+    ) external override nonReentrant {
         IERC20(t.path[0]).permit(msg.sender, address(this), t.amountIn, d, v, r, s);
         swapNoSplit(t, to, f);
     }
@@ -390,7 +432,7 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         uint8 v,
         bytes32 r,
         bytes32 s
-    ) external override {
+    ) external override nonReentrant {
         IERC20(t.path[0]).permit(msg.sender, address(this), t.amountIn, d, v, r, s);
         swapNoSplitToPLS(t, to, f);
     }
@@ -450,9 +492,5 @@ contract EmpsealRouterLiteFinal is Maintainable, Recoverable, IEmpsealRouter, IE
         external view override returns (FormattedOffer memory) 
     {
         return findBestPath(a, b, c, d);
-    }
-
-    function swap(bytes calldata, address) external payable returns (uint256) {
-        revert("Use executeConvergeSwap or executeSplitSwap");
     }
 }

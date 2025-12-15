@@ -7,7 +7,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     name: "PulseChain",
     symbol: "pulsechain",
     // routerAddress: '0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52',
-    routerAddress: "0x0875d006f9f2B2902275c3bCfd921c484d8F31FC",
+    routerAddress: "0xea73e1dEbC70770520A68Aa393C1d072a529bea9",
     wethAddress: "0xA1077a294dDE1B09bB078844df40758a5D0f9a27",
     priceApi: {
       baseUrl: "https://api.geckoterminal.com/api/v2",

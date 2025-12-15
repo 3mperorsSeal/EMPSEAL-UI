@@ -111,8 +111,12 @@ const Emp = ({ setPadding }) => {
   } = useChainConfig();
   // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
+  const DEADLINE_MINUTES = 10;
+  const deadline = Math.floor(Date.now() / 1000) + DEADLINE_MINUTES * 60;
+
   // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
+  // console.log("selected best route: ", bestRoute);
   useEffect(() => {
     if (publicClient && routerAddress) {
       const router = new SmartRouter(publicClient, routerAddress);
@@ -171,6 +175,7 @@ const Emp = ({ setPadding }) => {
 
       setBestRoute(route);
       // console.log("Best route:", route);
+      // console.log("Best route type:", route?.type);
 
       if (route) {
         let path = [];
@@ -489,6 +494,7 @@ const Emp = ({ setPadding }) => {
 
       let tx;
       if (bestRoute.type === "WRAP") {
+        // console.log("Executing WRAP strategy.");
         tx = await writeContractAsync({
           address: wethAddress,
           abi: getWrappedTokenABI(chainId),
@@ -496,6 +502,7 @@ const Emp = ({ setPadding }) => {
           value: bestRoute.payload.amountIn,
         });
       } else if (bestRoute.type === "UNWRAP") {
+        // console.log("Executing UNWRAP strategy.");
         tx = await writeContractAsync({
           address: wethAddress,
           abi: getWrappedTokenABI(chainId),
@@ -503,6 +510,7 @@ const Emp = ({ setPadding }) => {
           args: [bestRoute.payload.amountIn],
         });
       } else if (bestRoute.type === "CONVERGE") {
+        // console.log("Executing CONVERGE strategy.");
         tx = await writeContractAsync({
           address: routerAddress,
           abi: EmpsealRouterLiteV3,
@@ -512,10 +520,12 @@ const Emp = ({ setPadding }) => {
             minAmountOut,
             address,
             protocolFeeBigInt, // Fee
+            deadline,
           ],
         });
       } else {
         // SPLIT
+        // console.log("Executing SPLIT strategy.");
         tx = await writeContractAsync({
           address: routerAddress,
           abi: EmpsealRouterLiteV3,
@@ -526,6 +536,7 @@ const Emp = ({ setPadding }) => {
             minAmountOut,
             address,
             protocolFeeBigInt, // Fee
+            deadline,
           ],
         });
       }
