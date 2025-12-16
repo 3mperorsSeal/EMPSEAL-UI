@@ -738,10 +738,19 @@ export function CreateOrderForm({
                 {(() => {
                   const inputLength =
                     formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                  // const dynamicFontSize = Math.max(
+                  //   12,
+                  //   defaultFontSize - inputLength * 1.5
+                  // );
+                  const FREE_DIGITS = 10;
+                  const SHRINK_RATE = 3;
+
+                  const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
+
                   const dynamicFontSize = Math.max(
                     12,
-                    defaultFontSize - inputLength * 1.5
+                    defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
                     <input
@@ -920,12 +929,20 @@ export function CreateOrderForm({
 
               <div className="md:max-w-1/2 w-full me-3">
                 {(() => {
-                  const inputLength =
-                    formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const value = form.watch("minAmountOut") || "";
+
+                  const inputLength = value.replace(/\D/g, "").length;
+
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+
+                  const FREE_DIGITS = 10;
+                  const SHRINK_RATE = 3;
+
+                  const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
+
                   const dynamicFontSize = Math.max(
                     12,
-                    defaultFontSize - inputLength * 1.5
+                    defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
                     <input

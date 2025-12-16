@@ -41,11 +41,13 @@ const ChainPopup = ({
           </h2>
 
           {/* Search bar */}
-          <div className="mt-8 relative px-[54px] h-[54px] w-full flex gap-2 items-center bg-search">
+          {/* bg-search */}
+          <div className="mt-8 relative px-[10px] h-[54px] w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
             <input
               type="text"
               placeholder="Search Chain"
-              className="bg-transparent rounded-[4.83px] h-[43px] text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+              // md:max-w-[490px]
+              className="bg-transparent rounded-[4.83px] h-[43px] text-white w-full px-2 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
@@ -64,7 +66,7 @@ const ChainPopup = ({
             </svg>
           </div>
           {/* Chain cards */}
-          <div className="md:mt-10 space-y-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-0 px-2">
+          <div className="md:mt-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-0 px-2">
             {filteredChains.map((c) => {
               const isActive = chain?.id === c.id;
               return (
@@ -74,24 +76,22 @@ const ChainPopup = ({
                     switchChain({ chainId: c.id });
                     setShowChainPopup(false);
                   }}
-                  className={`group relative flex items-center px-4 gap-2 cursor-pointer rounded-xl py-1 w-full transition-all roboto ${
+                  className={`group relative flex items-center px-3 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hover:bg-[#FF9900]/10 ${
                     isActive ? "bg-black" : "bg-black"
                     // sc1
                   }`}
                 >
-                  <div className="w-6 h-6 bg-white rounded-full flex justify-center items-center">
+                  <div className="w-6 h-6 rounded-full flex justify-center items-center">
                     <img
                       src={c.icon || dummyImage}
                       alt={c.name}
                       onError={(e) => (e.currentTarget.src = dummyImage)}
-                      className="w-4 h-4 object-contain"
+                      className="w-6 h-6 object-contain"
                     />
                   </div>
                   <span
                     className={`font-orbitron text-xs text-center ${
-                      isActive
-                        ? "text-[#fff]"
-                        : "text-[#fff] group-hover:text-[#b4a895]"
+                      isActive ? "text-[#fff]" : "text-[#fff]"
                     }`}
                   >
                     {c.name}

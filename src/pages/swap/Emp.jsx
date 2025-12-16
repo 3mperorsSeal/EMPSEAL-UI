@@ -90,6 +90,8 @@ const Emp = ({ setPadding }) => {
   const [isQuoting, setIsQuoting] = useState(false);
   const [protocolFee, setProtocolFee] = useState(24);
   const publicClient = usePublicClient();
+  const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
+
   const { writeContractAsync } = useWriteContract();
   // Toggle function
   const togglePartialFill = () => {
@@ -869,12 +871,12 @@ const Emp = ({ setPadding }) => {
                       const inputLength =
                         formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                       const defaultFontSize =
-                        window.innerWidth >= 768 ? 48 : 36;
+                        window.innerWidth >= 768 ? 48 : 32;
                       // const dynamicFontSize = Math.max(
                       //   12,
                       //   defaultFontSize - inputLength * 1.5
                       // );
-                      const FREE_DIGITS = 5;
+                      const FREE_DIGITS = 10;
                       const SHRINK_RATE = 3;
 
                       const excessDigits = Math.max(
@@ -1027,13 +1029,13 @@ const Emp = ({ setPadding }) => {
                         formattedValue.replace(/,/g, "").length || 0;
 
                       const defaultFontSize =
-                        window.innerWidth >= 768 ? 48 : 36;
+                        window.innerWidth >= 768 ? 48 : 32;
 
                       // const dynamicFontSize = Math.max(
                       //   12,
                       //   defaultFontSize - outputLength * 1.5
                       // );
-                      const FREE_DIGITS = 5;
+                      const FREE_DIGITS = 10;
                       const SHRINK_RATE = 3;
 
                       const excessDigits = Math.max(
@@ -1244,7 +1246,7 @@ const Emp = ({ setPadding }) => {
           />
         )}
       </div>
-      <div className="lg:fixed absolute bg-white left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
+      <div className="xl:fixed absolute bg-white left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
         <h6 className="font-orbitron text-sm">
           <span>
             <span className="font-extrabold">Min Received</span> :{" "}

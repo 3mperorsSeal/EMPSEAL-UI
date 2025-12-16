@@ -165,7 +165,7 @@ const BridgeInterface = () => {
   const currentWrappedGasAllowance = wrappedGasTokenAllowance ?? 0n;
 
   // Balances
-  const currentTokenBalance = tokenBalance ?? 0n; 
+  const currentTokenBalance = tokenBalance ?? 0n;
   const currentUsdcBalance = usdcBalance ?? 0n;
   const currentWrappedGasBalance = wrappedGasTokenBalance ?? 0n;
 
@@ -540,7 +540,7 @@ const BridgeInterface = () => {
       ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
       : formattedInteger;
   };
-  const getDynamicFontSize = (value, desktop = 48, mobile = 36) => {
+  const getDynamicFontSize = (value, desktop = 48, mobile = 32) => {
     const length = value?.replace(/\D/g, "").length || 0;
     const baseSize = window.innerWidth >= 768 ? desktop : mobile;
 
@@ -685,10 +685,23 @@ const BridgeInterface = () => {
                     const formattedValue = formatNumber(
                       amount?.toString() || ""
                     );
-                    const dynamicFontSize = getDynamicFontSize(
-                      formattedValue,
-                      40,
-                      28
+
+                    const outputLength =
+                      formattedValue.replace(/\D/g, "").length || 0;
+
+                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+
+                    const FREE_DIGITS = 7; // no shrink up to 10 digits
+                    const SHRINK_RATE = 3; // slow shrink rate
+
+                    const excessDigits = Math.max(
+                      0,
+                      outputLength - FREE_DIGITS
+                    );
+
+                    const dynamicFontSize = Math.max(
+                      12,
+                      defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
                     return (
@@ -815,10 +828,27 @@ const BridgeInterface = () => {
                     const formattedValue = formatNumber(
                       amount?.toString() || ""
                     );
-                    const dynamicFontSize = getDynamicFontSize(
-                      formattedValue,
-                      40,
-                      28
+
+                    const defaultFontSize = 48;
+                    const minFontSize = 32;
+
+                    const FREE_DIGITS = 7;
+                    const SHRINK_RATE = 3;
+
+                    // count digits only (ignore commas & dots)
+                    const outputLength = formattedValue.replace(
+                      /\D/g,
+                      ""
+                    ).length;
+
+                    const excessDigits = Math.max(
+                      0,
+                      outputLength - FREE_DIGITS
+                    );
+
+                    const dynamicFontSize = Math.max(
+                      minFontSize,
+                      defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
                     return (
