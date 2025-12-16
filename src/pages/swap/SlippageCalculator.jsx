@@ -141,9 +141,10 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
       >
         <button
           onClick={handleModalClose}
-          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 flex flex-shrink-0"
+          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 flex flex-shrink-0 tilt"
         >
           <svg
+            // className=""
             width={18}
             height={19}
             viewBox="0 0 18 19"

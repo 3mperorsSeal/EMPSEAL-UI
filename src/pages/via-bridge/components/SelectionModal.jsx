@@ -16,9 +16,9 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
           <h3 className="text-lg font-bold text-white">{title}</h3>
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-300"
+            className="text-gray-500 hover:text-gray-300 tilt"
           >
-            <X />
+            <X className="tilt" />
           </button>
         </div>
         <div className="max-h-60 overflow-y-auto">

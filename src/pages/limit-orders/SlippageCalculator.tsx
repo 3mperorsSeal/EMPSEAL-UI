@@ -87,7 +87,7 @@ export function SlippageCalculator({
       >
         {/* Close Button */}
         <button
-          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 flex flex-shrink-0"
+          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 flex flex-shrink-0 tilt"
           onClick={() => handleModalClose()}
         >
           {" "}

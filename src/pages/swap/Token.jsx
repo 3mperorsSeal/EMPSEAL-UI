@@ -23,32 +23,32 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
 
   return (
     <div
-      className="flex justify-between items-center mt-4 cursor-pointer hover:bg-gray-800 p-2 rounded"
+      className="flex justify-between items-center mt-2 cursor-pointer hover:bg-gray-800 p-2 rounded"
       onClick={() => onClick(token)}
     >
       <div className="flex items-center gap-2">
         <div className="flex justify-center items-center bg-white rounded-full p-1">
-        <img
-          src={token.logoURI || token.image}
-          className="w-4 h-4"
-          alt={token.name}
-          onError={(e) => {
-            e.target.src = "path/to/fallback/image.png";
-          }}
-        />
+          <img
+            src={token.logoURI || token.image}
+            className="w-4 h-4"
+            alt={token.name}
+            onError={(e) => {
+              e.target.src = "path/to/fallback/image.png";
+            }}
+          />
         </div>
         <div>
-          <div className="text-white text-xs roboto leading-relaxed tracking-wide">
+          <div className="text-white roboto font-black text-xs roboto leading-relaxed tracking-wide">
             {token.name}
+          </div>
+          <div className="text-white text-xs roboto">
+            {token.symbol || token.ticker}
           </div>
         </div>
       </div>
       <div className="text-right">
-        <div className="text-[#FF9900] text-xs font-normal roboto tracking-wide">
+        <div className="text-[#FF9900] text-lg font-bold roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
-        </div>
-        <div className="text-gray-400 text-[10px] roboto mt-2">
-          {token.symbol || token.ticker}
         </div>
       </div>
     </div>
@@ -273,12 +273,12 @@ const Token = ({ onClose, onSelect }) => {
       <div className="w-full flex justify-center my-auto items-center">
         <div
           ref={modalRef}
-          className="md:max-w-[618px] w-full rounded-3xl relative py-6 md:px-10 px-4 mx-auto clip-bg"
+          className="md:max-w-[618px] w-full rounded-3xl relative py-4 md:px-10 px-4 mx-auto clip-bg"
         >
           {/* <img src={Clip} /> */}
           <svg
             onClick={onClose}
-            className="absolute cursor-pointer md:right-20 right-7 top-14"
+            className="absolute cursor-pointer md:right-14 right-7 top-12 tilt"
             width={18}
             height={19}
             viewBox="0 0 18 19"
@@ -294,13 +294,42 @@ const Token = ({ onClose, onSelect }) => {
             />
           </svg>
 
-          <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-[20px]">
-            <p className="md:text-2xl capitalize text-lg font-medium text-white roboto text-center tracking-widest">
+          <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-3">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
               Select a token
             </p>
           </div>
-
-          <div className="mt-6 relative px-[54px] h-[54px] w-full flex gap-2 items-center bg-search">
+          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-[24px] px-3">
+            {featureTokens.map((token, index) => (
+              <div
+                key={index}
+                className="flex flex-row items-center cursor-pointer roboto rounded-2xl bg-rec"
+                onClick={() => handleFeaturedTokenClick(token)}
+              >
+                <span className="flex items-center">
+                  <div className="relative flex justify-center items-center">
+                    <img
+                      src={token.logoURI || token.image}
+                      alt={token.name}
+                      className="w-4 h-4 rounded-full relative z-10 p-[1px] object-contain"
+                      onError={(e) =>
+                        (e.target.src = "path/to/fallback/image.png")
+                      }
+                    />
+                  </div>
+                  <p className="text-white font-black text-xs mt-0 ms-2">
+                    {token.symbol || token.ticker}
+                  </p>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 items-center justify-center cursor-pointer mt-1 py-3">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
+              Search token
+            </p>
+          </div>
+          <div className="mt-3 relative px-[54px] h-[54px] w-full flex gap-2 items-center bg-search">
             <input
               type="text"
               placeholder="Search token name or paste address"
@@ -327,39 +356,14 @@ const Token = ({ onClose, onSelect }) => {
               </svg>
             </button>
           </div>
-          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-6 md:px-[24px] px-3">
-            {featureTokens.map((token, index) => (
-              <div
-                key={index}
-                className="flex flex-row items-center cursor-pointer roboto rounded-2xl bg-rec"
-                onClick={() => handleFeaturedTokenClick(token)}
-              >
-                <span className="flex items-center">
-                  <div className="relative flex justify-center items-center">
-                    {/* <img src={Sbg} alt="sbg" className="absolute z-0 left-[-1px] top-0 bottom-0 my-auto min-w-[18px] h-[17px]" /> */}
-                    <img
-                      src={token.logoURI || token.image}
-                      alt={token.name}
-                      className="w-4 h-4 rounded-full relative z-10 p-[1px] object-contain"
-                      onError={(e) =>
-                        (e.target.src = "path/to/fallback/image.png")
-                      }
-                    />
-                  </div>
-                  <p className="text-white font-bold text-xs mt-0 ms-2">
-                    {token.symbol || token.ticker}
-                  </p>
-                </span>
-              </div>
-            ))}
-          </div>
+
           {/* <hr className="h-px my-8 bg-gray-200 border-[#3b3c4e] h-hr" /> */}
-          <div className="mt-6 px-[24px]">
-            <div className="flex justify-between gap-4 items-center">
+          <div className="mt-4 px-[24px]">
+            {/* <div className="flex justify-between gap-4 items-center">
               <p className="text-white text-sm font-medium roboto leading-relaxed tracking-wide">
                 Token Name
               </p>
-            </div>
+            </div> */}
 
             <SortedTokenList />
 

@@ -526,6 +526,27 @@ const BridgeInterface = () => {
     handleBridge,
   ]);
 
+  // Function to format the number with commas
+  const formatNumber = (value) => {
+    if (!value) return ""; // Handle empty input
+
+    const [integerPart, decimalPart] = value.split("."); // Split into integer and decimal parts
+    const formattedInteger = integerPart
+      .replace(/\D/g, "") // Allow only digits
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ""); // Add commas to integer part
+
+    // If there's a decimal part, return formatted integer + decimal
+    return decimalPart !== undefined
+      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
+      : formattedInteger;
+  };
+  const getDynamicFontSize = (value, desktop = 48, mobile = 36) => {
+    const length = value?.replace(/\D/g, "").length || 0;
+    const baseSize = window.innerWidth >= 768 ? desktop : mobile;
+
+    return Math.max(12, baseSize - length * 1.5);
+  };
+
   return (
     <>
       <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
@@ -577,18 +598,16 @@ const BridgeInterface = () => {
                 From
               </div>
               <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2">
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="font-extrabold font-orbitron leading-normal">
                   BAL
                 </span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
                   :{" "}
                 </span>
-                <span className="font-bold font-orbitron leading-normal">
-                  {/* Handle BigInt display safely */}
-                  {tokenBalance !== undefined
-                    ? formatEther(tokenBalance)
-                    : "0.00"}{" "}
+
+                <span className="rigamesh leading-normal">
+                  {tokenBalance ? formatEther(tokenBalance) : "0.00"}{" "}
                   {selectedToken.symbol}
                 </span>
               </div>
@@ -620,11 +639,12 @@ const BridgeInterface = () => {
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 ${
-                        selectedPercentage === value
-                          ? " text-white bg-black"
-                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                      }`}
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                ${
+                  selectedPercentage === value
+                    ? " text-white bg-black"
+                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -633,7 +653,7 @@ const BridgeInterface = () => {
                   ))}
                 </div>
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
-                  {(() => {
+                  {/* {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
                     const fontSizeClass =
@@ -648,15 +668,48 @@ const BridgeInterface = () => {
                           type="text"
                           value={amount}
                           onChange={(e) => setAmount(e.target.value)}
-                          placeholder="0.00"
-                          className={`text-[#000000] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
+                          placeholder={
+                            tokenBalance?.formatted === "0.000000"
+                              ? "0"
+                              : "0.00"
+                          }
+                          className={`text-[#000000] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 rigamesh placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
                           style={{
                             fontSize: `${Math.max(
                               12,
                               40 - amount.toString().length * 1.5
                             )}px`,
                           }}
+                        /> */}
+                  {(() => {
+                    const formattedValue = formatNumber(
+                      amount?.toString() || ""
+                    );
+                    const dynamicFontSize = getDynamicFontSize(
+                      formattedValue,
+                      40,
+                      28
+                    );
+
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          value={formattedValue}
+                          onChange={(e) =>
+                            setAmount(formatNumber(e.target.value))
+                          }
+                          placeholder={
+                            tokenBalance?.formatted === "0.000000"
+                              ? "0"
+                              : "0.00"
+                          }
+                          className="text-[#000000] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 rigamesh placeholder-black transition-all duration-200 ease-in-out"
+                          style={{
+                            fontSize: `${dynamicFontSize}px`,
+                          }}
                         />
+
                         <button
                           onClick={() => {
                             if (tokenBalance !== undefined) {
@@ -676,11 +729,14 @@ const BridgeInterface = () => {
             </div>
           </div>
 
-          <div className="cursor-pointer" onClick={handleSwapDirection}>
+          <div
+            className="cursor-pointer mx-auto my-4 md:pt-7 pt-[44px] md:w-[70px] w-12"
+            onClick={handleSwapDirection}
+          >
             <img
               src={UpDownAr}
               alt="Ar"
-              className="mx-auto my-4 md:pt-7 pt-[44px] pb-5 md:w-[70px] w-12"
+              className="hoverswap transition-all rounded-xl"
             />
           </div>
 
@@ -703,24 +759,87 @@ const BridgeInterface = () => {
               </div>
               <div className="md:w-1/2 w-full md:me-3">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
-                  <span />
-                  {[25, 50, 75, 100].map((v) => (
+                  <span></span>
+                  {[25, 50, 75, 100].map((value) => (
                     <button
-                      key={v}
+                      key={value}
                       type="button"
-                      className="py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                ${
+                  selectedPercentage === value
+                    ? " text-white bg-black"
+                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                }`}
+                      onClick={() => handlePercentageChange(value)}
+                      disabled={isLoading}
                     >
-                      {v}%
+                      {value}%
                     </button>
                   ))}
                 </div>
                 <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
-                  <input
-                    type="text"
-                    value={amount}
-                    disabled
-                    className="text-[#fff] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out md:text-[40px] text-2xl"
-                  />
+                  {/* {(() => {
+                    const inputLength =
+                      amount?.toString().replace(/\D/g, "").length || 0;
+
+                    const fontSizeClass =
+                      inputLength > 12
+                        ? "md:text-[24px] text-xl !text-[#fff]"
+                        : inputLength > 8
+                        ? "md:text-[32px] text-2xl !text-[#fff]"
+                        : "md:text-[40px] text-2xl !text-[#fff]";
+
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          placeholder={
+                            tokenBalance?.formatted === "0.000000"
+                              ? "0"
+                              : "0.00"
+                          }
+                          className={`text-[#fff] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
+                          style={{
+                            fontSize: `${Math.max(
+                              12,
+                              40 - amount.toString().length * 1.5
+                            )}px`,
+                          }}
+                        />
+                      </>
+                    );
+                  })()} */}
+                  {(() => {
+                    const formattedValue = formatNumber(
+                      amount?.toString() || ""
+                    );
+                    const dynamicFontSize = getDynamicFontSize(
+                      formattedValue,
+                      40,
+                      28
+                    );
+
+                    return (
+                      <>
+                        <input
+                          type="text"
+                          value={amount}
+                          onChange={(e) => setAmount(e.target.value)}
+                          placeholder={
+                            tokenBalance?.formatted === "0.000000"
+                              ? "0"
+                              : "0.00"
+                          }
+                          className="text-[#fff] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent  px-1 rigamesh placeholder-white transition-all duration-200 ease-in-out"
+                          style={{
+                            fontSize: `${dynamicFontSize}px`,
+                          }}
+                        />
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -748,7 +867,7 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-bold"
+            className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
           >
             <img
               className="absolute swap-button1"
