@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Logo from "../../assets/images/emp-logo.png";
 import WalletImg from "../../assets/images/wallet-2.svg";
 import Home from "../../assets/images/house.svg";
@@ -48,10 +48,10 @@ const Wallet = () => {
       : formattedInteger;
   };
 
-  const handleChainChange = (iconUrl, name) => {
+  const handleChainChange = useCallback((iconUrl, name) => {
     setChainIconUrl(iconUrl);
     setChainName(name);
-  };
+  }, []);
 
   return (
     <div>
@@ -61,7 +61,7 @@ const Wallet = () => {
           onChainChange={handleChainChange}
         />
         <Link to="/">
-          <button className="flex items-center justify-center bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-normal w-full font-orbitron">
+          <button className="flex items-center justify-center bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-extrabold w-full font-orbitron">
             <span className="ps-3">Home Page</span>
           </button>
         </Link>

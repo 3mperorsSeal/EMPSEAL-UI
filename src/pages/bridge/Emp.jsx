@@ -729,22 +729,15 @@ const Emp = ({
   //     setLoading(false);
   //   }
   // };
+
   return (
     <>
       <div
         className={`w-full rounded-xl xl:pb-10 lg:pt-1 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative ${
-          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 md:pb-0 pb-[350px]"
+          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-[350px]"
         }`}
       >
         <div className="scales8">
-          {/* <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
-            <h1 className="md:text-5xl text-3xl text-center  text-[#FF9900] font-orbitron font-bold mb-2">
-              Seamless
-            </h1>
-            <h1 className="md:text-5xl text-3xl text-center  text-white font-orbitron font-bold">
-              Cross Chain Swaps
-            </h1>
-          </div> */}
           <div className="relative">
             <img className="bg-sell" src={Sellbox} alt="sellbox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
@@ -752,14 +745,14 @@ const Emp = ({
                 You Sell
               </div>
               <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2">
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="font-extrabold font-orbitron leading-normal">
                   BAL
                 </span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
                   :{" "}
                 </span>
-                <span className=" font-bold font-orbitron leading-normal">
+                <span className="rigamesh leading-normal">
                   {isLoading
                     ? "Loading.."
                     : selectedTokenA.address === EMPTY_ADDRESS
@@ -775,10 +768,6 @@ const Emp = ({
               </div>
             </div>
             <div className="flex w-full px-4 py-4 mt-2">
-              {/* <div className="w-1/2">
-                <div className="flex justify-between gap-4 items-center cursor-pointer">
-                  <div className="flex gap-2 items-center mt-7">
-                     */}
               <div className="flex md:max-w-1/2 w-full me-3 justify-between rounded-2xl py-4 lg:px-8 px-3">
                 <div
                   onClick={() => {
@@ -809,6 +798,17 @@ const Emp = ({
                         /> */}
                         <h3
                           className={`font-bold font-orbitron text-center ${
+                            selectedTokenA?.name?.length > 10
+                              ? "text-[8px] lg:text-[12px]"
+                              : selectedTokenA?.name?.length > 6
+                              ? "text-[10px] lg:text-sm"
+                              : "text-xs lg:text-base"
+                          }`}
+                        >
+                          {selectedTokenA?.name}
+                        </h3>
+                        {/* <h3
+                          className={`font-bold font-orbitron text-center ${
                             selectedChainA?.name?.length > 10
                               ? "text-[8px] lg:text-[12px]"
                               : selectedChainA?.name?.length > 6
@@ -817,44 +817,32 @@ const Emp = ({
                           }`}
                         >
                           {selectedChainA?.name}
-                        </h3>
+                        </h3> */}
                       </div>
                     )}
                     <img
                       src={CPatch}
                       className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                     />
-                    {selectedTokenA.image && (
-                      <div
-                        className={`relative bg-black border h-[55px] md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
-                          selectedChainA.image ? "left-40-box " : "left-40-box"
-                        }`}
-                      >
-                        <img
-                          className="md:h-10 h-8 md:p-2 p-1"
-                          src={selectedTokenA.image}
-                          alt={selectedTokenA.name}
-                        />
-                        {/* <img
-                          className={`${
-                            selectedChainA?.name?.length > 10
-                              ? "md:h-10 h-8 md:p-2 p-1"
-                              : selectedChainA?.name?.length > 6
-                              ? "md:h-10 h-8 md:p-2 p-1"
-                              : "md:h-10 h-8 md:p-2 p-1"
-                          }`}
-                          src={selectedChainA?.image}
-                          alt={selectedChainA?.name}
-                        />  */}
-                      </div>
-                    )}
+                    {/* {selectedChainA.image && ( */}
+                    <div
+                      className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                        selectedChainA.image ? "left-40-box " : "left-40-box"
+                      }`}
+                    >
+                      <img
+                        className="md:h-10 h-8 md:p-2 p-1"
+                        src={selectedChainA.image}
+                        alt={selectedChainA.name}
+                      />
+                    </div>
+                    {/* )} */}
                   </div>
                 </div>
               </div>
               {/* </div>
                 </div>
               </div> */}
-
               <div className="md:max-w-1/2 w-full md:me-3">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
                   <span></span>
@@ -862,7 +850,7 @@ const Emp = ({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
@@ -877,14 +865,17 @@ const Emp = ({
                 </div>
                 {(() => {
                   const inputLength =
-                    formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
-                  const fontSizeClass =
-                    inputLength > 12
-                      ? "md:text-[24px] text-xl !text-[#000000]"
-                      : inputLength > 8
-                      ? "md:text-[32px] text-2xl !text-[#000000]"
-                      : "md:text-[40px] text-2xl !text-[#000000]";
+                    formatNumber(parseFloat(amountIn).toFixed(3))?.replace(
+                      /\D/g,
+                      ""
+                    ).length || 0;
 
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+
+                  const dynamicFontSize = Math.max(
+                    12,
+                    defaultFontSize - inputLength * 1.5
+                  );
                   return (
                     <input
                       type="text"
@@ -895,12 +886,9 @@ const Emp = ({
                       }
                       value={formatNumber(amountIn)}
                       onChange={(e) => handleInputChange(e.target.value)}
-                      className="text-[#000000] py-2 font-bold text-end w-full leading-7 outline-none border-none bg-transparent token_input px-3 font-orbitron placeholder-black transition-all duration-200 ease-in-out"
+                      className="text-[#000000] text-sh py-2 rigamesh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-3 placeholder-black transition-all duration-200 ease-in-out"
                       style={{
-                        fontSize: `${Math.max(
-                          12,
-                          40 - amountIn.toString().length * 1.5
-                        )}px`,
+                        fontSize: `${dynamicFontSize}px`,
                       }}
                     />
                   );
@@ -924,7 +912,7 @@ const Emp = ({
             }}
           >
             <div
-              className="cursor-pointer"
+              className="cursor-pointer mx-auto my-4 md:pt-7 pt-[44px] md:w-[70px] w-12"
               onClick={() => {
                 const _tokenA = selectedTokenA;
                 const _tokenB = selectedTokenB;
@@ -939,7 +927,7 @@ const Emp = ({
               <img
                 src={UpDownAr}
                 alt="Ar"
-                className="mx-auto my-4 md:pt-7 pt-[44px] md:w-[70px] w-12"
+                className="hoverswap transition-all rounded-xl"
               />
             </div>
           </div>
@@ -990,29 +978,29 @@ const Emp = ({
                         }`}
                       >
                         {/* Chain Image */}
-                        {selectedChainB.image && (
+                        {selectedTokenB.image && (
                           <div className="absolute px-3 left-0 right-0 mx-auto flex items-center justify-center gap-3 z-10">
                             {/* <img
                               className={`${
-                                selectedChainB?.name?.length > 10
+                                selectedTokenB?.name?.length > 10
                                   ? "w-3 md:w-6"
-                                  : selectedChainB?.name?.length > 6
+                                  : selectedTokenB?.name?.length > 6
                                   ? "w-4 md:w-7"
                                   : "w-4 md:w-8"
                               }`}
-                              src={selectedChainB?.image}
-                              alt={selectedChainB?.name}
+                              src={selectedTokenB?.image}
+                              alt={selectedTokenB?.name}
                             /> */}
                             <h3
                               className={`font-bold font-orbitron text-center ${
-                                selectedChainB?.name?.length > 10
+                                selectedTokenB?.name?.length > 10
                                   ? "text-[8px] lg:text-[12px]"
-                                  : selectedChainB?.name?.length > 6
+                                  : selectedTokenB?.name?.length > 6
                                   ? "text-[10px] lg:text-sm"
                                   : "text-xs lg:text-base"
                               }`}
                             >
-                              {selectedChainB?.name}
+                              {selectedTokenB?.name}
                             </h3>
                           </div>
                         )}
@@ -1020,20 +1008,20 @@ const Emp = ({
                           src={CPatch}
                           className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
                         />
-                        {selectedTokenB.image && (
-                          <div
-                            className={`relative bg-black border h-[55px] md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
-                              selectedChainB.image
-                                ? "left-40-box "
-                                : "left-40-box"
-                            }`}
-                          >
-                            <img
-                              className="md:h-10 h-8 md:p-2 p-1"
-                              src={selectedTokenB.image}
-                              alt={selectedTokenB.name}
-                            />
-                             {/* <img
+                        {/* {selectedChainB.image && ( */}
+                        <div
+                          className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                            selectedChainB.image
+                              ? "left-40-box "
+                              : "left-40-box"
+                          }`}
+                        >
+                          <img
+                            className="md:h-10 h-8 md:p-2 p-1"
+                            src={selectedChainB.image}
+                            alt={selectedChainB.name}
+                          />
+                          {/* <img
                               className={`${
                                 selectedChainB?.name?.length > 10
                                   ? "md:h-10 h-8 md:p-2 p-1"
@@ -1044,8 +1032,8 @@ const Emp = ({
                               src={selectedChainB?.image}
                               alt={selectedChainB?.name}
                             /> */}
-                          </div>
-                        )}
+                        </div>
+                        {/* // )} */}
                       </div>
                       {/* <svg
                     className='pointer-events-none'
@@ -1087,27 +1075,36 @@ const Emp = ({
                     </button>
                   ))}
                 </div> */}
-                <input
-                  type="text"
-                  placeholder="0"
-                  value={
-                    amountOut === "0" || !amountOut
-                      ? ""
-                      : parseFloat(amountOut).toFixed(6)
-                  }
-                  readOnly
-                  className="truncate text-white font-bold font-orbitron text-end w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
-                  style={{
-                    fontSize: `${Math.max(
-                      12,
-                      40 -
-                        formatNumber(
-                          parseFloat(amountOut).toFixed(6)
-                        ).toString().length *
-                          1.5
-                    )}px`,
-                  }}
-                />
+                {(() => {
+                  const inputLength =
+                    formatNumber(parseFloat(amountOut).toFixed(3))?.replace(
+                      /\D/g,
+                      ""
+                    ).length || 0;
+
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+
+                  const dynamicFontSize = Math.max(
+                    12,
+                    defaultFontSize - inputLength * 1.5
+                  );
+                  return (
+                    <input
+                      type="text"
+                      placeholder="0"
+                      value={
+                        amountOut === "0" || !amountOut
+                          ? ""
+                          : parseFloat(amountOut).toFixed(6)
+                      }
+                      readOnly
+                      className="truncate text-white font-bold rigamesh text_sh text-end placeholder:text-white w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
+                      style={{
+                        fontSize: `${dynamicFontSize}px`,
+                      }}
+                    />
+                  );
+                })()}
               </div>
             </div>
             {/* <div className="text-right text-white font-bold text-sm -mt-[0px] pe-8 roboto truncate">
@@ -1175,7 +1172,7 @@ const Emp = ({
                   loading || amountIn === "0" || !amountIn || !selfAddress
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black lg:text-3xl text-lg font-bold`}
+                } font-orbitron text-black lg:text-3xl text-lg font-extrabold`}
               >
                 <img className="absolute swap-button" src={Swapbutton} />
                 {loading ? "Processing..." : "Estimate Trade"}
@@ -1187,7 +1184,7 @@ const Emp = ({
                   isInsufficientBalance() || !amountOut || amountOut === "0"
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black lg:text-3xl text-lg font-bold`}
+                } font-orbitron text-black lg:text-3xl text-lg font-extrabold`}
               >
                 <img className="absolute swap-button" src={Swapbutton} />
                 <span className="ps-7">{getButtonText()}</span>
@@ -1221,7 +1218,7 @@ const Emp = ({
         )}
       </div>
       {/* Routing  */}
-      <div className="mt-3 absolute md:left-0 lefts md:bottom-[275px] bottom-[255px]">
+      <div className="mt-3 lg:fixed absolute md:left-0 lefts 2xl:bottom-[31%] lg:bottom-[31%] md:bottom-[16%] bottom-[275px] z-40">
         <div className="relative">
           <div className="w-full border-3 border-white rounded-xl-view py-4 2xl:px-7 lg:px-5 px-4 bg-black min-w-[240px] scale81 relative max-w-[302px] mxauto round">
             <div className="flex justify-center gap-2 md:flex-nowrap flex-wrap absolute left-0 right-0 -top-7">

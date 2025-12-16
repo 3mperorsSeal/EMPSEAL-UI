@@ -32,7 +32,7 @@ export default function AddressCard({
     >
       <svg
         onClick={onClose}
-        className="absolute cursor-pointer md:right-10 right-4 md:top-12 top-4 hover:scale-110 transition-transform"
+        className="absolute cursor-pointer md:right-10 right-4 md:top-12 top-4 tilt"
         width={18}
         height={19}
         viewBox="0 0 18 19"

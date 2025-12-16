@@ -1,20 +1,64 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   rainbowWallet,
   metaMaskWallet,
   coinbaseWallet,
   walletConnectWallet,
   phantomWallet,
-} from '@rainbow-me/rainbowkit/wallets';
-import { http, createConfig } from 'wagmi';
-import { pulsechain, bsc, arbitrum, avalanche, polygon, sei, mainnet, base, polygonZkEvm, moonriver, fantom, aurora, optimism, cronos, gnosis, linea, scroll, blast, fuse, moonbeam, celo, boba, mantle, manta, zetachain, telos, kava, zksync, arbitrumNova, tron, metis, bahamut, mode, rootstock, merlin, zkLinkNova, taiko, fraxtal, gravity, morph, sonic } from 'wagmi/chains';
+} from "@rainbow-me/rainbowkit/wallets";
+import { http, createConfig } from "wagmi";
+import {
+  pulsechainV4,
+  baseSepolia,
+  pulsechain,
+  bsc,
+  arbitrum,
+  avalanche,
+  polygon,
+  sei,
+  mainnet,
+  base,
+  polygonZkEvm,
+  moonriver,
+  fantom,
+  aurora,
+  optimism,
+  cronos,
+  gnosis,
+  linea,
+  scroll,
+  blast,
+  fuse,
+  moonbeam,
+  celo,
+  boba,
+  mantle,
+  manta,
+  zetachain,
+  telos,
+  kava,
+  zksync,
+  arbitrumNova,
+  tron,
+  metis,
+  bahamut,
+  mode,
+  rootstock,
+  merlin,
+  zkLinkNova,
+  taiko,
+  fraxtal,
+  gravity,
+  morph,
+  sonic,
+} from "wagmi/chains";
 
 // Wallet configuration for bridge
 const bridgeConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Suggested',
+      groupName: "Suggested",
       wallets: [
         metaMaskWallet,
         phantomWallet,
@@ -24,13 +68,15 @@ const bridgeConnectors = connectorsForWallets(
       ],
     },
   ],
-  { appName: 'RainbowKit Bridge', projectId: 'YOUR_PROJECT_ID' },
+  { appName: "RainbowKit Bridge", projectId: "YOUR_PROJECT_ID" }
 );
 
 export const bridgeConfig = getDefaultConfig({
-  appName: 'Emplseal Bridge',
-  projectId: 'YOUR_PROJECT_ID',
+  appName: "Emplseal Bridge",
+  projectId: "YOUR_PROJECT_ID",
   chains: [
+    baseSepolia,
+    pulsechainV4,
     pulsechain,
     mainnet,
     bsc,
@@ -71,8 +117,8 @@ export const bridgeConfig = getDefaultConfig({
     fraxtal,
     gravity,
     morph,
-    sonic
+    sonic,
   ],
   ssr: true,
-  bridgeConnectors,
-}); 
+  connectors: bridgeConnectors,
+});
