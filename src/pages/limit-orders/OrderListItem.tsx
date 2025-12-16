@@ -9,7 +9,7 @@ import { useReadContract, useWatchContractEvent } from "wagmi";
 import { formatUnits } from "viem";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 
-const CONTRACT_ADDRESS = "0xCfA7562553e6BC466a60aA93079495A829221305";
+const CONTRACT_ADDRESS = "0x92a37eCd8E27a21DF650e0ef1cB7366f9B8f61EF";
 
 interface OrderListItemProps {
   order: Order;
