@@ -120,5 +120,5 @@ export const bridgeConfig = getDefaultConfig({
     sonic,
   ],
   ssr: true,
-  bridgeConnectors,
+  connectors: bridgeConnectors,
 });

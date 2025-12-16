@@ -35,6 +35,26 @@ const COLLATERAL_BRIDGE_ABI = [
         type: "address",
       },
       {
+        internalType: "address",
+        name: "_wrappedGasToken",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_protocolFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_viaSourceFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_viaDestGas",
+        type: "uint256",
+      },
+      {
         internalType: "bool",
         name: "_supported",
         type: "bool",
@@ -44,52 +64,6 @@ const COLLATERAL_BRIDGE_ABI = [
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_wrappedToken",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_messageV3Address",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_owner",
-        type: "address",
-      },
-    ],
-    stateMutability: "nonpayable",
-    type: "constructor",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "uint32",
-        name: "chainId",
-        type: "uint32",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "remoteContract",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bool",
-        name: "supported",
-        type: "bool",
-      },
-    ],
-    name: "ChainConfigured",
-    type: "event",
   },
   {
     inputs: [
@@ -118,6 +92,70 @@ const COLLATERAL_BRIDGE_ABI = [
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_messageV3",
+        type: "address",
+      },
+      {
+        internalType: "uint256[]",
+        name: "_chainIds",
+        type: "uint256[]",
+      },
+      {
+        internalType: "address[]",
+        name: "_endpoints",
+        type: "address[]",
+      },
+      {
+        internalType: "uint16[]",
+        name: "_confirmations",
+        type: "uint16[]",
+      },
+    ],
+    name: "configureMessageClient",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_collateralToken",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_feeToken",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_messageV3Address",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_treasury",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "_owner",
+        type: "address",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "constructor",
+  },
+  {
+    inputs: [],
+    name: "ChainNotConfigured",
+    type: "error",
   },
   {
     inputs: [
@@ -161,32 +199,83 @@ const COLLATERAL_BRIDGE_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "InsufficientFeeTokenBalance",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientGasTokenBalance",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidConfiguration",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidRecipient",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "UnauthorizedSourceChain",
+    type: "error",
+  },
+  {
+    anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "uint32",
+        name: "chainId",
+        type: "uint32",
+      },
+      {
+        indexed: true,
         internalType: "address",
-        name: "_messageV3",
+        name: "remoteContract",
         type: "address",
       },
       {
-        internalType: "uint256[]",
-        name: "_chainIds",
-        type: "uint256[]",
+        indexed: false,
+        internalType: "address",
+        name: "wrappedGasToken",
+        type: "address",
       },
       {
-        internalType: "address[]",
-        name: "_endpoints",
-        type: "address[]",
+        indexed: false,
+        internalType: "uint256",
+        name: "protocolFee",
+        type: "uint256",
       },
       {
-        internalType: "uint16[]",
-        name: "_confirmations",
-        type: "uint16[]",
+        indexed: false,
+        internalType: "uint256",
+        name: "viaSourceFee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "viaDestGas",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bool",
+        name: "supported",
+        type: "bool",
       },
     ],
-    name: "configureMessageClient",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
+    name: "ChainConfigured",
+    type: "event",
   },
   {
     inputs: [
@@ -216,62 +305,30 @@ const COLLATERAL_BRIDGE_ABI = [
     inputs: [
       {
         indexed: true,
-        internalType: "address",
-        name: "token",
-        type: "address",
+        internalType: "uint32",
+        name: "chainId",
+        type: "uint32",
       },
       {
         indexed: false,
         internalType: "uint256",
-        name: "amount",
+        name: "protocolFee",
         type: "uint256",
       },
       {
-        indexed: true,
-        internalType: "address",
-        name: "to",
-        type: "address",
+        indexed: false,
+        internalType: "uint256",
+        name: "viaSourceFee",
+        type: "uint256",
       },
-    ],
-    name: "EmergencyWithdraw",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
       {
         indexed: false,
         internalType: "uint256",
-        name: "newFee",
+        name: "viaDestGas",
         type: "uint256",
       },
     ],
-    name: "FeeUpdated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "minAmount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "maxAmount",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "dailyLimit",
-        type: "uint256",
-      },
-    ],
-    name: "LimitsUpdated",
+    name: "FeesUpdated",
     type: "event",
   },
   {
@@ -297,7 +354,7 @@ const COLLATERAL_BRIDGE_ABI = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_txId",
+        name: "",
         type: "uint256",
       },
       {
@@ -312,12 +369,12 @@ const COLLATERAL_BRIDGE_ABI = [
       },
       {
         internalType: "address",
-        name: "_reference",
+        name: "",
         type: "address",
       },
       {
         internalType: "uint256",
-        name: "_protocolAmount",
+        name: "",
         type: "uint256",
       },
       {
@@ -583,17 +640,23 @@ const COLLATERAL_BRIDGE_ABI = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "fee",
+        name: "protocolFee",
         type: "uint256",
       },
       {
         indexed: false,
         internalType: "uint256",
-        name: "txId",
+        name: "viaSourceFee",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "viaDestGas",
         type: "uint256",
       },
     ],
-    name: "TokensBridged",
+    name: "TokensLocked",
     type: "event",
   },
   {
@@ -617,14 +680,8 @@ const COLLATERAL_BRIDGE_ABI = [
         name: "amount",
         type: "uint256",
       },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "txId",
-        type: "uint256",
-      },
     ],
-    name: "TokensReceived",
+    name: "TokensUnlocked",
     type: "event",
   },
   {
@@ -657,6 +714,25 @@ const COLLATERAL_BRIDGE_ABI = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "oldTreasury",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "newTreasury",
+        type: "address",
+      },
+    ],
+    name: "TreasuryUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "address",
         name: "account",
@@ -673,12 +749,27 @@ const COLLATERAL_BRIDGE_ABI = [
   {
     inputs: [
       {
+        internalType: "uint32",
+        name: "_chainId",
+        type: "uint32",
+      },
+      {
         internalType: "uint256",
-        name: "_newFee",
+        name: "_protocolFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_viaSourceFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_viaDestGas",
         type: "uint256",
       },
     ],
-    name: "updateFee",
+    name: "updateFees",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -686,22 +777,12 @@ const COLLATERAL_BRIDGE_ABI = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_minAmount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_maxAmount",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_dailyLimit",
-        type: "uint256",
+        internalType: "address",
+        name: "_newTreasury",
+        type: "address",
       },
     ],
-    name: "updateLimits",
+    name: "updateTreasury",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -709,19 +790,6 @@ const COLLATERAL_BRIDGE_ABI = [
   {
     stateMutability: "payable",
     type: "receive",
-  },
-  {
-    inputs: [],
-    name: "bridgeFee",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
   },
   {
     inputs: [
@@ -759,31 +827,12 @@ const COLLATERAL_BRIDGE_ABI = [
   },
   {
     inputs: [],
-    name: "dailyLimit",
+    name: "collateralToken",
     outputs: [
       {
-        internalType: "uint256",
+        internalType: "contract IERC20",
         name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    name: "dailyVolume",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -855,64 +904,46 @@ const COLLATERAL_BRIDGE_ABI = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "feeToken",
+    outputs: [
+      {
+        internalType: "contract IERC20",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_day",
-        type: "uint256",
+        internalType: "uint32",
+        name: "_destChainId",
+        type: "uint32",
       },
     ],
-    name: "getDailyVolume",
+    name: "getBridgeFees",
     outputs: [
       {
         internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getRemainingDailyLimit",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "getStats",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_totalLocked",
+        name: "protocolFee",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "_totalBridged",
+        name: "viaSourceFee",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "_totalTransactions",
+        name: "viaDestGas",
         type: "uint256",
       },
       {
         internalType: "uint256",
-        name: "_todayVolume",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_remainingLimit",
+        name: "totalUsdcRequired",
         type: "uint256",
       },
     ],
@@ -920,13 +951,78 @@ const COLLATERAL_BRIDGE_ABI = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getTodayVolume",
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "_chainId",
+        type: "uint32",
+      },
+    ],
+    name: "getChainStats",
     outputs: [
       {
         internalType: "uint256",
-        name: "",
+        name: "volume",
         type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "protocolFeesCollected",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "viaFeesPaid",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "protocolFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "viaSourceFee",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "viaDestGas",
+        type: "uint256",
+      },
+      {
+        internalType: "address",
+        name: "remoteContract",
+        type: "address",
+      },
+      {
+        internalType: "address",
+        name: "wrappedGasToken",
+        type: "address",
+      },
+      {
+        internalType: "bool",
+        name: "supported",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "_destChainId",
+        type: "uint32",
+      },
+    ],
+    name: "getWrappedGasToken",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -964,7 +1060,7 @@ const COLLATERAL_BRIDGE_ABI = [
         type: "uint32",
       },
     ],
-    name: "isChainSupported",
+    name: "isChainConfigured",
     outputs: [
       {
         internalType: "bool",
@@ -1001,19 +1097,6 @@ const COLLATERAL_BRIDGE_ABI = [
   },
   {
     inputs: [],
-    name: "maxBridgeAmount",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "MESSAGE_OWNER",
     outputs: [
       {
@@ -1033,19 +1116,6 @@ const COLLATERAL_BRIDGE_ABI = [
         internalType: "contract IMessageV3",
         name: "",
         type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "minBridgeAmount",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -1085,7 +1155,45 @@ const COLLATERAL_BRIDGE_ABI = [
         type: "uint32",
       },
     ],
-    name: "remoteContracts",
+    name: "protocolFeePerChain",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "protocolFeesCollectedPerChain",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "remoteSyntheticContracts",
     outputs: [
       {
         internalType: "address",
@@ -1117,19 +1225,6 @@ const COLLATERAL_BRIDGE_ABI = [
   },
   {
     inputs: [],
-    name: "totalBridged",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "totalLocked",
     outputs: [
       {
@@ -1143,7 +1238,26 @@ const COLLATERAL_BRIDGE_ABI = [
   },
   {
     inputs: [],
-    name: "totalTransactions",
+    name: "treasury",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "viaDestinationGasPerChain",
     outputs: [
       {
         internalType: "uint256",
@@ -1157,12 +1271,12 @@ const COLLATERAL_BRIDGE_ABI = [
   {
     inputs: [
       {
-        internalType: "address",
+        internalType: "uint32",
         name: "",
-        type: "address",
+        type: "uint32",
       },
     ],
-    name: "userBridged",
+    name: "viaFeesPaidPerChain",
     outputs: [
       {
         internalType: "uint256",
@@ -1174,8 +1288,52 @@ const COLLATERAL_BRIDGE_ABI = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "wrappedToken",
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "viaSourceFeePerChain",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "volumePerChain",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    name: "wrappedGasTokenPerChain",
     outputs: [
       {
         internalType: "contract IERC20",
@@ -1187,4 +1345,5 @@ const COLLATERAL_BRIDGE_ABI = [
     type: "function",
   },
 ] as const;
+
 export default COLLATERAL_BRIDGE_ABI;

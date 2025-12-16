@@ -24,7 +24,7 @@ const Normal = () => {
             <div className="md:block hidden">
               <Wallet />
             </div>
-            <div className="mt-3 absolute md:left-0 lefts bottom-[275px]">
+            <div className="mt-3 lg:fixed absolute md:left-0 lefts 2xl:bottom-[31%] lg:bottom-[31%] md:bottom-[25%] bottom-[275px]">
               <Routing />
             </div>
             <div className="mt-3 hidden">

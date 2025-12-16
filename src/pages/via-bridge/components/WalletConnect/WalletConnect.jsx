@@ -10,9 +10,6 @@ import {
   useChains,
 } from "wagmi";
 import AddressCard from "./AddressCard";
-// import Dis from "../../../assets/images/dis.png";
-// import Copy from "../../../assets/images/copy.png";
-// import Sbg from "../../../assets/images/sbg.png";
 
 const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain }) => {
   useEffect(() => {
@@ -60,8 +57,6 @@ export default function WalletConnect({ onChainChange }) {
         const ready = mounted && authenticationStatus !== "loading";
         const connected = ready && account && chain;
 
-        // Effects moved inside render prop to correctly access `chain`
-        // and avoid infinite loops.
 
 
         if (!ready) return null;

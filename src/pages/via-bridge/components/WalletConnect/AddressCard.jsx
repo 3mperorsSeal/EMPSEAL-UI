@@ -1,7 +1,7 @@
 import { useRef, useEffect } from "react";
-import Min from "../../../assets/images/min.png";
-import Dis from "../../../assets/images/dis.png";
-import Copy from "../../../assets/images/copy.png";
+import Min from "../../../../assets/images/min.png";
+import Dis from "../../../../assets/images/dis.png";
+import Copy from "../../../../assets/images/copy.png";
 
 export default function AddressCard({
   address,

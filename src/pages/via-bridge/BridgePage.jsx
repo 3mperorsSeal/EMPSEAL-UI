@@ -1,4 +1,5 @@
 import BridgeInterface from "./BridgeInterface";
+import Wallet from "./components/Wallet";
 // import BridgeStats from "./BridgeStats";
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
@@ -17,9 +18,15 @@ const BridgePage = () => {
   }, [path]);
 
   return (
-    <>
+    <div className="relative">
+      <div className="md:hidden block">
+        <Wallet />
+      </div>
+      <div className="md:block hidden">
+        <Wallet />
+      </div>
       <div
-        className={`w-full scales-b rounded-xl lg:pt-1 pt-2 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-1 relative lg:pb-0 pb-5`}
+        className={`w-full scales-b rounded-xl lg:pt-1 pt-2 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-1 lg:pb-0 pb-5`}
       >
         <div className="w-full">
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
@@ -83,7 +90,7 @@ const BridgePage = () => {
       </div>
 
       <BridgeInterface />
-    </>
+    </div>
   );
 };
 

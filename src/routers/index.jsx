@@ -1,4 +1,6 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { lazy, Suspense } from "react";
+
 // import Base from "../layout/base/Base";
 import Home from "../pages/Home/Main";
 import Swap from "../pages/swap/Main";
@@ -17,6 +19,8 @@ import { useEffect } from "react";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { pulsechain, sonic } from "wagmi/chains";
 import ViaBridge from "../pages/via-bridge/BridgePage";
+
+const GasBridgePage = lazy(() => import("../pages/GasBridgePage"));
 
 // This component will be rendered inside WagmiProvider
 const ChainSwitcher = ({ children }) => {
@@ -43,6 +47,15 @@ const SwapWrapper = ({ children }) => (
         {children}
         <ToastContainer position="top-right" theme="dark" autoClose={5000} />
       </ChainSwitcher>
+    </Provider>
+  </WagmiProviderWrapper>
+);
+
+const ViaBridgeWrapper = ({ children }) => (
+  <WagmiProviderWrapper appType="via-bridge">
+    <Provider store={store}>
+      {children}
+      <ToastContainer position="top-right" theme="dark" autoClose={5000} />
     </Provider>
   </WagmiProviderWrapper>
 );
@@ -89,8 +102,18 @@ function MyRoutes() {
             <Route
               path="/via-bridge"
               element={
-                <BridgeWrapper>
+                <ViaBridgeWrapper>
                   <ViaBridge />
+                </ViaBridgeWrapper>
+              }
+            />
+            <Route
+              path="/gas"
+              element={
+                <BridgeWrapper>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <GasBridgePage />
+                  </Suspense>
                 </BridgeWrapper>
               }
             />
