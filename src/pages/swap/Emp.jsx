@@ -1246,7 +1246,7 @@ const Emp = ({ setPadding }) => {
           />
         )}
       </div>
-      <div className="lg:fixed absolute bg-white left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
+      <div className="xl:fixed absolute bg-white left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
         <h6 className="font-orbitron text-sm">
           <span>
             <span className="font-extrabold">Min Received</span> :{" "}

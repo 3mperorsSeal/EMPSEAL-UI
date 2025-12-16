@@ -107,7 +107,7 @@ const TransferPanel = () => {
   };
 
   const expectedAmountInWei = quoteData?.quotes?.[0]?.expected ?? "0";
-  let formattedExpectedAmount = "0.000000";
+  let formattedExpectedAmount = "0.0000";
   if (BigInt(expectedAmountInWei) > 0) {
     const expectedAmountInEth = formatEther(BigInt(expectedAmountInWei));
     formattedExpectedAmount = parseFloat(expectedAmountInEth).toFixed(6);
@@ -228,10 +228,27 @@ const TransferPanel = () => {
                     const formattedValue = formatNumber(
                       amount?.toString() || ""
                     );
-                    const dynamicFontSize = getDynamicFontSize(
-                      formattedValue,
-                      40,
-                      28
+
+                    const defaultFontSize = 48;
+                    const minFontSize = 32;
+
+                    const FREE_DIGITS = 7;
+                    const SHRINK_RATE = 3;
+
+                    // count digits only (ignore commas & decimals)
+                    const outputLength = formattedValue.replace(
+                      /\D/g,
+                      ""
+                    ).length;
+
+                    const excessDigits = Math.max(
+                      0,
+                      outputLength - FREE_DIGITS
+                    );
+
+                    const dynamicFontSize = Math.max(
+                      minFontSize,
+                      defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
                     return (
@@ -355,14 +372,20 @@ const TransferPanel = () => {
             </div>
             {(() => {
               const value = formattedExpectedAmount || "";
-              const dynamicFontSize = getDynamicFontSize(value, 40, 28);
 
-              // const fontSizeClass =
-              //   length > 12
-              //     ? "md:text-[24px] text-xl"
-              //     : length > 8
-              //     ? "md:text-[32px] text-2xl"
-              //     : "md:text-[40px] text-2xl";
+              const defaultFontSize = 48;
+              const minFontSize = 32;
+
+              const FREE_DIGITS = 7;
+              const SHRINK_RATE = 3;
+              const outputLength = value.replace(/\D/g, "").length;
+
+              const excessDigits = Math.max(0, outputLength - FREE_DIGITS);
+
+              const dynamicFontSize = Math.max(
+                minFontSize,
+                defaultFontSize - excessDigits * SHRINK_RATE
+              );
 
               return (
                 <div className="w-full py-2 text-end px-1 font-orbitron transition-all duration-200 ">

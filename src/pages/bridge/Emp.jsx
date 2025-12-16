@@ -118,7 +118,7 @@ const Emp = ({
   }, [address, datas]);
 
   const formattedBalance = balanceAddress
-    ? `${parseFloat(balanceAddress).toFixed(6)}`
+    ? `${parseFloat(balanceAddress).toFixed(3)}`
     : "0.00";
 
   function setRoute(path) {
@@ -141,8 +141,8 @@ const Emp = ({
 
   // Format the chain balance
   const formattedChainBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(6) // Format to 6 decimal places
-    : "0.000000";
+    ? parseFloat(tokenBalance.formatted).toFixed(3) // Format to 6 decimal places
+    : "0.000";
 
   const { data: tokenBBalance } = useBalance({
     address: address, // Use the connected wallet address
@@ -152,8 +152,8 @@ const Emp = ({
 
   // Format the chain balance
   const formattedChainBalanceTokenB = tokenBBalance
-    ? parseFloat(tokenBBalance.formatted).toFixed(6) // Format to 6 decimal places
-    : "0.000000";
+    ? parseFloat(tokenBBalance.formatted).toFixed(3) // Format to 6 decimal places
+    : "0.000";
 
   const handlePercentageChange = (e) => {
     const percentage = e === "" ? "" : parseInt(e);
@@ -182,10 +182,10 @@ const Emp = ({
       percentage === 100
     ) {
       // Leave some balance for gas fees (e.g., 0.01 units)
-      return Math.max(0, calculatedAmount - 0.01).toFixed(6);
+      return Math.max(0, calculatedAmount - 0.01).toFixed(3);
     }
 
-    return calculatedAmount.toFixed(6);
+    return calculatedAmount.toFixed(3);
   };
 
   const WETH_ADDRESS = "0xa1077a294dde1b09bb078844df40758a5d0f9a27";
@@ -524,7 +524,7 @@ const Emp = ({
   //   if (conversionRate && !isNaN(conversionRate)) {
   //     const valueInUSD = (
   //       parseFloat(amountIn || 0) * parseFloat(conversionRate)
-  //     ).toFixed(6);
+  //     ).toFixed(3);
   //     setUsdValue(valueInUSD);
   //   } else {
   //     console.error('Missing or invalid conversion rate:', conversionRate);
@@ -535,7 +535,7 @@ const Emp = ({
   //   if (conversionRateTokenB && !isNaN(conversionRateTokenB)) {
   //     const valueInUSD = (
   //       parseFloat(amountOut || 0) * parseFloat(conversionRateTokenB)
-  //     ).toFixed(6);
+  //     ).toFixed(3);
   //     setUsdValueTokenB(valueInUSD);
   //   } else {
   //     console.error(
@@ -580,7 +580,7 @@ const Emp = ({
   //     )
   //   );
 
-  //   return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
+  //   return isRateReversed ? (1 / rate).toFixed(3) : rate.toFixed(3);
   // };
 
   useEffect(() => {
@@ -598,7 +598,7 @@ const Emp = ({
   // console.log("rubicRouteCheck: ", rubicRoute);
 
   const formatTokenAmount = (amount, decimals) => {
-    return (parseFloat(amount) / 10 ** decimals).toFixed(6);
+    return (parseFloat(amount) / 10 ** decimals).toFixed(3);
   };
 
   // useEffect(() => {
@@ -760,14 +760,14 @@ const Emp = ({
                     : `${
                         tokenBalance
                           ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(6)
+                              parseFloat(tokenBalance.formatted).toFixed(3)
                             )
                           : "0.00"
                       }`}
                 </span>
               </div>
             </div>
-            <div className="flex w-full px-4 py-4 mt-2">
+            <div className="flex w-full px-2 py-4 mt-2">
               <div className="flex md:max-w-1/2 w-full me-3 justify-between rounded-2xl py-4 lg:px-8 px-3">
                 <div
                   onClick={() => {
@@ -865,28 +865,37 @@ const Emp = ({
                 </div>
                 {(() => {
                   const inputLength =
-                    formatNumber(parseFloat(amountIn).toFixed(3))?.replace(
+                    formatNumber(parseFloat(amountIn).toFixed(0))?.replace(
                       /\D/g,
                       ""
                     ).length || 0;
 
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+
+                  // const dynamicFontSize = Math.max(
+                  //   12,
+                  //   defaultFontSize - inputLength * 1.5
+                  // );
+                  const FREE_DIGITS = 6;
+                  const SHRINK_RATE = 3;
+
+                  const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
                     12,
-                    defaultFontSize - inputLength * 1.5
+                    defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
                     <input
                       type="text"
                       placeholder={
-                        formattedChainBalance === "0.000000"
+                        formattedChainBalance === "0.00"
                           ? "0"
                           : calculateAmount(selectedPercentage)
                       }
                       value={formatNumber(amountIn)}
                       onChange={(e) => handleInputChange(e.target.value)}
-                      className="text-[#000000] text-sh py-2 rigamesh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-3 placeholder-black transition-all duration-200 ease-in-out"
+                      className="text-[#000000] text-sh py-2 rigamesh text-end w-full leading-7 outline-none border-none bg-transparent token_input px-1 placeholder-black transition-all duration-200 ease-in-out"
                       style={{
                         fontSize: `${dynamicFontSize}px`,
                       }}
@@ -945,7 +954,7 @@ const Emp = ({
                   {" "}
                   :{" "}
                 </span>
-                <span className="font-bold font-orbitron leading-normal">
+                <span className="rigamesh leading-normal">
                   {isLoading
                     ? "Loading.."
                     : selectedTokenA.address === EMPTY_ADDRESS
@@ -953,7 +962,7 @@ const Emp = ({
                     : `${
                         tokenBBalance
                           ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(6)
+                              parseFloat(tokenBBalance.formatted).toFixed(3)
                             )
                           : "0.00"
                       }`}
@@ -1082,11 +1091,20 @@ const Emp = ({
                       ""
                     ).length || 0;
 
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 36;
+                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+
+                  // const dynamicFontSize = Math.max(
+                  //   12,
+                  //   defaultFontSize - inputLength * 1.5
+                  // );
+                  const FREE_DIGITS = 6;
+                  const SHRINK_RATE = 3;
+
+                  const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
                     12,
-                    defaultFontSize - inputLength * 1.5
+                    defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
                     <input
@@ -1095,7 +1113,7 @@ const Emp = ({
                       value={
                         amountOut === "0" || !amountOut
                           ? ""
-                          : parseFloat(amountOut).toFixed(6)
+                          : parseFloat(amountOut).toFixed(3)
                       }
                       readOnly
                       className="truncate text-white font-bold rigamesh text_sh text-end placeholder:text-white w-full leading-7 outline-none border-none bg-transparent ps-0 transition-all duration-200 ease-in-out"
