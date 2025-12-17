@@ -723,7 +723,7 @@ const Emp = ({ setPadding }) => {
         }`}
       >
         <div
-          className={`scales8 ${order ? "scales-top scales-top_limit" : ""}`}
+          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"}`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
@@ -907,7 +907,7 @@ const Emp = ({ setPadding }) => {
                     })()}
                   </div>
                 </div>
-                <div className="text-right text-white text-sm -mt-[14px] pe-8 truncate rigamesh text-sh1">
+                <div className="text-right text-white text-base usd-spacing -mt-[14px] pe-8 truncate rigamesh text-sh1">
                   {conversionRate
                     ? `$${formatNumber(usdValue)}`
                     : "Fetching Rate..."}
@@ -1064,10 +1064,19 @@ const Emp = ({ setPadding }) => {
                     })()}
                   </div>
                 </div>
-                <div className="text-right text-white text-sm -mt-[0px] pe-8 rigamesh truncate text-sh1">
+                {/* <div className="text-right text-white text-sm -mt-[0px] pe-8 rigamesh truncate text-sh1">
                   {conversionRateTokenB
                     ? `$${formatNumber(usdValueTokenB)}`
                     : "Fetching Rate..."}
+                </div> */}
+                <div className="text-right text-white text-base -mt-[0px] pe-8 rigamesh truncate text-sh1">
+                  {conversionRateTokenB ? (
+                    <span className="usd-spacing">
+                      ${Number(usdValueTokenB).toFixed(2)}
+                    </span>
+                  ) : (
+                    "Fetching Rate..."
+                  )}
                 </div>
               </div>
               <div

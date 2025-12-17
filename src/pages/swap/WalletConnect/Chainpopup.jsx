@@ -66,8 +66,17 @@ const ChainPopup = ({
             </svg>
           </div>
           {/* Chain cards */}
-          <div className="md:mt-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-0 px-2">
+          <div className="md:mt-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-4 px-2">
             {filteredChains.map((c) => {
+              // console.log("Chain:", {
+              //   id: c.id,
+              //   name: c.name,
+              //   icon: c.icon,
+              //   image:c.image,
+              //   logo:c.logo,
+              //   logoURI:c.logoURI,
+              //   iconType: typeof c.icon,
+              // });
               const isActive = chain?.id === c.id;
               return (
                 <div
@@ -76,8 +85,8 @@ const ChainPopup = ({
                     switchChain({ chainId: c.id });
                     setShowChainPopup(false);
                   }}
-                  className={`group relative flex items-center px-3 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hover:bg-[#FF9900]/10 ${
-                    isActive ? "bg-black" : "bg-black"
+                  className={`group relative mt-4 flex items-center px-1 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hoverclip ${
+                    isActive ? "" : ""
                     // sc1
                   }`}
                 >
@@ -91,9 +100,7 @@ const ChainPopup = ({
                   </div>
                   <span
                     className={`font-orbitron text-xs text-center ${
-                      isActive
-                        ? "text-[#fff]"
-                        : "text-[#fff]"
+                      isActive ? "text-[#fff]" : "text-[#fff]"
                     }`}
                   >
                     {c.name}
