@@ -62,7 +62,7 @@ import {
 import { formatErrorMessage } from "../../utils/utils";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
-const CONTRACT_ADDRESS = "0xCfA7562553e6BC466a60aA93079495A829221305";
+const CONTRACT_ADDRESS = "0x92a37eCd8E27a21DF650e0ef1cB7366f9B8f61EF";
 
 interface CreateOrderFormProps {
   onStatusMessage: (message: StatusMessage) => void;
