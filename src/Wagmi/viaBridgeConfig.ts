@@ -7,7 +7,7 @@ import {
   walletConnectWallet,
   phantomWallet,
 } from "@rainbow-me/rainbowkit/wallets";
-import { pulsechainV4, baseSepolia, pulsechain, base } from "wagmi/chains";
+import { pulsechainV4, baseSepolia, pulsechain, base, sei } from "wagmi/chains";
 
 // Wallet configuration for via-bridge
 const viaBridgeConnectors = connectorsForWallets(
@@ -29,7 +29,7 @@ const viaBridgeConnectors = connectorsForWallets(
 export const viaBridgeConfig = getDefaultConfig({
   appName: "Emplseal Via Bridge",
   projectId: "YOUR_PROJECT_ID",
-  chains: [baseSepolia, pulsechainV4, pulsechain, base],
+  chains: [baseSepolia, pulsechainV4, pulsechain, base, sei],
   ssr: true,
   connectors: viaBridgeConnectors,
 });

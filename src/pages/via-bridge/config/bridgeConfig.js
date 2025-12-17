@@ -71,4 +71,23 @@ export const BRIDGE_CONFIG = {
     explorer: "https://basescan.org/",
     rpcUrl: "https://8453.rpc.vialabs.io/",
   },
+
+  // --- Sei Mainnet ---
+  1329: {
+    id: "1329",
+    name: "Sei Mainnet",
+    bridge: "0x1F031F7A2652fD6f10F1FB37BEfaac8A69039f08",
+    abiType: "synthetic",
+    usdcAddress: "0x3894085Ef7Ff0f0aeDf52E2A2704928d1Ec074F1",
+    wrappedGasTokenAddress: "0xE30feDd158A2e3b13e9badaeABaFc5516e95e8C7",
+    tokens: [
+      {
+        address: "0x1F031F7A2652fD6f10F1FB37BEfaac8A69039f08",
+        symbol: "De-cock",
+        name: "De-COCK ",
+      },
+    ],
+    explorer: "https://seitrace.com/",
+    rpcUrl: "https://evm-rpc.sei-apis.com/",
+  },
 };
