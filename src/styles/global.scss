@@ -388,6 +388,14 @@ body.bg-pattern {
   border: 1px solid #ff9900;
   box-shadow: 0px 4px 30px 0px #855610;
 }
+.hoverclip {
+  border: 1px solid transparent;
+}
+.hoverclip:hover {
+  background-color: black;
+  border: 1px solid #ff9900;
+  box-shadow: 0px 4px 30px 0px #855610;
+}
 .bg-rec {
   background-image: url("../assets/images/bg-rec.svg");
   background-repeat: no-repeat;
@@ -595,6 +603,9 @@ body.bg-pattern {
   .scales8 {
     scale: 0.9;
   }
+  .top70{
+    top: -70px;
+  }
   .scales-b {
     scale: 0.9;
     // top: -90px;
@@ -620,7 +631,7 @@ body.bg-pattern {
     top: -10px;
   }
   .scales-top_limit {
-    top: -40px;
+    top: -115px;
   }
 }
 @media (min-width: 1024px) and (max-width: 1700px) {
@@ -851,8 +862,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25);
 }
 .text-sh1 {
-  text-shadow: 0px 4px 4px 0px #00000040;
+  text-shadow: 0px 4px 4px #00000040 !important;
+  -webkit-text-stroke: 1px rgba(0, 0, 0, 1);
 }
+
 .hoverswap:hover {
   box-shadow: 0px 4px 30px 0px #855610;
 }
@@ -870,4 +883,7 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
 .tilt:hover {
   animation: tilt 1s ease-in-out infinite;
+}
+.usd-spacing {
+  letter-spacing: 0.2em;
 }

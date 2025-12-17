@@ -23,14 +23,14 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
 
   return (
     <div
-      className="flex justify-between items-center mt-2 cursor-pointer hover:bg-gray-800 p-2 rounded"
+      className="flex justify-between items-center mt-2 cursor-pointer hoverclip p-2 rounded-xl"
       onClick={() => onClick(token)}
     >
       <div className="flex items-center gap-2">
-        <div className="flex justify-center items-center bg-white rounded-full p-1">
+        <div className="flex justify-center items-center rounded-full p-1">
           <img
             src={token.logoURI || token.image}
-            className="w-4 h-4"
+            className="w-6 h-6 object-contain"
             alt={token.name}
             onError={(e) => {
               e.target.src = "path/to/fallback/image.png";
@@ -139,7 +139,7 @@ const Token = ({ onClose, onSelect }) => {
     });
 
     return (
-      <div className="max-h-[400px] overflow-y-auto">
+      <div className="max-h-[400px] overflow-y-auto px-3">
         {sortedTokens.map(({ token }, index) => (
           <TokenListItem
             key={index}
@@ -329,7 +329,8 @@ const Token = ({ onClose, onSelect }) => {
               Search token
             </p>
           </div>
-          <div className="mt-3 relative px-[54px] h-[54px] w-full flex gap-2 items-center bg-search">
+          {/* bg-search */}
+          <div className="mt-3 relative px-[10px] h-[54px] w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
             <input
               type="text"
               placeholder="Search token name or paste address"
@@ -358,7 +359,7 @@ const Token = ({ onClose, onSelect }) => {
           </div>
 
           {/* <hr className="h-px my-8 bg-gray-200 border-[#3b3c4e] h-hr" /> */}
-          <div className="mt-4 px-[24px]">
+          <div className="mt-4 px-[2px]">
             {/* <div className="flex justify-between gap-4 items-center">
               <p className="text-white text-sm font-medium roboto leading-relaxed tracking-wide">
                 Token Name
