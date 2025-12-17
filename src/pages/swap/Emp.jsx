@@ -89,6 +89,7 @@ const Emp = ({ setPadding }) => {
   const [bestRoute, setBestRoute] = useState(null);
   const [isQuoting, setIsQuoting] = useState(false);
   const [protocolFee, setProtocolFee] = useState(24);
+  const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
 
