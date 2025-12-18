@@ -23,9 +23,7 @@ import Rbox from "../../assets/images/r-d.png";
 import CPatch from "../../assets/images/rec-token.svg";
 
 // Import ABIs
-import COLLATERAL_BRIDGE_ABI from "../../utils/via-bridge-abis/CollateralERC20";
-import SYNTHETIC_BRIDGE_ABI from "../../utils/via-bridge-abis/SyntheticERC20";
-import ERC20_ABI from "../../utils/via-bridge-abis/ERC20";
+import {ERC20_ABI} from "../../utils/via-bridge-abis/index";
 
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
@@ -58,10 +56,7 @@ const BridgeInterface = () => {
 
   const [bridgeFees, setBridgeFees] = useState(null);
 
-  const bridgeFeesAbi =
-    sourceChain.abiType === "collateral"
-      ? COLLATERAL_BRIDGE_ABI
-      : SYNTHETIC_BRIDGE_ABI;
+  const bridgeFeesAbi = sourceChain.abi;
   const bridgeFeesContractAddress = sourceChain.bridge;
 
   // PulseChain (Synthetic) -> 369 | Base (Collateral) -> 8453
@@ -349,10 +344,7 @@ const BridgeInterface = () => {
   const handleBridge = useCallback(async () => {
     try {
       const amountBigInt = parseEther(amount);
-      let abiToUse =
-        sourceChain.abiType === "collateral"
-          ? COLLATERAL_BRIDGE_ABI
-          : SYNTHETIC_BRIDGE_ABI;
+      let abiToUse = sourceChain.abi;
 
       if (!abiToUse) {
         toast.error("Unsupported chain type");
@@ -537,7 +529,7 @@ const BridgeInterface = () => {
 
     // If there's a decimal part, return formatted integer + decimal
     return decimalPart !== undefined
-      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
+      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "").slice(0, 6)}` // Remove non-numeric from decimal
       : formattedInteger;
   };
   const getDynamicFontSize = (value, desktop = 48, mobile = 32) => {
@@ -607,7 +599,7 @@ const BridgeInterface = () => {
                 </span>
 
                 <span className="rigamesh leading-normal">
-                  {tokenBalance ? formatEther(tokenBalance) : "0.00"}{" "}
+                  {tokenBalance ? parseFloat(formatEther(tokenBalance)).toFixed(6) : "0.00"}{" "}
                   {selectedToken.symbol}
                 </span>
               </div>
@@ -855,8 +847,10 @@ const BridgeInterface = () => {
                       <>
                         <input
                           type="text"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
+                          value={formattedValue}
+                          onChange={(e) =>
+                            setAmount(formatNumber(e.target.value))
+                          }
                           placeholder={
                             tokenBalance?.formatted === "0.000000"
                               ? "0"
