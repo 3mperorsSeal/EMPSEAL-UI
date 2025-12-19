@@ -561,7 +561,15 @@ const Emp = ({ setPadding }) => {
     } catch (error) {
       setAmountVisible(false); // Close Amount modal on other errors
       setSwapStatus("ERROR");
-      toast.error(error.message || "Transaction failed");
+      if (
+        error.message &&
+        (error.message.includes("User rejected") ||
+          error.message.includes("User denied"))
+      ) {
+        toast.error("Transaction rejected by user");
+      } else {
+        toast.error(error.message || "Transaction failed");
+      }
       console.error("Swap failed", error);
     }
   };
