@@ -14,7 +14,7 @@ import AddressCard from "./AddressCard";
 // import Copy from "../../../assets/images/copy.png";
 // import Sbg from "../../../assets/images/sbg.png";
 
-const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain }) => {
+const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain, allowUnsupported }) => {
   useEffect(() => {
     if (onChainChange) {
       onChainChange(chain?.iconUrl, chain?.name);
@@ -22,15 +22,15 @@ const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain }) => {
   }, [chain, onChainChange]);
 
   useEffect(() => {
-    if (chain?.unsupported && chains?.length > 0) {
+    if (!allowUnsupported && chain?.unsupported && chains?.length > 0) {
       switchChain({ chainId: chains[0].id });
     }
-  }, [chain, chains, switchChain]);
+  }, [chain, chains, switchChain, allowUnsupported]);
 
   return null; // This component doesn't render anything visible
 };
 
-export default function WalletConnect({ onChainChange }) {
+export default function WalletConnect({ onChainChange, allowUnsupported = false }) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { chains, switchChain } = useSwitchChain();
@@ -175,7 +175,7 @@ export default function WalletConnect({ onChainChange }) {
             </>
           );
         }
-        if (chain.unsupported) {
+        if (chain.unsupported && !allowUnsupported) {
           return (
             <button
               className="wallet-bg-bridge1 text-[#FF494A] font-extrabold"
@@ -193,6 +193,7 @@ export default function WalletConnect({ onChainChange }) {
               onChainChange={onChainChange}
               chains={chains}
               switchChain={switchChain}
+              allowUnsupported={allowUnsupported}
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button

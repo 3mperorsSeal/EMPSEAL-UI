@@ -1,11 +1,15 @@
 import ChainSelector from "../components/gas/ChainSelector";
 import TransferPanel from "../components/gas/TransferPanel";
 import TransactionHistory from "../components/gas/TransactionHistory";
+import WalletConnect from "./swap/WalletConnect/WalletConnect";
 
 export default function GasBridgePage() {
   return (
     <>
       <div className="md:max-w-[1100px] w-full mx-auto p-4 text-white">
+        <div className="flex justify-end gap-4 mb-4">
+          <WalletConnect allowUnsupported={true} />
+        </div>
         <div className="text-center mb-4">
           <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
             Gas Bridge
