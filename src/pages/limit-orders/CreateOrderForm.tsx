@@ -46,6 +46,7 @@ import {
   Settings,
   Cog,
   Info,
+  X,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { useAccount, useBalance } from "wagmi";
@@ -60,6 +61,8 @@ import {
   erc20Abi,
 } from "viem";
 import { formatErrorMessage } from "../../utils/utils";
+import { TokenLogo } from "../../components/TokenLogo";
+import { LogoService } from "../../services/LogoService";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
 const CONTRACT_ADDRESS = "0x92a37eCd8E27a21DF650e0ef1cB7366f9B8f61EF";
@@ -94,6 +97,9 @@ export function CreateOrderForm({
   const [quoteReversed, setQuoteReversed] = useState(false);
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [limitPriceError, setLimitPriceError] = useState<string | null>(null);
+  // const [minValueError, setMinValueError] = useState<string | null>(null); // state for minimum value error for amount in with USD check $30
+  const [tokenInUSDPrice, setTokenInUSDPrice] = useState<number | null>(null);
+  const [tokenOutUSDPrice, setTokenOutUSDPrice] = useState<number | null>(null);
 
   const form = useForm<CreateOrderInput>({
     resolver: zodResolver(createOrderSchema) as any,
@@ -171,12 +177,18 @@ export function CreateOrderForm({
         );
         const data = await response.json();
         if (data.data.attributes) {
-          const { name, symbol, decimals } = data.data.attributes;
+          const { name, symbol, decimals, image_url } = data.data.attributes;
+
+          // Cache the logo if found
+          if (image_url) {
+          }
+
           setCustomToken({
             address: tokenAddress,
             name,
             symbol,
             decimals,
+            logoURI: image_url
           });
         }
       } catch (error) {
@@ -227,13 +239,46 @@ export function CreateOrderForm({
   useEffect(() => {
     setQuoteReversed(false);
     const fetchMarketPrice = async () => {
-      if (selectedTokenIn && selectedTokenOut) {
-        try {
-          const response = await fetch(
-            `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${selectedTokenIn},${selectedTokenOut}`
-          );
-          const data = await response.json();
+      // Collect addresses to fetch
+      const addresses = [];
+      if (selectedTokenIn && isAddress(selectedTokenIn)) addresses.push(selectedTokenIn);
+      if (selectedTokenOut && isAddress(selectedTokenOut)) addresses.push(selectedTokenOut);
 
+      if (addresses.length === 0) {
+        setTokenInUSDPrice(null);
+        setTokenOutUSDPrice(null);
+        setMarketPrice(null);
+        return;
+      }
+
+      try {
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${addresses.join(',')}`
+        );
+        const data = await response.json();
+
+        // Update Token In Price
+        if (selectedTokenIn && isAddress(selectedTokenIn)) {
+          const tokenInPrice = parseFloat(
+            data.data.attributes.token_prices[selectedTokenIn.toLowerCase()]
+          );
+          setTokenInUSDPrice(tokenInPrice || null);
+        } else {
+          setTokenInUSDPrice(null);
+        }
+
+        // Update Token Out Price
+        if (selectedTokenOut && isAddress(selectedTokenOut)) {
+          const tokenOutPrice = parseFloat(
+            data.data.attributes.token_prices[selectedTokenOut.toLowerCase()]
+          );
+          setTokenOutUSDPrice(tokenOutPrice || null);
+        } else {
+          setTokenOutUSDPrice(null);
+        }
+
+        // Update Market Price (Ratio)
+        if (selectedTokenIn && selectedTokenOut && isAddress(selectedTokenIn) && isAddress(selectedTokenOut)) {
           const tokenInPrice = parseFloat(
             data.data.attributes.token_prices[selectedTokenIn.toLowerCase()]
           );
@@ -247,20 +292,41 @@ export function CreateOrderForm({
           } else {
             setMarketPrice(null);
           }
-        } catch (error) {
-          console.error(
-            "Failed to fetch market price from GeckoTerminal:",
-            error
-          );
+        } else {
           setMarketPrice(null);
         }
-      } else {
+
+      } catch (error) {
+        console.error(
+          "Failed to fetch market price from GeckoTerminal:",
+          error
+        );
         setMarketPrice(null);
+        setTokenInUSDPrice(null);
+        setTokenOutUSDPrice(null);
       }
     };
 
     fetchMarketPrice();
   }, [selectedTokenIn, selectedTokenOut]);
+
+  // useEffect(() => {
+  //   if (amountIn && tokenInUSDPrice) {
+  //     const amount = parseFloat(amountIn);
+  //     if (!isNaN(amount)) {
+  //       const totalValueUSD = amount * tokenInUSDPrice;
+  //       if (totalValueUSD < 30) {
+  //         setMinValueError("Amount in must be greater than $30");
+  //       } else {
+  //         setMinValueError(null);
+  //       }
+  //     } else {
+  //       setMinValueError(null);
+  //     }
+  //   } else {
+  //     setMinValueError(null);
+  //   }
+  // }, [amountIn, tokenInUSDPrice]);
 
   useEffect(() => {
     if (currentLimitPrice && marketPrice && currentStrategy) {
@@ -606,17 +672,17 @@ export function CreateOrderForm({
                 <span className="rigamesh leading-normal">
                   {tokenInMode === "select"
                     ? tokenInBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          {/* {tokenInInfo?.symbol || "Tokens"} */}
-                        </span>
-                      )
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        {/* {tokenInInfo?.symbol || "Tokens"} */}
+                      </span>
+                    )
                     : tokenInBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          {/* {customTokenIn?.symbol || "Tokens"} */}
-                        </span>
-                      )}
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        {/* {customTokenIn?.symbol || "Tokens"} */}
+                      </span>
+                    )}
                 </span>
               </div>
             </div>
@@ -648,7 +714,13 @@ export function CreateOrderForm({
                                 ([address, token]) => (
                                   <SelectItem key={address} value={address}>
                                     <div className="flex items-center gap-2">
-                                      <Coins className="h-4 w-4" />
+                                      {/* <Coins className="h-4 w-4" /> */}
+                                      <TokenLogo
+                                        chainId={369}
+                                        tokenAddress={address}
+                                        symbol={token.symbol}
+                                        className="h-5 w-5"
+                                      />
                                       <span className="font-medium">
                                         {token.symbol}
                                       </span>
@@ -674,17 +746,40 @@ export function CreateOrderForm({
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <Input
-                            {...form.register("tokenIn")}
-                            placeholder="0x..."
-                            className="h-12 bg-transparent !border-none"
-                            data-testid="input-token-in-custom"
-                            disabled={
-                              tokenOutMode === "custom" &&
-                              !getTokenInfo(selectedTokenOut) &&
-                              isAddress(selectedTokenOut)
-                            }
-                          />
+                          {customTokenIn ? (
+                            <div className="flex items-center justify-between h-12 px-3">
+                              <div className="flex items-center gap-2">
+                                {customTokenIn.logoURI && (
+                                  <img src={customTokenIn.logoURI} alt="token logo" className="h-6 w-6 rounded-full" />
+                                )}
+                                <div className="flex flex-col">
+                                  {/* <span className="text-white font-medium text-sm">{customTokenIn.name}</span> */}
+                                  <span className="text-white/70 text-xs">{customTokenIn.symbol}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => form.setValue("tokenIn", "")}
+                                className="text-white/70 hover:text-white transition-colors"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <Input
+                                {...form.register("tokenIn")}
+                                placeholder="0x..."
+                                className="h-12 bg-transparent !border-none pr-10" // Added padding for logo
+                                data-testid="input-token-in-custom"
+                                disabled={
+                                  tokenOutMode === "custom" &&
+                                  !getTokenInfo(selectedTokenOut) &&
+                                  isAddress(selectedTokenOut)
+                                }
+                              />
+                            </div>
+                          )}
                           <Button
                             type="button"
                             variant="ghost"
@@ -697,17 +792,6 @@ export function CreateOrderForm({
                           >
                             Back to token list
                           </Button>
-                          {/* {customTokenIn && (
-                            <p className="text-xs text-muted-foreground">
-                              Selected: {customTokenIn.symbol}
-                            </p>
-                          )}
-                          {tokenInBalance && (
-                            <p className="text-xs text-muted-foreground text-right">
-                              Balance: {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                              {customTokenIn?.symbol || "Tokens"}
-                            </p>
-                          )} */}
                         </div>
                       )}
                     </div>
@@ -723,13 +807,12 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-      ${
-        selectedPercentage === value
-          ? "text-white bg-black"
-          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-      }`}
+      ${selectedPercentage === value
+                          ? "text-white bg-black"
+                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
-                      // disabled={isLoading}
+                    // disabled={isLoading}
                     >
                       {value}%
                     </button>
@@ -774,6 +857,11 @@ export function CreateOrderForm({
                     ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
                 </p>
+                <div className="text-right text-white text-sm -mt-[0px] font-bold pe-1 rigamesh truncate text-sh1">
+                  {tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))
+                    ? `$${formatNumber((parseFloat(amountIn) * tokenInUSDPrice).toFixed(2))}`
+                    : ""}
+                </div>
               </div>
             </div>
             <div className="text-right text-white font-extrabold text-sm -mt-[14px] pe-8 roboto truncate">
@@ -782,6 +870,11 @@ export function CreateOrderForm({
                   {form.formState.errors.amountIn.message}
                 </p>
               )}
+              {/* {minValueError && (
+                <p className="mt-1 text-sm text-destructive">
+                  {minValueError}
+                </p>
+              )} */}
             </div>
           </div>
           <div className="md:pt-4 pt-2 font-extrabold">
@@ -815,21 +908,20 @@ export function CreateOrderForm({
                 <span className="font-extrabold leading-normal">BAL</span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
-                  :{" "}
-                </span>
+                  :{" "} </span>
                 <span className="rigamesh leading-normal">
                   {tokenOutBalance === "select"
                     ? tokenOutBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                        </span>
-                      )
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                      </span>
+                    )
                     : tokenOutBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                          {/* {customTokenOut?.symbol || "Tokens"} */}
-                        </span>
-                      )}
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                        {/* {customTokenOut?.symbol || "Tokens"} */}
+                      </span>
+                    )}
                 </span>
               </div>
             </div>
@@ -860,7 +952,13 @@ export function CreateOrderForm({
                                 ([address, token]) => (
                                   <SelectItem key={address} value={address}>
                                     <div className="flex items-center gap-2 text-black">
-                                      <Coins className="h-4 w-4" />
+                                      {/* <Coins className="h-4 w-4" /> */}
+                                      <TokenLogo
+                                        chainId={369}
+                                        tokenAddress={address}
+                                        symbol={token.symbol}
+                                        className="h-5 w-5"
+                                      />
                                       <span className="font-medium">
                                         {token.symbol}
                                       </span>
@@ -886,17 +984,40 @@ export function CreateOrderForm({
                         </div>
                       ) : (
                         <div className="space-y-2">
-                          <Input
-                            {...form.register("tokenOut")}
-                            placeholder="0x..."
-                            className="h-12 bg-transparent !border-none !text-black"
-                            data-testid="input-token-out-custom"
-                            disabled={
-                              tokenInMode === "custom" &&
-                              !getTokenInfo(selectedTokenIn) &&
-                              isAddress(selectedTokenIn)
-                            }
-                          />
+                          {customTokenOut ? (
+                            <div className="flex items-center justify-between h-12 px-3">
+                              <div className="flex items-center gap-2">
+                                {customTokenOut.logoURI && (
+                                  <img src={customTokenOut.logoURI} alt="token logo" className="h-6 w-6 rounded-full" />
+                                )}
+                                <div className="flex flex-col">
+                                  {/* <span className="text-black font-medium text-sm">{customTokenOut.name}</span> */}
+                                  <span className="text-black/70 text-xs">{customTokenOut.symbol}</span>
+                                </div>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => form.setValue("tokenOut", "")}
+                                className="text-black/70 hover:text-black transition-colors"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <Input
+                                {...form.register("tokenOut")}
+                                placeholder="0x..."
+                                className="h-12 bg-transparent !border-none !text-black pr-10"
+                                data-testid="input-token-out-custom"
+                                disabled={
+                                  tokenInMode === "custom" &&
+                                  !getTokenInfo(selectedTokenIn) &&
+                                  isAddress(selectedTokenIn)
+                                }
+                              />
+                            </div>
+                          )}
                           <Button
                             type="button"
                             variant="ghost"
@@ -909,17 +1030,6 @@ export function CreateOrderForm({
                           >
                             Back to token list
                           </Button>
-                          {/* {customTokenOut && (
-                            <p className="text-xs text-muted-foreground">
-                              Selected: {customTokenOut.symbol}
-                            </p>
-                          )}
-                          {tokenOutBalance && (
-                            <p className="text-xs text-muted-foreground text-right">
-                              Balance: {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                              {customTokenOut?.symbol || "Tokens"}
-                            </p>
-                          )} */}
                         </div>
                       )}
                     </div>
@@ -935,8 +1045,8 @@ export function CreateOrderForm({
 
                   const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
 
-                  const FREE_DIGITS = 10;
-                  const SHRINK_RATE = 3;
+                  const FREE_DIGITS = 6;
+                  const SHRINK_RATE = 2;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
@@ -1017,8 +1127,8 @@ export function CreateOrderForm({
                     {marketPrice && tokenInInfo && tokenOutInfo
                       ? quoteReversed
                         ? `Market: 1 ${tokenOutInfo.symbol} ≈ ${(
-                            1 / parseFloat(marketPrice)
-                          ).toFixed(8)} ${tokenInInfo.symbol}`
+                          1 / parseFloat(marketPrice)
+                        ).toFixed(8)} ${tokenInInfo.symbol}`
                         : `Market: 1 ${tokenInInfo.symbol} ≈ ${marketPrice} ${tokenOutInfo.symbol}`
                       : "Price per token (decimal value)"}
                   </span>
@@ -1162,7 +1272,7 @@ export function CreateOrderForm({
             <button
               type="button"
               onClick={handleApproveTokens}
-              disabled={isApproving || isCreating || !!tradeError}
+              disabled={isApproving || isCreating || !!tradeError} // || !!minValueError
               className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-approve-tokens"
             >
@@ -1183,7 +1293,7 @@ export function CreateOrderForm({
             <button
               type="submit"
               disabled={
-                isApproving || isCreating || !!tradeError || !!limitPriceError
+                isApproving || isCreating || !!tradeError || !!limitPriceError // || !!minValueError
               }
               className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-create-order"
@@ -1205,9 +1315,8 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div
-            className={`${
-              isPartialFill ? "w-[200px]" : "w-[200px]"
-            } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[46%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            className={`${isPartialFill ? "w-[200px]" : "w-[200px]"
+              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[46%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">

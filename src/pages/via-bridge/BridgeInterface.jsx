@@ -25,6 +25,7 @@ import CPatch from "../../assets/images/rec-token.svg";
 // Import ABIs
 import {ERC20_ABI} from "../../utils/via-bridge-abis/index";
 
+
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
   const { transactions, addTransaction, clearTransactions } =
@@ -618,6 +619,7 @@ const BridgeInterface = () => {
                     />
                     <TokenSelector
                       token={selectedToken}
+                      chainId={fromChainId}
                       onClick={() => setIsTokenModalOpen(true)}
                     />
                   </div>
@@ -632,11 +634,10 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? " text-white bg-black"
-                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                }`}
+                ${selectedPercentage === value
+                          ? " text-white bg-black"
+                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -770,11 +771,10 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? " text-white bg-black"
-                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                }`}
+                ${selectedPercentage === value
+                          ? " text-white bg-black"
+                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
