@@ -9,8 +9,6 @@ import {
 } from "@rainbow-me/rainbowkit/wallets";
 import { http, createConfig } from "wagmi";
 import {
-  pulsechainV4,
-  baseSepolia,
   pulsechain,
   bsc,
   arbitrum,
@@ -75,8 +73,6 @@ export const bridgeConfig = getDefaultConfig({
   appName: "Emplseal Bridge",
   projectId: "YOUR_PROJECT_ID",
   chains: [
-    baseSepolia,
-    pulsechainV4,
     pulsechain,
     mainnet,
     bsc,

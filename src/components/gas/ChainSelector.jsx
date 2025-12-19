@@ -200,7 +200,35 @@ import { useGasBridgeStore } from "../../redux/store/gasBridgeStore";
 import { Search } from "lucide-react";
 
 /* ---------------------------------
-   Reusable Chain Modal
+   Chain Logo Component
+---------------------------------- */
+const ChainLogo = ({ chain, className }) => {
+  const [srcIndex, setSrcIndex] = useState(0);
+
+  const sources = [
+    chain.logoURI,
+    `https://icons.llamao.fi/icons/chains/rsz_${chain.shortName}`,
+    `https://raw.githubusercontent.com/Cryptofonts/cryptoicons/master/128/${chain.symbol?.toLowerCase()}.png`,
+  ].filter(Boolean);
+
+  const handleError = () => {
+    if (srcIndex < sources.length - 1) {
+      setSrcIndex(srcIndex + 1);
+    }
+  };
+
+  return (
+    <img
+      src={sources[srcIndex]}
+      alt={chain.name}
+      className={className}
+      onError={handleError}
+    />
+  );
+};
+
+/* ---------------------------------
+   Reusable Modal
 ---------------------------------- */
 const ChainModal = ({
   isOpen,
@@ -232,20 +260,6 @@ const ChainModal = ({
   );
 
   const renderChain = (chain) => {
-    const githubLogoUrl = `https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/${chain.name
-      .toLowerCase()
-      .replace(/\s+/g, "")}.svg`;
-
-    const defiLlamaUrl = `https://defillama.com/chain-icons/rsz/${chain.name.toLowerCase()}.jpg`;
-
-    const handleImageError = (e) => {
-      if (e.target.src === githubLogoUrl) {
-        e.target.src = defiLlamaUrl;
-      } else {
-        e.target.style.display = "none";
-      }
-    };
-
     return (
       <div
         key={chain.chain}
@@ -256,12 +270,7 @@ const ChainModal = ({
         }}
         className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#FF9900]/10 cursor-pointer"
       >
-        <img
-          src={chain.logoURI || githubLogoUrl}
-          alt={chain.name}
-          className="w-6 h-6 rounded-full"
-          onError={handleImageError}
-        />
+        <ChainLogo chain={chain} className="w-6 h-6 rounded-full" />
         <span className="text-white">{chain.name}</span>
       </div>
     );
@@ -273,7 +282,7 @@ const ChainModal = ({
         ref={modalRef}
         className="relative w-full max-w-[650px] rounded-3xl bg-black py-6 md:px-10 md:py-12 px-6 clip-bg"
       >
-        {/* Close Button */}
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute right-6 top-6 text-white text-xl tilt"
@@ -318,7 +327,7 @@ const ChainSelector = ({ onSwitch }) => {
   const { fromChainId, toChainId, setFromChain, setToChain } =
     useGasBridgeStore();
 
-  const [activeModal, setActiveModal] = useState(null); // "from" | "to" | null
+  const [activeModal, setActiveModal] = useState(null);
 
   useEffect(() => {
     if (onSwitch) {
@@ -337,24 +346,29 @@ const ChainSelector = ({ onSwitch }) => {
       <div className="text-center text-red-500">Error fetching chains.</div>
     );
 
-  const formattedChains = chains.map((c) => ({
-    ...c,
-    id: c.chain,
-    logoURI: c.logo,
-  }));
+  /* ---------------------------------
+     Format Chains
+  ---------------------------------- */
+  const formattedChains = chains.map((c) => {
+    const shortName =
+      c.name
+        ?.match(/^\w+/)?.[0]
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, "") ?? "";
+
+    return {
+      ...c,
+      id: c.chain,
+      logoURI: c.logo,
+      shortName,
+    };
+  });
 
   const fromChain = formattedChains.find((c) => c.chain === fromChainId);
   const toChain = formattedChains.find((c) => c.chain === toChainId);
 
-  const getChainLogo = (chain) =>
-    chain.logoURI ||
-    `https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/${chain.name
-      .toLowerCase()
-      .replace(/\s+/g, "")}.svg`;
-
   const getFontSizeClass = (text) => {
     const length = text?.toString().length || 0;
-
     if (length > 14) return "text-[10px]";
     if (length > 11) return "text-sm";
     return "text-base";
@@ -370,14 +384,7 @@ const ChainSelector = ({ onSwitch }) => {
         >
           {fromChain ? (
             <>
-              <img
-                src={getChainLogo(fromChain)}
-                alt={fromChain.name}
-                className="w-6 h-6 rounded-full"
-                onError={(e) => {
-                  e.target.src = `https://defillama.com/chain-icons/rsz/${fromChain.name.toLowerCase()}.jpg`;
-                }}
-              />
+              <ChainLogo chain={fromChain} className="w-6 h-6 rounded-full" />
               <span
                 className={`text-white whitespace-nowrap ${getFontSizeClass(
                   fromChain.name
@@ -398,14 +405,7 @@ const ChainSelector = ({ onSwitch }) => {
         >
           {toChain ? (
             <>
-              <img
-                src={getChainLogo(fromChain)}
-                alt={fromChain.name}
-                className="w-6 h-6 rounded-full"
-                onError={(e) => {
-                  e.target.src = `https://defillama.com/chain-icons/rsz/${fromChain.name.toLowerCase()}.jpg`;
-                }}
-              />
+              <ChainLogo chain={toChain} className="w-6 h-6 rounded-full" />
               <span
                 className={`text-black whitespace-nowrap ${getFontSizeClass(
                   toChain.name
