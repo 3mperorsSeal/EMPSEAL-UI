@@ -23,8 +23,7 @@ import Rbox from "../../assets/images/r-d.png";
 import CPatch from "../../assets/images/rec-token.svg";
 
 // Import ABIs
-import {ERC20_ABI} from "../../utils/via-bridge-abis/index";
-
+import { ERC20_ABI } from "../../utils/via-bridge-abis/index";
 
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
@@ -391,21 +390,12 @@ const BridgeInterface = () => {
   // ----------------------------------------------------------------
 
   const renderButton = useCallback(() => {
-    if (!address)
-      return (
-        <button disabled className="w-full">
-          Connect Wallet
-        </button>
-      );
+    if (!address) return <button disabled>Connect Wallet</button>;
     if (!isCorrectChain)
-      return (
-        <button disabled className="w-full">
-          Switch to {sourceChain.name}
-        </button>
-      );
+      return <button disabled>Switch to {sourceChain.name}</button>;
     if (isBridged)
       return (
-        <button disabled className="w-full">
+        <button disabled>
           <CheckCircle2 className="w-5 h-5" /> Bridged
         </button>
       );
@@ -413,10 +403,7 @@ const BridgeInterface = () => {
     // Step 1: Input Validation
     if (currentStep === 1) {
       return (
-        <button
-          disabled={!amount || parseFloat(amount) === 0}
-          className="w-full"
-        >
+        <button disabled={!amount || parseFloat(amount) === 0}>
           Enter Amount
         </button>
       );
@@ -600,8 +587,10 @@ const BridgeInterface = () => {
                 </span>
 
                 <span className="rigamesh leading-normal">
-                  {tokenBalance ? parseFloat(formatEther(tokenBalance)).toFixed(6) : "0.00"}{" "}
-                  {selectedToken.symbol}
+                  {tokenBalance
+                    ? parseFloat(formatEther(tokenBalance)).toFixed(6)
+                    : "0.00"}{" "}
+                  {/* {selectedToken.symbol} */}
                 </span>
               </div>
             </div>
@@ -634,10 +623,11 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${selectedPercentage === value
-                          ? " text-white bg-black"
-                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                        }`}
+                ${
+                  selectedPercentage === value
+                    ? " text-white bg-black"
+                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -771,10 +761,11 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${selectedPercentage === value
-                          ? " text-white bg-black"
-                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                        }`}
+                ${
+                  selectedPercentage === value
+                    ? " text-white bg-black"
+                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -891,7 +882,7 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="w-full button-trans text-center mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
+            className="md:max-w-[432px] w-full mx-auto button-trans text-center mt-12 h- flex justify-center items-center gap-2 rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
           >
             <img
               className="absolute swap-button1"

@@ -81,16 +81,16 @@ const ChainPopup = ({
                     // sc1
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full flex justify-center items-center">
+                  {/* <div className="w-6 h-6 rounded-full flex justify-center items-center">
                     <img
                       src={c.icon || dummyImage}
                       alt={c.name}
                       onError={(e) => (e.currentTarget.src = dummyImage)}
                       className="w-6 h-6 object-contain"
                     />
-                  </div>
+                  </div> */}
                   <span
-                    className={`font-orbitron text-xs text-center ${
+                    className={`font-orbitron text-xs text-center px-3 ${
                       isActive ? "text-[#fff]" : "text-[#fff]"
                     }`}
                   >

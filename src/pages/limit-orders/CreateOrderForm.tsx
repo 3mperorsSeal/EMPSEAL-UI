@@ -58,6 +58,7 @@ import {
   formatUnits,
   zeroAddress,
   decodeEventLog,
+  parseEventLogs,
   erc20Abi,
 } from "viem";
 import { formatErrorMessage } from "../../utils/utils";
@@ -494,21 +495,14 @@ export function CreateOrderForm({
 
       let newOrderId = "new";
       try {
-        const event = receipt.logs
-          .map((log) => {
-            try {
-              return decodeEventLog({
-                abi: LIMIT_ORDER_ABI,
-                ...log,
-              });
-            } catch {
-              return null;
-            }
-          })
-          .find((decoded) => decoded?.eventName === "OrderCreated");
+        const logs = parseEventLogs({
+          abi: LIMIT_ORDER_ABI,
+          logs: receipt.logs,
+        });
 
-        if (event && event.args) {
-          newOrderId = (event.args as any).orderId.toString();
+        const createdEvent = logs.find((l) => l.eventName === "OrderCreated");
+        if (createdEvent) {
+          newOrderId = (createdEvent.args as any).orderId.toString();
         }
       } catch (e) {
         console.error("Error decoding event log", e);
@@ -522,11 +516,15 @@ export function CreateOrderForm({
       form.reset();
       setTokenInMode("select");
       setTokenOutMode("select");
-      onOrderCreated({
-        orderId: newOrderId,
-        txHash: hash,
-        strategy: data.strategy,
-      });
+
+      // Only trigger the client update if we actually found a valid ID
+      if (newOrderId !== "new") {
+        onOrderCreated({
+          orderId: newOrderId,
+          txHash: hash,
+          strategy: data.strategy,
+        });
+      }
     } catch (error: any) {
       console.error("Order creation failed:", error);
       onStatusMessage({
@@ -550,11 +548,11 @@ export function CreateOrderForm({
 
   // const [isModalOpen, setIsModalOpen] = useState(false);
 
-  const [isPartialFill, setIsPartialFill] = useState(false);
+  // const [isPartialFill, setIsPartialFill] = useState(false);
   // Toggle function
-  const togglePartialFill = () => {
-    setIsPartialFill((prev) => !prev);
-  };
+  // const togglePartialFill = () => {
+  //   setIsPartialFill((prev) => !prev);
+  // };
 
   // For Limit Price
   // Apply limit price by +/- percentage from market
@@ -618,7 +616,7 @@ export function CreateOrderForm({
 
   return (
     <>
-      <div data-testid="card-create-order">
+      <div data-testid="card-create-order" className="md:max-w-[818px] mx-auto w-full">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
@@ -656,7 +654,7 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div className="relative">
-            <img className="bg-sell" src={Sellbox} alt="sellbox" />
+            <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-black">
                 In Address
@@ -899,7 +897,7 @@ export function CreateOrderForm({
           {/*  */}
           {/*  */}
           <div className="relative pb-7">
-            <img className="bg-sell-1" src={LimitBg} alt="LimitBg" />
+            <img className="bg-sell-1 w-full" src={LimitBg} alt="LimitBg" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-white">
                 Out Address
@@ -1315,8 +1313,8 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div
-            className={`${isPartialFill ? "w-[200px]" : "w-[200px]"
-              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[46%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            className={`${partialFillEnabled ? "w-[200px]" : "w-[200px]"
+              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[42%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">
@@ -1326,37 +1324,48 @@ export function CreateOrderForm({
                 <label className="toggle-switch">
                   <input
                     type="checkbox"
-                    checked={isPartialFill}
-                    onChange={togglePartialFill}
+                    checked={partialFillEnabled}
+                    onChange={() => {
+                      const newEnabled = !partialFillEnabled;
+                      setPartialFillEnabled(newEnabled);
+                      if (newEnabled) {
+                        setFillMode(1); // Default to Split 3
+                      } else {
+                        setFillMode(0); // Reset to None
+                      }
+                    }}
                   />
                   <span className="slider"></span>
                 </label>
               </div>
             </div>
-            {isPartialFill && (
+            {partialFillEnabled && (
               <>
                 <div className="h-full w-full bg-white flex gap-2 flex-wrap justify-center items-center pt-3">
                   <button
+                    type="button"
                     onClick={() => setFillMode(1)}
-                    className="bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition"
+                    className={`${fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 3
                   </button>
                   <button
+                    type="button"
                     onClick={() => setFillMode(2)}
-                    className="bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition"
+                    className={`${fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 5
                   </button>
                   <button
+                    type="button"
                     onClick={() => setFillMode(3)}
-                    className="bg-[#F4AC3F] text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition"
+                    className={`${fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 10
                   </button>
                 </div>
                 <div className="text-xs text-center font-medium text-black pt-5 pb-2 bg-white rounded-b-lg">
-                  Selected: {["Split 3", "Split 5", "Split 10"][fillMode - 1]}
+                  Selected: {fillMode === 1 ? "Split 3" : fillMode === 2 ? "Split 5" : fillMode === 3 ? "Split 10" : "None"}
                 </div>
               </>
             )}

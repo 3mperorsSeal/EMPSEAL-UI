@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useSearchParams } from "react-router-dom";
 import Logo from "../../assets/images/swap-emp.png";
 import Sett from "../../assets/images/setting.svg";
 import Ar from "../../assets/images/reverse.svg";
@@ -56,7 +57,7 @@ const getWrappedTokenABI = (chainId) => {
   }
 };
 
-const Emp = ({ setPadding }) => {
+const Emp = ({ setPadding, setBestRoute }) => {
   const [isAmountVisible, setAmountVisible] = useState(false);
   const [isSlippageVisible, setSlippageVisible] = useState(false);
   const [isSlippageApplied, setIsSlippageApplied] = useState(false);
@@ -86,11 +87,21 @@ const Emp = ({ setPadding }) => {
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
   const [isPartialFill, setIsPartialFill] = useState(false);
   const [smartRouter, setSmartRouter] = useState(null);
-  const [bestRoute, setBestRoute] = useState(null);
+  // const [bestRoute, setBestRoute] = useState(null);
+  const [localBestRoute, setLocalBestRoute] = useState(null);
+
   const [isQuoting, setIsQuoting] = useState(false);
   const [protocolFee, setProtocolFee] = useState(24);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
+
+  // Then in your useEffect where you set the route:
+  const updateRoute = (route) => {
+    setLocalBestRoute(route);
+    if (setBestRoute) {
+      setBestRoute(route);
+    }
+  };
 
   const { writeContractAsync } = useWriteContract();
   // Toggle function
@@ -143,6 +154,73 @@ const Emp = ({ setPadding }) => {
     }
   }, [tokenList]);
 
+  // useEffect(() => {
+  //   const getQuote = async () => {
+  //     if (
+  //       !smartRouter ||
+  //       !amountIn ||
+  //       parseFloat(amountIn) <= 0 ||
+  //       !selectedTokenA ||
+  //       !selectedTokenB
+  //     ) {
+  //       setAmountOut("0");
+  //       setBestRoute(null);
+  //       setRoute([]);
+  //       return;
+  //     }
+  //     setIsQuoting(true);
+  //     setAmountOut("0"); // Reset previous quote state
+  //     const amountInBigInt = convertToBigInt(amountIn, selectedTokenA.decimal);
+  //     if (amountInBigInt <= 0) {
+  //       setAmountOut("0");
+  //       setBestRoute(null);
+  //       setRoute([]);
+  //       setIsQuoting(false);
+  //       return;
+  //     }
+
+  //     const route = await smartRouter.getBestQuote(
+  //       amountInBigInt,
+  //       selectedTokenA.address,
+  //       selectedTokenB.address,
+  //       protocolFee
+  //     );
+
+  //     setBestRoute(route);
+  //     // console.log("Best route:", route);
+  //     // console.log("Best route type:", route?.type);
+
+  //     if (route) {
+  //       let path = [];
+  //       if (route.type === "CONVERGE") {
+  //         path = [
+  //           route.payload.tokenIn,
+  //           route.payload.intermediate,
+  //           route.payload.tokenOut,
+  //         ];
+  //       } else if (route.type === "SPLIT" && route.payload.length > 0) {
+  //         path = route.payload[0].path;
+  //       } else if (route.type === "WRAP" || route.type === "UNWRAP") {
+  //         path = [route.payload.tokenIn, route.payload.tokenOut];
+  //       }
+  //       setRoute(path);
+
+  //       const amountOutFormatted = formatUnits(
+  //         route.amountOut,
+  //         selectedTokenB.decimal
+  //       );
+  //       setAmountOut(amountOutFormatted);
+  //     } else {
+  //       setAmountOut("0");
+  //       setRoute([]);
+  //     }
+  //     setIsQuoting(false);
+  //   };
+
+  //   getQuote();
+  // }, [smartRouter, amountIn, selectedTokenA, selectedTokenB]);
+
+  // And update the getQuote useEffect:
   useEffect(() => {
     const getQuote = async () => {
       if (
@@ -153,16 +231,16 @@ const Emp = ({ setPadding }) => {
         !selectedTokenB
       ) {
         setAmountOut("0");
-        setBestRoute(null);
+        updateRoute(null);
         setRoute([]);
         return;
       }
       setIsQuoting(true);
-      setAmountOut("0"); // Reset previous quote state
+      setAmountOut("0");
       const amountInBigInt = convertToBigInt(amountIn, selectedTokenA.decimal);
       if (amountInBigInt <= 0) {
         setAmountOut("0");
-        setBestRoute(null);
+        updateRoute(null);
         setRoute([]);
         setIsQuoting(false);
         return;
@@ -175,9 +253,7 @@ const Emp = ({ setPadding }) => {
         protocolFee
       );
 
-      setBestRoute(route);
-      // console.log("Best route:", route);
-      // console.log("Best route type:", route?.type);
+      updateRoute(route); // Use updateRoute instead of setBestRoute
 
       if (route) {
         let path = [];
@@ -208,6 +284,9 @@ const Emp = ({ setPadding }) => {
 
     getQuote();
   }, [smartRouter, amountIn, selectedTokenA, selectedTokenB]);
+
+  // Also update the console.log:
+  console.log("selected best route: ", localBestRoute);
 
   useEffect(() => {
     if (address && datas) {
@@ -458,15 +537,15 @@ const Emp = ({ setPadding }) => {
   }, [amountOut, conversionRateTokenB]);
 
   const confirmSwap = async () => {
-    if (!bestRoute) return;
+    if (!localBestRoute) return; // Use localBestRoute instead of bestRoute
 
     try {
       setSwapStatus("LOADING");
       // Handle approval
       if (selectedTokenA.address !== EMPTY_ADDRESS) {
         const amountInBigInt =
-          bestRoute.type === "CONVERGE" || bestRoute.type === "UNWRAP"
-            ? bestRoute.payload.amountIn
+          localBestRoute.type === "CONVERGE" || localBestRoute.type === "UNWRAP" // Use localBestRoute
+            ? localBestRoute.payload.amountIn
             : convertToBigInt(amountIn, selectedTokenA.decimal);
 
         const allowance = await checkAllowance(
@@ -484,60 +563,58 @@ const Emp = ({ setPadding }) => {
             setSwapStatus("ERROR");
             console.error("Approval failed:", error);
             toast.error("Token approval failed");
-            return; // Stop if approval fails
+            return;
           }
         }
       }
 
       setSwapStatus("SWAPPING");
-      const minAmountOut = (bestRoute.amountOut * 995n) / 1000n; // 0.5% slippage
+      const minAmountOut = (localBestRoute.amountOut * 995n) / 1000n; // Use localBestRoute
       const protocolFeeBigInt = BigInt(protocolFee);
-      // const minAmountOut = bestRoute.amountOut; // 0.5% slippage
 
       let tx;
-      if (bestRoute.type === "WRAP") {
-        // console.log("Executing WRAP strategy.");
+      if (localBestRoute.type === "WRAP") {
+        // Use localBestRoute
         tx = await writeContractAsync({
           address: wethAddress,
           abi: getWrappedTokenABI(chainId),
           functionName: "deposit",
-          value: bestRoute.payload.amountIn,
+          value: localBestRoute.payload.amountIn, // Use localBestRoute
         });
-      } else if (bestRoute.type === "UNWRAP") {
-        // console.log("Executing UNWRAP strategy.");
+      } else if (localBestRoute.type === "UNWRAP") {
+        // Use localBestRoute
         tx = await writeContractAsync({
           address: wethAddress,
           abi: getWrappedTokenABI(chainId),
           functionName: "withdraw",
-          args: [bestRoute.payload.amountIn],
+          args: [localBestRoute.payload.amountIn], // Use localBestRoute
         });
-      } else if (bestRoute.type === "CONVERGE") {
-        // console.log("Executing CONVERGE strategy.");
+      } else if (localBestRoute.type === "CONVERGE") {
+        // Use localBestRoute
         tx = await writeContractAsync({
           address: routerAddress,
           abi: EmpsealRouterLiteV3,
           functionName: "executeConvergeSwap",
           args: [
-            bestRoute.payload, // The ConvergeTrade struct
+            localBestRoute.payload, // Use localBestRoute
             minAmountOut,
             address,
-            protocolFeeBigInt, // Fee
+            protocolFeeBigInt,
             deadline,
           ],
         });
       } else {
         // SPLIT
-        // console.log("Executing SPLIT strategy.");
         tx = await writeContractAsync({
           address: routerAddress,
           abi: EmpsealRouterLiteV3,
           functionName: "executeSplitSwap",
           args: [
-            bestRoute.payload, // The SplitPath[] array
-            convertToBigInt(amountIn, selectedTokenA.decimal), // Total In
+            localBestRoute.payload, // Use localBestRoute
+            convertToBigInt(amountIn, selectedTokenA.decimal),
             minAmountOut,
             address,
-            protocolFeeBigInt, // Fee
+            protocolFeeBigInt,
             deadline,
           ],
         });
@@ -550,16 +627,16 @@ const Emp = ({ setPadding }) => {
       });
 
       if (receipt.status === "success") {
-        setAmountVisible(false); // Close Amount modal on success
+        setAmountVisible(false);
         setSwapStatus("SWAPPED");
-        setSwapSuccess(true); // Now show the final success modal
+        setSwapSuccess(true);
         toast.success("Transaction Confirmed!");
       } else {
-        setAmountVisible(false); // Close Amount modal on failure
+        setAmountVisible(false);
         throw new Error("Transaction reverted on-chain.");
       }
     } catch (error) {
-      setAmountVisible(false); // Close Amount modal on other errors
+      setAmountVisible(false);
       setSwapStatus("ERROR");
       if (
         error.message &&
@@ -573,6 +650,122 @@ const Emp = ({ setPadding }) => {
       console.error("Swap failed", error);
     }
   };
+  // const confirmSwap = async () => {
+  //   if (!bestRoute) return;
+
+  //   try {
+  //     setSwapStatus("LOADING");
+  //     // Handle approval
+  //     if (selectedTokenA.address !== EMPTY_ADDRESS) {
+  //       const amountInBigInt =
+  //         bestRoute.type === "CONVERGE" || bestRoute.type === "UNWRAP"
+  //           ? bestRoute.payload.amountIn
+  //           : convertToBigInt(amountIn, selectedTokenA.decimal);
+
+  //       const allowance = await checkAllowance(
+  //         chainId,
+  //         selectedTokenA.address,
+  //         address
+  //       );
+  //       if (allowance.data < amountInBigInt) {
+  //         try {
+  //           setSwapStatus("APPROVING");
+  //           await callApprove(chainId, selectedTokenA.address, amountInBigInt);
+  //           setSwapStatus("APPROVED");
+  //           toast.success("Token approved!");
+  //         } catch (error) {
+  //           setSwapStatus("ERROR");
+  //           console.error("Approval failed:", error);
+  //           toast.error("Token approval failed");
+  //           return; // Stop if approval fails
+  //         }
+  //       }
+  //     }
+
+  //     setSwapStatus("SWAPPING");
+  //     const minAmountOut = (bestRoute.amountOut * 995n) / 1000n; // 0.5% slippage
+  //     const protocolFeeBigInt = BigInt(protocolFee);
+  //     // const minAmountOut = bestRoute.amountOut; // 0.5% slippage
+
+  //     let tx;
+  //     if (bestRoute.type === "WRAP") {
+  //       // console.log("Executing WRAP strategy.");
+  //       tx = await writeContractAsync({
+  //         address: wethAddress,
+  //         abi: getWrappedTokenABI(chainId),
+  //         functionName: "deposit",
+  //         value: bestRoute.payload.amountIn,
+  //       });
+  //     } else if (bestRoute.type === "UNWRAP") {
+  //       // console.log("Executing UNWRAP strategy.");
+  //       tx = await writeContractAsync({
+  //         address: wethAddress,
+  //         abi: getWrappedTokenABI(chainId),
+  //         functionName: "withdraw",
+  //         args: [bestRoute.payload.amountIn],
+  //       });
+  //     } else if (bestRoute.type === "CONVERGE") {
+  //       // console.log("Executing CONVERGE strategy.");
+  //       tx = await writeContractAsync({
+  //         address: routerAddress,
+  //         abi: EmpsealRouterLiteV3,
+  //         functionName: "executeConvergeSwap",
+  //         args: [
+  //           bestRoute.payload, // The ConvergeTrade struct
+  //           minAmountOut,
+  //           address,
+  //           protocolFeeBigInt, // Fee
+  //           deadline,
+  //         ],
+  //       });
+  //     } else {
+  //       // SPLIT
+  //       // console.log("Executing SPLIT strategy.");
+  //       tx = await writeContractAsync({
+  //         address: routerAddress,
+  //         abi: EmpsealRouterLiteV3,
+  //         functionName: "executeSplitSwap",
+  //         args: [
+  //           bestRoute.payload, // The SplitPath[] array
+  //           convertToBigInt(amountIn, selectedTokenA.decimal), // Total In
+  //           minAmountOut,
+  //           address,
+  //           protocolFeeBigInt, // Fee
+  //           deadline,
+  //         ],
+  //       });
+  //     }
+  //     setSwapHash(tx);
+
+  //     toast.info("Waiting for transaction confirmation...");
+  //     const receipt = await publicClient.waitForTransactionReceipt({
+  //       hash: tx,
+  //     });
+
+  //     if (receipt.status === "success") {
+  //       setAmountVisible(false); // Close Amount modal on success
+  //       setSwapStatus("SWAPPED");
+  //       setSwapSuccess(true); // Now show the final success modal
+  //       toast.success("Transaction Confirmed!");
+  //     } else {
+  //       setAmountVisible(false); // Close Amount modal on failure
+  //       throw new Error("Transaction reverted on-chain.");
+  //     }
+  //   } catch (error) {
+  //     setAmountVisible(false); // Close Amount modal on other errors
+  //     setSwapStatus("ERROR");
+  //     if (
+  //       error.message &&
+  //       (error.message.includes("User rejected") ||
+  //         error.message.includes("User denied"))
+  //     ) {
+  //       toast.error("Transaction rejected by user");
+  //     } else {
+  //       toast.error(error.message || "Transaction failed");
+  //     }
+  //     console.error("Swap failed", error);
+  //   }
+  // };
   const getRateDisplay = () => {
     if (!amountIn || !amountOut || +amountOut === 0) return "0";
     const rate = parseFloat(amountOut) / parseFloat(amountIn);
@@ -720,18 +913,26 @@ const Emp = ({ setPadding }) => {
     return "text-red-500";
   };
   //
+  // For Limit Tab
+  const [searchParams, setSearchParams] = useSearchParams();
+  useEffect(() => {
+    const tab = searchParams.get("tab");
+    setOrder(tab === "limit");
+  }, [searchParams]);
   return (
     <>
       {/* <div
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative ${
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
           order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
         }`}
       >
         <div
-          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"}`}
+          className={`scales8 ${
+            order ? "scales-top scales-top_limit" : "top70"
+          }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
@@ -741,11 +942,12 @@ const Emp = ({ setPadding }) => {
               Cross Chain Swaps
             </h2>
           </div>
-          <div className="flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex- my-6 lg:px-1 px-0">
+          <div className="md:max-w-[818px] mx-auto w-full flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex- my-6 lg:px-1 px-0">
             <div
               onClick={() => {
                 setOrder(false);
                 setPadding("lg:h-[295px] h-full");
+                setSearchParams({}, { replace: true });
               }}
               className={`${
                 order
@@ -761,6 +963,7 @@ const Emp = ({ setPadding }) => {
               onClick={() => {
                 setOrder(true);
                 setPadding("md:pb-[160px] pb-10");
+                setSearchParams({ tab: "limit" }, { replace: true });
               }}
               className={`${
                 order
@@ -783,9 +986,9 @@ const Emp = ({ setPadding }) => {
           </div>
           {/* Swap */}
           {!order ? (
-            <>
+            <div className="md:max-w-[818px] mx-auto w-full">
               <div className="relative">
-                <img className="bg-sell" src={Sellbox} alt="sellbox" />
+                <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
                 <div className="flex justify-between gap-3 items-center lg:px-2">
                   <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
                     You Sell
@@ -938,7 +1141,7 @@ const Emp = ({ setPadding }) => {
                 />
               </div>
               <div className="relative">
-                <img className="bg-sell" src={Buybox} alt="Buybox" />
+                <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
                 <div className="flex justify-between gap-3 items-center">
                   <div className="font-orbitron text-white ps-6 pt-4 text-2xl font-semibold leading-normal">
                     You Buy
@@ -1057,27 +1260,36 @@ const Emp = ({ setPadding }) => {
                       );
 
                       return (
-                        <input
-                          type="text"
-                          placeholder="0.00"
-                          value={formattedValue}
-                          onChange={handleOutputChange}
-                          readOnly
-                          className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 rigamesh placeholder-white transition-all duration-200 ease-in-out"
-                          style={{
-                            fontSize: `${dynamicFontSize}px`,
-                          }}
-                        />
+                        <>
+                          {isQuoting ? (
+                            <span className="text-white animate-pulse text-right w-full flex justify-end">
+                              Calculating...
+                            </span>
+                          ) : (
+                            <input
+                              type="text"
+                              placeholder="0.00"
+                              value={formattedValue}
+                              onChange={handleOutputChange}
+                              readOnly
+                              className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 rigamesh placeholder-white transition-all duration-200 ease-in-out"
+                              style={{
+                                fontSize: `${dynamicFontSize}px`,
+                              }}
+                            />
+                          )}
+                        </>
                       );
                     })()}
                   </div>
                 </div>
+
                 {/* <div className="text-right text-white text-sm -mt-[0px] pe-8 rigamesh truncate text-sh1">
                   {conversionRateTokenB
                     ? `$${formatNumber(usdValueTokenB)}`
                     : "Fetching Rate..."}
                 </div> */}
-                <div className="text-right text-white text-base -mt-[0px] pe-8 rigamesh truncate text-sh1">
+                <div className="text-right text-white usd-spacing text-base -mt-[0px] pe-8 rigamesh truncate text-sh1">
                   {conversionRateTokenB ? (
                     <span className="usd-spacing">
                       ${Number(usdValueTokenB).toFixed(2)}
@@ -1111,7 +1323,7 @@ const Emp = ({ setPadding }) => {
                   <span className="ps-7">{getButtonText()}</span>
                 </button>
               </div>
-            </>
+            </div>
           ) : (
             // {/* Limit Order */}
             <OrderListItems slippage={limitOrderSlippage} />
