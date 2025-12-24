@@ -117,13 +117,26 @@ const TransferPanel = () => {
   const [selectedPercentage, setSelectedPercentage] = useState(null);
   const balance = balanceData ? Number(balanceData.formatted) : 0;
 
+  const truncateToSixDecimals = (value) => {
+    if (!value) return "";
+    let str = value.toString();
+    if (str.includes("e")) {
+      return Number(value).toFixed(6);
+    }
+    const [integer, decimal] = str.split(".");
+    if (decimal && decimal.length > 6) {
+      return `${integer}.${decimal.substring(0, 6)}`;
+    }
+    return str;
+  };
+
   const handlePercentageChange = (percentage) => {
     if (!balance || balance <= 0) return;
 
     const calculatedAmount = (balance * percentage) / 100;
 
     setSelectedPercentage(percentage);
-    setAmount(calculatedAmount.toString());
+    setAmount(truncateToSixDecimals(calculatedAmount));
   };
 
   const handleAmountChange = (e) => {
@@ -139,7 +152,7 @@ const TransferPanel = () => {
 
     // Clamp amount to balance
     if (numericValue > balance) {
-      setAmount(balance.toString());
+      setAmount(truncateToSixDecimals(balanceData?.formatted || balance));
       setSelectedPercentage(100);
       return;
     }
@@ -196,7 +209,7 @@ const TransferPanel = () => {
                       <span>Fetching balance...</span>
                     ) : balanceData ? (
                       <span>
-                        {parseFloat(balanceData.formatted).toFixed(8)}{" "}
+                        {parseFloat(balanceData.formatted).toFixed(6)}{" "}
                         {balanceData.symbol}
                       </span>
                     ) : null}
@@ -214,11 +227,10 @@ const TransferPanel = () => {
                         disabled={isBalanceLoading || !balance}
                         onClick={() => handlePercentageChange(value)}
                         className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-        ${
-          selectedPercentage === value
-            ? "bg-black text-white"
-            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-        }`}
+        ${selectedPercentage === value
+                            ? "bg-black text-white"
+                            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                          }`}
                       >
                         {value}%
                       </button>
@@ -306,7 +318,7 @@ const TransferPanel = () => {
                   // }}
                   onClick={() => {
                     if (!isBalanceLoading && balanceData) {
-                      setAmount(balance.toString());
+                      setAmount(truncateToSixDecimals(balanceData.formatted));
                       setSelectedPercentage(100);
                     }
                   }}
@@ -360,11 +372,10 @@ const TransferPanel = () => {
                   disabled={isBalanceLoading || !balance}
                   onClick={() => handlePercentageChange(value)}
                   className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-        ${
-          selectedPercentage === value
-            ? "bg-black text-white"
-            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-        }`}
+        ${selectedPercentage === value
+                      ? "bg-black text-white"
+                      : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                    }`}
                 >
                   {value}%
                 </button>
@@ -442,8 +453,8 @@ const TransferPanel = () => {
                 {isSending
                   ? "Check Wallet..."
                   : isConfirming
-                  ? "Bridging..."
-                  : "Bridge"}
+                    ? "Bridging..."
+                    : "Bridge"}
               </span>
             </button>
           </div>
