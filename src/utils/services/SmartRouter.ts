@@ -90,13 +90,6 @@ export class SmartRouter {
       this.trustedTokens = trustedResults.map(
         (res) => res.result as `0x${string}`
       );
-
-      // console.log(`✅ Loaded ${this.adapters.length} adapters`);
-      // console.log(`✅ WNATIVE: ${this.wnativeAddress}`);
-      // console.log(`✅ Trusted tokens: ${this.trustedTokens.length}`);
-      // console.log(
-      //   `   ${this.trustedTokens.map((t) => t.slice(0, 8)).join(", ")}...`
-      // );
     } catch (error) {
       console.error("Failed to load router config:", error);
       throw error;
@@ -260,7 +253,6 @@ export class SmartRouter {
         );
 
         if (refinedResult.bestOutput > bestOutput) {
-          // console.log(`      ✨ Refined split found (+${refinedResult.bestOutput - bestOutput} units)`);
           bestOutput = refinedResult.bestOutput;
           bestSplits = refinedResult.bestSplits;
         }
@@ -466,7 +458,6 @@ export class SmartRouter {
       this.isNative(tokenOut);
 
     if (isWrapping) {
-      // console.log("✅ Strategy: Direct Wrap (No Fee)");
       return {
         type: "WRAP",
         amountOut: amountIn, // Use original amountIn
@@ -480,7 +471,6 @@ export class SmartRouter {
     }
 
     if (isUnwrapping) {
-      // console.log("✅ Strategy: Direct Unwrap (No Fee)");
       return {
         type: "UNWRAP",
         amountOut: amountIn, // Use original amountIn
@@ -495,22 +485,7 @@ export class SmartRouter {
 
     // Calculate fee only for other route types
     const amountAfterFee = this.calculateAmountAfterFee(amountIn, fee);
-
-    // console.log(`\n${"=".repeat(70)}`);
-    // console.log(`🔍 Finding route: ${amountAfterFee.toString()}`);
-    // console.log(
-    //   `   ${normalizedTokenIn.slice(0, 10)}... → ${normalizedTokenOut.slice(
-    //     0,
-    //     10
-    //   )}...`
-    // );
-    // if (this.isNative(tokenIn)) console.log(`   (Native → WNATIVE conversion)`);
-    // if (this.isNative(tokenOut))
-    //   console.log(`   (WNATIVE → Native conversion)`);
-    // console.log(`${"=".repeat(70)}\n`);
-
     if (this.convergeOnly) {
-      // console.log("🔄 CONVERGE-ONLY MODE");
       const convergeResult = await this.findConvergePath(
         // amountAfterFee,
         amountIn,
@@ -518,10 +493,8 @@ export class SmartRouter {
         normalizedTokenOut
       );
       if (!convergeResult) {
-        // console.log("❌ No converge path\n");
         return null;
       }
-      // console.log(`✅ Output: ${convergeResult.amountOut.toString()}\n`);
       return convergeResult;
     }
 
@@ -568,28 +541,11 @@ export class SmartRouter {
         ? convergeMultiHopResult.value
         : null;
 
-    // console.log("\n📊 RESULTS:");
-    // console.log(
-    //   `   Converge (Omni):     ${converge?.amountOut.toString() || "N/A"}`
-    // );
-    // console.log(
-    //   `   Direct:              ${split?.amountOut.toString() || "N/A"}`
-    // );
-    // console.log(
-    //   `   Multi-hop:           ${multiHop?.amountOut.toString() || "N/A"}`
-    // );
-    // console.log(
-    //   `   Converge Multi-hop:  ${
-    //     convergeMultiHop?.amountOut.toString() || "N/A"
-    //   }`
-    // );
-
     const candidates = [converge, split, multiHop, convergeMultiHop].filter(
       Boolean
     );
 
     if (candidates.length === 0) {
-      // console.log("❌ No routes found\n");
       return null;
     }
 
@@ -603,8 +559,6 @@ export class SmartRouter {
     else if (winner === convergeMultiHop) winnerName = "Converge Multi-hop";
     else winnerName = "Multi-hop";
 
-    // console.log(`✅ Winner: ${winnerName} (${winner!.amountOut.toString()})\n`);
-
     return winner;
   }
 
@@ -613,8 +567,6 @@ export class SmartRouter {
     tokenIn: `0x${string}`,
     tokenOut: `0x${string}`
   ): Promise<BestRouteResult | null> {
-    // console.log("🔗 Testing MULTI-HOP strategy");
-
     const bestPath = await this.findBestMultiHopPath(
       amountIn,
       tokenIn,
@@ -622,14 +574,8 @@ export class SmartRouter {
     );
 
     if (!bestPath) {
-      // console.log("   ❌ No multi-hop path found");
       return null;
     }
-
-    // console.log(`   ✅ Found ${bestPath.path.length - 1}-hop path`);
-    // console.log(
-    //   `      ${bestPath.path.map((t) => t.slice(0, 8)).join(" → ")}...`
-    // );
 
     const payload: SplitPath[] = [
       {
@@ -656,14 +602,12 @@ export class SmartRouter {
     tokenIn: `0x${string}`,
     tokenOut: `0x${string}`
   ): Promise<BestRouteResult | null> {
-    // console.log("🔄🔗 Testing CONVERGE MULTI-HOP strategy");
 
     if (
       !this.wnativeAddress ||
       tokenIn === this.wnativeAddress ||
       tokenOut === this.wnativeAddress
     ) {
-      // console.log("   ⚠️ Skipping (circular or native involved)");
       return null;
     }
 
@@ -676,7 +620,6 @@ export class SmartRouter {
     );
 
     if (inputPaths.length === 0) {
-      // console.log("   ❌ No multi-hop paths to intermediate");
       return null;
     }
 
@@ -756,7 +699,6 @@ export class SmartRouter {
     );
 
     if (!outputPath) {
-      // console.log("   ❌ No multi-hop path from intermediate");
       return null;
     }
 
@@ -884,7 +826,6 @@ export class SmartRouter {
     tokenIn: `0x${string}`,
     tokenOut: `0x${string}`
   ): Promise<BestRouteResult | null> {
-    // console.log("🔄 Testing OMNI-CONVERGE strategy");
 
     // Filter valid intermediates
     const candidates = this.trustedTokens.filter(
@@ -894,7 +835,6 @@ export class SmartRouter {
     );
 
     if (candidates.length === 0) {
-      // console.log("   ⚠️ No valid intermediate tokens found");
       return null;
     }
 
@@ -954,18 +894,12 @@ export class SmartRouter {
     );
 
     if (validResults.length === 0) {
-      // console.log("   ❌ No converge paths found");
       return null;
     }
 
     const bestResult = validResults.reduce((prev, current) =>
       prev!.finalAmount > current!.finalAmount ? prev : current
     );
-
-    // console.log(
-    //   `   🏆 Best Intermediate: ${bestResult!.intermediate.slice(0, 8)}...`
-    // );
-
     const payload: ConvergeTrade = {
       tokenIn,
       intermediate: bestResult!.intermediate, // Now dynamic!
@@ -996,12 +930,9 @@ export class SmartRouter {
     tokenIn: `0x${string}`,
     tokenOut: `0x${string}`
   ): Promise<BestRouteResult | null> {
-    // console.log("📊 Testing DIRECT SPLIT strategy");
-
     const quotes = await this.getAllAdapterQuotes(amountIn, tokenIn, tokenOut);
 
     if (quotes.length === 0) {
-      // console.log("   ❌ No direct paths");
       return null;
     }
 

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Button } from "../../components/ui/button";
 import {
   Card,
@@ -57,12 +57,14 @@ interface OrderListProps {
   userAddress: string;
   onStatusMessage: (message: StatusMessage) => void;
   newOrderCounter: number;
+  lastCreatedOrderId?: string | null;
 }
 
 export function OrderList({
   userAddress,
   onStatusMessage,
   newOrderCounter,
+  lastCreatedOrderId,
 }: OrderListProps) {
   const { chainId } = useAccount();
   const isPulseChain = chainId === 369;
@@ -73,6 +75,8 @@ export function OrderList({
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const { data: writeContractHash, writeContract } = useWriteContract();
+  const lastHandledTxHash = useRef<string | null>(null);
+
 
   useEffect(() => {
     setAllOrders(loadOrdersFromLocalStorage(userAddress));
@@ -87,6 +91,23 @@ export function OrderList({
       query: { enabled: isPulseChain },
     });
 
+  const orderIdsToFetch = useMemo(() => {
+    const ids = [...(activeOrderIds || [])];
+    if (lastCreatedOrderId) {
+      try {
+        const bigId = BigInt(lastCreatedOrderId);
+        const exists = ids.find((id) => id === bigId);
+        if (!exists) {
+          ids.push(bigId);
+          // Sort descending to keep latest at top if that's the order, or just append
+        }
+      } catch (e) {
+        console.error("Invalid lastCreatedOrderId", lastCreatedOrderId);
+      }
+    }
+    return ids;
+  }, [activeOrderIds, lastCreatedOrderId]);
+
   const {
     data: activeOrdersData,
     isLoading,
@@ -96,31 +117,28 @@ export function OrderList({
     address: CONTRACT_ADDRESS,
     abi: LIMIT_ORDER_ABI,
     functionName: "getOrders",
-    args: [activeOrderIds || []],
-    query: { enabled: isPulseChain && !!activeOrderIds },
+    args: [orderIdsToFetch],
+    query: { enabled: isPulseChain && orderIdsToFetch.length > 0 },
   });
 
   const activeOrders = activeOrdersData
     ? (activeOrdersData as any[]).map((order: any) => {
-        const tokenOutInfo = getTokenInfo(order.tokenOut);
-        return {
-          id: order.id.toString(),
-          user: order.user,
-          tokenIn: order.tokenIn,
-          tokenOut: order.tokenOut,
-          amountIn: order.amountIn.toString(),
-          minAmountOut: order.minAmountOut.toString(),
-          limitPrice: order.limitPrice.toString(),
-          deadline: order.deadline.toString(),
-          allowPartialFill: order.allowPartialFill,
-          filledAmount: order.filledAmount.toString(),
-          status:
-            ["none", "active", "fulfilled", "cancelled", "expired"][
-              order.status
-            ] || "unknown",
-          tokenOutDecimals: tokenOutInfo?.decimals || 18,
-        };
-      })
+      const tokenOutInfo = getTokenInfo(order.tokenOut);
+      return {
+        id: order.id.toString(),
+        user: order.user,
+        tokenIn: order.tokenIn,
+        tokenOut: order.tokenOut,
+        amountIn: order.amountIn.toString(),
+        minAmountOut: order.minAmountOut.toString(),
+        limitPrice: order.limitPrice.toString(),
+        deadline: order.deadline.toString(),
+        allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
+        filledAmount: order.filledAmount.toString(),
+        status: ["active", "fulfilled", "cancelled", "expired"][order.status] || "unknown",
+        tokenOutDecimals: tokenOutInfo?.decimals || 18,
+      };
+    })
     : [];
 
   useEffect(() => {
@@ -158,7 +176,13 @@ export function OrderList({
 
       // Merge fresh data from contract into existing orders
       activeOrders.forEach((activeOrder) => {
-        const existingOrder = mergedOrdersMap.get(activeOrder.id) || {};
+        const existingOrder = (mergedOrdersMap.get(activeOrder.id) || {}) as any;
+
+        let newStatus = activeOrder.status;
+        if (existingOrder.status === 'cancelled' && activeOrder.status === 'active') {
+          newStatus = 'cancelled';
+        }
+
         mergedOrdersMap.set(activeOrder.id, {
           fillMode: 0,
           maxSplits: 0,
@@ -166,6 +190,7 @@ export function OrderList({
           strategy: "GreedyOrderRouter" as OrderStrategy,
           ...existingOrder,
           ...activeOrder,
+          status: newStatus,
         });
       });
 
@@ -209,9 +234,8 @@ export function OrderList({
     if (result.isSuccess) {
       onStatusMessage({
         type: "success",
-        message: `Fetched ${
-          (result.data as any[])?.length ?? 0
-        } active order(s)`,
+        message: `Fetched ${(result.data as any[])?.length ?? 0
+          } active order(s)`,
       });
     }
   };
@@ -239,12 +263,20 @@ export function OrderList({
         txHash: writeContractHash,
       });
     }
-    if (isConfirmed) {
+    if (isConfirmed && writeContractHash) {
+      if (lastHandledTxHash.current === writeContractHash) {
+        return;
+      }
+      lastHandledTxHash.current = writeContractHash;
+
       onStatusMessage({
         type: "success",
         message: "Transaction successful!",
       });
       if (isPulseChain) refetchActiveOrders();
+      if (cancellingOrderId) {
+        handleStatusChange(cancellingOrderId, "cancelled");
+      }
       setCancellingOrderId(null);
     }
   }, [
@@ -254,6 +286,7 @@ export function OrderList({
     onStatusMessage,
     refetchActiveOrders,
     writeContractHash,
+    cancellingOrderId,
   ]);
 
   const handleStatusChange = (orderId: string, newStatus: string) => {
@@ -339,12 +372,12 @@ export function OrderList({
   });
 
   return (
-    <div className="text-white w-full sctable">
+    <div className="text-white w-full sctable md:max-w-[1050px] mx-auto">
       <div className="flex justify-between items-center flex-wrap gap-4">
         <button className="font-orbitron px-6 py-2 bg-[#FF9900] text-black md:w-[220px] h-[70px] md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200">
           Your Orders
         </button>
-        <div className="flex gap-2 items-center flex-wrap">
+        <div className="flex gap-2 items-center flex-wrap md:mb-0 mb-2">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[180px] border border-[#FF9900] bg-black text-white">
               <SelectValue placeholder="Filter by status" />
@@ -366,16 +399,15 @@ export function OrderList({
             className="border border-[#FF9900]"
           >
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${
-                isLoading && isPulseChain ? "animate-spin" : ""
-              }`}
+              className={`mr-2 h-4 w-4 ${isLoading && isPulseChain ? "animate-spin" : ""
+                }`}
             />
             {isLoading && isPulseChain ? "Fetching..." : "Refresh"}
           </Button>
         </div>
       </div>
 
-      <div className="clip-bg1 w-full rounded-tr-2xl rounded-b-2xl lg:py-8 lg:px-8 md:px-6 px-4 md:py-6 py-6 space-y-3">
+      <div className="clip-bg1 w-full md:rounded-tr-2xl md:rounded-0 rounded-2xl rounded-b-2xl lg:py-8 lg:px-8 md:px-6 px-4 md:py-6 py-6 space-y-3">
         {!isPulseChain ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
             <p className="text-sm font-medium text-foreground">

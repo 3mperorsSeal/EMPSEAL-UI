@@ -14,12 +14,11 @@ const ToastContent = ({ message }) => (
     )}
   </div>
 );
-
 export default function LimitOrder({ slippage }) {
   const { address, isConnected } = useAccount();
 
   const [newOrderCounter, setNewOrderCounter] = useState(0);
-
+  const [lastCreatedOrderId, setLastCreatedOrderId] = useState(null);
   const handleStatusMessage = useCallback((message) => {
     switch (message.type) {
       case "success":
@@ -44,6 +43,7 @@ export default function LimitOrder({ slippage }) {
       new CustomEvent("gemini:orderCreated", { detail: details })
     );
     setNewOrderCounter((c) => c + 1);
+    setLastCreatedOrderId(details.orderId);
   };
 
   return (
@@ -60,6 +60,7 @@ export default function LimitOrder({ slippage }) {
               userAddress={address}
               onStatusMessage={handleStatusMessage}
               newOrderCounter={newOrderCounter}
+              lastCreatedOrderId={lastCreatedOrderId}
             />
           </>
         ) : (

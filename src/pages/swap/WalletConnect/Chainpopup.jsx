@@ -14,7 +14,7 @@ const ChainPopup = ({
   );
 
   return (
-    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
+    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
       <div className="w-full flex justify-center my-auto items-center">
         <div className="md:max-w-[618px] w-full rounded-3xl relative py-6 md:px-10 px-4 mx-auto clip-bg">
           <svg
@@ -90,16 +90,16 @@ const ChainPopup = ({
                     // sc1
                   }`}
                 >
-                  <div className="w-6 h-6 rounded-full flex justify-center items-center">
+                  {/* <div className="w-6 h-6 rounded-full flex justify-center items-center">
                     <img
                       src={c.icon || dummyImage}
                       alt={c.name}
                       onError={(e) => (e.currentTarget.src = dummyImage)}
                       className="w-6 h-6 object-contain"
                     />
-                  </div>
+                  </div> */}
                   <span
-                    className={`font-orbitron text-xs text-center ${
+                    className={`font-orbitron text-xs text-center px-3 ${
                       isActive ? "text-[#fff]" : "text-[#fff]"
                     }`}
                   >
