@@ -31,7 +31,7 @@ export type WrapUnwrapTrade = {
 
 // Internal type for the Router result
 export type BestRouteResult = {
-  type: "CONVERGE" | "SPLIT" | "WRAP" | "UNWRAP";
+  type: "CONVERGE" | "SPLIT" | "WRAP" | "UNWRAP" | "NOSPLIT";
   amountOut: bigint;
   payload: ConvergeTrade | SplitPath[] | WrapUnwrapTrade; // The data to pass to the contract write function
   gasEstimate: bigint;
