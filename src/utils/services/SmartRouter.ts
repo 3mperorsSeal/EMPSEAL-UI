@@ -586,7 +586,7 @@ export class SmartRouter {
     ];
 
     return {
-      type: "SPLIT",
+      type: "NOSPLIT",
       amountOut: bestPath.amountOut,
       payload,
       gasEstimate: 0n,
@@ -721,7 +721,7 @@ export class SmartRouter {
       ];
 
       return {
-        type: "SPLIT",
+        type: "NOSPLIT",
         amountOut: outputPath.amountOut,
         payload,
         gasEstimate: 0n,
@@ -741,7 +741,7 @@ export class SmartRouter {
       ];
 
       return {
-        type: "SPLIT",
+        type: "NOSPLIT",
         amountOut: outputPath.amountOut,
         payload,
         gasEstimate: 0n,
@@ -950,7 +950,7 @@ export class SmartRouter {
     }));
 
     return {
-      type: "SPLIT",
+      type: splits.length === 1 ? "NOSPLIT" : "SPLIT",
       amountOut: totalOut,
       payload,
       gasEstimate: 0n,

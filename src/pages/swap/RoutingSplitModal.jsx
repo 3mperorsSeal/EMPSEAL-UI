@@ -232,7 +232,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
 
     const newTokenImages = {};
 
-    if (bestRoute.type === "SPLIT") {
+    if (bestRoute.type === "SPLIT" || bestRoute.type === "NOSPLIT") {
       bestRoute.payload.forEach((pathObj) => {
         pathObj.path.forEach((address) => {
           if (address && !newTokenImages[address]) {
@@ -269,7 +269,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
           Routing <br /> {bestRoute.type}
         </h2>
         {/* Split Type */}
-        {bestRoute.type === "SPLIT" && (
+        {(bestRoute.type === "SPLIT" || bestRoute.type === "NOSPLIT") && (
           <div className="flex flex-col gap-6">
             {bestRoute.payload.map((pathObj, index) => {
               const firstToken = pathObj.path[0];
@@ -368,7 +368,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
                     getTokenSymbol={getTokenSymbol}
                   />
                   <PercentBox
-                   value={`${formatProportion(outputHop.proportion)}%`}
+                    value={`${formatProportion(outputHop.proportion)}%`}
                     tokenAddress={tokenOut}
                     tokenSymbol={getTokenSymbol(tokenOut)}
                     tokenImage={tokenImages[tokenOut]}
