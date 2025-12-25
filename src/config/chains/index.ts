@@ -18,6 +18,11 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "Otterscan",
     rpcUrl: "https://rpc.pulsechain.com",
     maxHops: 3,
+    stableTokens: [
+      "0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07",
+      "0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f",
+      "0xefd766ccb38eaf1dfd701853bfce31359239f305",
+    ],
   },
   // ETHW
   10001: {

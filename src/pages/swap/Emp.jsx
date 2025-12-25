@@ -91,7 +91,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const [localBestRoute, setLocalBestRoute] = useState(null);
 
   const [isQuoting, setIsQuoting] = useState(false);
-  const [protocolFee, setProtocolFee] = useState(24);
+  const [protocolFee, setProtocolFee] = useState(21);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
 
@@ -121,6 +121,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
     blockExplorer,
     blockExplorerName,
     maxHops,
+    stableTokens,
   } = useChainConfig();
   // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
@@ -142,6 +143,29 @@ const Emp = ({ setPadding, setBestRoute }) => {
       router.setGranularity(5);
     }
   }, [publicClient, routerAddress]);
+
+  // Dynamic Fee Update
+  useEffect(() => {
+    if (selectedTokenA && selectedTokenB) {
+      const isStable = (address) =>
+        stableTokens?.some(
+          (stable) => stable.toLowerCase() === address.toLowerCase()
+        ) || false;
+
+      if (
+        isStable(selectedTokenA.address) ||
+        isStable(selectedTokenB.address)
+      ) {
+        setProtocolFee(10); // 0.10% for stable pairs
+      } else {
+        setProtocolFee(21); // 0.21% for volatile pairs
+      }
+    } else {
+      setProtocolFee(21); // Default for other chains or if undefined
+    }
+  }, [chainId, selectedTokenA, selectedTokenB, stableTokens]);
+
+  console.log("protocolFee: ", protocolFee);
 
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
@@ -602,6 +626,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
             protocolFeeBigInt,
             deadline,
           ],
+          value:
+            selectedTokenA.address === EMPTY_ADDRESS
+              ? localBestRoute.payload.amountIn
+              : 0n,
         });
       } else {
         // SPLIT
@@ -617,6 +645,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
             protocolFeeBigInt,
             deadline,
           ],
+          value:
+            selectedTokenA.address === EMPTY_ADDRESS
+              ? convertToBigInt(amountIn, selectedTokenA.decimal)
+              : 0n,
         });
       }
       setSwapHash(tx);
@@ -899,10 +931,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
-            parseFloat(usdValueTokenA)) *
-          100
-        ).toFixed(2)
+        ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
+          parseFloat(usdValueTokenA)) *
+        100
+      ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
@@ -925,14 +957,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
-          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
-        }`}
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
+          }`}
       >
         <div
-          className={`scales8 ${
-            order ? "scales-top scales-top_limit" : "top70"
-          }`}
+          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"
+            }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
@@ -949,11 +979,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("lg:h-[295px] h-full");
                 setSearchParams({}, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-white text-[#FF9900]"
-                  : "border-[#FF9900] text-black bg-[#FF9900]"
-              } cursor-pointer hoverswap transition-all md:max-w-[100px] w-full h-[47px] flex justify-center items-center rounded-lg border md:text-sm text-[13px] font-bold font-orbitron`}
+              className={`${order
+                ? "border-white text-[#FF9900]"
+                : "border-[#FF9900] text-black bg-[#FF9900]"
+                } cursor-pointer hoverswap transition-all md:max-w-[100px] w-full h-[47px] flex justify-center items-center rounded-lg border md:text-sm text-[13px] font-bold font-orbitron`}
             >
               SWAP
             </div>
@@ -965,11 +994,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("md:pb-[160px] pb-10");
                 setSearchParams({ tab: "limit" }, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-[#FF9900] text-black bg-[#FF9900]"
-                  : "border-white "
-              }  md:max-w-[154px] w-full h-[47px] flex justify-center items-center rounded-lg border text-[#FF9900] md:text-sm text-[13px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
+              className={`${order
+                ? "border-[#FF9900] text-black bg-[#FF9900]"
+                : "border-white "
+                }  md:max-w-[154px] w-full h-[47px] flex justify-center items-center rounded-lg border text-[#FF9900] md:text-sm text-[13px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
             >
               LIMIT ORDER
             </div>
@@ -1005,13 +1033,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedBalance)}`
-                        : `${
-                            tokenBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedBalance)}`
+                          : `${tokenBalance
+                            ? formatNumber(
+                              parseFloat(tokenBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1047,7 +1074,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colorss"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenA.address ? (
+                              activeTokenAddress === selectedTokenA.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
@@ -1066,11 +1093,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1156,13 +1182,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedChainBalanceTokenB)}`
-                        : `${
-                            tokenBBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedChainBalanceTokenB)}`
+                          : `${tokenBBalance
+                            ? formatNumber(
+                              parseFloat(tokenBBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1197,7 +1222,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colors"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenB.address ? (
+                              activeTokenAddress === selectedTokenB.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
@@ -1216,11 +1241,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={` py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FF9900] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FF9900] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1292,7 +1316,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 <div className="text-right text-white usd-spacing text-base -mt-[0px] pe-8 rigamesh truncate text-sh1">
                   {conversionRateTokenB ? (
                     <span className="usd-spacing">
-                      ${Number(usdValueTokenB).toFixed(2)}
+                      ${formatNumber(usdValueTokenB)}
                     </span>
                   ) : (
                     "Fetching Rate..."
@@ -1300,20 +1324,18 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${
-                  order
-                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                    : "pt-0 top-0"
-                }`}
+                className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${order
+                  ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                  : "pt-0 top-0"
+                  }`}
               >
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`w-full button-trans mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all ${
-                    isInsufficientBalance()
-                      ? "opacity-50 cursor-not-allowed"
-                      : " hover:text-black hover:bg-transparent"
-                  } font-orbitron text-black lg:text-3xl text-2xl font-black`}
+                  className={`w-full button-trans mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all ${isInsufficientBalance()
+                    ? "opacity-50 cursor-not-allowed"
+                    : " hover:text-black hover:bg-transparent"
+                    } font-orbitron text-black lg:text-3xl text-2xl font-black`}
                 >
                   <img
                     className="absolute swap-button"
