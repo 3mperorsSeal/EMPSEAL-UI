@@ -546,16 +546,16 @@ const BridgeInterface = () => {
 
         {/* Fees Display */}
         {bridgeFees && (
-          <div className="mb-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-xs md:text-sm">
+          <div className="mb-4 p-4 bg-[#FF9900]/10 border border-[#FF9900] rounded-lg text-white text-xs md:text-sm">
             <h3 className="text-base font-semibold mb-2 text-[#FF9900]">
               Estimated Fees:
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              <div>Protocol Fee:</div>
-              <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div>
+              {/* <div>Protocol Fee:</div>
+              <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div> */}
 
-              <div>VIA Source Fee:</div>
-              <div>{formatUnits(bridgeFees[1] ?? 0n, 6)} USDC</div>
+              {/* <div>VIA Source Fee:</div>
+              <div>{formatUnits(bridgeFees[1] ?? 0n, 6)} USDC</div> */}
 
               <div>Gas Token Req:</div>
               <div>
@@ -563,7 +563,7 @@ const BridgeInterface = () => {
                 {fromChainId === 369 ? "WPLS" : "ETH"}
               </div>
 
-              <div>Total USDC Required:</div>
+              <div>Messaging Fees:</div>
               <div>{formatUnits(bridgeFees[3] ?? 0n, 6)} USDC</div>
             </div>
           </div>

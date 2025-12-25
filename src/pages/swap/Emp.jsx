@@ -942,7 +942,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
               Cross Chain Swaps
             </h2>
           </div>
-          <div className="md:max-w-[818px] mx-auto w-full flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex- my-6 lg:px-1 px-0">
+          <div className="md:max-w-[700px] mx-auto w-full flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex- my-6 lg:px-1 px-0">
             <div
               onClick={() => {
                 setOrder(false);
@@ -986,7 +986,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
           </div>
           {/* Swap */}
           {!order ? (
-            <div className="md:max-w-[818px] mx-auto w-full">
+            <div className="md:max-w-[700px] mx-auto w-full">
               <div className="relative">
                 <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
                 <div className="flex justify-between gap-3 items-center lg:px-2">

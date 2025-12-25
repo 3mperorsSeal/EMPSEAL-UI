@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
 import Sbg from "../../assets/images/sbg.png";
 import Clip from "../../assets/images/bg-clip.png";
@@ -7,7 +7,7 @@ import { useBalance } from "wagmi";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import Web3 from "web3";
 
-const TokenListItem = ({ token, walletAddress, onClick }) => {
+const TokenListItem = ({ token, walletAddress, onClick,conversionRate }) => {
   const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
     address: walletAddress,
     token:
@@ -20,6 +20,14 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
   const formattedBalance = tokenBalance
     ? parseFloat(tokenBalance.formatted).toFixed(4)
     : "0.0000";
+
+  // Calculate USD value
+  const usdValue =
+    conversionRate && tokenBalance
+      ? (
+          parseFloat(tokenBalance.formatted) * parseFloat(conversionRate)
+        ).toFixed(2)
+      : "0.00";
 
   return (
     <div
@@ -38,7 +46,7 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
           />
         </div>
         <div>
-          <div className="text-white roboto font-black text-xs roboto leading-relaxed tracking-wide">
+          <div className="text-white font-orbitron font-black text-lg roboto leading-relaxed tracking-wide">
             {token.name}
           </div>
           <div className="text-white text-xs roboto">
@@ -49,6 +57,9 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
       <div className="text-right">
         <div className="text-[#FF9900] text-lg font-bold roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
+        </div>
+        <div className="text-white text-xs roboto">
+          {conversionRate ? `$${usdValue}` : "Fetching Rate..."}
         </div>
       </div>
     </div>
@@ -303,9 +314,10 @@ const Token = ({ onClose, onSelect }) => {
             {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer roboto rounded-2xl bg-rec"
+                className="flex flex-row items-center cursor-pointer roboto rounded-2xl border border-[#FF9900] p-[14px]"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
+                {/* bg-rec */}
                 <span className="flex items-center">
                   <div className="relative flex justify-center items-center">
                     <img
@@ -317,7 +329,7 @@ const Token = ({ onClose, onSelect }) => {
                       }
                     />
                   </div>
-                  <p className="text-white font-black text-xs mt-0 ms-2">
+                  <p className="text-white font-black text-xs mt-0 ms-2 font-orbitron">
                     {token.symbol || token.ticker}
                   </p>
                 </span>

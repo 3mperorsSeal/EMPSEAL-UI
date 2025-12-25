@@ -616,7 +616,7 @@ export function CreateOrderForm({
 
   return (
     <>
-      <div data-testid="card-create-order" className="md:max-w-[818px] mx-auto w-full">
+      <div data-testid="card-create-order" className="md:max-w-[700px] mx-auto w-full">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
