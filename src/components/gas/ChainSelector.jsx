@@ -268,7 +268,7 @@ const ChainModal = ({
           setSearchTerm("");
           onClose();
         }}
-        className="flex items-center gap-3 p-3 rounded-lg hover:bg-[#FF9900]/10 cursor-pointer"
+        className="flex items-center gap-3 rounded-lg hoverclip my-3 px-3 py-3 cursor-pointer"
       >
         <ChainLogo chain={chain} className="w-6 h-6 rounded-full" />
         <span className="text-white">{chain.name}</span>
@@ -285,7 +285,7 @@ const ChainModal = ({
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute right-6 top-6 text-white text-xl tilt"
+          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 text-2xl tilt"
         >
           ✕
         </button>
@@ -296,10 +296,11 @@ const ChainModal = ({
         </h2>
 
         {/* Search */}
-        <div className="mt-10 relative px-[54px] h-[54px] w-full flex gap-2 items-center bg-search">
+        {/* bg-search */}
+        <div className="mt-10 relative px-[10px] h-[54px] w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
           <Search
             size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400"
+            className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400"
           />
           <input
             type="text"
@@ -311,7 +312,7 @@ const ChainModal = ({
         </div>
 
         {/* Chains */}
-        <div className="mt-4 max-h-[350px] overflow-y-auto">
+        <div className="mt-4 max-h-[350px] overflow-y-auto px-2">
           {filteredChains.map(renderChain)}
         </div>
       </div>
@@ -376,7 +377,7 @@ const ChainSelector = ({ onSwitch }) => {
 
   return (
     <>
-      <div className="space-y-4 md:h-[435px] h_cs h-[400px] flex flex-col justify-between">
+      <div className="space-y-4 md:h-[420px] h_cs h-[400px] flex flex-col justify-between">
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}

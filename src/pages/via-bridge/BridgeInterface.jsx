@@ -529,7 +529,7 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
+      <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
         {!isCorrectChain && address && (
           <div className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-[#FF9900] mt-0.5 flex-shrink-0" />
@@ -543,36 +543,10 @@ const BridgeInterface = () => {
             </div>
           </div>
         )}
-
-        {/* Fees Display */}
-        {bridgeFees && (
-          <div className="mb-4 p-4 bg-gray-800/50 border border-gray-700 rounded-lg text-white text-xs md:text-sm">
-            <h3 className="text-base font-semibold mb-2 text-[#FF9900]">
-              Estimated Fees:
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div>Protocol Fee:</div>
-              <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div>
-
-              <div>VIA Source Fee:</div>
-              <div>{formatUnits(bridgeFees[1] ?? 0n, 6)} USDC</div>
-
-              <div>Gas Token Req:</div>
-              <div>
-                {formatEther(bridgeFees[2] ?? 0n)}{" "}
-                {fromChainId === 369 ? "WPLS" : "ETH"}
-              </div>
-
-              <div>Total USDC Required:</div>
-              <div>{formatUnits(bridgeFees[3] ?? 0n, 6)} USDC</div>
-            </div>
-          </div>
-        )}
-
         <div className="w-full">
           {/* FROM SECTION */}
           <div className="relative">
-            <img className="bg-sell" src={Sellbox} alt="sellbox" />
+            <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
                 From
@@ -635,7 +609,7 @@ const BridgeInterface = () => {
                     </button>
                   ))}
                 </div>
-                <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
+                <div className="relative flex-flex-col justify-end items-end">
                   {/* {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
@@ -726,7 +700,7 @@ const BridgeInterface = () => {
           </div>
 
           <div
-            className="cursor-pointer mx-auto my-4 md:pt-7 pt-[44px] md:w-[70px] w-12"
+            className="cursor-pointer mx-auto my-4 md:pt-7 relative top-[-8px] pt-[44px] md:w-[70px] w-12"
             onClick={handleSwapDirection}
           >
             <img
@@ -738,7 +712,7 @@ const BridgeInterface = () => {
 
           {/* TO SECTION */}
           <div className="relative text-white">
-            <img className="bg-sell" src={Buybox} alt="Buybox" />
+            <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
             <div className="flex justify-between gap-3 items-center lg:px-2">
               <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
                 To
@@ -764,7 +738,7 @@ const BridgeInterface = () => {
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
-                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                    : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
                 }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
@@ -773,7 +747,7 @@ const BridgeInterface = () => {
                     </button>
                   ))}
                 </div>
-                <div className="relative md:pr-5 pr-5 flex-flex-col justify-end items-end">
+                <div className="relative flex-flex-col justify-end items-end">
                   {/* {(() => {
                     const inputLength =
                       amount?.toString().replace(/\D/g, "").length || 0;
@@ -817,16 +791,14 @@ const BridgeInterface = () => {
 
                     const FREE_DIGITS = 7;
                     const SHRINK_RATE = 3;
-
-                    // count digits only (ignore commas & dots)
-                    const outputLength = formattedValue.replace(
+                    const inputLength = formattedValue.replace(
                       /\D/g,
                       ""
                     ).length;
 
                     const excessDigits = Math.max(
                       0,
-                      outputLength - FREE_DIGITS
+                      inputLength - FREE_DIGITS
                     );
 
                     const dynamicFontSize = Math.max(
@@ -862,21 +834,45 @@ const BridgeInterface = () => {
         </div>
 
         {/* Recipient Address */}
-        <div className="mt-20 mb-20 relative">
+        <div className="mt-20 mb-10 relative">
           <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
             Recipient Address
           </label>
-          <div className="relative w-full h-[120px]">
-            <img className="bg-rb" src={Rbox} alt="Rbox" />
+          <div className="relative w-full py-9 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg">
+            {/* <img className="bg-rb" src={Rbox} alt="Rbox" /> */}
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="0x..."
-              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full pl-10 pr-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
+              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full px-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
             />
           </div>
         </div>
+        {/* Fees Display */}
+        {bridgeFees && (
+          <div className="mb-20 ">
+            <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
+              Estimated Fees:
+            </label>
+            <div className="grid grid-cols-2 gap-2 p-4 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg text-white text-xs md:text-sm">
+              {/* <div>Protocol Fee:</div>
+              <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div> */}
+
+              {/* <div>VIA Source Fee:</div>
+              <div>{formatUnits(bridgeFees[1] ?? 0n, 6)} USDC</div> */}
+
+              <div>Gas Token Req:</div>
+              <div>
+                {formatEther(bridgeFees[2] ?? 0n)}{" "}
+                {fromChainId === 369 ? "WPLS" : "ETH"}
+              </div>
+
+              <div>Messaging Fees:</div>
+              <div>{formatUnits(bridgeFees[3] ?? 0n, 6)} USDC</div>
+            </div>
+          </div>
+        )}
 
         {/* Main Action Button */}
         <div className="md:px-1 px-4 2xl:pb-20">
@@ -951,7 +947,7 @@ const BridgeInterface = () => {
           transactions={transactions}
           clearTransactions={clearTransactions}
         />
-        <hr className="mt-20" />
+        <hr className="mt-10" />
 
         {/* Instructions */}
         <div className="w-full md:px-0 px-4 md:pb-20 pb-10">

@@ -616,7 +616,7 @@ export function CreateOrderForm({
 
   return (
     <>
-      <div data-testid="card-create-order" className="md:max-w-[818px] mx-auto w-full">
+      <div data-testid="card-create-order" className="md:max-w-[700px] mx-auto w-full">
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
@@ -1271,7 +1271,7 @@ export function CreateOrderForm({
               type="button"
               onClick={handleApproveTokens}
               disabled={isApproving || isCreating || !!tradeError} // || !!minValueError
-              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
+              className="md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-approve-tokens"
             >
               <img
@@ -1293,7 +1293,7 @@ export function CreateOrderForm({
               disabled={
                 isApproving || isCreating || !!tradeError || !!limitPriceError // || !!minValueError
               }
-              className="w-full button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
+              className="md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
               data-testid="button-create-order"
             >
               <img
@@ -1314,7 +1314,7 @@ export function CreateOrderForm({
           {/*  */}
           <div
             className={`${partialFillEnabled ? "w-[200px]" : "w-[200px]"
-              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[42%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[50%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">

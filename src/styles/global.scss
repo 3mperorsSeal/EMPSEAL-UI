@@ -107,7 +107,7 @@ input[type="number"]::-webkit-outer-spin-button {
 }
 body {
   font-family: "Inter", sans-serif;
-  background: #121214;
+  background: #000000;
   overflow-x: hidden;
 }
 
@@ -428,7 +428,9 @@ body.bg-pattern {
   align-items: center;
   top: -19px;
   z-index: -1;
-  min-width: 26rem;
+  // min-width: 26rem;
+  max-width: 432px;
+  width: 100%;
 }
 .swap-button1 {
   left: auto;
@@ -438,7 +440,9 @@ body.bg-pattern {
   align-items: center;
   top: -20px;
   z-index: -1;
-  min-width: 30rem;
+  // min-width: 30rem;
+  max-width: 432px;
+  width: 100%;
 }
 .h-hr {
   width: 31rem;
@@ -608,7 +612,7 @@ body.bg-pattern {
   .scales8 {
     scale: 0.9;
   }
-  .top70{
+  .top70 {
     top: -70px;
   }
   .scales-b {
@@ -722,7 +726,7 @@ body.bg-pattern {
     right: 0px;
     margin: auto;
   }
-  .lefts01{
+  .lefts01 {
     max-width: 180px;
     width: 100%;
   }
@@ -868,11 +872,12 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(0);
 }
 .text-sh {
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.25);
+  text-shadow: 4px 4px 4px #00000040;
 }
+
 .text-sh1 {
-  text-shadow: 0px 4px 4px #00000040 !important;
-  -webkit-text-stroke: 1px rgba(0, 0, 0, 1);
+  text-shadow: 0px 3px 3px #00000040 !important;
+  -webkit-text-stroke: 0.3px rgba(0, 0, 0, 1);
 }
 
 .hoverswap:hover {
@@ -894,5 +899,5 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   animation: tilt 1s ease-in-out infinite;
 }
 .usd-spacing {
-  letter-spacing: 0.2em;
+  letter-spacing: 0.1em;
 }

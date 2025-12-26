@@ -64,7 +64,7 @@ export default function LimitOrder({ slippage }) {
             />
           </>
         ) : (
-          <div className="rounded-lg border border-[#FF9900] bg-card px-6 py-10 text-center">
+          <div className="rounded-lg border border-[#FF9900] bg-card px-6 py-10 text-center md:max-w-[812px] mx-auto w-full">
             <h2 className="mb-2 text-lg font-semibold">
               Welcome to Limit Orders
             </h2>
