@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import { LogoService } from "../../../services/LogoService";
 
 const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
   if (!isOpen) return null;
@@ -10,29 +11,46 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="relative text-white md:p-8 p-6 rounded-2xl md:max-w-[520px] w-full clip-bg roboto"
+        className="relative text-white md:p-8 p-6 rounded-2xl md:max-w-[618px] w-full clip-bg roboto"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-bold text-white">{title}</h3>
+        {/* Header */}
+        <div className="flex justify-center items-center mb-4">
+          <h3 className="md:text-2xl text-lg font-medium text-white text-center tracking-widest md:mt-10 mt-5">
+            {title}
+          </h3>
+
           <button
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-300 tilt"
+            className="absolute md:right-10 right-7 top-14 cursor-pointer"
           >
-            <X className="tilt" />
+            <X size={30} />
           </button>
         </div>
+
+        {/* Items */}
         <div className="max-h-60 overflow-y-auto">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              onClick={() => onSelect(item)}
-              className="p-3 flex items-center hover:bg-[#FF9900]/10 rounded-lg cursor-pointer"
-            >
-              <span className="text-sm font-medium text-white">
-                {item.name}
-              </span>
-            </div>
-          ))}
+          {items.map((item) => {
+            const logo = LogoService.getChainLogo(item.id);
+
+            return (
+              <div
+                key={item.id}
+                onClick={() => onSelect(item)}
+                className="p-3.5 flex items-center gap-3 hoverclip rounded-lg cursor-pointer my-3.5"
+              >
+                {logo && (
+                  <img
+                    src={logo}
+                    alt={item.name}
+                    className="w-5 h-5 rounded-full"
+                  />
+                )}
+                <span className="font-medium text-white text-xs">
+                  {item.name}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>

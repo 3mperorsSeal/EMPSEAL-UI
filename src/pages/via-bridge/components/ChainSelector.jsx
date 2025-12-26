@@ -15,9 +15,9 @@ const ChainSelector = ({ chain, onClick }) => {
           {chain.name}
         </span>
       </div>
-      <span className="md:text-xs text-[10px] text-black">
+      {/* <span className="md:text-xs text-[10px] text-black">
         <ChevronDown size={16} />
-      </span>
+      </span> */}
     </button>
   );
 };

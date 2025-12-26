@@ -538,7 +538,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
     if (conversionRate && !isNaN(conversionRate)) {
       const valueInUSD = (
         parseFloat(amountIn || 0) * parseFloat(conversionRate)
-      ).toFixed(6);
+      ).toFixed(2);
       setUsdValue(valueInUSD);
       setUsdValueTokenA(valueInUSD);
     } else {
@@ -550,7 +550,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
     if (conversionRateTokenB && !isNaN(conversionRateTokenB)) {
       const valueInUSD = (
         parseFloat(amountOut || 0) * parseFloat(conversionRateTokenB)
-      ).toFixed(6);
+      ).toFixed(2);
       setUsdValueTokenB(valueInUSD);
     } else {
       console.error(
@@ -1048,7 +1048,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
                       <div className="flex gap-2 items-center mt-7">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-3 gap-1 items-center bg-black border border-white rounded-lg md:px-6 px-4 md:py-3 py-4 margin_left">
+                        <div className="flex md:gap-3 gap-1 items-center bg-black border border-white rounded-lg md:px-6 px-4 md:py-[18px] py-4 margin_left">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(true);
@@ -1151,7 +1151,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className="cursor-pointer mx-auto my-4 md:pt-7 pt-[44px] md:w-[70px] w-12"
+                className="cursor-pointer mx-auto my-4 md:pt-7 relative top-[-8px] pt-[44px] md:w-[70px] w-12"
                 onClick={() => {
                   const _tokenA = selectedTokenA;
                   const _tokenB = selectedTokenB;
@@ -1198,7 +1198,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
                       <div className="flex gap-2 items-center md:mt-4 mt-8">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-3 gap-1 items-center bg-[#FFE6C0] border border-white rounded-lg md:px-6 px-4 md:py-3 py-4 margin_left">
+                        <div className="flex md:gap-3 gap-1 items-center bg-[#FFE6C0] border border-white rounded-lg md:px-6 px-4 md:py-[18px] py-4 margin_left">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(false);
@@ -1240,10 +1240,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         <button
                           key={value}
                           type="button"
-                          className={` py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
+                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
             ${selectedPercentage === value
                               ? " text-white bg-black"
-                              : "bg-[#FF9900] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                              : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
                             }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
@@ -1324,7 +1324,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-28 mt-11 xl:pt-0 ${order
+                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${order
                   ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
                   : "pt-0 top-0"
                   }`}
@@ -1332,7 +1332,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`w-full button-trans mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all ${isInsufficientBalance()
+                  className={`md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all ${isInsufficientBalance()
                     ? "opacity-50 cursor-not-allowed"
                     : " hover:text-black hover:bg-transparent"
                     } font-orbitron text-black lg:text-3xl text-2xl font-black`}
@@ -1342,7 +1342,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     src={Swapbutton}
                     alt="Swap"
                   />
-                  <span className="ps-7">{getButtonText()}</span>
+                  <span>{getButtonText()}</span>
                 </button>
               </div>
             </div>

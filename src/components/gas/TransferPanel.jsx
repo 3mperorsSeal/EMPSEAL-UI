@@ -107,7 +107,7 @@ const TransferPanel = () => {
   };
 
   const expectedAmountInWei = quoteData?.quotes?.[0]?.expected ?? "0";
-  let formattedExpectedAmount = "0.0000";
+  let formattedExpectedAmount = "0.00";
   if (BigInt(expectedAmountInWei) > 0) {
     const expectedAmountInEth = formatEther(BigInt(expectedAmountInWei));
     formattedExpectedAmount = parseFloat(expectedAmountInEth).toFixed(6);
@@ -191,9 +191,9 @@ const TransferPanel = () => {
         <div className="relative h-[200px] flex justify-center items-center md:max-w-[730px] w-full py-4 mt-2 mx-auto">
           <div className="flex md:max-w-[730px] w-full py-4 mt-2 relative">
             <div className="flex w-full justify-between rounded-2xl py-4 scales-b scales-top-1 ">
-              <img className="bg-sell" src={Sellbox} alt="sellbox" />
-              <div className="flex justify-between gap-3 items-center md:pl-8 pl-4">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-35px] top-[-40px]">
+              <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
+              <div className="flex justify-between gap-3 items-center md:pl-6 pl-4">
+                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-45px] top-[-50px]">
                   From
                 </h2>
                 <div className="text-center absolute top-[-30px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
@@ -210,7 +210,7 @@ const TransferPanel = () => {
                     ) : balanceData ? (
                       <span>
                         {parseFloat(balanceData.formatted).toFixed(6)}{" "}
-                        {balanceData.symbol}
+                        {/* {balanceData.symbol} */}
                       </span>
                     ) : null}
                   </span>
@@ -227,10 +227,11 @@ const TransferPanel = () => {
                         disabled={isBalanceLoading || !balance}
                         onClick={() => handlePercentageChange(value)}
                         className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-        ${selectedPercentage === value
-                            ? "bg-black text-white"
-                            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                          }`}
+        ${
+          selectedPercentage === value
+            ? "bg-black text-white"
+            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+        }`}
                       >
                         {value}%
                       </button>
@@ -330,7 +331,7 @@ const TransferPanel = () => {
                 </div>
               </div>
             </div>
-            <div className="absolute md:left-[-40px] left-[-10px] top-20 z-[9]">
+            <div className="absolute md:left-[-40px] left-[-10px] top-[7rem] z-[9]">
               <ChainSelector
                 onSwitch={(fn) => {
                   switchRef.current = fn;
@@ -342,7 +343,7 @@ const TransferPanel = () => {
         {/*  */}
         <button
           onClick={() => switchRef.current && switchRef.current()}
-          className="cursor-pointer md:mt-20 md:mb-8 mt-16 mb-8 flex scales-b scales-top-2 mx-auto md:w-[70px] w-12"
+          className="cursor-pointer md:mt-12 md:mb-2 mt-16 mb-8 flex scales-b scales-top-2 mx-auto md:w-[70px] w-12"
         >
           <img
             src={UpDownAr}
@@ -351,13 +352,13 @@ const TransferPanel = () => {
           />
         </button>
         {/*  */}
-        <div className="relative h-[200px] flex justify-center items-center text-white scales-b scales-top">
-          <img className="bg-sell" src={Buybox} alt="Buybox" />
+        <div className="md:max-w-[730px] w-full mx-auto relative h-[200px] flex justify-center items-center text-white scales-b scales-top">
+          <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
 
           <div className="md:max-w-[730px] w-full px-4 py-4 mt-2">
             <div className="flex w-full justify-between rounded-2xl py-4 px-1">
               <div className="flex justify-between gap-3 items-center lg:px-2">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-[#FF9900] relative top-[-20px]">
+                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-[#FF9900] relative lg:top-[-10px] top-[-20px]">
                   You will receive
                 </h2>
                 {/*  */}
@@ -372,10 +373,11 @@ const TransferPanel = () => {
                   disabled={isBalanceLoading || !balance}
                   onClick={() => handlePercentageChange(value)}
                   className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-        ${selectedPercentage === value
-                      ? "bg-black text-white"
-                      : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                    }`}
+        ${
+          selectedPercentage === value
+            ? "bg-black text-white"
+            : "bg-[#FF9900] text-black hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
+        }`}
                 >
                   {value}%
                 </button>
@@ -419,20 +421,20 @@ const TransferPanel = () => {
             })()}
           </div>
         </div>
-        <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
+        <div className="md:max-w-[710px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
           <div className="md:my-14 my-7 relative">
             <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
               Recipient Address
             </label>
-            <div className="relative w-full h-[120px]">
-              <img className="bg-rb" src={Rbox} alt="Rbox" />
+            <div className="relative w-full py-9 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg">
+              {/* <img className="bg-rb" src={Rbox} alt="Rbox" /> */}
               <input
                 type="text"
                 id="recipient"
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 placeholder="0x..."
-                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full pl-10 pr-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
+                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full px-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
               />
             </div>
           </div>
@@ -441,7 +443,7 @@ const TransferPanel = () => {
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}
               type="button"
-              className="w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
+              className="md:max-w-[432px] mx-auto w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
             >
               <img
                 className="absolute swap-button1 top-0 bottom-0 my-auto"
@@ -453,8 +455,8 @@ const TransferPanel = () => {
                 {isSending
                   ? "Check Wallet..."
                   : isConfirming
-                    ? "Bridging..."
-                    : "Bridge"}
+                  ? "Bridging..."
+                  : "Bridge"}
               </span>
             </button>
           </div>

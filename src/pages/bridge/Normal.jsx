@@ -167,7 +167,7 @@ const Normal = () => {
   return (
     <>
       <div className="py-3 relative lg:pt-0 pt-28">
-        <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap mt-6 px-3 mb-8">
+        <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap px-3 mb-2">
           <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
             Seamless
           </h1>
@@ -207,7 +207,7 @@ const Normal = () => {
             </Link>
           </div>
         </div>
-        <div className="md:max-w-[818px] mx-auto w-full md:px-4 px-2  justify-center xl:gap-4 gap-4 items-start 2xl:pt-10 py-2">
+        <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-3 justify-center xl:gap-4 gap-4 items-start py-2">
           <div className=" w-full">
             {/* <div className="md:hidden block">
               {activeTab === "cross" ? <Wallet /> : <div></div>}

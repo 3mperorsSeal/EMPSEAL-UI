@@ -733,7 +733,7 @@ const Emp = ({
   return (
     <>
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative ${
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 md:mt-0 mt-4 relative ${
           order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-[350px]"
         }`}
       >
@@ -776,7 +776,7 @@ const Emp = ({
                     setSelectedPercentage("");
                     setAmountIn("");
                   }}
-                  className="flex justify-center gap-4 items-center cursor-pointer md:h-[56px] h-12 md:w-[170px] w-[120px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative"
+                  className="flex justify-center gap-4 items-center cursor-pointer md:h-[66px] h-12 md:w-[170px] w-[120px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative"
                 >
                   <div
                     className={`relatve flex gap-2 items-center ${
@@ -826,7 +826,7 @@ const Emp = ({
                     />
                     {/* {selectedChainA.image && ( */}
                     <div
-                      className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                      className={`relative bg-black border md:h-[66px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
                         selectedChainA.image ? "left-40-box " : "left-40-box"
                       }`}
                     >
@@ -979,7 +979,7 @@ const Emp = ({
                         setIsSelectingTokenA(false);
                         setTokenVisible(true);
                       }}
-                      className="flex justify-center gap-4 items-center cursor-pointer md:h-[56px] h-12 md:w-[170px] w-[120px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative"
+                      className="flex justify-center gap-4 items-center cursor-pointer md:h-[66px] h-12 md:w-[170px] w-[120px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative"
                     >
                       <div
                         className={` flex gap-2 items-center ${
@@ -1019,7 +1019,7 @@ const Emp = ({
                         />
                         {/* {selectedChainB.image && ( */}
                         <div
-                          className={`relative bg-black border md:h-[55px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
+                          className={`relative bg-black border md:h-[66px] md:w-[55px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[8.1rem] !left-[6rem] ${
                             selectedChainB.image
                               ? "left-40-box "
                               : "left-40-box"
@@ -1236,7 +1236,7 @@ const Emp = ({
         )}
       </div>
       {/* Routing  */}
-      <div className="mt-3 lg:fixed absolute md:left-0 lefts 2xl:bottom-[31%] lg:bottom-[31%] md:bottom-[16%] bottom-[275px] z-40">
+      {/* <div className="mt-3 lg:fixed absolute md:left-0 lefts 2xl:bottom-[31%] lg:bottom-[31%] md:bottom-[16%] bottom-[275px] z-40">
         <div className="relative">
           <div className="w-full border-3 border-white rounded-xl-view py-4 2xl:px-7 lg:px-5 px-4 bg-black min-w-[240px] scale81 relative max-w-[302px] mxauto round">
             <div className="flex justify-center gap-2 md:flex-nowrap flex-wrap absolute left-0 right-0 -top-7">
@@ -1271,7 +1271,7 @@ const Emp = ({
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
       {/* Routing  */}
       <TradeDataCard
         amountIn={amountIn}

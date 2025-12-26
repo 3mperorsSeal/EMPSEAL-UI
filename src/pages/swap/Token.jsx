@@ -7,7 +7,7 @@ import { useBalance } from "wagmi";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import Web3 from "web3";
 
-const TokenListItem = ({ token, walletAddress, onClick,conversionRate }) => {
+const TokenListItem = ({ token, walletAddress, onClick }) => {
   const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
     address: walletAddress,
     token:
@@ -20,14 +20,6 @@ const TokenListItem = ({ token, walletAddress, onClick,conversionRate }) => {
   const formattedBalance = tokenBalance
     ? parseFloat(tokenBalance.formatted).toFixed(4)
     : "0.0000";
-
-  // Calculate USD value
-  const usdValue =
-    conversionRate && tokenBalance
-      ? (
-          parseFloat(tokenBalance.formatted) * parseFloat(conversionRate)
-        ).toFixed(2)
-      : "0.00";
 
   return (
     <div
@@ -58,8 +50,8 @@ const TokenListItem = ({ token, walletAddress, onClick,conversionRate }) => {
         <div className="text-[#FF9900] text-lg font-bold roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
         </div>
-        <div className="text-white text-xs roboto">
-          {conversionRate ? `$${usdValue}` : "Fetching Rate..."}
+         <div className="text-white text-xs roboto mt-1">
+          Fetching price...
         </div>
       </div>
     </div>

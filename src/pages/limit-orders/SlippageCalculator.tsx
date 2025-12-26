@@ -120,11 +120,11 @@ export function SlippageCalculator({
           {[0.5, 1.0, 2.0].map((preset) => (
             <button
               key={preset}
-              className={`px-4 py-1.5 rounded justify-center md:w-[100px] w-20 relative md:text-base text-sm text-white`}
+              className={`px-4 py-1.5 justify-center md:w-[100px] w-20 relative md:text-base text-sm text-white border border-[#ff9900] rounded-xl`}
               onClick={() => handleSelect(preset)}
             >
               {preset}%
-              <img src={BG1} alt="BG1" className="absolute top-0 left-0" />
+              {/* <img src={BG1} alt="BG1" className="absolute top-0 left-0" /> */}
             </button>
           ))}
           <input
@@ -136,11 +136,11 @@ export function SlippageCalculator({
             step="0.1"
             min="0"
             max="5"
-            className="md:w-[120px] w-20 md:h-11 h-9 md:mt-2 mt-1 text-center font-bold text-sm text-white focus:outline-none bg-[#382B19] clip-path-polygon"
-            style={{
-              clipPath:
-                "polygon(0px 0px, 90% 0px, 100% 20%, 100% 100%, 12% 100%, 0px 65%)",
-            }}
+            className="md:w-[120px] w-20 md:h-9 h-9 text-center font-bold text-sm text-white focus:outline-none bg-[#382B19] border border-[#ff9900] rounded-xl"
+            // style={{
+            //   clipPath:
+            //     "polygon(0px 0px, 90% 0px, 100% 20%, 100% 100%, 12% 100%, 0px 65%)",
+            // }}
           />
           <span className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
             %

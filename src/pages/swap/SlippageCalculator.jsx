@@ -180,14 +180,14 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
             <button
               key={index}
               onClick={() => handleSlippageSelect(option)}
-              className={`px-4 py-1.5 rounded justify-center md:w-[100px] w-20 relative md:text-base text-sm ${
+              className={`px-4 py-1.5 justify-center md:w-[100px] w-20 relative md:text-base text-sm border border-[#ff9900] rounded-xl ${
                 slippage === option
                   ? "bg- text-white"
                   : "bg-transparent text-white"
               } ${error ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={!!error}
             >
-              <img src={BG1} alt="BG1" className="absolute top-0 left-0" />
+              {/* <img src={BG1} alt="BG1" className="absolute top-0 left-0" /> */}
               {option}%
             </button>
           ))}
@@ -197,13 +197,13 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
             inputMode="decimal"
             value={customSlippage}
             onChange={handleCustomSlippageChange}
-            className={`md:w-[120px] w-20 md:h-11 h-9 md:mt-2 mt-1 text-center font-bold text-sm text-white focus:outline-none
+            className={`md:w-[120px] w-20 md:h-9 h-9 text-center font-bold text-sm text-white focus:outline-none bg-[#382B19] border border-[#ff9900] rounded-xl
       ${error ? "opacity-50 cursor-not-allowed" : ""}`}
-            style={{
-              background: "#382B19",
-              clipPath:
-                "polygon(0 0, 90% 0, 100% 20%, 100% 100%, 12% 100%, 0 65%)",
-            }}
+            // style={{
+            //   background: "#382B19",
+            //   clipPath:
+            //     "polygon(0 0, 90% 0, 100% 20%, 100% 100%, 12% 100%, 0 65%)",
+            // }}
             placeholder="%"
             disabled={!!error}
           />
