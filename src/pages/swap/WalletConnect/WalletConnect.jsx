@@ -69,14 +69,14 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
           return (
             <>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
                 Connect
               </button>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -178,7 +178,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
         if (chain.unsupported && !allowUnsupported) {
           return (
             <button
-              className="wallet-bg-bridge1 text-[#FF494A] font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
@@ -197,7 +197,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowPopup(true)}
                 type="button"
               >
@@ -206,7 +206,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
             </div>
 
             <button
-              className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >

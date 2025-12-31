@@ -64,14 +64,14 @@ export default function WalletConnect({ onChainChange }) {
           return (
             <>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
                 Connect
               </button>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -173,7 +173,7 @@ export default function WalletConnect({ onChainChange }) {
         if (chain.unsupported) {
           return (
             <button
-              className="wallet-bg-bridge1 text-[#FF494A] font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
@@ -191,7 +191,7 @@ export default function WalletConnect({ onChainChange }) {
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowPopup(true)}
                 type="button"
               >
@@ -200,7 +200,7 @@ export default function WalletConnect({ onChainChange }) {
             </div>
 
             <button
-              className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >

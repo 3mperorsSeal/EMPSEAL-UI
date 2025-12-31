@@ -11,7 +11,7 @@ const ChainSelector = ({ chain, onClick }) => {
     >
       <div className="flex items-center justify-center gap-2">
         {logo && <img src={logo} alt={chain.name} className="w-5 h-5 rounded-full" />}
-        <span className="md:text-xs text-[10px] font-medium text-black">
+        <span className="md:text-xl text-[10px] font-medium">
           {chain.name}
         </span>
       </div>

@@ -104,14 +104,14 @@ const Wallet = () => {
         </Link>
       </div>
     </div> */}
-      <div className="flex justify-center gap-4 flex-col wallet_bg z-10 md:mt-0 mt-3 absolute wallet-bg-bridge lefts1">
+      <div className="flex justify-center lg:gap-2 gap-2 flex-col wallet_bg md:z-10 z-1 md:mt-0 mt-3 absolute wallet-bg-bridge lefts1">
         <WalletConnect
           icon={<img src={WalletImg} alt="Wallet Icon" />}
           onChainChange={handleChainChange}
         />
         <Link to="/">
-          <button className="flex items-center justify-center bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-extrabold w-full font-orbitron">
-            <span className="ps-3">Home Page</span>
+          <button className="flex items-center justify-center bg-[#FF9900] hover:opacity-80 transition-all text-black text-sm py-2 px-6 rounded-md font-extrabold w-full font-orbitron">
+            <span>Home</span>
           </button>
         </Link>
       </div>

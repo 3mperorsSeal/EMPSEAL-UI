@@ -643,7 +643,7 @@ const Amount = ({
                           <button
               onClick={handleClick}
               disabled={disabled || isLoading}
-              className="w-full rounded-xl w-pro  bg-search-padd py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center hover:bg-[#FF9900] border border-[#FF9900] hover:text-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+              className="w-full rounded-xl w-pro bg-search-padd py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center hover:bg-[#FF9900] border border-[#FF9900] hover:text-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
             >
               {isLoading ? (
                 <div className="flex items-center gap-2">

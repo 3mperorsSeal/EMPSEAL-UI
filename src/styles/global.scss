@@ -283,7 +283,8 @@ body {
   height: 113px;
 }
 .margin_left {
-  margin-left: -86px;
+  margin-left: -140px;
+  // margin-left: -86px;
 }
 .scales81 {
   // top: -110px!important;
@@ -309,7 +310,7 @@ body {
 
 .wallet-bg-bridge button {
   position: relative;
-  background: #f7931a;
+  background: #ff9900;
   color: #000;
   font-family: "Orbitron", sans-serif;
   font-size: 16px;
@@ -318,15 +319,16 @@ body {
   padding: 14px 32px;
   cursor: pointer;
   letter-spacing: 0.5px;
-  clip-path: polygon(5% 0%, 94% 0%, 100% 22%, 100% 100%, 14% 100%, 5% 70%);
+  // clip-path: polygon(5% 0%, 94% 0%, 100% 22%, 100% 100%, 14% 100%, 5% 70%);
   transition: background 0.25s ease;
+  border-radius: 10px !important;
 }
 .wallet-bg-bridge .text-3xl {
   font-size: 28px;
 }
 .futuristic-btn {
   position: relative;
-  background: #f7931a;
+  background: #ff9900;
   color: #000;
   font-family: "Orbitron", sans-serif;
   font-size: 13px;
@@ -450,41 +452,46 @@ body.bg-pattern {
 }
 .bg-search {
   position: relative;
-  background: #382b19;
+  // background: #382b19;
   font-family: "Orbitron", sans-serif;
   font-size: 16px;
-  border-radius: 0 !important;
+  // border-radius: 0 !important;
   border: none;
   padding: 14px 10px 14px 32px;
   cursor: pointer;
   letter-spacing: 0.5px;
-  clip-path: polygon(0% 0%, 97% 0%, 100% 22%, 100% 100%, 27% 217%, 0% 72%);
+  // clip-path: polygon(0% 0%, 97% 0%, 100% 22%, 100% 100%, 27% 217%, 0% 72%);
   transition: background 0.25s ease;
+  border: 1px solid #ff9900;
+  border-radius: 16px !important;
   width: 100%;
 }
 .w-auto-search {
   width: auto !important;
 }
 .bg-search-padd {
-  padding-left: 46px;
+  padding-left: 26px;
 }
 .w-pro {
   width: 105%;
   margin-left: -29px;
 }
 .bridge-button button {
-  clip-path: polygon(5% 0%, 95% 0%, 100% 22%, 100% 100%, 18% 120%, 5% 74%);
+  // clip-path: polygon(5% 0%, 95% 0%, 100% 22%, 100% 100%, 18% 120%, 5% 74%);
   position: relative;
-  background: #f7931a;
+  background: #ff9900;
   color: #000;
   font-family: "Orbitron", sans-serif;
   font-size: 16px;
-  border-radius: 0 !important;
+  border-radius: 16 !important;
   border: none;
   padding: 14px 32px;
   cursor: pointer;
   letter-spacing: 0.5px;
   transition: background 0.25s ease;
+}
+.bridge-button:hover button {
+  opacity: 0.8;
 }
 .s_chain {
   background: linear-gradient(
@@ -648,11 +655,13 @@ body.bg-pattern {
     top: -180px !important;
   }
 }
-@media (min-width: 1024px) and (max-width: 1536px) {
+@media (min-width: 768px) and (max-width: 1536px) {
   .wallet-bg-bridge button {
     font-size: 14px !important;
     padding: 12px 20px !important;
   }
+}
+@media (min-width: 1024px) and (max-width: 1536px) {
   .scales8 {
     scale: 0.8;
     position: relative;
@@ -705,6 +714,11 @@ body.bg-pattern {
     scale: 0.7 !important;
   }
 }
+@media (min-width: 768px) and (max-width: 900px) {
+  .margin_left {
+    margin-left: -95px;
+  }
+}
 @media (min-width: 768px) and (max-width: 1024px) {
   .mdlg {
     top: 50% !important;
@@ -712,7 +726,7 @@ body.bg-pattern {
 }
 @media (max-width: 1300px) {
   .wallet-bg-bridge {
-    top: -65px;
+    top: -80px;
     right: 20px;
   }
   // .wallet-bg-bridge01 {
@@ -720,7 +734,7 @@ body.bg-pattern {
   // }
 }
 
-@media (max-width: 1024px) {
+@media (max-width: 768px) {
   .lefts11 {
     left: 0px;
     right: 0px;
@@ -737,7 +751,7 @@ body.bg-pattern {
 //     top: 80px!important;
 //   }
 // }
-@media (max-width: 992px) {
+@media (max-width: 768px) {
   .wallet-bg-bridge {
     top: -80px;
     right: 5px;
@@ -762,7 +776,7 @@ body.bg-pattern {
     top: 0px;
     left: 0px;
     right: 0px;
-    width: 180px;
+    width: 145px;
     margin: auto;
   }
   .lefts {
@@ -900,4 +914,71 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 }
 .usd-spacing {
   letter-spacing: 0.1em;
+}
+.bg_swap_box {
+  background: #ff9900;
+  border-radius: 50px;
+  border-width: 2.5px;
+  border: 2.5px solid #fdfdfd;
+  padding-top: 18px;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-bottom: 32px;
+}
+.bg_swap_box_black {
+  background: black;
+  border-radius: 50px;
+  border-width: 2.5px;
+  border: 2.5px solid #ff9900;
+  padding-top: 18px;
+  padding-left: 32px;
+  padding-right: 32px;
+  padding-bottom: 32px;
+}
+.mtb {
+  margin-top: 12px;
+  margin-bottom: 12px;
+}
+.top45 {
+  top: 4.5rem;
+}
+@media (max-width: 1536px) {
+  .mtb {
+    margin-top: 40px;
+    margin-bottom: 40px;
+  }
+  .top45 {
+    top: 3rem;
+  }
+}
+@media (max-width: 1024px) {
+  .top45 {
+    top: 4rem;
+  }
+}
+@media (max-width: 768px) {
+  .mtb {
+    margin-top: 20px;
+    margin-bottom: 20px;
+  }
+  .bg_swap_box {
+    background: #ff9900;
+    border-radius: 28px;
+    border-width: 2.5px;
+    border: 2.5px solid #fdfdfd;
+    padding-top: 12px;
+    padding-left: 12px;
+    padding-right: 16px;
+    padding-bottom: 20px;
+  }
+  .bg_swap_box_black {
+    background: black;
+    border-radius: 28px;
+    border-width: 2.5px;
+    border: 2.5px solid #ff9900;
+    padding-top: 12px;
+    padding-left: 12px;
+    padding-right: 16px;
+    padding-bottom: 20px;
+  }
 }

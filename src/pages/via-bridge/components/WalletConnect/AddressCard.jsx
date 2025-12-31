@@ -55,25 +55,25 @@ export default function AddressCard({
       <p className="text-2xl font-bold roboto">{shortAddress}</p>
       <p className="text-gray-400 font-medium text-xl mb-5">0 PLS</p>
       <div
-        className="relative text-black px-6 py-2 rounded-md w-full font-semibold text-2xl font-orbitron text-center cursor-pointer hover:opacity-90 transition-all"
+        className="relative text-black bg-[#FF9900] rounded-2xl px-6 py-3 w-full font-semibold text-2xl font-orbitron text-center cursor-pointer hover:opacity-90 transition-all"
         onClick={onCopy}
       >
-        <img
+        {/* <img
           src={Copy}
           alt="Copy"
           className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto z-0"
-        />
+        /> */}
         <span className="relative z-10">Copy Address</span>
       </div>
       <div
-        className="mt-5 relative text-[#FF9900] bg-transparent px-6 py-2 rounded-md w-full font-semibold text-2xl text-center font-orbitron cursor-pointer hover:opacity-80 transition-all"
+        className="mt-3 relative text-[#FF9900] border border-[#FF9900] bg-transparent px-6 py-3 rounded-2xl w-full font-semibold text-2xl text-center font-orbitron cursor-pointer hover:opacity-80 transition-all"
         onClick={onDisconnect}
       >
-        <img
+        {/* <img
           src={Dis}
           alt="Disconnect"
           className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto"
-        />
+        /> */}
         <span className="relative z-10">Disconnect</span>
       </div>
     </div>

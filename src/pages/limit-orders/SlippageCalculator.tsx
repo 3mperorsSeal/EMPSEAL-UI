@@ -152,12 +152,13 @@ export function SlippageCalculator({
           </p>
         )}
         <div className="flex justify-center items-center mt-8 flex-col gap-2">
+          {/* clip-path-polygon */}
           <button
-            className="relative w-full md:h-16 h-12 flex items-center justify-center font-roboto font-semibold md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron bg-[#FF9900] text-black border-2 border-[#FF9900] clip-path-polygon"
-            style={{
-              clipPath:
-                "polygon(0px 0px, 95% 0px, 100% 30%, 100% 100%, 6% 100%, 0px 60%)",
-            }}
+            className="relative w-full md:h-16 h-12 flex items-center justify-center font-roboto font-semibold md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron bg-[#FF9900] text-black border-2 border-[#FF9900] rounded-2xl"
+            // style={{
+            //   clipPath:
+            //     "polygon(0px 0px, 95% 0px, 100% 30%, 100% 100%, 6% 100%, 0px 60%)",
+            // }}
             onClick={handleReset}
           >
             Reset Slippage

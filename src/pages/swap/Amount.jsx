@@ -92,7 +92,7 @@ const Amount = ({
               />
             </svg>
             <div className="flex items-center justify-center">
-              <div className="text-white text-lg font-bold roboto leading-7">
+              <div className="text-white text-2xl font-bold roboto leading-7">
                 Select Amount
               </div>
             </div>
@@ -100,7 +100,7 @@ const Amount = ({
               <div className="text-white mb-2 text-sm font-normal roboto">
                 You Pay
               </div>
-              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center -ml-6 w-auto-search bg-search bg-search-padd">
+              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                 {formatNumber(amountIn)} {tokenA?.ticker}
                 <img src={tokenA?.image} alt="tokenA" className="w-4 h-4" />
               </div>
@@ -109,7 +109,7 @@ const Amount = ({
               <div className="text-white text-sm font-normal roboto mb-2">
                 You Receive
               </div>
-              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center -ml-6 w-auto-search bg-search bg-search-padd">
+              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                 {formatNumber(amountOut)} {tokenB?.ticker}
                 <img src={tokenB?.image} alt="tokenB" className="w-4 h-4" />
               </div>

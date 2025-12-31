@@ -188,15 +188,15 @@ const TransferPanel = () => {
   return (
     <>
       <div className="w-full md;px-0 px-4">
-        <div className="relative h-[200px] flex justify-center items-center md:max-w-[730px] w-full py-4 mt-2 mx-auto">
-          <div className="flex md:max-w-[730px] w-full py-4 mt-2 relative">
-            <div className="flex w-full justify-between rounded-2xl py-4 scales-b scales-top-1 ">
-              <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
-              <div className="flex justify-between gap-3 items-center md:pl-6 pl-4">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-black relative md:top-[-45px] top-[-50px]">
+        <div className="relative flex justify-center items-center md:max-w-[730px] w-full mx-auto">
+          <div className="flex md:max-w-[730px] w-full  relative">
+            <div className="flex w-full justify-between rounded-2xl py-4 scales-b scales-top-1 bg_swap_box">
+              {/* <img className="bg-sell w-full" src={Sellbox} alt="sellbox" /> */}
+              <div className="flex justify-between gap-3 items-center">
+                <h2 className="font-orbitron md:text-2xl text-xs font-semibold leading-normal relative 2xl:top-[-52px] top-[-55px]">
                   From
                 </h2>
-                <div className="text-center absolute top-[-30px] right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
+                <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
                   <span className="font-extrabold font-orbitron leading-normal">
                     BAL
                   </span>
@@ -217,7 +217,7 @@ const TransferPanel = () => {
                 </div>
               </div>
               <div>
-                <div className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full md:top-12 md:mt-0 mt-10">
+                <div className="relative flex-flex-col justify-end items-end w-full md:top-8 md:mt-0 mt-10">
                   <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
                     {[25, 50, 75, 100].map((value) => (
                       <button
@@ -226,11 +226,11 @@ const TransferPanel = () => {
                         // disabled={isLoading}
                         disabled={isBalanceLoading || !balance}
                         onClick={() => handlePercentageChange(value)}
-                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
         ${
           selectedPercentage === value
             ? "bg-black text-white"
-            : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+            : "bg-black text-white hover:border-black hover:bg-[#FF9900] hover:text-black"
         }`}
                       >
                         {value}%
@@ -238,17 +238,37 @@ const TransferPanel = () => {
                     ))}
                   </div>
                   {(() => {
+                    //  const inputLength =
+                    //     formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
+                    //   const defaultFontSize =
+                    //     window.innerWidth >= 768 ? 48 : 32;
+                    //   // const dynamicFontSize = Math.max(
+                    //   //   12,
+                    //   //   defaultFontSize - inputLength * 1.5
+                    //   // );
+                    //   const FREE_DIGITS = 10;
+                    //   const SHRINK_RATE = 3;
+
+                    //   const excessDigits = Math.max(
+                    //     0,
+                    //     inputLength - FREE_DIGITS
+                    //   );
+
+                    //   const dynamicFontSize = Math.max(
+                    //     12,
+                    //     defaultFontSize - excessDigits * SHRINK_RATE
+                    //   );
                     const formattedValue = formatNumber(
                       amount?.toString() || ""
                     );
 
-                    const defaultFontSize = 48;
-                    const minFontSize = 32;
+                    // const defaultFontSize = 48;
+                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                    // const minFontSize = 32;
 
                     const FREE_DIGITS = 7;
                     const SHRINK_RATE = 3;
 
-                    // count digits only (ignore commas & decimals)
                     const outputLength = formattedValue.replace(
                       /\D/g,
                       ""
@@ -259,8 +279,12 @@ const TransferPanel = () => {
                       outputLength - FREE_DIGITS
                     );
 
+                    // const dynamicFontSize = Math.max(
+                    //   minFontSize,
+                    //   defaultFontSize - excessDigits * SHRINK_RATE
+                    // );
                     const dynamicFontSize = Math.max(
-                      minFontSize,
+                      12,
                       defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
@@ -280,50 +304,15 @@ const TransferPanel = () => {
                       </>
                     );
                   })()}
-                  {/* {(() => {
-                    const inputLength =
-                      amount?.toString().replace(/\D/g, "").length || 0;
-
-                    const fontSizeClass =
-                      inputLength > 12
-                        ? "md:text-[24px] text-xl !text-[#000]"
-                        : inputLength > 8
-                        ? "md:text-[32px] text-2xl !text-[#000]"
-                        : "md:text-[40px] text-2xl !text-[#000]";
-
-                    return (
-                      <>
-                        <input
-                          id="amount"
-                          type="text"
-                          value={amount}
-                          onChange={handleAmountChange}
-                          placeholder="0.1"
-                          className={`w-full text-[#000] py-2 font-bold text-end leading-7 outline-none border-none bg-transparent px-1 font-orbitron placeholder-black transition-all duration-200 ease-in-out ${fontSizeClass}`}
-                          style={{
-                            fontSize: `${Math.max(
-                              12,
-                              40 - amount.toString().length * 1.5
-                            )}px`,
-                          }}
-                        />
-                      </>
-                    );
-                  })()} */}
                 </div>
                 <div
-                  // onClick={() => {
-                  //   if (!isBalanceLoading && balanceData) {
-                  //     setAmount(balanceData.formatted);
-                  //   }
-                  // }}
                   onClick={() => {
                     if (!isBalanceLoading && balanceData) {
                       setAmount(truncateToSixDecimals(balanceData.formatted));
                       setSelectedPercentage(100);
                     }
                   }}
-                  className="relative md:pr-8 pr-5 flex-flex-col justify-end items-end w-full cursor-pointer md:top-12"
+                  className="relative flex-flex-col justify-end items-end w-full cursor-pointer md:top-6 md:pb-4"
                 >
                   <p className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
                     Max Amount
@@ -331,7 +320,7 @@ const TransferPanel = () => {
                 </div>
               </div>
             </div>
-            <div className="absolute md:left-[-40px] left-[-10px] top-[7rem] z-[9]">
+            <div className="absolute md:left-[-40px] left-[-10px] top45 z-[9]">
               <ChainSelector
                 onSwitch={(fn) => {
                   switchRef.current = fn;
@@ -343,7 +332,7 @@ const TransferPanel = () => {
         {/*  */}
         <button
           onClick={() => switchRef.current && switchRef.current()}
-          className="cursor-pointer md:mt-12 md:mb-2 mt-16 mb-8 flex scales-b scales-top-2 mx-auto md:w-[70px] w-12"
+          className="cursor-pointer mtb mt-6 mb-8 flex scales-b scales-top-2 mx-auto md:w-[70px] w-12"
         >
           <img
             src={UpDownAr}
@@ -352,13 +341,12 @@ const TransferPanel = () => {
           />
         </button>
         {/*  */}
-        <div className="md:max-w-[730px] w-full mx-auto relative h-[200px] flex justify-center items-center text-white scales-b scales-top">
-          <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
-
-          <div className="md:max-w-[730px] w-full px-4 py-4 mt-2">
-            <div className="flex w-full justify-between rounded-2xl py-4 px-1">
-              <div className="flex justify-between gap-3 items-center lg:px-2">
-                <h2 className="font-orbitron text-dark-400 text-2xl font-semibold leading-normal text-[#FF9900] relative lg:top-[-10px] top-[-20px]">
+        <div className="md:max-w-[730px] w-full mx-auto relative flex justify-center items-center text-white scales-b scales-top bg_swap_box_black">
+          {/* <img className="bg-sell w-full" src={Buybox} alt="Buybox" /> */}
+          <div className="md:max-w-[730px] w-full">
+            <div className="flex w-full justify-between rounded-2xl">
+              <div className="flex justify-between gap-3 items-center">
+                <h2 className="font-orbitron md:text-2xl text-xs font-semibold leading-normal text-[#FF9900] relative lg:top-[-5px] top-[-5px]">
                   You will receive
                 </h2>
                 {/*  */}
@@ -372,7 +360,7 @@ const TransferPanel = () => {
                   // disabled={isLoading}
                   disabled={isBalanceLoading || !balance}
                   onClick={() => handlePercentageChange(value)}
-                  className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                  className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
         ${
           selectedPercentage === value
             ? "bg-black text-white"
@@ -386,8 +374,10 @@ const TransferPanel = () => {
             {(() => {
               const value = formattedExpectedAmount || "";
 
-              const defaultFontSize = 48;
-              const minFontSize = 32;
+              // const defaultFontSize = 48;
+              const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+
+              // const minFontSize = 32;
 
               const FREE_DIGITS = 7;
               const SHRINK_RATE = 3;
@@ -396,23 +386,30 @@ const TransferPanel = () => {
               const excessDigits = Math.max(0, outputLength - FREE_DIGITS);
 
               const dynamicFontSize = Math.max(
-                minFontSize,
+                12,
                 defaultFontSize - excessDigits * SHRINK_RATE
               );
+              // const dynamicFontSize = Math.max(
+              //   minFontSize,
+              //   defaultFontSize - excessDigits * SHRINK_RATE
+              // );
 
               return (
-                <div className="w-full py-2 text-end px-1 font-orbitron transition-all duration-200 ">
+                <div className="w-full py-2 text-end px-1 text-sh rigamesh transition-all duration-200 ">
                   <span
-                    className={`font-bold text-white`}
+                    className={`text-white`}
                     style={{
                       fontSize: `${dynamicFontSize}px`,
                     }}
                   >
-                    {isQuoteLoading ? "Loading quote..." : value}
+                    <span className="">
+                      {" "}
+                      {isQuoteLoading ? "Loading" : value}
+                    </span>
                   </span>
 
                   {quoteError && (
-                    <p className="text-[#FF9900] text-xs mt-2">
+                    <p className="text-[#FF9900] text-xs mt-2 absolute right-4">
                       Could not fetch quote. Please check inputs.
                     </p>
                   )}
@@ -423,10 +420,10 @@ const TransferPanel = () => {
         </div>
         <div className="md:max-w-[710px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
           <div className="md:my-14 my-7 relative">
-            <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
+            <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
               Recipient Address
             </label>
-            <div className="relative w-full py-9 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg">
+            <div className="relative w-full border border-[#FF9900] py-10 rounded-[40px]">
               {/* <img className="bg-rb" src={Rbox} alt="Rbox" /> */}
               <input
                 type="text"
@@ -434,8 +431,13 @@ const TransferPanel = () => {
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 placeholder="0x..."
-                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full px-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
+                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-10 pl-4 pr-32 py-12 bg-transparent text-white roboto md:text-xl text-sm truncate outline-none"
               />
+              <button
+                className={`!absolute !bg-transparent bg-black w-[100px] h-12 hover:opacity-70 !border !border-white top-4 right-4 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
+              >
+                Self
+              </button>
             </div>
           </div>
           <div className="md:px-1 px-4 md:pt-10 pt-5">
@@ -443,14 +445,16 @@ const TransferPanel = () => {
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}
               type="button"
-              className="md:max-w-[432px] mx-auto w-full cursor-pointer button-trans text-center h-[108px] flex justify-center items-center rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
+              className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto cursor-pointer button-trans text-center flex justify-center items-center hover:opacity-80 transition-all  group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
             >
-              <img
+              {/* <img
                 className="absolute swap-button1 top-0 bottom-0 my-auto"
                 src={Swapbutton}
                 alt="Swap"
-              />
-              <span className="h-20">
+              /> */}
+              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+
+              <span>
                 {" "}
                 {isSending
                   ? "Check Wallet..."

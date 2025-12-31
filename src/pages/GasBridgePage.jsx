@@ -19,11 +19,11 @@ export default function GasBridgePage() {
         </div> */}
         <div className="text-center mb-4 lg:mt-0 mt-36">
           <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
-            Gas Bridge
+           Gas <span className="text-white">Anywhere</span>
           </h1> 
-          <p className="text-lg text-gray-400 text-center">
+          {/* <p className="text-lg text-gray-400 text-center">
             Instantly refuel gas on any chain.
-          </p>
+          </p> */}
         </div>
       </div>
       {/* Main Bridge UI */}

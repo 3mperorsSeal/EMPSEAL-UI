@@ -5,14 +5,14 @@ const TokenSelector = ({ token, chainId, onClick }) => {
   return (
     <button
       onClick={onClick}
-      className="flex items-center justify-center gap-2 w-full bg-transparent ml-[-10px]"
+      className="flex items-center justify-center gap-2 w-full bg-transparent"
     >
       <div className="flex items-center">
         <TokenLogo
           chainId={chainId}
           tokenAddress={token.address}
           symbol={token.symbol}
-          className="w-5 h-5 mr-2"
+          className="md:w-8 md:h-8 w-5"
         />
         {/* <span className="md:text-xs text-[10px] font-medium text-white">{token.symbol}</span> */}
         {/* <ChevronDown size={16} className="text-white ml-1" /> */}

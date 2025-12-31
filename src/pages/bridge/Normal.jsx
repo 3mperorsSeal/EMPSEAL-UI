@@ -166,15 +166,15 @@ const Normal = () => {
   };
   return (
     <>
-      <div className="py-3 relative lg:pt-0 pt-28">
-        <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap px-3 mb-2">
-          <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
+      <div className="py-3 relative md:pt-0 pt-28">
+        <div className="md:max-w-[800px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap px-3 mb-5 md:mt-0 mt-5">
+          <h1 className="lg:text-5xl md:text-[40px] text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
             Seamless
           </h1>
-          <h2 className="md:text-5xl text-3xl text-center text-white font-orbitron font-bold">
+          <h2 className="lg:text-5xl md:text-[40px] text-3xl text-center text-white font-orbitron font-bold">
             Cross Chain Swaps
           </h2>
-          <div className="flex justify-center gap-4 w-full mt-7 md:flex-nowrap flex-wrap">
+          <div className="flex justify-center gap-4 w-full mt-7 md:flex-nowrap flex-wrap md:px-0 px-20">
             <div
               onClick={() => setActiveTab("cross")}
               className={`${
@@ -233,7 +233,7 @@ const Normal = () => {
       <div className="mt-3 absolute ">
         <Routing />
       </div>
-      <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto">
+      <div className="w-full md:pb-20 pb-10 md:max-w-[1000px] mx-auto px-4">
         <div className="mt-3">
           {activeTab === "cross" ? (
             <ProvidersList

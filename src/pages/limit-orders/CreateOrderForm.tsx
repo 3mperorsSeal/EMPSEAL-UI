@@ -189,7 +189,7 @@ export function CreateOrderForm({
             name,
             symbol,
             decimals,
-            logoURI: image_url
+            logoURI: image_url,
           });
         }
       } catch (error) {
@@ -242,8 +242,10 @@ export function CreateOrderForm({
     const fetchMarketPrice = async () => {
       // Collect addresses to fetch
       const addresses = [];
-      if (selectedTokenIn && isAddress(selectedTokenIn)) addresses.push(selectedTokenIn);
-      if (selectedTokenOut && isAddress(selectedTokenOut)) addresses.push(selectedTokenOut);
+      if (selectedTokenIn && isAddress(selectedTokenIn))
+        addresses.push(selectedTokenIn);
+      if (selectedTokenOut && isAddress(selectedTokenOut))
+        addresses.push(selectedTokenOut);
 
       if (addresses.length === 0) {
         setTokenInUSDPrice(null);
@@ -254,7 +256,9 @@ export function CreateOrderForm({
 
       try {
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${addresses.join(',')}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/pulsechain/token_price/${addresses.join(
+            ","
+          )}`
         );
         const data = await response.json();
 
@@ -279,7 +283,12 @@ export function CreateOrderForm({
         }
 
         // Update Market Price (Ratio)
-        if (selectedTokenIn && selectedTokenOut && isAddress(selectedTokenIn) && isAddress(selectedTokenOut)) {
+        if (
+          selectedTokenIn &&
+          selectedTokenOut &&
+          isAddress(selectedTokenIn) &&
+          isAddress(selectedTokenOut)
+        ) {
           const tokenInPrice = parseFloat(
             data.data.attributes.token_prices[selectedTokenIn.toLowerCase()]
           );
@@ -296,7 +305,6 @@ export function CreateOrderForm({
         } else {
           setMarketPrice(null);
         }
-
       } catch (error) {
         console.error(
           "Failed to fetch market price from GeckoTerminal:",
@@ -616,7 +624,10 @@ export function CreateOrderForm({
 
   return (
     <>
-      <div data-testid="card-create-order" className="md:max-w-[700px] mx-auto w-full">
+      <div
+        data-testid="card-create-order"
+        className="lg:max-w-[700px] md:max-w-[600px] mx-auto w-full"
+      >
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
@@ -653,13 +664,13 @@ export function CreateOrderForm({
             </div>
           </div>
           {/*  */}
-          <div className="relative">
-            <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
-            <div className="flex justify-between gap-3 items-center lg:px-2">
-              <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-black">
+          <div className="relative bg_swap_box">
+            {/* <img className="bg-sell w-full" src={Sellbox} alt="sellbox" /> */}
+            <div className="flex justify-between gap-3 items-center">
+              <div className="font-orbitron text-dark-400 md:text-2xl text-xs font-semibold leading-normal text-black">
                 In Address
               </div>
-              <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2 text-black">
+              <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2 text-black">
                 <span className="font-extrabold font-orbitron leading-normal">
                   BAL
                 </span>
@@ -670,26 +681,26 @@ export function CreateOrderForm({
                 <span className="rigamesh leading-normal">
                   {tokenInMode === "select"
                     ? tokenInBalance && (
-                      <span className="rigamesh leading-normal">
-                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                        {/* {tokenInInfo?.symbol || "Tokens"} */}
-                      </span>
-                    )
+                        <span className="rigamesh leading-normal">
+                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                          {/* {tokenInInfo?.symbol || "Tokens"} */}
+                        </span>
+                      )
                     : tokenInBalance && (
-                      <span className="rigamesh leading-normal">
-                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                        {/* {customTokenIn?.symbol || "Tokens"} */}
-                      </span>
-                    )}
+                        <span className="rigamesh leading-normal">
+                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                          {/* {customTokenIn?.symbol || "Tokens"} */}
+                        </span>
+                      )}
                 </span>
               </div>
             </div>
-            <div className="flex w-full px-4 py-4 mt-2">
+            <div className="flex w-full">
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
-                  <div className="flex gap-2 items-center mt-7">
+                  <div className="flex gap-2 items-center md:mt-5 mt-6">
                     {/* md:w-[220px] w-[160px] */}
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center bg-black border border-white rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                    <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-3 margin_left md:w-[280px] w-[145px] justify-center">
                       {tokenInMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -717,9 +728,9 @@ export function CreateOrderForm({
                                         chainId={369}
                                         tokenAddress={address}
                                         symbol={token.symbol}
-                                        className="h-5 w-5"
+                                        className="md:h-10 md:w-10 w-8 h-8"
                                       />
-                                      <span className="font-medium">
+                                      <span className="lg:text-2xl text-sm font-bold font-orbitron">
                                         {token.symbol}
                                       </span>
                                     </div>
@@ -748,11 +759,17 @@ export function CreateOrderForm({
                             <div className="flex items-center justify-between h-12 px-3">
                               <div className="flex items-center gap-2">
                                 {customTokenIn.logoURI && (
-                                  <img src={customTokenIn.logoURI} alt="token logo" className="h-6 w-6 rounded-full" />
+                                  <img
+                                    src={customTokenIn.logoURI}
+                                    alt="token logo"
+                                    className="h-6 w-6 rounded-full"
+                                  />
                                 )}
                                 <div className="flex flex-col">
                                   {/* <span className="text-white font-medium text-sm">{customTokenIn.name}</span> */}
-                                  <span className="text-white/70 text-xs">{customTokenIn.symbol}</span>
+                                  <span className="text-white/70 text-xs">
+                                    {customTokenIn.symbol}
+                                  </span>
                                 </div>
                               </div>
                               <button
@@ -797,20 +814,21 @@ export function CreateOrderForm({
                 </div>
               </div>
 
-              <div className="md:max-w-1/2 w-full me-3">
+              <div className="md:max-w-1/2 w-full">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex gap-2 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-      ${selectedPercentage === value
-                          ? "text-white bg-black"
-                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                        }`}
+                      className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+      ${
+        selectedPercentage === value
+          ? "text-white bg-black"
+          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+      }`}
                       onClick={() => handlePercentageChange(value)}
-                    // disabled={isLoading}
+                      // disabled={isLoading}
                     >
                       {value}%
                     </button>
@@ -850,14 +868,16 @@ export function CreateOrderForm({
                     />
                   );
                 })()}
-                <p className="mt-1 text-xs text-black text-right font-extrabold">
+                <p className="mt-1 md:text-xs text-[10px] text-black text-right font-extrabold">
                   {tokenInInfo
                     ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
                 </p>
                 <div className="text-right text-white text-sm -mt-[0px] font-bold pe-1 rigamesh truncate text-sh1">
                   {tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))
-                    ? `$${formatNumber((parseFloat(amountIn) * tokenInUSDPrice).toFixed(2))}`
+                    ? `$${formatNumber(
+                        (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2)
+                      )}`
                     : ""}
                 </div>
               </div>
@@ -875,16 +895,10 @@ export function CreateOrderForm({
               )} */}
             </div>
           </div>
-          <div className="md:pt-4 pt-2 font-extrabold">
-            {form.formState.errors.tokenIn && (
-              <p className="mt-1 text-sm text-destructive">
-                {form.formState.errors.tokenIn.message}
-              </p>
-            )}
-          </div>
+
           {/*  */}
           <div
-            className="cursor-pointer relative md:pb-2 mx-auto !mt-4 mb-4 md:w-[70px] w-12"
+            className="cursor-pointer relative md:pb-2 mx-auto !mt-7 mb-4 md:w-[70px] w-12"
             onClick={handleSwapTokens}
             data-testid="button-swap-tokens"
           >
@@ -896,38 +910,39 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           {/*  */}
-          <div className="relative pb-7">
-            <img className="bg-sell-1 w-full" src={LimitBg} alt="LimitBg" />
+          <div className="relative pb-7 bg_swap_box_black">
+            {/* <img className="bg-sell-1 w-full" src={LimitBg} alt="LimitBg" /> */}
             <div className="flex justify-between gap-3 items-center lg:px-2">
-              <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal text-white">
+              <div className="font-orbitron text-dark-400 md:text-2xl text-xs font-semibold leading-normal text-white">
                 Out Address
               </div>
-              <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2  border border-white bg-[#FFBF5E] md:text-sm text-xs px-2 py-2 text-black">
+              <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2 text-black">
                 <span className="font-extrabold leading-normal">BAL</span>
                 <span className="font-bold font-orbitron leading-normal">
                   {" "}
-                  :{" "} </span>
+                  :{" "}
+                </span>
                 <span className="rigamesh leading-normal">
                   {tokenOutBalance === "select"
                     ? tokenOutBalance && (
-                      <span className="rigamesh leading-normal">
-                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                      </span>
-                    )
+                        <span className="rigamesh leading-normal">
+                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                        </span>
+                      )
                     : tokenOutBalance && (
-                      <span className="rigamesh leading-normal">
-                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                        {/* {customTokenOut?.symbol || "Tokens"} */}
-                      </span>
-                    )}
+                        <span className="rigamesh leading-normal">
+                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                          {/* {customTokenOut?.symbol || "Tokens"} */}
+                        </span>
+                      )}
                 </span>
               </div>
             </div>
-            <div className="flex w-full px-4 py-4 mt-2">
+            <div className="flex w-full">
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
-                  <div className="flex gap-2 items-center mt-7">
-                    <div className="flex md:gap-3 gap-1 md:w-[200px] w-[130px] items-center !bg-[#FFE6C0] border border-[#FFE6C0] rounded-lg md:px-6 px-2 md:py-3 py-2 margin_left">
+                  <div className="flex gap-2 items-center mt-5">
+                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFBF5E] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 md:w-[280px] w-[145px] margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -940,12 +955,12 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none !bg-[#FFE6C0] focus:none px-0 !w-full outline-none text-black"
+                              className="h-12 border-none !bg-[#FFBF5E] focus:none px-0 !w-full outline-none text-black"
                               data-testid="select-token-out"
                             >
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
-                            <SelectContent className="!bg-[#FFE6C0] text-black">
+                            <SelectContent className="!bg-[#FFBF5E] text-black">
                               {Object.entries(TOKENS).map(
                                 ([address, token]) => (
                                   <SelectItem key={address} value={address}>
@@ -955,9 +970,9 @@ export function CreateOrderForm({
                                         chainId={369}
                                         tokenAddress={address}
                                         symbol={token.symbol}
-                                        className="h-5 w-5"
+                                        className="md:h-10 md:w-10 w-8 h-8"
                                       />
-                                      <span className="font-medium">
+                                      <span className="lg:text-2xl text-sm font-bold font-orbitron">
                                         {token.symbol}
                                       </span>
                                     </div>
@@ -986,11 +1001,17 @@ export function CreateOrderForm({
                             <div className="flex items-center justify-between h-12 px-3">
                               <div className="flex items-center gap-2">
                                 {customTokenOut.logoURI && (
-                                  <img src={customTokenOut.logoURI} alt="token logo" className="h-6 w-6 rounded-full" />
+                                  <img
+                                    src={customTokenOut.logoURI}
+                                    alt="token logo"
+                                    className="h-6 w-6 rounded-full"
+                                  />
                                 )}
                                 <div className="flex flex-col">
                                   {/* <span className="text-black font-medium text-sm">{customTokenOut.name}</span> */}
-                                  <span className="text-black/70 text-xs">{customTokenOut.symbol}</span>
+                                  <span className="text-black/70 text-xs">
+                                    {customTokenOut.symbol}
+                                  </span>
                                 </div>
                               </div>
                               <button
@@ -1066,7 +1087,7 @@ export function CreateOrderForm({
                     />
                   );
                 })()}
-                <p className="mt-1 text-xs text-white text-right font-extrabold">
+                <p className="mt-1 md:text-xs text-[10px] text-white text-right font-extrabold">
                   {tokenOutInfo
                     ? `In ${tokenOutInfo.symbol} (${tokenOutInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
@@ -1080,7 +1101,7 @@ export function CreateOrderForm({
                 </p>
               )}
             </div>
-            <div className="md:px-5 px-4 md:mt-8 mt-6">
+            <div className="md:mt-8 mt-8">
               {/* Limit Price */}
               <div className="font-orbitron relative flex gap-2 items-center">
                 <input
@@ -1088,13 +1109,13 @@ export function CreateOrderForm({
                   {...form.register("limitPrice")}
                   placeholder="Limit Price"
                   type="text"
-                  className="!border !border-[#FF9900] h-[54px] flex gap-2 items-center !bg-transparent bgs rounded-lg w-full px-4 outline-none text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                  className="!border !border-[#FF9900] md:h-[54px] h-12 flex gap-2 items-center !bg-transparent bgs rounded-lg w-full px-4 outline-none text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
                   data-testid="input-limit-price"
                 />
                 {marketPrice && tokenInInfo && tokenOutInfo && (
                   <button
                     onClick={() => setQuoteReversed((prev) => !prev)}
-                    className="w-[54px] h-[54px] shrink-0 flex items-center justify-center rounded-lg !border !border-[#FF9900]"
+                    className="w-[54px] md:h-[54px] h-12 shrink-0 flex items-center justify-center rounded-lg !border !border-[#FF9900]"
                   >
                     <svg
                       width={38}
@@ -1125,8 +1146,8 @@ export function CreateOrderForm({
                     {marketPrice && tokenInInfo && tokenOutInfo
                       ? quoteReversed
                         ? `Market: 1 ${tokenOutInfo.symbol} ≈ ${(
-                          1 / parseFloat(marketPrice)
-                        ).toFixed(8)} ${tokenInInfo.symbol}`
+                            1 / parseFloat(marketPrice)
+                          ).toFixed(8)} ${tokenInInfo.symbol}`
                         : `Market: 1 ${tokenInInfo.symbol} ≈ ${marketPrice} ${tokenOutInfo.symbol}`
                       : "Price per token (decimal value)"}
                   </span>
@@ -1266,19 +1287,20 @@ export function CreateOrderForm({
               </p>
             </div>
           )}
-          <div className="flex flex-col gap-14 lg:pt-2 md:pt-[250px] pt-[200px] pb-20">
+          <div className="flex flex-col gap-8 lg:pt-2 md:pt-[250px] pt-[200px] md:pb-20 pb-10">
             <button
               type="button"
               onClick={handleApproveTokens}
               disabled={isApproving || isCreating || !!tradeError} // || !!minValueError
-              className="md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
+              className="group relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-8 h- flex justify-center text-center items-center hover:opacity-80 transition-all group-hover:text-black group-hover:bg-opacity-80 font-orbitron text-black lg:text-[28px] text-xl font-extrabold"
               data-testid="button-approve-tokens"
             >
-              <img
+              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
+              {/* <img
                 className="absolute swap-button"
                 src={Swapbutton}
                 alt="Swap"
-              />
+              /> */}
               {isApproving ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1293,14 +1315,15 @@ export function CreateOrderForm({
               disabled={
                 isApproving || isCreating || !!tradeError || !!limitPriceError // || !!minValueError
               }
-              className="md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center text-center items-center rounded-xl hover:opacity-80 transition-all  hover:text-black hover:bg-transparent font-orbitron text-black lg:text-3xl text-2xl font-extrabold"
+              className="group relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-4 h- flex justify-center text-center items-center hover:opacity-80 transition-all group-hover:text-black group-hover:bg-opacity-80 font-orbitron text-black lg:text-[28px] text-xl font-extrabold"
               data-testid="button-create-order"
             >
-              <img
+              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
+              {/* <img
                 className="absolute swap-button"
                 src={Swapbutton}
                 alt="Swap"
-              />
+              /> */}
               {isCreating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -1311,10 +1334,18 @@ export function CreateOrderForm({
               )}
             </button>
           </div>
+          <div className="md:pt-4 pt-2 font-extrabold">
+            {form.formState.errors.tokenIn && (
+              <p className="mt-1 text-sm text-destructive">
+                {form.formState.errors.tokenIn.message}
+              </p>
+            )}
+          </div>
           {/*  */}
           <div
-            className={`${partialFillEnabled ? "w-[200px]" : "w-[200px]"
-              } absolute 2xl:-right-[25vw] xl:-right-[20vw] md:right-[0vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[50%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            className={`${
+              partialFillEnabled ? "w-[200px]" : "w-[200px]"
+            } absolute 2xl:right-[3vw] xl:right-[2vw] md:right-[32vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[44%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">
@@ -1345,27 +1376,40 @@ export function CreateOrderForm({
                   <button
                     type="button"
                     onClick={() => setFillMode(1)}
-                    className={`${fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${
+                      fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 3
                   </button>
                   <button
                     type="button"
                     onClick={() => setFillMode(2)}
-                    className={`${fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${
+                      fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 5
                   </button>
                   <button
                     type="button"
                     onClick={() => setFillMode(3)}
-                    className={`${fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"} text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${
+                      fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 10
                   </button>
                 </div>
                 <div className="text-xs text-center font-medium text-black pt-5 pb-2 bg-white rounded-b-lg">
-                  Selected: {fillMode === 1 ? "Split 3" : fillMode === 2 ? "Split 5" : fillMode === 3 ? "Split 10" : "None"}
+                  Selected:{" "}
+                  {fillMode === 1
+                    ? "Split 3"
+                    : fillMode === 2
+                    ? "Split 5"
+                    : fillMode === 3
+                    ? "Split 10"
+                    : "None"}
                 </div>
               </>
             )}
