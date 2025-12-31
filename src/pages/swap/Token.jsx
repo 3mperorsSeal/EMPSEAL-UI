@@ -7,7 +7,13 @@ import { useBalance } from "wagmi";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import Web3 from "web3";
 
-const TokenListItem = ({ token, walletAddress, onClick }) => {
+const TokenListItem = ({
+  token,
+  walletAddress,
+  onClick,
+  chainSymbol,
+  wethAddress,
+}) => {
   const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
     address: walletAddress,
     token:
@@ -17,9 +23,100 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
     watch: true,
   });
 
+  const [price, setPrice] = useState(null);
+  const [loadingPrice, setLoadingPrice] = useState(false);
+
   const formattedBalance = tokenBalance
     ? parseFloat(tokenBalance.formatted).toFixed(4)
     : "0.0000";
+
+  // Format number function
+  const formatNumber = (value) => {
+    if (!value) return "0.00";
+
+    const num = parseFloat(value);
+    if (isNaN(num)) return "0.00";
+
+    // If number is very small
+    if (num < 0.000001) {
+      return "<0.000001";
+    }
+
+    // If number is less than 1
+    if (num < 1) {
+      return num.toFixed(6);
+    }
+
+    // If number is between 1 and 1000
+    if (num < 1000) {
+      return num.toFixed(4);
+    }
+
+    // For larger numbers
+    return num.toLocaleString("en-US", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
+  // Fetch token price
+  useEffect(() => {
+    const fetchTokenPrice = async () => {
+      if (!chainSymbol || !token.address) return;
+
+      setLoadingPrice(true);
+      try {
+        // Handle native token (use wrapped token address)
+        let addressToFetch = token.address?.toLowerCase();
+
+        if (
+          token.address === "0x0000000000000000000000000000000000000000" &&
+          wethAddress
+        ) {
+          addressToFetch = wethAddress.toLowerCase();
+        }
+
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/${chainSymbol}/token_price/${addressToFetch}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tokenPrices = data?.data?.attributes?.token_prices;
+
+        if (tokenPrices) {
+          // Try to get price with exact address
+          let tokenPrice = tokenPrices[addressToFetch];
+
+          // If not found and it's native token, try with weth address
+          if (
+            !tokenPrice &&
+            token.address === "0x0000000000000000000000000000000000000000"
+          ) {
+            tokenPrice = tokenPrices[wethAddress?.toLowerCase()];
+          }
+
+          setPrice(tokenPrice);
+        }
+      } catch (error) {
+        console.error("Error fetching token price:", error);
+        setPrice(null);
+      } finally {
+        setLoadingPrice(false);
+      }
+    };
+
+    fetchTokenPrice();
+  }, [token.address, chainSymbol, wethAddress]);
+
+  // Calculate USD value
+  const usdValue =
+    price && tokenBalance
+      ? parseFloat(tokenBalance.formatted) * parseFloat(price)
+      : 0;
 
   return (
     <div
@@ -50,8 +147,16 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
         <div className="text-[#FF9900] text-lg font-bold roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
         </div>
-         <div className="text-white text-xs roboto mt-1">
-          Fetching price...
+        <div className="text-white text-xs roboto mt-1">
+          {loadingPrice ? (
+            "Fetching price..."
+          ) : price ? (
+            <>
+              ${formatNumber(price)} ≈ ${formatNumber(usdValue)}
+            </>
+          ) : (
+            "Price not available"
+          )}
         </div>
       </div>
     </div>
@@ -113,6 +218,8 @@ const Token = ({ onClose, onSelect }) => {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   const SortedTokenList = () => {
+    const { symbol, wethAddress } = useChainConfig();
+
     const tokenPromises = filteredTokens.map((token) => ({
       token,
       balancePromise: useBalance({
@@ -149,6 +256,8 @@ const Token = ({ onClose, onSelect }) => {
             token={token}
             walletAddress={walletAddress}
             onClick={handleTokenSelect}
+            chainSymbol={symbol}
+            wethAddress={wethAddress}
           />
         ))}
       </div>
@@ -385,6 +494,8 @@ const Token = ({ onClose, onSelect }) => {
                 token={tokenDetails}
                 walletAddress={walletAddress}
                 onClick={handleTokenSelect}
+                chainSymbol={symbol}
+                 wethAddress={wethAddress}
               />
             )}
 

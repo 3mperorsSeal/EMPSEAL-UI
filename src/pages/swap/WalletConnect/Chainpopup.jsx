@@ -1,5 +1,8 @@
 import { useState } from "react";
 import dummyImage from "../../../assets/images/emp-logo.png";
+import Eth from "../../../assets/icons/eth.svg";
+import Pulse from "../../../assets/icons/pls.svg";
+import Sonic from "../../../assets/icons/sonic.png";
 
 const ChainPopup = ({
   setShowChainPopup,
@@ -12,6 +15,13 @@ const ChainPopup = ({
   const filteredChains = availableChains.filter((c) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const chainIcons = {
+    ethereum: Eth,
+    ethereumpow: Eth,
+    pulse: Pulse,
+    pulsechain: Pulse,
+    sonic: Sonic,
+  };
 
   return (
     <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
@@ -78,6 +88,8 @@ const ChainPopup = ({
               //   iconType: typeof c.icon,
               // });
               const isActive = chain?.id === c.id;
+              const chainKey = c.name.toLowerCase();
+              const chainIcon = chainIcons[chainKey] || dummyImage;
               return (
                 <div
                   key={c.id}
@@ -90,6 +102,14 @@ const ChainPopup = ({
                     // sc1
                   }`}
                 >
+                  <div className="w-6 h-6 flex justify-center items-center">
+                    <img
+                      src={chainIcon}
+                      alt={c.name}
+                      className="w-6 h-6 object-contain"
+                      onError={(e) => (e.currentTarget.src = dummyImage)}
+                    />
+                  </div>
                   {/* <div className="w-6 h-6 rounded-full flex justify-center items-center">
                     <img
                       src={c.icon || dummyImage}
