@@ -850,7 +850,7 @@ const Emp = ({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
@@ -979,7 +979,7 @@ const Emp = ({
                         setIsSelectingTokenA(false);
                         setTokenVisible(true);
                       }}
-                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFBF5E] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[130px] margin_left"
+                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFE6C0] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[130px] margin_left"
                     >
                       <div
                         className={` flex gap-2 items-center ${

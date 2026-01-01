@@ -1,5 +1,5 @@
 import { useRef, useEffect } from "react";
-import Min from "../../../assets/images/min.png";
+import Min from "../../../assets/images/swap-emp.png";
 import Dis from "../../../assets/images/dis.png";
 import Copy from "../../../assets/images/copy.png";
 
@@ -28,7 +28,7 @@ export default function AddressCard({
   return (
     <div
       ref={popupRef}
-      className="relative bg-black text-white md:p-12 p-6 rounded-2xl clip-bg flex flex-col items-center gap-4 md:max-w-[430px] w-full border border-[#FF9900]"
+      className="relative bg-black text-white md:p-12 p-8 rounded-2xl clip-bg flex flex-col items-center gap-4 md:max-w-[430px] w-full border border-[#FF9900]"
     >
       <svg
         onClick={onClose}
@@ -50,30 +50,32 @@ export default function AddressCard({
       <img
         src={Min}
         alt="Avatar"
-        className="md:w-[100px] md:h-[100px] w-16 h-16 rounded-full object-cover"
+        className="md:w-[150px] w-16 rounded-full object-contain"
       />
       <p className="text-2xl font-bold roboto">{shortAddress}</p>
       <p className="text-gray-400 font-medium text-xl mb-5">0 PLS</p>
       <div
-        className="relative text-black px-6 py-2 rounded-md w-full font-semibold text-2xl font-orbitron text-center cursor-pointer hover:opacity-90 transition-all"
+        className="md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer group-hover:!opacity-80 transition-all"
         onClick={onCopy}
       >
-        <img
+        <div className="group-hover:opacity-80 w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
+        {/* <img
           src={Copy}
           alt="Copy"
           className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto z-0"
-        />
+        /> */}
         <span className="relative z-10">Copy Address</span>
       </div>
       <div
-        className="mt-5 relative text-[#FF9900] bg-transparent px-6 py-2 rounded-md w-full font-semibold text-2xl text-center font-orbitron cursor-pointer hover:opacity-80 transition-all"
+        className="mt-6 md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer group-hover:!opacity-80 transition-all"
         onClick={onDisconnect}
       >
-        <img
-          src={Dis}
-          alt="Disconnect"
-          className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto"
-        />
+        <div className="group-hover:opacity-80 w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
+        {/* <img
+          src={Copy}
+          alt="Copy"
+          className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto z-0"
+        /> */}
         <span className="relative z-10">Disconnect</span>
       </div>
     </div>

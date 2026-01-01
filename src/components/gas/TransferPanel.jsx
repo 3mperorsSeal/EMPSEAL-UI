@@ -226,7 +226,7 @@ const TransferPanel = () => {
                         // disabled={isLoading}
                         disabled={isBalanceLoading || !balance}
                         onClick={() => handlePercentageChange(value)}
-                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                        className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
         ${
           selectedPercentage === value
             ? "bg-black text-white"
@@ -360,7 +360,7 @@ const TransferPanel = () => {
                   // disabled={isLoading}
                   disabled={isBalanceLoading || !balance}
                   onClick={() => handlePercentageChange(value)}
-                  className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                  className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
         ${
           selectedPercentage === value
             ? "bg-black text-white"
@@ -418,8 +418,8 @@ const TransferPanel = () => {
             })()}
           </div>
         </div>
-        <div className="md:max-w-[710px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top">
-          <div className="md:my-14 my-7 relative">
+        <div className="md:max-w-[710px] mx-auto w-full md:px-4 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 scales-b scales-top_1 lg:mt-0 mt-4">
+          <div className="md:my-2 my-6 relative">
             <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
               Recipient Address
             </label>

@@ -661,6 +661,14 @@ body.bg-pattern {
     padding: 12px 20px !important;
   }
 }
+.scales-top_1 {
+  top: -20px;
+}
+@media (min-width: 1024px) and (max-width: 1536px) {
+  .scales-top_1 {
+    top: -130px !important;
+  }
+}
 @media (min-width: 1024px) and (max-width: 1536px) {
   .scales8 {
     scale: 0.8;
@@ -678,6 +686,7 @@ body.bg-pattern {
   .scales-top-1 {
     top: -20px;
   }
+
   .scales-top-2 {
     top: -60px;
   }
@@ -886,11 +895,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   filter: invert(0);
 }
 .text-sh {
-  text-shadow: 4px 4px 4px #00000040;
+  // text-shadow: 4px 4px 4px #00000040;
 }
-
 .text-sh1 {
-  text-shadow: 0px 3px 3px #00000040 !important;
+  // text-shadow: 0px 3px 3px #00000040 !important;
   -webkit-text-stroke: 0.3px rgba(0, 0, 0, 1);
 }
 
@@ -981,4 +989,27 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
     padding-right: 16px;
     padding-bottom: 20px;
   }
+}
+/* width */
+.terms::-webkit-scrollbar {
+  width: 4px;
+  border-radius: 12px;
+}
+
+/* Track */
+.terms::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 12px;
+}
+
+/* Handle */
+.terms::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 12px;
+}
+
+/* Handle on hover */
+.terms::-webkit-scrollbar-thumb:hover {
+  background: #555;
+  border-radius: 12px;
 }

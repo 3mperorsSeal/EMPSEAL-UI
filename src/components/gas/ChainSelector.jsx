@@ -253,11 +253,30 @@ const ChainModal = ({
 
   if (!isOpen) return null;
 
+  const isTestnet = (chain) => {
+    if (chain.testnet) return true;
+
+    const testnetKeywords = [
+      "test",
+      "goerli",
+      "sepolia",
+      "mumbai",
+      "fuji",
+      "chapel",
+      "alfajores",
+      "dev",
+    ];
+
+    return testnetKeywords.some((k) => chain.name?.toLowerCase().includes(k));
+  };
   const filteredChains = chains.filter(
     (c) =>
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.symbol?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const mainnets = filteredChains.filter((c) => !isTestnet(c));
+  const testnets = filteredChains.filter((c) => isTestnet(c));
 
   const renderChain = (chain) => {
     return (
@@ -313,7 +332,24 @@ const ChainModal = ({
 
         {/* Chains */}
         <div className="mt-4 max-h-[350px] overflow-y-auto px-2">
-          {filteredChains.map(renderChain)}
+          {/* MAINNETS */}
+          {mainnets.length > 0 && (
+            <>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">
+                Mainnets
+              </p>
+              {mainnets.map(renderChain)}
+            </>
+          )}
+          {/* TESTNETS */}
+          {testnets.length > 0 && (
+            <>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-6 mb-2">
+                Testnets
+              </p>
+              {testnets.map(renderChain)}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -402,7 +438,7 @@ const ChainSelector = ({ onSwitch }) => {
         {/* TO */}
         <button
           onClick={() => setActiveModal("to")}
-          className="bg-[#FFBF5E] border-2 border-white rounded-lg md:px-4 px-2 py-4 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
+          className="bg-[#FFE6C0] border-2 border-white rounded-lg md:px-4 px-2 py-4 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
         >
           {toChain ? (
             <>

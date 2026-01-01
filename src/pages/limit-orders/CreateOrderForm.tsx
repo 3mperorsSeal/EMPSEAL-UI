@@ -821,7 +821,7 @@ export function CreateOrderForm({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
       ${
         selectedPercentage === value
           ? "text-white bg-black"
@@ -942,7 +942,7 @@ export function CreateOrderForm({
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-5">
-                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFBF5E] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 md:w-[280px] w-[145px] margin_left">
+                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 md:w-[280px] w-[145px] margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -955,12 +955,12 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none !bg-[#FFBF5E] focus:none px-0 !w-full outline-none text-black"
+                              className="h-12 border-none !bg-[#FFE6C0] focus:none px-0 !w-full outline-none text-black"
                               data-testid="select-token-out"
                             >
                               <SelectValue placeholder="Select" />
                             </SelectTrigger>
-                            <SelectContent className="!bg-[#FFBF5E] text-black">
+                            <SelectContent className="!bg-[#FFE6C0] text-black">
                               {Object.entries(TOKENS).map(
                                 ([address, token]) => (
                                   <SelectItem key={address} value={address}>

@@ -571,19 +571,15 @@ const BridgeInterface = () => {
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
                 <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left md:w-[280px] w-[130px] justify-center">
-                  <ChainSelector
-                    chain={sourceChain}
-                    onClick={() => setIsFromChainModalOpen(true)}
+                  <TokenSelector
+                    token={selectedToken}
+                    chainId={fromChainId}
+                    onClick={() => setIsTokenModalOpen(true)}
                   />
                   <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-83px] right-[-50px]">
-                    {/* <img
-                      src={CPatch}
-                      className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] md:rotate-[60deg] rotate-[70deg] z-[-1] relative md:left-[-20px] left-[-10px]"
-                    /> */}
-                    <TokenSelector
-                      token={selectedToken}
-                      chainId={fromChainId}
-                      onClick={() => setIsTokenModalOpen(true)}
+                    <ChainSelector
+                      chain={sourceChain}
+                      onClick={() => setIsFromChainModalOpen(true)}
                     />
                   </div>
                 </div>
@@ -596,7 +592,7 @@ const BridgeInterface = () => {
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
@@ -719,7 +715,7 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4">
-                <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFBF5E] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 md:h-20 h-12 py-2.5 md:w-[280px] w-[145px] margin_left">
+                <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 md:h-20 h-12 py-2.5 md:w-[280px] w-[145px] margin_left">
                   <ChainSelector
                     chain={destChain}
                     onClick={() => setIsToChainModalOpen(true)}
@@ -733,7 +729,7 @@ const BridgeInterface = () => {
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
@@ -848,7 +844,7 @@ const BridgeInterface = () => {
         </div>
 
         {/* Recipient Address */}
-        <div className="mt-20 mb-10 relative">
+        <div className="my-8 relative">
           <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
             Recipient Address
           </label>
@@ -871,11 +867,11 @@ const BridgeInterface = () => {
         </div>
         {/* Fees Display */}
         {bridgeFees && (
-          <div className="mb-20 ">
+          <div className="mb-10">
             <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
               Estimated Fees:
             </label>
-            <div className="grid grid-cols-2 gap-2 p-4 border border-[#FF9900] text-center rounded-[40px] text-white text-xs md:text-sm">
+            <div className="grid grid-cols-2 gap-2 p-4 border border-[#FF9900] text-center rounded-[40px] text-white text-xs md:text-sm font-orbitron">
               {/* <div>Protocol Fee:</div>
               <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div> */}
 
@@ -898,7 +894,7 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-12 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
+            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
           >
             <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
             {/* <img

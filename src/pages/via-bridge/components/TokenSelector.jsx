@@ -14,7 +14,7 @@ const TokenSelector = ({ token, chainId, onClick }) => {
           symbol={token.symbol}
           className="md:w-8 md:h-8 w-5"
         />
-        {/* <span className="md:text-xs text-[10px] font-medium text-white">{token.symbol}</span> */}
+        <span className="md:text-2xl text-[10px] font-medium text-white">{token.symbol}</span>
         {/* <ChevronDown size={16} className="text-white ml-1" /> */}
       </div>
     </button>

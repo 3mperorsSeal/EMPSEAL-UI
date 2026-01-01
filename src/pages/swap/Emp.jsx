@@ -1102,7 +1102,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         <button
                           key={value}
                           type="button"
-                          className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[10px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                          className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
             ${
               selectedPercentage === value
                 ? " text-white bg-black"
@@ -1210,7 +1210,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
                       <div className="flex gap-2 items-center md:mt-2 mt-6">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFBF5E] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 md:w-[280px] w-[145px] margin_left">
+                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 md:w-[280px] w-[145px] margin_left">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(false);
@@ -1252,7 +1252,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         <button
                           key={value}
                           type="button"
-                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
+                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
             ${
               selectedPercentage === value
                 ? " text-white bg-black"
@@ -1346,7 +1346,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center hover:opacity-80 transition-all ${
+                  className={`group relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center hover:opacity-80 transition-all ${
                     isInsufficientBalance()
                       ? "opacity-50 cursor-not-allowed"
                       : " group-hover:text-black group-hover:bg-opacity-80"
