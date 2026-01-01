@@ -111,11 +111,11 @@ export function SlippageCalculator({
         <h2 className="text-white text-xl font-bold mb-4 roboto text-center">
           Slippage Settings
         </h2>
-        <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg">
+        {/* <div className="mb-4 p-3 bg-red-900/50 border border-red-500 rounded-lg">
           <p className="text-red-200 text-sm">
             Please provide token input values before applying slippage.
           </p>
-        </div>
+        </div> */}
         <div className="flex gap-4 items-center justify-center flex-wrap">
           {[0.5, 1.0, 2.0].map((preset) => (
             <button
@@ -137,10 +137,10 @@ export function SlippageCalculator({
             min="0"
             max="5"
             className="md:w-[120px] w-20 md:h-9 h-9 text-center font-bold text-sm text-white focus:outline-none bg-[#382B19] border border-[#ff9900] rounded-xl"
-            // style={{
-            //   clipPath:
-            //     "polygon(0px 0px, 90% 0px, 100% 20%, 100% 100%, 12% 100%, 0px 65%)",
-            // }}
+          // style={{
+          //   clipPath:
+          //     "polygon(0px 0px, 90% 0px, 100% 20%, 100% 100%, 12% 100%, 0px 65%)",
+          // }}
           />
           <span className="absolute inset-y-0 right-3 flex items-center text-sm text-muted-foreground">
             %

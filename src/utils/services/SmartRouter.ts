@@ -14,6 +14,19 @@ const IAdapterAbi = parseAbi([
 
 const FEE_DENOMINATOR = 10000;
 
+// Timeout helper to prevent strategies from hanging
+const withTimeout = <T>(promise: Promise<T>, timeoutMs: number, name: string): Promise<T | null> => {
+  return Promise.race([
+    promise,
+    new Promise<null>((_, reject) =>
+      setTimeout(() => {
+        // console.warn(`[SmartRouter] ${name} timed out after ${timeoutMs}ms`);
+        reject(new Error(`${name} timed out`));
+      }, timeoutMs)
+    )
+  ]).catch(() => null);
+};
+
 export class SmartRouter {
   private publicClient: PublicClient;
   private routerAddress: `0x${string}`;
@@ -25,7 +38,7 @@ export class SmartRouter {
   private maxAdaptersPerSplit = 4;
   private convergeOnly = false;
   private granularity = 5;
-  private maxHops = 3;
+  private maxHops = 4;
 
   constructor(publicClient: PublicClient, routerAddress: `0x${string}`) {
     this.publicClient = publicClient;
@@ -100,6 +113,14 @@ export class SmartRouter {
     this.convergeOnly = enabled;
   }
 
+  setAdapters(adapters: `0x${string}`[]) {
+    this.adapters = adapters;
+  }
+
+  setTrustedTokens(tokens: `0x${string}`[]) {
+    this.trustedTokens = tokens;
+  }
+
   setMaxAdapters(max: number) {
     this.maxAdaptersPerSplit = Math.min(Math.max(max, 1), 6);
   }
@@ -137,39 +158,51 @@ export class SmartRouter {
 
   private generateSplitStrategies(numAdapters: number): number[][] {
     const strategies: number[][] = [];
-    const step = this.granularity * 100;
+    const stepSize = this.granularity * 100; // Basis points step (e.g., 500 = 5%)
 
     if (numAdapters === 1) {
-      return [[10000]];
+      return [[10000]]; // 100% to single adapter
     }
 
     if (numAdapters === 2) {
+      // Two-adapter splits: 100/0, 95/5, 90/10, ... down to 50/50
       strategies.push([10000, 0]);
-      for (let pct1 = 9500; pct1 >= 5000; pct1 -= step) {
-        const pct2 = 10000 - pct1;
-        if (pct2 >= 500) {
-          strategies.push([pct1, pct2]);
+      for (let adapterShare1 = 9500; adapterShare1 >= 5000; adapterShare1 -= stepSize) {
+        const adapterShare2 = 10000 - adapterShare1;
+        if (adapterShare2 >= 500) {
+          strategies.push([adapterShare1, adapterShare2]);
         }
       }
     } else if (numAdapters === 3) {
+      // Three-adapter splits
       strategies.push([10000, 0, 0]);
-      for (let pct1 = 9000; pct1 >= 5000; pct1 -= step) {
-        strategies.push([pct1, 10000 - pct1, 0]);
+
+      // Two active adapters
+      for (let adapterShare1 = 9000; adapterShare1 >= 5000; adapterShare1 -= stepSize) {
+        strategies.push([adapterShare1, 10000 - adapterShare1, 0]);
       }
-      for (let pct1 = 7000; pct1 >= 4000; pct1 -= step) {
-        for (let pct2 = 3000; pct2 >= 2000; pct2 -= step) {
-          const pct3 = 10000 - pct1 - pct2;
-          if (pct3 >= 1000 && pct3 <= 4000) {
-            strategies.push([pct1, pct2, pct3]);
+
+      // Three active adapters
+      for (let adapterShare1 = 7000; adapterShare1 >= 4000; adapterShare1 -= stepSize) {
+        for (let adapterShare2 = 3000; adapterShare2 >= 2000; adapterShare2 -= stepSize) {
+          const adapterShare3 = 10000 - adapterShare1 - adapterShare2;
+          if (adapterShare3 >= 1000 && adapterShare3 <= 4000) {
+            strategies.push([adapterShare1, adapterShare2, adapterShare3]);
           }
         }
       }
-      strategies.push([3334, 3333, 3333]);
+      strategies.push([3334, 3333, 3333]); // Equal split
+
     } else if (numAdapters >= 4) {
+      // Four+ adapter splits - use predefined common patterns
       strategies.push([10000, 0, 0, 0]);
-      for (let pct1 = 8000; pct1 >= 5000; pct1 -= step * 2) {
-        strategies.push([pct1, 10000 - pct1, 0, 0]);
+
+      // Two active adapters
+      for (let adapterShare1 = 8000; adapterShare1 >= 5000; adapterShare1 -= stepSize * 2) {
+        strategies.push([adapterShare1, 10000 - adapterShare1, 0, 0]);
       }
+
+      // Predefined multi-adapter patterns
       strategies.push(
         [5000, 3000, 2000, 0],
         [5000, 2500, 2500, 0],
@@ -233,7 +266,7 @@ export class SmartRouter {
           if (i === j) continue;
 
           // Create a variation: -1% from i, +1% to j
-          const newStrategy = [...bestRawStrategy];
+          const newStrategy = [...(bestRawStrategy as number[])];
           if (newStrategy[i] >= step) {
             newStrategy[i] -= step;
             newStrategy[j] += step;
@@ -272,6 +305,7 @@ export class SmartRouter {
 
   /**
    * Helper to execute a batch of split strategies
+   * OPTIMIZED: Uses Multicall to reduce RPC requests
    */
   private async executeSplitSearch(
     amountIn: bigint,
@@ -285,43 +319,62 @@ export class SmartRouter {
     let bestSplits: any[] = [];
     let bestRawStrategy: number[] | null = null;
 
-    const batchSize = 10;
+    // Batch size can be larger now that we use multicall
+    const batchSize = 20;
+
     for (let i = 0; i < strategies.length; i += batchSize) {
       const batch = strategies.slice(i, i + batchSize);
-      const batchResults = await Promise.allSettled(
-        batch.map(async (strategy) => {
-          const queries = await Promise.all(
-            strategy.slice(0, numAdapters).map((proportion, idx) => {
-              if (proportion === 0) return Promise.resolve(0n);
-              const splitAmount =
-                (amountIn * BigInt(proportion)) / BigInt(FEE_DENOMINATOR);
-              return this.publicClient.readContract({
-                address: sortedQuotes[idx].adapter,
-                abi: IAdapterAbi,
-                functionName: "query",
-                args: [splitAmount, tokenIn, tokenOut],
-              });
-            })
-          );
-          const totalOutput = queries.reduce(
-            (sum, q) => sum + (q as bigint),
-            0n
-          );
-          return { strategy, totalOutput };
-        })
-      );
+      const flattenCalls: any[] = [];
+      // Map multicall result index back to { strategyIndexInBatch, adapterIndex }
+      const callMap: { strategyIdx: number; adapterIdx: number }[] = [];
 
-      batchResults.forEach((result) => {
-        if (
-          result.status === "fulfilled" &&
-          result.value.totalOutput > bestOutput
-        ) {
-          bestOutput = result.value.totalOutput;
-          bestRawStrategy = result.value.strategy;
-          bestSplits = result.value.strategy
+      // 1. Prepare Multicall Data
+      batch.forEach((strategy, sIdx) => {
+        strategy.slice(0, numAdapters).forEach((proportion, aIdx) => {
+          if (proportion > 0) {
+            const splitAmount =
+              (amountIn * BigInt(proportion)) / BigInt(FEE_DENOMINATOR);
+
+            flattenCalls.push({
+              address: sortedQuotes[aIdx].adapter,
+              abi: IAdapterAbi,
+              functionName: "query",
+              args: [splitAmount, tokenIn, tokenOut],
+            });
+            callMap.push({ strategyIdx: sIdx, adapterIdx: aIdx });
+          }
+        });
+      });
+
+      if (flattenCalls.length === 0) continue;
+
+      // 2. Execute Multicall
+      const results = await this.publicClient.multicall({
+        contracts: flattenCalls,
+      });
+
+      // 3. Aggregate Results per Strategy
+      const strategyTotals = new Array(batch.length).fill(0n);
+
+      results.forEach((res, index) => {
+        if (res.status === "success") {
+          const { strategyIdx } = callMap[index];
+          const val = res.result as bigint;
+          strategyTotals[strategyIdx] += val;
+        }
+      });
+
+      // 4. Find Best in Batch
+      strategyTotals.forEach((total, idx) => {
+        if (total > bestOutput) {
+          bestOutput = total;
+          bestRawStrategy = batch[idx];
+
+          // Reconstruct splits for the winner
+          bestSplits = batch[idx]
             .slice(0, numAdapters)
-            .map((proportion: number, idx: number) => ({
-              adapter: sortedQuotes[idx].adapter,
+            .map((proportion: number, aIdx: number) => ({
+              adapter: sortedQuotes[aIdx].adapter,
               proportion,
             }))
             .filter((s: any) => s.proportion > 0);
@@ -460,11 +513,11 @@ export class SmartRouter {
     if (isWrapping) {
       return {
         type: "WRAP",
-        amountOut: amountIn, // Use original amountIn
+        amountOut: amountIn,
         payload: {
           tokenIn,
           tokenOut,
-          amountIn: amountIn, // Use original amountIn
+          amountIn: amountIn,
         },
         gasEstimate: 0n,
       };
@@ -473,11 +526,11 @@ export class SmartRouter {
     if (isUnwrapping) {
       return {
         type: "UNWRAP",
-        amountOut: amountIn, // Use original amountIn
+        amountOut: amountIn,
         payload: {
           tokenIn,
           tokenOut,
-          amountIn: amountIn, // Use original amountIn
+          amountIn: amountIn,
         },
         gasEstimate: 0n,
       };
@@ -498,38 +551,55 @@ export class SmartRouter {
       return convergeResult;
     }
 
-    // Run all strategies in parallel
+    // Run all strategies in parallel with timeouts to prevent hanging
+    const STRATEGY_TIMEOUT = 15000; // 15 seconds
     const [
       convergeResult,
       splitResult,
       multiHopResult,
       convergeMultiHopResult,
+      hybridResult,
+      multiStageConvergeSplitResult,
     ] = await Promise.allSettled([
-      this.findConvergePath(
-        // amountAfterFee,
-        amountIn,
-        normalizedTokenIn,
-        normalizedTokenOut
+      withTimeout(
+        this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findConvergePath'
       ),
-      this.findStandardSplit(
-        // amountAfterFee,
-        amountIn,
-        normalizedTokenIn,
-        normalizedTokenOut
+      withTimeout(
+        this.findStandardSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findStandardSplit'
       ),
-      this.findMultiHopSplit(
-        // amountAfterFee,
-        amountIn,
-        normalizedTokenIn,
-        normalizedTokenOut
+      withTimeout(
+        this.findNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findNoSplit'
       ),
-      this.findConvergeMultiHop(
-        // amountAfterFee,
-        amountIn,
-        normalizedTokenIn,
-        normalizedTokenOut
+      withTimeout(
+        this.findConvergeMultiHop(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findConvergeMultiHop'
+      ),
+      withTimeout(
+        this.findHybridSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findHybridSplit'
+      ),
+      withTimeout(
+        this.findMultiStageConvergeSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+        STRATEGY_TIMEOUT,
+        'findMultiStageConvergeSplit'
       ),
     ]);
+
+    // Log any rejected strategies for debugging
+    // const strategyNames = ['converge', 'split', 'multiHop', 'convergeMultiHop', 'hybrid', 'multiStageConvergeSplit'];
+    // [convergeResult, splitResult, multiHopResult, convergeMultiHopResult, hybridResult, multiStageConvergeSplitResult].forEach((result, i) => {
+    //   if (result.status === "rejected") {
+    //     console.error(`[SmartRouter] ${strategyNames[i]} REJECTED:`, result.reason);
+    //   }
+    // });
 
     const converge =
       convergeResult.status === "fulfilled" ? convergeResult.value : null;
@@ -540,29 +610,268 @@ export class SmartRouter {
       convergeMultiHopResult.status === "fulfilled"
         ? convergeMultiHopResult.value
         : null;
+    const hybrid =
+      hybridResult.status === "fulfilled" ? hybridResult.value : null;
+    const multiStageConvergeSplit =
+      multiStageConvergeSplitResult.status === "fulfilled" ? multiStageConvergeSplitResult.value : null;
 
-    const candidates = [converge, split, multiHop, convergeMultiHop].filter(
-      Boolean
-    );
+    const candidates = [converge, split, multiHop, convergeMultiHop, hybrid, multiStageConvergeSplit]
+      .filter((c): c is BestRouteResult => c !== null && c.amountOut > 0n);
 
     if (candidates.length === 0) {
       return null;
     }
 
-    const winner = candidates.reduce((best, current) =>
-      current!.amountOut > best!.amountOut ? current : best
+    // 1. Determine Baseline Anchor
+    let baselineAmount = 0n;
+    if (split && split.amountOut > 0n) {
+      baselineAmount = split.amountOut;
+    } else if (multiHop && multiHop.amountOut > 0n) {
+      baselineAmount = multiHop.amountOut;
+    }
+
+    let safeCandidates = candidates;
+
+    if (baselineAmount > 0n) {
+      const threshold = baselineAmount + (baselineAmount / 2n);
+
+      safeCandidates = candidates.filter(c => {
+        if (c.amountOut > threshold) {
+          // console.warn(`[SmartRouter] Discarding Suspicious strategy (Baseline Filter): ${c.type} amount ${c.amountOut} > baseline ${baselineAmount}`);
+          return false;
+        }
+        return true;
+      });
+
+    } else if (candidates.length >= 2) {
+      const sorted = [...candidates].sort((a, b) => (a.amountOut > b.amountOut ? 1 : -1));
+      const medianIndex = Math.floor(sorted.length / 2);
+      const median = sorted[medianIndex].amountOut;
+
+      const threshold = median + (median / 5n);
+
+      safeCandidates = candidates.filter(c => {
+        if (c.amountOut > threshold) {
+          // console.warn(`[SmartRouter] Discarding Suspicious strategy (Median Filter): ${c.type} amount ${c.amountOut} > threshold ${threshold}`);
+          return false;
+        }
+        return true;
+      });
+    }
+
+    if (safeCandidates.length === 0) {
+      // console.warn("[SmartRouter] All routes filtered! Reverting to safest available (Split/MultiHop or lowest)");
+      if (split) safeCandidates = [split];
+      else if (multiHop) safeCandidates = [multiHop];
+      else safeCandidates = candidates; 
+    }
+
+    const winner = safeCandidates.reduce((best, current) =>
+      current.amountOut > best.amountOut ? current : best
     );
 
     let winnerName = "Unknown";
     if (winner === converge) winnerName = "Omni-Converge";
     else if (winner === split) winnerName = "Direct";
     else if (winner === convergeMultiHop) winnerName = "Converge Multi-hop";
+    else if (winner === hybrid) winnerName = "Hybrid Split";
+    else if (winner === multiStageConvergeSplit) winnerName = "Multi-Stage Converge Split";
     else winnerName = "Multi-hop";
 
     return winner;
   }
 
-  private async findMultiHopSplit(
+  /**
+   * Strategy: Hybrid Split (Partial Converge)
+   * Splits liquidity between Direct adapters and best Multi-hop paths.
+   */
+  private async findHybridSplit(
+    amountIn: bigint,
+    tokenIn: `0x${string}`,
+    tokenOut: `0x${string}`
+  ): Promise<BestRouteResult | null> {
+    // 1. Get Direct Quotes
+    const directQuotes = await this.getAllAdapterQuotes(
+      amountIn,
+      tokenIn,
+      tokenOut
+    );
+
+    // 2. Get Top Multi-Hop Paths
+    const multiHopPaths = await this.findTopMultiHopPaths(
+      amountIn,
+      tokenIn,
+      tokenOut,
+      3
+    );
+
+    // 3. Combine into "Route Candidates"
+    const candidates = [
+      ...directQuotes.map((q) => ({
+        type: "DIRECT" as const,
+        adapter: q.adapter,
+        path: [tokenIn, tokenOut] as `0x${string}`[],
+        adapters: [q.adapter] as `0x${string}`[],
+        amountOut: q.amountOut,
+      })),
+      ...multiHopPaths.map((p) => ({
+        type: "MULTIHOP" as const,
+        adapter: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        path: p.path,
+        adapters: p.adapters,
+        amountOut: p.amountOut,
+      })),
+    ].sort((a, b) => (a.amountOut > b.amountOut ? -1 : 1));
+
+    if (candidates.length === 0) return null;
+
+    // 4. Run Optimal Split Search on Candidates
+    const { splits, totalOut } = await this.findOptimalRouteSplit(
+      amountIn,
+      tokenIn,
+      tokenOut,
+      candidates
+    );
+
+    if (totalOut === 0n) return null;
+
+    const payload: SplitPath[] = splits.map((s) => ({
+      path: s.candidate.path,
+      adapters: s.candidate.adapters,
+      proportion: s.proportion,
+    }));
+
+    return {
+      type: "SPLIT",
+      amountOut: totalOut,
+      payload,
+      gasEstimate: 0n,
+    };
+  }
+
+  /**
+   * Specialized Split Search that handles mixed Route types (Direct + MultiHop)
+   */
+  private async findOptimalRouteSplit(
+    amountIn: bigint,
+    tokenIn: `0x${string}`,
+    tokenOut: `0x${string}`,
+    candidates: any[]
+  ) {
+    if (candidates.length === 1) {
+      const simulatedOutput = await this.simulateHybridStrategy(
+        [10000],
+        candidates,
+        amountIn,
+        tokenIn,
+        tokenOut,
+        3
+      );
+      return {
+        splits: [{ candidate: candidates[0], proportion: 10000 }],
+        totalOut: simulatedOutput
+      };
+    }
+
+    const numRoutes = Math.min(candidates.length, 3);
+    const strategies = this.generateSplitStrategies(numRoutes);
+
+    let bestOutput = 0n;
+    let bestSplits: any[] = [];
+    let consecutiveNoImprovement = 0;
+
+    // Process strategies in parallel batches for performance
+    const batchSize = 5;
+    for (let i = 0; i < strategies.length; i += batchSize) {
+      const batch = strategies.slice(i, i + batchSize);
+
+      const batchResults = await Promise.allSettled(
+        batch.map(strategy =>
+          this.simulateHybridStrategy(
+            strategy,
+            candidates,
+            amountIn,
+            tokenIn,
+            tokenOut,
+            numRoutes
+          )
+        )
+      );
+
+      let foundImprovement = false;
+      batchResults.forEach((result, batchIdx) => {
+        if (result.status === "fulfilled" && result.value > bestOutput) {
+          bestOutput = result.value;
+          const strategy = batch[batchIdx];
+          bestSplits = strategy.slice(0, numRoutes).map((prop, idx) => ({
+            candidate: candidates[idx],
+            proportion: prop
+          })).filter(s => s.proportion > 0);
+          foundImprovement = true;
+        }
+      });
+
+      // Early termination: if no improvement for 2 consecutive batches
+      if (foundImprovement) {
+        consecutiveNoImprovement = 0;
+      } else {
+        consecutiveNoImprovement++;
+        if (consecutiveNoImprovement >= 2 && bestOutput > 0n) {
+          break;
+        }
+      }
+    }
+
+    return { splits: bestSplits, totalOut: bestOutput };
+  }
+
+  private async simulateHybridStrategy(
+    strategy: number[],
+    candidates: any[],
+    amountIn: bigint,
+    tokenIn: `0x${string}`,
+    tokenOut: `0x${string}`,
+    numRoutes: number
+  ): Promise<bigint> {
+    const promises = strategy.slice(0, numRoutes).map(async (proportion, idx) => {
+      if (proportion === 0) return 0n;
+      const splitAmount = (amountIn * BigInt(proportion)) / BigInt(FEE_DENOMINATOR);
+      const candidate = candidates[idx];
+
+      if (candidate.type === 'DIRECT') {
+        return this.publicClient.readContract({
+          address: candidate.adapter,
+          abi: IAdapterAbi,
+          functionName: "query",
+          args: [splitAmount, tokenIn, tokenOut],
+        }) as Promise<bigint>;
+      } else {
+        let currentAmount = splitAmount;
+        for (let i = 0; i < candidate.adapters.length; i++) {
+          const hopIn = candidate.path[i];
+          const hopOut = candidate.path[i + 1];
+          const adapter = candidate.adapters[i];
+          try {
+            currentAmount = await this.publicClient.readContract({
+              address: adapter,
+              abi: IAdapterAbi,
+              functionName: "query",
+              args: [currentAmount, hopIn, hopOut]
+            }) as bigint;
+          } catch {
+            return 0n;
+          }
+          if (currentAmount === 0n) return 0n;
+        }
+        return currentAmount;
+      }
+    });
+
+    const results = await Promise.all(promises);
+    return results.reduce((sum, val) => sum + val, 0n);
+  }
+
+  private async findNoSplit(
     amountIn: bigint,
     tokenIn: `0x${string}`,
     tokenOut: `0x${string}`
@@ -622,74 +931,16 @@ export class SmartRouter {
     if (inputPaths.length === 0) {
       return null;
     }
-
-    // Step 2: Optimize split across input paths
-    let totalIntermediateAmount = 0n;
-    let bestInputConfig: Array<{
-      path: `0x${string}`[];
-      adapters: `0x${string}`[];
-      proportion: number;
-    }> = [];
-
-    if (inputPaths.length === 1) {
-      totalIntermediateAmount = inputPaths[0].amountOut;
-      bestInputConfig = [
-        {
-          path: inputPaths[0].path,
-          adapters: inputPaths[0].adapters,
-          proportion: 10000,
-        },
-      ];
-    } else {
-      const singleBest = inputPaths[0];
-      if (
-        inputPaths.length >= 2 &&
-        inputPaths[1].amountOut > (singleBest.amountOut * 7n) / 10n
-      ) {
-        const halfAmount = amountIn / 2n;
-        const [split1, split2] = await Promise.all([
-          this.findBestMultiHopPath(halfAmount, tokenIn, this.wnativeAddress!),
-          this.findBestMultiHopPath(halfAmount, tokenIn, this.wnativeAddress!),
-        ]);
-
-        const splitTotal =
-          (split1?.amountOut || 0n) + (split2?.amountOut || 0n);
-
-        if (splitTotal > singleBest.amountOut) {
-          totalIntermediateAmount = splitTotal;
-          bestInputConfig = [
-            {
-              path: inputPaths[0].path,
-              adapters: inputPaths[0].adapters,
-              proportion: 5000,
-            },
-            {
-              path: inputPaths[1].path,
-              adapters: inputPaths[1].adapters,
-              proportion: 5000,
-            },
-          ];
-        } else {
-          totalIntermediateAmount = singleBest.amountOut;
-          bestInputConfig = [
-            {
-              path: singleBest.path,
-              adapters: singleBest.adapters,
-              proportion: 10000,
-            },
-          ];
-        }
-      } else {
-        totalIntermediateAmount = singleBest.amountOut;
-        bestInputConfig = [
-          {
-            path: singleBest.path,
-            adapters: singleBest.adapters,
-            proportion: 10000,
-          },
-        ];
-      }
-    }
+    // Select the single best path for input leg
+    const singleBest = inputPaths[0];
+    const totalIntermediateAmount = singleBest.amountOut;
+    const bestInputConfig = [
+      {
+        path: singleBest.path,
+        adapters: singleBest.adapters,
+        proportion: 10000,
+      },
+    ];
 
     // Step 3: Paths FROM WNATIVE
     const outputPath = await this.findBestMultiHopPath(
@@ -702,51 +953,30 @@ export class SmartRouter {
       return null;
     }
 
-    if (bestInputConfig.length === 1) {
-      const fullPath = [
-        ...bestInputConfig[0].path,
-        ...outputPath.path.slice(1),
-      ];
-      const fullAdapters = [
-        ...bestInputConfig[0].adapters,
-        ...outputPath.adapters,
-      ];
+    // Build the full path combining input and output legs
+    const fullPath = [
+      ...bestInputConfig[0].path,
+      ...outputPath.path.slice(1),
+    ];
+    const fullAdapters = [
+      ...bestInputConfig[0].adapters,
+      ...outputPath.adapters,
+    ];
 
-      const payload: SplitPath[] = [
-        {
-          path: fullPath,
-          adapters: fullAdapters,
-          proportion: 10000,
-        },
-      ];
+    const payload: SplitPath[] = [
+      {
+        path: fullPath,
+        adapters: fullAdapters,
+        proportion: 10000,
+      },
+    ];
 
-      return {
-        type: "NOSPLIT",
-        amountOut: outputPath.amountOut,
-        payload,
-        gasEstimate: 0n,
-      };
-    } else {
-      // Fallback for complex splits (currently simplified)
-      const singleBest = inputPaths[0];
-      const fullPath = [...singleBest.path, ...outputPath.path.slice(1)];
-      const fullAdapters = [...singleBest.adapters, ...outputPath.adapters];
-
-      const payload: SplitPath[] = [
-        {
-          path: fullPath,
-          adapters: fullAdapters,
-          proportion: 10000,
-        },
-      ];
-
-      return {
-        type: "NOSPLIT",
-        amountOut: outputPath.amountOut,
-        payload,
-        gasEstimate: 0n,
-      };
-    }
+    return {
+      type: "NOSPLIT",
+      amountOut: outputPath.amountOut,
+      payload,
+      gasEstimate: 0n,
+    };
   }
 
   private async findTopMultiHopPaths(
@@ -804,6 +1034,11 @@ export class SmartRouter {
       );
 
       if (secondLegQuotes.length > 0) {
+        // console.log(`[SmartRouter] MultiHop Trace: ${tokenIn} -> ${intermediate} -> ${tokenOut}:`, {
+        //   in: amountIn.toString(),
+        //   mid: firstLegQuotes[0].amountOut.toString(),
+        //   out: secondLegQuotes[0].amountOut.toString()
+        // });
         allPaths.push({
           path: [tokenIn, intermediate, tokenOut],
           adapters: [firstLegQuotes[0].adapter, secondLegQuotes[0].adapter],
@@ -812,9 +1047,11 @@ export class SmartRouter {
       }
     }
 
-    return allPaths
+    const topPaths = allPaths
       .sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1))
       .slice(0, topN);
+
+    return topPaths;
   }
 
   /**
@@ -900,6 +1137,7 @@ export class SmartRouter {
     const bestResult = validResults.reduce((prev, current) =>
       prev!.finalAmount > current!.finalAmount ? prev : current
     );
+
     const payload: ConvergeTrade = {
       tokenIn,
       intermediate: bestResult!.intermediate, // Now dynamic!
@@ -952,6 +1190,143 @@ export class SmartRouter {
     return {
       type: splits.length === 1 ? "NOSPLIT" : "SPLIT",
       amountOut: totalOut,
+      payload,
+      gasEstimate: 0n,
+    };
+  }
+
+  /**
+   * Strategy: Multi-Stage Converge Split
+   * Pattern: Split → Converge → Split → Converge
+   * Uses optimal splits across adapters at each leg with 2 intermediates
+   */
+  private async findMultiStageConvergeSplit(
+    amountIn: bigint,
+    tokenIn: `0x${string}`,
+    tokenOut: `0x${string}`
+  ): Promise<BestRouteResult | null> {
+    let bestResult: {
+      intermediate1: `0x${string}`;
+      intermediate2: `0x${string}`;
+      leg1Splits: Array<{ adapter: `0x${string}`; proportion: number }>;
+      leg2Splits: Array<{ adapter: `0x${string}`; proportion: number }>;
+      leg3Adapter: `0x${string}`;
+      totalLeg1Out: bigint;
+      totalLeg2Out: bigint;
+      finalAmountOut: bigint;
+    } | null = null;
+
+    // Limit combinations to avoid excessive RPC calls
+    const maxIntermediates = Math.min(this.trustedTokens.length, 5);
+    const candidateTokens = this.trustedTokens.slice(0, maxIntermediates);
+
+    // Try each pair of trusted tokens as intermediate1 and intermediate2
+    for (const intermediate1 of candidateTokens) {
+      if (
+        intermediate1.toLowerCase() === tokenIn.toLowerCase() ||
+        intermediate1.toLowerCase() === tokenOut.toLowerCase()
+      ) {
+        continue;
+      }
+
+      // Leg 1: tokenIn → intermediate1 (with split)
+      const leg1Quotes = await this.getAllAdapterQuotes(
+        amountIn,
+        tokenIn,
+        intermediate1
+      );
+      if (leg1Quotes.length === 0) continue;
+
+      const { splits: leg1Splits, totalOut: totalLeg1Out } =
+        await this.findOptimalSplit(amountIn, tokenIn, intermediate1, leg1Quotes);
+
+      if (totalLeg1Out === 0n) continue;
+
+      for (const intermediate2 of candidateTokens) {
+        if (
+          intermediate2.toLowerCase() === tokenIn.toLowerCase() ||
+          intermediate2.toLowerCase() === tokenOut.toLowerCase() ||
+          intermediate2.toLowerCase() === intermediate1.toLowerCase()
+        ) {
+          continue;
+        }
+
+        // Leg 2: intermediate1 → intermediate2 (with split)
+        const leg2Quotes = await this.getAllAdapterQuotes(
+          totalLeg1Out,
+          intermediate1,
+          intermediate2
+        );
+        if (leg2Quotes.length === 0) continue;
+
+        const { splits: leg2Splits, totalOut: totalLeg2Out } =
+          await this.findOptimalSplit(totalLeg1Out, intermediate1, intermediate2, leg2Quotes);
+
+        if (totalLeg2Out === 0n) continue;
+
+        // Leg 3: intermediate2 → tokenOut (single best adapter for simplicity)
+        const leg3Quotes = await this.getAllAdapterQuotes(
+          totalLeg2Out,
+          intermediate2,
+          tokenOut
+        );
+        if (leg3Quotes.length === 0) continue;
+
+        const leg3Best = leg3Quotes[0];
+        const finalAmountOut = leg3Best.amountOut;
+
+        // Track best result
+        if (!bestResult || finalAmountOut > bestResult.finalAmountOut) {
+          bestResult = {
+            intermediate1,
+            intermediate2,
+            leg1Splits,
+            leg2Splits,
+            leg3Adapter: leg3Best.adapter,
+            totalLeg1Out,
+            totalLeg2Out,
+            finalAmountOut,
+          };
+        }
+      }
+    }
+
+    if (!bestResult) {
+      return null;
+    }
+
+    // Build payload - using SPLIT type with multi-hop paths
+    const payload: SplitPath[] = [];
+
+    bestResult.leg1Splits.forEach((leg1Split) => {
+      bestResult!.leg2Splits.forEach((leg2Split) => {
+        // Calculate combined proportion: (p1 * p2) / 10000
+        // e.g. 50% * 50% = 25% (2500 basis points)
+        const combinedProportion = (leg1Split.proportion * leg2Split.proportion) / 10000;
+
+        if (combinedProportion > 0) {
+          payload.push({
+            path: [tokenIn, bestResult!.intermediate1, bestResult!.intermediate2, tokenOut],
+            adapters: [
+              leg1Split.adapter,
+              leg2Split.adapter,
+              bestResult!.leg3Adapter,
+            ],
+            proportion: Math.floor(combinedProportion),
+          });
+        }
+      });
+    });
+
+    // Normalize proportions to ensure they sum to 10000 due to floor rounding
+    const totalProp = payload.reduce((sum, p) => sum + p.proportion, 0);
+    if (totalProp < 10000 && payload.length > 0) {
+      payload[0].proportion += (10000 - totalProp);
+    }
+
+    return {
+      type: "SPLIT",
+      amountOut: bestResult.finalAmountOut,
       payload,
       gasEstimate: 0n,
     };
