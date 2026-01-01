@@ -154,7 +154,7 @@ export function SlippageCalculator({
         <div className="flex justify-center items-center mt-8 flex-col gap-2">
           {/* clip-path-polygon */}
           <button
-            className="relative w-full md:h-16 h-12 flex items-center justify-center font-roboto font-semibold md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron bg-[#FF9900] text-black border-2 border-[#FF9900] rounded-2xl"
+            className={`relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron`}
             // style={{
             //   clipPath:
             //     "polygon(0px 0px, 95% 0px, 100% 30%, 100% 100%, 6% 100%, 0px 60%)",
@@ -162,6 +162,7 @@ export function SlippageCalculator({
             onClick={handleReset}
           >
             Reset Slippage
+            <div className="group-hover:opacity-80 w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div>
           </button>
           <button
             className="px-4 py-1 mt-4 bg-black font-semibold md:text-2xl text-xl text-[#FF9900] rounded font-orbitron"

@@ -211,7 +211,7 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
         <div className="flex justify-center items-center mt-20 flex-col">
           <button
             onClick={handleResetSlippage}
-            className={`relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-semibold md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron
+            className={`relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron
     ${error ? "opacity-100 cursor-not-allowed" : ""}`}
             style={{
               background: "#FF9900",
@@ -222,12 +222,13 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
             }}
             disabled={!!error}
           >
+            <div className="group-hover:opacity-80 w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div>
             Reset Slippage
           </button>
 
           <button
             onClick={handleModalClose}
-            className="px-4 py-1 mt-4 bg-black font-semibold md:text-2xl text-xl text-[#FF9900] rounded font-orbitron"
+            className="px-4 py-1 mt-5 bg-black font-semibold md:text-2xl text-xl text-[#FF9900] rounded font-orbitron"
           >
             Close
           </button>
