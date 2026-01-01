@@ -2,6 +2,8 @@ import { useRef, useEffect } from "react";
 import Min from "../../../assets/images/swap-emp.png";
 import Dis from "../../../assets/images/dis.png";
 import Copy from "../../../assets/images/copy.png";
+import { useBalance } from "wagmi";
+import { formatEther } from "viem";
 
 export default function AddressCard({
   address,
@@ -10,10 +12,20 @@ export default function AddressCard({
   onClose,
 }) {
   const popupRef = useRef(null);
+
+  // Fetch balance inside the component
+  const { data: balanceData } = useBalance({
+    address: address,
+  });
+
   const shortAddress =
     address && address.length > 8
       ? `${address.slice(0, 4)}...${address.slice(-4)}`
       : address;
+
+  const balance = balanceData
+    ? parseFloat(formatEther(balanceData.value)).toFixed(4)
+    : "0";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -53,7 +65,7 @@ export default function AddressCard({
         className="md:w-[150px] w-16 rounded-full object-contain"
       />
       <p className="text-2xl font-bold roboto">{shortAddress}</p>
-      <p className="text-gray-400 font-medium text-xl mb-5">0 PLS</p>
+      <p className="text-gray-400 font-medium text-xl mb-5">{balance} PLS</p>
       <div
         className="md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer group-hover:!opacity-80 transition-all"
         onClick={onCopy}
