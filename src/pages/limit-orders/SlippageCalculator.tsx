@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import BG1 from "../../assets/images/bg.png";
+// import BG1 from "../../assets/images/bg.png";
 
 interface SlippageCalculatorProps {
   onSlippageChange: (slippage: number) => void;
