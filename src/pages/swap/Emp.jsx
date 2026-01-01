@@ -931,10 +931,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-        ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
-          parseFloat(usdValueTokenA)) *
-        100
-      ).toFixed(2)
+          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
+            parseFloat(usdValueTokenA)) *
+          100
+        ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
@@ -957,32 +957,40 @@ const Emp = ({ setPadding, setBestRoute }) => {
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
-          }`}
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
+          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
+        }`}
       >
         <div
-          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"
-            }`}
+          className={`scales8 ${
+            order ? "scales-top scales-top_limit" : "top70"
+          }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
-            <h1 className="md:text-5xl text-3xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
-              Seamless
+            <h1 className="md:text-5xl text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
+              {!order ? (
+                <>
+                  Optimized <span className="text-white">Aggregation</span>
+                </>
+              ) : (
+                <>
+                  Limit Orders <span className="text-white">Optimized</span>
+                </>
+              )}
             </h1>
-            <h2 className="md:text-5xl text-3xl text-center text-white font-orbitron font-bold">
-              Cross Chain Swaps
-            </h2>
           </div>
-          <div className="md:max-w-[700px] mx-auto w-full flex gap-3 items-center md:justify-start justify-center md:flex-nowrap flex- my-6 lg:px-1 px-0">
+          <div className="lg:max-w-[700px] md:max-w-[600px] mx-auto w-full flex gap-3 items-center md:justify-start justify-start md:flex-nowrap flex- my-6 lg:px-1 px-0">
             <div
               onClick={() => {
                 setOrder(false);
                 setPadding("lg:h-[295px] h-full");
                 setSearchParams({}, { replace: true });
               }}
-              className={`${order
-                ? "border-white text-[#FF9900]"
-                : "border-[#FF9900] text-black bg-[#FF9900]"
-                } cursor-pointer hoverswap transition-all md:max-w-[100px] w-full h-[47px] flex justify-center items-center rounded-lg border md:text-sm text-[13px] font-bold font-orbitron`}
+              className={`${
+                order
+                  ? "border-white text-[#FF9900]"
+                  : "border-[#FF9900] text-black bg-[#FF9900]"
+              } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
             >
               SWAP
             </div>
@@ -994,34 +1002,35 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("md:pb-[160px] pb-10");
                 setSearchParams({ tab: "limit" }, { replace: true });
               }}
-              className={`${order
-                ? "border-[#FF9900] text-black bg-[#FF9900]"
-                : "border-white "
-                }  md:max-w-[154px] w-full h-[47px] flex justify-center items-center rounded-lg border text-[#FF9900] md:text-sm text-[13px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
+              className={`${
+                order
+                  ? "border-[#FF9900] text-black bg-[#FF9900]"
+                  : "border-white "
+              }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
             >
               LIMIT ORDER
             </div>
             <div
               onClick={() => setSlippageVisible(true)}
-              className="shrink-0 w-[47px] h-[47px] border border-white rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
+              className="shrink-0 md:w-[47px] md:h-[47px] w-7 h-7 border border-white rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
             >
               <img
                 src={Sett}
                 alt="Sett"
-                className="w-[26px] group-hover:animate-[spin_3s_linear_infinite]"
+                className="md:w-[26px] w-[14px] group-hover:animate-[spin_3s_linear_infinite]"
               />
             </div>
           </div>
           {/* Swap */}
           {!order ? (
-            <div className="md:max-w-[700px] mx-auto w-full">
-              <div className="relative">
-                <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
-                <div className="flex justify-between gap-3 items-center lg:px-2">
-                  <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
+            <div className="lg:max-w-[700px] md:max-w-[600px] mx-auto w-full">
+              <div className="relative bg_swap_box">
+                {/* <img className="bg-sell w-full" src={Sellbox} alt="sellbox" /> */}
+                <div className="flex justify-between gap-3 items-center">
+                  <div className="font-orbitron text-dark-400 md:text-2xl text-xs font-semibold leading-normal">
                     You Sell
                   </div>
-                  <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-xs px-2 py-2">
+                  <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
                     <span className="font-extrabold font-orbitron leading-normal">
                       BAL
                     </span>
@@ -1033,22 +1042,23 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedBalance)}`
-                          : `${tokenBalance
-                            ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
+                        ? `${formatNumber(formattedBalance)}`
+                        : `${
+                            tokenBalance
+                              ? formatNumber(
+                                  parseFloat(tokenBalance.formatted).toFixed(6)
+                                )
+                              : "0.00"
                           }`}
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full md:px-4 px-2 py-4 mt-2">
+                <div className="flex w-full mt-2">
                   <div className="w-1/2">
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
-                      <div className="flex gap-2 items-center mt-7">
+                      <div className="flex gap-2 items-center md:mt-2 mt-6">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-3 gap-1 items-center bg-black border border-white rounded-lg md:px-6 px-4 md:py-[18px] py-4 margin_left">
+                        <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left md:w-[280px] w-[145px] justify-center">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(true);
@@ -1056,14 +1066,14 @@ const Emp = ({ setPadding, setBestRoute }) => {
                               setSelectedPercentage("");
                               setAmountIn("");
                             }}
-                            className="flex items-center md:gap-3 gap-1"
+                            className="flex items-center md:gap-4 gap-1"
                           >
                             <img
                               className="md:w-9 md:h-9 w-4 h-4"
                               src={selectedTokenA.image}
                               alt={selectedTokenA.name}
                             />
-                            <div className="text-[#FF9900] lg:text-base text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
+                            <div className="text-[#FF9900] lg:text-3xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
                               {selectedTokenA.ticker}
                             </div>
                           </div>
@@ -1074,7 +1084,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colorss"
                           >
                             {copySuccess &&
-                              activeTokenAddress === selectedTokenA.address ? (
+                            activeTokenAddress === selectedTokenA.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
@@ -1085,18 +1095,19 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     </div>
                   </div>
 
-                  <div className="md:max-w-1/2 w-full md:me-3">
-                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex gap-2 md:ml-0 ml-[-40px] justify-end">
+                  <div className="md:max-w-1/2 w-full">
+                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
                       <span></span>
                       {[25, 50, 75, 100].map((value) => (
                         <button
                           key={value}
                           type="button"
-                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${selectedPercentage === value
-                              ? " text-white bg-black"
-                              : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                            }`}
+                          className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+            ${
+              selectedPercentage === value
+                ? " text-white bg-black"
+                : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1144,14 +1155,14 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     })()}
                   </div>
                 </div>
-                <div className="text-right text-white text-base usd-spacing -mt-[14px] pe-8 truncate rigamesh text-sh1">
+                <div className="text-right text-black md:text-base text-[10px] usd-spacing truncate rigamesh text-sh1">
                   {conversionRate
                     ? `$${formatNumber(usdValue)}`
                     : "Fetching Rate..."}
                 </div>
               </div>
               <div
-                className="cursor-pointer mx-auto my-4 md:pt-7 relative top-[-8px] pt-[44px] md:w-[70px] w-12"
+                className="cursor-pointer mx-auto my-4 md:pt-7 relative md:top-[-16px] top-[-10px] pt-[20px] md:w-[70px] w-12"
                 onClick={() => {
                   const _tokenA = selectedTokenA;
                   const _tokenB = selectedTokenB;
@@ -1166,13 +1177,13 @@ const Emp = ({ setPadding, setBestRoute }) => {
                   className="hoverswap transition-all rounded-xl"
                 />
               </div>
-              <div className="relative">
-                <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
+              <div className="relative bg_swap_box_black">
+                {/* <img className="bg-sell w-full" src={Buybox} alt="Buybox" /> */}
                 <div className="flex justify-between gap-3 items-center">
-                  <div className="font-orbitron text-white ps-6 pt-4 text-2xl font-semibold leading-normal">
+                  <div className="font-orbitron text-white md:text-2xl text-xs font-semibold leading-normal">
                     You Buy
                   </div>
-                  <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFBF5E] md:text-sm text-xs px-2 py-2">
+                  <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
                     <span className="font-extrabold leading-normal">BAL</span>
                     <span className="font-bold font-orbitron leading-normal">
                       {" "}
@@ -1182,36 +1193,37 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedChainBalanceTokenB)}`
-                          : `${tokenBBalance
-                            ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
+                        ? `${formatNumber(formattedChainBalanceTokenB)}`
+                        : `${
+                            tokenBBalance
+                              ? formatNumber(
+                                  parseFloat(tokenBBalance.formatted).toFixed(6)
+                                )
+                              : "0.00"
                           }`}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex w-full md:px-4 px-2 pt-4 pb-1 mt-2">
+                <div className="flex w-full mt-2">
                   <div className="w-1/2">
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
-                      <div className="flex gap-2 items-center md:mt-4 mt-8">
+                      <div className="flex gap-2 items-center md:mt-2 mt-6">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-3 gap-1 items-center bg-[#FFE6C0] border border-white rounded-lg md:px-6 px-4 md:py-[18px] py-4 margin_left">
+                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 md:w-[280px] w-[145px] margin_left">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(false);
                               setTokenVisible(true);
                             }}
-                            className="flex items-center md:gap-3 gap-1"
+                            className="flex items-center justify-center md:gap-4 gap-1"
                           >
                             <img
                               className="md:w-9 md:h-9 w-4 h-4"
                               src={selectedTokenB.image}
                               alt={selectedTokenB.name}
                             />
-                            <div className="text-dark lg:text-base text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
+                            <div className="text-dark lg:text-3xl text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
                               {selectedTokenB.ticker}
                             </div>
                           </div>
@@ -1222,7 +1234,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colors"
                           >
                             {copySuccess &&
-                              activeTokenAddress === selectedTokenB.address ? (
+                            activeTokenAddress === selectedTokenB.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
@@ -1232,19 +1244,20 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="md:max-w-1/2 w-full md:me-3">
+                  <div className="md:max-w-1/2 w-full">
                     {/*  */}
-                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex gap-2 mb-2 md:ml-0 ml-[-40px] justify-end">
+                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 mb-2 md:ml-0 ml-[-40px] justify-end">
                       <span></span>
                       {[25, 50, 75, 100].map((value) => (
                         <button
                           key={value}
                           type="button"
-                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
-            ${selectedPercentage === value
-                              ? " text-white bg-black"
-                              : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
-                            }`}
+                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
+            ${
+              selectedPercentage === value
+                ? " text-white bg-black"
+                : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
+            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1313,7 +1326,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     ? `$${formatNumber(usdValueTokenB)}`
                     : "Fetching Rate..."}
                 </div> */}
-                <div className="text-right text-white usd-spacing text-base -mt-[0px] pe-8 rigamesh truncate text-sh1">
+                <div className="text-right text-white usd-spacing md:text-base text-[10px] rigamesh truncate text-sh1">
                   {conversionRateTokenB ? (
                     <span className="usd-spacing">
                       ${formatNumber(usdValueTokenB)}
@@ -1324,24 +1337,27 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${order
-                  ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                  : "pt-0 top-0"
-                  }`}
+                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${
+                  order
+                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                    : "pt-0 top-0"
+                }`}
               >
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`md:max-w-[432px] w-full mx-auto button-trans mt-12 h- flex justify-center items-center rounded-xl hover:opacity-80 transition-all ${isInsufficientBalance()
-                    ? "opacity-50 cursor-not-allowed"
-                    : " hover:text-black hover:bg-transparent"
-                    } font-orbitron text-black lg:text-3xl text-2xl font-black`}
+                  className={`group relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center hover:opacity-80 transition-all ${
+                    isInsufficientBalance()
+                      ? "opacity-50 cursor-not-allowed"
+                      : " group-hover:text-black group-hover:bg-opacity-80"
+                  } font-orbitron text-black lg:text-3xl text-base font-black`}
                 >
-                  <img
+                  <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+                  {/* <img
                     className="absolute swap-button"
                     src={Swapbutton}
                     alt="Swap"
-                  />
+                  /> */}
                   <span>{getButtonText()}</span>
                 </button>
               </div>
@@ -1497,8 +1513,8 @@ const Emp = ({ setPadding, setBestRoute }) => {
           />
         )}
       </div>
-      <div className="xl:fixed absolute bg-white left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
-        <h6 className="font-orbitron text-sm">
+      <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
+        <h6 className="font-orbitron md:text-sm text-[10px]">
           <span>
             <span className="font-extrabold">Min Received</span> :{" "}
             <span className="rigamesh truncate">
@@ -1507,7 +1523,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
             <span className="font-extrabold">{selectedTokenB.ticker}</span>
           </span>
         </h6>
-        <h6 className="font-orbitron text-sm py-3">
+        <h6 className="font-orbitron md:text-sm text-[10px] py-3">
           <span>
             <span className="font-extrabold">Rate :</span>{" "}
             <span className="font-bold">1</span>{" "}
@@ -1520,7 +1536,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
             </span>
           </span>
         </h6>
-        <h6 className="font-orbitron text-sm">
+        <h6 className="font-orbitron md:text-sm text-[10px]">
           <span>
             <span className="font-extrabold">Price Impact:</span>{" "}
             <span

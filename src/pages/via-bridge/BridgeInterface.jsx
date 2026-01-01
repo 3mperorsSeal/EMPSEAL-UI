@@ -529,7 +529,7 @@ const BridgeInterface = () => {
 
   return (
     <>
-      <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-2 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
+      <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-4 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
         {!isCorrectChain && address && (
           <div className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-[#FF9900] mt-0.5 flex-shrink-0" />
@@ -545,13 +545,13 @@ const BridgeInterface = () => {
         )}
         <div className="w-full">
           {/* FROM SECTION */}
-          <div className="relative">
-            <img className="bg-sell w-full" src={Sellbox} alt="sellbox" />
-            <div className="flex justify-between gap-3 items-center lg:px-2">
-              <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
+          <div className="relative bg_swap_box">
+            {/* <img className="bg-sell w-full" src={Sellbox} alt="sellbox" /> */}
+            <div className="flex justify-between gap-3 items-center">
+              <div className="font-orbitron text-dark-400 md:text-2xl text-xs font-semibold leading-normal">
                 From
               </div>
-              <div className="text-center absolute -top-4 right-0 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 bg-[#FFE6C0] md:text-sm text-xs px-2 py-2">
+              <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
                 <span className="font-extrabold font-orbitron leading-normal">
                   BAL
                 </span>
@@ -568,39 +568,35 @@ const BridgeInterface = () => {
                 </span>
               </div>
             </div>
-            <div className="flex w-full px-4 py-4 mt-2">
-              <div className="flex md:w-1/2 w-[40%] md:me-3 justify-between rounded-2xl py-4 lg:px-8 px-3">
-                <div className="flex justify-center gap-4 items-center cursor-pointer md:h-[56px] h-12 md:w-[170px] w-[100px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative">
-                  <ChainSelector
-                    chain={sourceChain}
-                    onClick={() => setIsFromChainModalOpen(true)}
+            <div className="flex w-full">
+              <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left md:w-[280px] w-[130px] justify-center">
+                  <TokenSelector
+                    token={selectedToken}
+                    chainId={fromChainId}
+                    onClick={() => setIsTokenModalOpen(true)}
                   />
-                  <div className="absolute bg-black border border-white md:w-[75px] w-[55px] md:h-[55px] h-[50px] flex justify-center items-center rounded-lg md:right-[-90px] right-[-60px]">
-                    <img
-                      src={CPatch}
-                      className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] md:rotate-[60deg] rotate-[70deg] z-[-1] relative md:left-[-20px] left-[-10px]"
-                    />
-                    <TokenSelector
-                      token={selectedToken}
-                      chainId={fromChainId}
-                      onClick={() => setIsTokenModalOpen(true)}
+                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-83px] right-[-50px]">
+                    <ChainSelector
+                      chain={sourceChain}
+                      onClick={() => setIsFromChainModalOpen(true)}
                     />
                   </div>
                 </div>
               </div>
 
-              <div className="md:w-1/2 w-full md:me-3">
-                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
+              <div className="md:w-1/2 w-full">
+                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
-                    : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                    : "bg-black text-white hover:border-black hover:bg-[#FF9900] hover:text-black"
                 }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
@@ -698,9 +694,8 @@ const BridgeInterface = () => {
               </div>
             </div>
           </div>
-
           <div
-            className="cursor-pointer mx-auto my-4 md:pt-7 relative top-[-8px] pt-[44px] md:w-[70px] w-12"
+            className="cursor-pointer mx-auto my-4 md:pt-7 relative md:top-[-14px] top-[-10px] pt-[20px] md:w-[70px] w-12"
             onClick={handleSwapDirection}
           >
             <img
@@ -711,30 +706,30 @@ const BridgeInterface = () => {
           </div>
 
           {/* TO SECTION */}
-          <div className="relative text-white">
-            <img className="bg-sell w-full" src={Buybox} alt="Buybox" />
+          <div className="relative text-white bg_swap_box_black">
+            {/* <img className="bg-sell w-full" src={Buybox} alt="Buybox" /> */}
             <div className="flex justify-between gap-3 items-center lg:px-2">
-              <div className="font-orbitron text-dark-400 ps-4 pt-4 text-2xl font-semibold leading-normal">
+              <div className="font-orbitron text-white md:text-2xl text-xs font-semibold leading-normal">
                 To
               </div>
             </div>
-            <div className="flex w-full px-4 py-4 mt-2">
-              <div className="flex md:w-1/2 w-[40%] md:me-3 justify-between rounded-2xl py-4 lg:px-8 px-3">
-                <div className="flex justify-center gap-4 items-center cursor-pointer md:h-[56px] h-12 md:w-[170px] w-[120px] bg-[#FFE6C0] md:px-3 px-1 py-0 rounded-lg margin_left relative">
+            <div className="flex w-full">
+              <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4">
+                <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 md:h-20 h-12 py-2.5 md:w-[280px] w-[145px] margin_left">
                   <ChainSelector
                     chain={destChain}
                     onClick={() => setIsToChainModalOpen(true)}
                   />
                 </div>
               </div>
-              <div className="md:w-1/2 w-full md:me-3">
-                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:mt-0 mt-[-20px] md:ml-0 ml-[-40px] justify-end">
+              <div className="md:w-1/2 w-full">
+                <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
                 ${
                   selectedPercentage === value
                     ? " text-white bg-black"
@@ -782,27 +777,42 @@ const BridgeInterface = () => {
                     );
                   })()} */}
                   {(() => {
+                    // const formattedValue = formatNumber(
+                    //   amount?.toString() || ""
+                    // );
+
+                    // const defaultFontSize = 48;
+                    // const minFontSize = 32;
+
+                    // const FREE_DIGITS = 7;
+                    // const SHRINK_RATE = 3;
+                    // const inputLength = formattedValue.replace(
+                    //   /\D/g,
+                    //   ""
+                    // ).length;
+
+                    // const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
+
+                    // const dynamicFontSize = Math.max(
+                    //   minFontSize,
+                    //   defaultFontSize - excessDigits * SHRINK_RATE
+                    // );
                     const formattedValue = formatNumber(
                       amount?.toString() || ""
                     );
 
-                    const defaultFontSize = 48;
-                    const minFontSize = 32;
+                    const inputLength =
+                      formattedValue.replace(/\D/g, "").length || 0;
 
-                    const FREE_DIGITS = 7;
-                    const SHRINK_RATE = 3;
-                    const inputLength = formattedValue.replace(
-                      /\D/g,
-                      ""
-                    ).length;
+                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
 
-                    const excessDigits = Math.max(
-                      0,
-                      inputLength - FREE_DIGITS
-                    );
+                    const FREE_DIGITS = 7; // no shrink up to 10 digits
+                    const SHRINK_RATE = 3; // slow shrink rate
+
+                    const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                     const dynamicFontSize = Math.max(
-                      minFontSize,
+                      12,
                       defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
@@ -834,28 +844,34 @@ const BridgeInterface = () => {
         </div>
 
         {/* Recipient Address */}
-        <div className="mt-20 mb-10 relative">
-          <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
+        <div className="my-8 relative">
+          <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
             Recipient Address
           </label>
-          <div className="relative w-full py-9 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg">
+          <div className="relative w-full border border-[#FF9900] py-10 rounded-[40px]">
             {/* <img className="bg-rb" src={Rbox} alt="Rbox" /> */}
             <input
               type="text"
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="0x..."
-              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full px-4 py-3 bg-transparent text-white roboto md:text-2xl text-sm truncate outline-none"
+              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-10 pl-4 pr-32 py-12 text-center bg-transparent text-white roboto md:text-xl text-sm truncate outline-none"
             />
+            <button
+              className={`!absolute !bg-transparent w-[100px] h-12 hover:opacity-70 bg-black !border !border-white top-4 right-4 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
+              // onClick={handleSelfButtonClick}
+            >
+              Self
+            </button>
           </div>
         </div>
         {/* Fees Display */}
         {bridgeFees && (
-          <div className="mb-20 ">
-            <label className="block md:text-2xl text-sm font-medium text-gray-300 mb-6 roboto">
+          <div className="mb-10">
+            <label className="block md:text-4xl text-xl font-medium text-white mb-6 font-orbitron text-center">
               Estimated Fees:
             </label>
-            <div className="grid grid-cols-2 gap-2 p-4 bg-[#FF9900]/5 border border-[#FF9900] rounded-lg text-white text-xs md:text-sm">
+            <div className="grid grid-cols-2 gap-2 p-4 border border-[#FF9900] text-center rounded-[40px] text-white text-xs md:text-sm font-orbitron">
               {/* <div>Protocol Fee:</div>
               <div>{formatUnits(bridgeFees[0] ?? 0n, 6)} USDC</div> */}
 
@@ -878,13 +894,14 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="md:max-w-[432px] w-full mx-auto button-trans text-center mt-12 h- flex justify-center items-center gap-2 rounded-xl hover:opacity-80 transition-all hover:text-black hover:bg-transparent font-orbitron text-black lg:text-2xl text-base font-extrabold"
+            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
           >
-            <img
+            <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+            {/* <img
               className="absolute swap-button1"
               src={Swapbutton}
               alt="Swap"
-            />
+            /> */}
             {renderButton()}
           </button>
         </div>
@@ -924,7 +941,7 @@ const BridgeInterface = () => {
       />
 
       {/* Info / Logs */}
-      <div className="md:max-w-[1300px] w-full mx-auto px-4 md:mt-0 mt-28 scales-b scales-top">
+      <div className="md:max-w-[1300px] w-full mx-auto px-4 md:mt-0 mt-20 scales-b scales-top">
         {bridgeHash && (
           <div className="clip-bg1 rounded-lg p-4 w-full">
             <p className="text-lg text-[#FBB025] font-medium  mb-2 v">

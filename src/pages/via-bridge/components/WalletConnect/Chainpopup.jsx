@@ -1,5 +1,8 @@
 import { useState } from "react";
 import dummyImage from "../../../../assets/images/emp-logo.png";
+import Base from "../../../../assets/icons/base.svg";
+import Pulse from "../../../../assets/icons/pls.svg";
+import Arbitrum from "../../../../assets/icons/arbitrum.svg";
 
 const ChainPopup = ({
   setShowChainPopup,
@@ -12,6 +15,12 @@ const ChainPopup = ({
   const filteredChains = availableChains.filter((c) =>
     c.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const chainIcons = {
+    base: Base,
+    pulse: Pulse,
+    pulsechain: Pulse,
+    "arbitrum one": Arbitrum,
+  };
 
   return (
     <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
@@ -69,6 +78,8 @@ const ChainPopup = ({
           <div className="md:mt-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-4 px-2">
             {filteredChains.map((c) => {
               const isActive = chain?.id === c.id;
+              const chainKey = c.name.toLowerCase();
+              const chainIcon = chainIcons[chainKey] || dummyImage;
               return (
                 <div
                   key={c.id}
@@ -81,6 +92,15 @@ const ChainPopup = ({
                     // sc1
                   }`}
                 >
+                  {" "}
+                  <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                    <img
+                      src={chainIcon}
+                      alt={c.name}
+                      className="w-full flex shrink-0"
+                      onError={(e) => (e.currentTarget.src = dummyImage)}
+                    />
+                  </div>
                   {/* <div className="w-6 h-6 rounded-full flex justify-center items-center">
                     <img
                       src={c.icon || dummyImage}
@@ -90,7 +110,7 @@ const ChainPopup = ({
                     />
                   </div> */}
                   <span
-                    className={`font-orbitron text-xs text-center px-3 ${
+                    className={`font-orbitron text-2xl text-center px-3 ${
                       isActive ? "text-[#fff]" : "text-[#fff]"
                     }`}
                   >

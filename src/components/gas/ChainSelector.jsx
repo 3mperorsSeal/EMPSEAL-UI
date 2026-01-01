@@ -253,11 +253,30 @@ const ChainModal = ({
 
   if (!isOpen) return null;
 
+  const isTestnet = (chain) => {
+    if (chain.testnet) return true;
+
+    const testnetKeywords = [
+      "test",
+      "goerli",
+      "sepolia",
+      "mumbai",
+      "fuji",
+      "chapel",
+      "alfajores",
+      "dev",
+    ];
+
+    return testnetKeywords.some((k) => chain.name?.toLowerCase().includes(k));
+  };
   const filteredChains = chains.filter(
     (c) =>
       c.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       c.symbol?.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const mainnets = filteredChains.filter((c) => !isTestnet(c));
+  const testnets = filteredChains.filter((c) => isTestnet(c));
 
   const renderChain = (chain) => {
     return (
@@ -277,7 +296,7 @@ const ChainModal = ({
   };
 
   return (
-    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
+    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
       <div
         ref={modalRef}
         className="relative w-full max-w-[650px] rounded-3xl bg-black py-6 md:px-10 md:py-12 px-6 clip-bg"
@@ -313,7 +332,24 @@ const ChainModal = ({
 
         {/* Chains */}
         <div className="mt-4 max-h-[350px] overflow-y-auto px-2">
-          {filteredChains.map(renderChain)}
+          {/* MAINNETS */}
+          {mainnets.length > 0 && (
+            <>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mb-2">
+                Mainnets
+              </p>
+              {mainnets.map(renderChain)}
+            </>
+          )}
+          {/* TESTNETS */}
+          {testnets.length > 0 && (
+            <>
+              <p className="text-xs text-gray-400 uppercase tracking-widest mt-6 mb-2">
+                Testnets
+              </p>
+              {testnets.map(renderChain)}
+            </>
+          )}
         </div>
       </div>
     </div>
@@ -370,18 +406,18 @@ const ChainSelector = ({ onSwitch }) => {
 
   const getFontSizeClass = (text) => {
     const length = text?.toString().length || 0;
-    if (length > 14) return "text-[10px]";
-    if (length > 11) return "text-sm";
-    return "text-base";
+    if (length > 11) return "text-[10px]";
+    if (length > 11) return "text-xl";
+    return "text-xl";
   };
 
   return (
     <>
-      <div className="space-y-4 md:h-[420px] h_cs h-[400px] flex flex-col justify-between">
+      <div className="space-y-4 lg:h-[350px] h_cs md:h-[420px] h-[270px] flex flex-col justify-between">
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}
-          className="bg-black border border-white rounded-lg md:px-4 px-2 py-4 flex items-center gap-2 w-full"
+          className="bg-black border-2 border-white rounded-lg md:px-4 px-2 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
         >
           {fromChain ? (
             <>
@@ -395,14 +431,14 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="text-white">Select From Chain</span>
+            <span className="text-white">Select Chain</span>
           )}
         </button>
 
         {/* TO */}
         <button
           onClick={() => setActiveModal("to")}
-          className="bg-[#FFE6C0] rounded-lg md:px-4 px-2 py-4 flex items-center gap-2"
+          className="bg-[#FFE6C0] border-2 border-white rounded-lg md:px-4 px-2 py-4 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
         >
           {toChain ? (
             <>
@@ -416,7 +452,7 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="text-black">Select To Chain</span>
+            <span className="text-black">Select Chain</span>
           )}
         </button>
       </div>

@@ -10,11 +10,18 @@ import {
   useChains,
 } from "wagmi";
 import AddressCard from "./AddressCard";
+import TermsModal from "../TermsModal";
 // import Dis from "../../../assets/images/dis.png";
 // import Copy from "../../../assets/images/copy.png";
 // import Sbg from "../../../assets/images/sbg.png";
 
-const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain, allowUnsupported }) => {
+const ChainChangeHandler = ({
+  chain,
+  onChainChange,
+  chains,
+  switchChain,
+  allowUnsupported,
+}) => {
   useEffect(() => {
     if (onChainChange) {
       onChainChange(chain?.iconUrl, chain?.name);
@@ -30,7 +37,10 @@ const ChainChangeHandler = ({ chain, onChainChange, chains, switchChain, allowUn
   return null; // This component doesn't render anything visible
 };
 
-export default function WalletConnect({ onChainChange, allowUnsupported = false }) {
+export default function WalletConnect({
+  onChainChange,
+  allowUnsupported = false,
+}) {
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { chains, switchChain } = useSwitchChain();
@@ -40,6 +50,16 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
   const [showPopup, setShowPopup] = useState(false);
   const [showChainPopup, setShowChainPopup] = useState(false);
   const [showConnectPopup, setShowConnectPopup] = useState(false);
+
+  const [showTermsPopup, setShowTermsPopup] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  // Filter connectors by search term (case-insensitive)
+  const filteredConnectors = connectors
+    .slice(0, 6) // keep the limit if needed
+    .filter((connector) =>
+      connector.name.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
   useEffect(() => {
     if (address && !sessionStorage.getItem("walletReloaded")) {
@@ -63,20 +83,19 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
         // Effects moved inside render prop to correctly access `chain`
         // and avoid infinite loops.
 
-
         if (!ready) return null;
         if (!connected) {
           return (
             <>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
                 Connect
               </button>
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -98,7 +117,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
                       setShowConnectPopup(false);
                   }}
                 >
-                  <div className="relative text-white md:p-8 p-6 rounded-2xl md:max-w-[520px] w-full clip-bg roboto">
+                  <div className="relative text-white md:p-12 p-6 rounded-2xl md:max-w-[520px] w-full clip-bg font-orbitron">
                     <svg
                       onClick={() => setShowConnectPopup(false)}
                       className="absolute cursor-pointer md:right-10 right-4 md:top-11 top-4 tilt"
@@ -117,19 +136,23 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
                       />
                     </svg>
 
-                    <h2 className="md:text-2xl text-xl font-extrabold text-white mb-2 text-center">
-                      Connect a Wallet
+                    <h2 className="md:text-2xl text-xl font-bold text-white mb-2 text-center">
+                      Connect a wallet to EmpX
                     </h2>
-                    <p className="text-gray-400 text-sm text-left mt-12 mb-6">
-                      Popular
-                    </p>
+                    <input
+                      type="text"
+                      placeholder="Search"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="my-5 border border-[#FF9900] rounded-xl bg-transparent h-[48px] text-white md:max-w-[490px] w-full px-5 outline-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+                    />
 
                     {/* Wallet options */}
-                    <div className="grid md:grid-cols-3 grid-cols-2 gap-x-2 gap-y-6 mt-2">
-                      {connectors.slice(0, 6).map((connector) => (
+                    <div className="grid md:grid-cols-1 grid-cols-1 gap-x-2 gap-y-2 mt-2">
+                      {filteredConnectors.slice(0, 6).map((connector) => (
                         <div
                           key={connector.uid}
-                          className="flex items-center justify-start gap-2 cursor-pointer hover:opacity-80 transition-all"
+                          className="flex items-center justify-start gap-4 cursor-pointer rounded-lg d:py-3 py-2 px-3 transition-all hoverclip"
                           onClick={() => {
                             connect({ connector });
                             setShowConnectPopup(false);
@@ -153,23 +176,39 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
                                   : "https://rainbowkit.com/icons/wallet.svg"
                               }
                               alt={connector.name}
-                              className="w-4 h-4 relative z-10 flex flex-shrink-0 object-contain rounded-full"
+                              className="w-8 h-8 relative z-10 flex flex-shrink-0 object-contain rounded-full"
                             />
                           </div>
-                          <p className="md:text-[13px] text-[10px] text-white">
+                          <p className="md:text-lg text-[10px] text-white font-orbitron font-extrabold">
                             {connector.name}
                           </p>
                         </div>
                       ))}
                     </div>
                     <div className="bg-[#444444] w-full h-[1px] mb-4 mt-10"></div>
-                    <div className="text-gray-400 text-sm mt-4 flex justify-between items-center gap-2 roboto font-medium">
-                      New to Ethereum Wallets?{" "}
-                      <span className="text-[#FF9900] cursor-pointer hover:underline text-xs roboto font-bold">
-                        Learn More
+                    <div className="text-white md:text-base text-sm mt-4 font-orbitron font-bold text-center">
+                      By logging in I agree to the
+                      <span
+                        onClick={() => {
+                          setShowTermsPopup(true);
+                          setShowConnectPopup(false);
+                        }}
+                        className="ml-1 text-[#FF9900] cursor-pointer hover:underline md:text-base text-sm font-orbitron font-bold"
+                      >
+                        Terms & Privacy Policy
                       </span>
                     </div>
                   </div>
+                </div>
+              )}
+              {showTermsPopup && (
+                <div
+                  className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 px-4"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setShowTermsPopup(false);
+                  }}
+                >
+                  <TermsModal onClose={() => setShowTermsPopup(false)} />
                 </div>
               )}
             </>
@@ -178,7 +217,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
         if (chain.unsupported && !allowUnsupported) {
           return (
             <button
-              className="wallet-bg-bridge1 text-[#FF494A] font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
@@ -197,7 +236,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
-                className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
                 onClick={() => setShowPopup(true)}
                 type="button"
               >
@@ -206,7 +245,7 @@ export default function WalletConnect({ onChainChange, allowUnsupported = false 
             </div>
 
             <button
-              className="wallet-bg-bridge1 text-[#FF9900] text-center font-extrabold"
+              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >

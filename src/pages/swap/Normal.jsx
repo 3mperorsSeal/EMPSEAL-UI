@@ -34,14 +34,14 @@ const Normal = () => {
           </div>
         </div>
         {/* Social buttons */}
-        <div className="flex lg:justify-end justify-center gap-4 items-center md:max-w-[1400px] w-full mx-auto px-4 lg:fixed bottom-6 2xl:right-[6%] right-[1%]">
-          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+        <div className="md:flex hidden md:justify-end justify-center gap-4 items-center md:max-w-[300px] w-full mx-auto px-4 z-1 lg:fixed bottom-6 2xl:right-[6%] right-[1%]">
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-16 h-16 rounded-[10px] border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
             <img src={X} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
           </button>
-          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-16 h-16 rounded-[10px] border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
             <img src={L} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
           </button>
-          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-10 h-10 rounded-full border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
+          <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-16 h-16 rounded-[10px] border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
             <img src={Y} alt="x" className="2xl:w-6 2xl:h-6 w-4 h-4" />
           </button>
         </div>

@@ -31,7 +31,9 @@ export const TokenLogo = ({ chainId, tokenAddress, symbol, className = "h-5 w-5"
     }, [chainId, tokenAddress]);
 
     if (logoUrl) {
-        return <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} />;
+        return <>
+        {/* <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} /> */}
+        </>
     }
 
     return <Coins className={className} />;

@@ -258,14 +258,14 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
 
   return (
     <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
-      <div className="relative md:max-w-[750px] w-full rounded-2xl clip-bg_r py-10 lg:px-10 md:px-7 px-2 font-orbitron overflow-x-auto whitespace-nowrap">
+      <div className="!bg-[#FFE6C0] relative md:max-w-[750px] w-full rounded-2xl clip-bg_r py-10 lg:px-5 md:px-4 px-2 font-orbitron overflow-x-auto whitespace-nowrap">
         <button
           onClick={onClose}
-          className="absolute right-4 top-4 text-white tilt"
+          className="absolute right-4 top-4 md:top-8 md:right-8 text-black tilt font-black text-xl"
         >
           ✕
         </button>
-        <h2 className="mb-8 text-center tracking-wide text-[#FF9900] text-xl font-bold font-orbitron">
+        <h2 className="mb-8 text-center tracking-wide text-black text-xl font-bold font-orbitron">
           Routing <br /> {bestRoute.type}
         </h2>
         {/* Split Type */}
@@ -281,7 +281,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
               return (
                 <div
                   key={index}
-                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center"
+                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center bg-black rounded-md md:px-10 px-5 md:py-20 py-10"
                 >
                   {/* First PercentBox with token in */}
                   <PercentBox
@@ -327,7 +327,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
               bestRoute.payload;
 
             return (
-              <div className="flex md:gap-10 gap-4 items-center md:justify-center md:pr-0 pr-5">
+              <div className="flex md:gap-10 gap-4 items-center md:justify-center md:pr-0 pr-5 bg-black rounded-md md:px-10 px-5 md:py-20 py-10">
                 <div className="flex items-center md:gap-6 gap-3 justify-center">
                   <div className="flex flex-col gap-14">
                     {inputHops.map((hop, i) => (

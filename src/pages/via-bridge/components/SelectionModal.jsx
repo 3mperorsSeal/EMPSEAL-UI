@@ -39,13 +39,15 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
                 className="p-3.5 flex items-center gap-3 hoverclip rounded-lg cursor-pointer my-3.5"
               >
                 {logo && (
-                  <img
-                    src={logo}
-                    alt={item.name}
-                    className="w-5 h-5 rounded-full"
-                  />
+                  <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                    <img
+                      src={logo}
+                      alt={item.name}
+                      className="w-full rounded-full"
+                    />
+                  </div>
                 )}
-                <span className="font-medium text-white text-xs">
+                <span className="font-medium text-white text-2xl">
                   {item.name}
                 </span>
               </div>

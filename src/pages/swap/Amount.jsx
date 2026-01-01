@@ -72,7 +72,7 @@ const Amount = ({
         <div className="w-full flex justify-center items-center">
           <div
             ref={modalRef}
-            className="md:max-w-[600px] w-full bg-black clip-bg rounded-3xl relative py-6 px-6 mx-auto border border-[#222]"
+            className="md:max-w-[600px] w-full bg-black clip-bg rounded-3xl relative py-10 md:px-8 px-6 mx-auto border border-[#222]"
           >
             <svg
               onClick={onClose}
@@ -92,7 +92,7 @@ const Amount = ({
               />
             </svg>
             <div className="flex items-center justify-center">
-              <div className="text-white text-lg font-bold roboto leading-7">
+              <div className="text-white text-2xl font-bold roboto leading-7">
                 Select Amount
               </div>
             </div>
@@ -100,7 +100,7 @@ const Amount = ({
               <div className="text-white mb-2 text-sm font-normal roboto">
                 You Pay
               </div>
-              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center -ml-6 w-auto-search bg-search bg-search-padd">
+              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                 {formatNumber(amountIn)} {tokenA?.ticker}
                 <img src={tokenA?.image} alt="tokenA" className="w-4 h-4" />
               </div>
@@ -109,7 +109,7 @@ const Amount = ({
               <div className="text-white text-sm font-normal roboto mb-2">
                 You Receive
               </div>
-              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center -ml-6 w-auto-search bg-search bg-search-padd">
+              <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                 {formatNumber(amountOut)} {tokenB?.ticker}
                 <img src={tokenB?.image} alt="tokenB" className="w-4 h-4" />
               </div>
@@ -163,17 +163,18 @@ const Amount = ({
                 disabled={disabled || isLoading}
                 usdValueTokenA={usdValueTokenA}
                 usdValueTokenB={usdValueTokenB}
-                className="w-full rounded-xl py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center hover:bg-[#FF9900] border border-[#FF9900] hover:text-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                className="relative w-full rounded-xl py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center hover:bg-[#FF9900] border border-[#FF9900] hover:text-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
+                <div className="group-hover:opacity-80 w-full absolute md:top-2 top-2 md:-left-3 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl h-[58px]"></div>
                 {isLoading ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span className="text-white text-base font-bold font-orbitron">
+                    <span className="text-white md:text-xl text-base font-black font-orbitron">
                       Processing...
                     </span>
                   </div>
                 ) : (
-                  <div className="text-black text-base font-bold text-center leading-normal uppercase font-orbitron">
+                  <div className="text-black md:text-xl text-base font-black text-center leading-normal uppercase font-orbitron">
                     Swap
                   </div>
                 )}
@@ -403,4 +404,3 @@ export default Amount;
 // };
 
 // export default Amount;
-  
