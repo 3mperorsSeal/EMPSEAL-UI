@@ -6,13 +6,14 @@ const calculateSlippage = (amountOut, slippagePercent) => {
   if (slippagePercent < 0 || slippagePercent > 5) {
     throw new Error("Invalid slippage percentage. Must be between 0.5 and 5");
   }
+  // console.log("Calculated Slippage: ", amountOut, slippagePercent);
   return (
     (amountOut * BigInt(10000 - Math.round(slippagePercent * 100))) /
     BigInt(10000)
   );
 };
 
-const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
+const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
   const [slippage, setSlippage] = useState(0);
   const [customSlippage, setCustomSlippage] = useState("");
   const [slippageApplied, setSlippageApplied] = useState(false);
@@ -20,26 +21,26 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
   const originalAmountRef = useRef(null);
   const modalRef = useRef(null);
 
-  const lastAmount = tradeInfo?.amounts?.[tradeInfo?.amounts?.length - 1];
-
   // Validate trade info on mount
   useEffect(() => {
-    if (!tradeInfo?.amounts || tradeInfo.amounts.length === 0) {
+    if (!inputAmount || inputAmount <= 0n) {
       setError("Please provide token input values before applying slippage.");
     } else {
       setError("");
     }
-  }, [tradeInfo]);
+  }, [inputAmount]);
 
   // Store original amount when tradeInfo changes and ref is empty
   useEffect(() => {
-    if (tradeInfo?.amountOut && !originalAmountRef.current) {
-      originalAmountRef.current = lastAmount;
+    if (inputAmount && !originalAmountRef.current) {
+      originalAmountRef.current = inputAmount;
     }
-  }, [tradeInfo?.amountOut, lastAmount]);
+  }, [inputAmount]);
 
   // Calculate slippage when necessary
   useEffect(() => {
+    // console.log("Calculating slippage...");
+    // console.log(originalAmountRef.current, slippage, slippageApplied, error);
     if (
       originalAmountRef.current &&
       slippage >= 0 &&
@@ -49,7 +50,10 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
     ) {
       try {
         // Always calculate based on original amount
-        const adjustedAmount = calculateSlippage(lastAmount, slippage);
+        const adjustedAmount = calculateSlippage(
+          originalAmountRef.current,
+          slippage
+        );
         onSlippageCalculated(adjustedAmount);
         setSlippageApplied(true);
       } catch (error) {
@@ -57,7 +61,7 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
         setError(error.message);
       }
     }
-  }, [slippage, onSlippageCalculated, slippageApplied, error, lastAmount]);
+  }, [slippage, onSlippageCalculated, slippageApplied, error]);
 
   // Handle slippage option selection
   const handleSlippageSelect = (value) => {
@@ -179,11 +183,10 @@ const SlippageCalculator = ({ tradeInfo, onSlippageCalculated, onClose }) => {
             <button
               key={index}
               onClick={() => handleSlippageSelect(option)}
-              className={`px-4 py-1.5 justify-center md:w-[100px] w-20 relative md:text-base text-sm border border-[#ff9900] rounded-xl ${
-                slippage === option
+              className={`px-4 py-1.5 justify-center md:w-[100px] w-20 relative md:text-base text-sm border border-[#ff9900] rounded-xl ${slippage === option
                   ? "bg- text-white"
                   : "bg-transparent text-white"
-              } ${error ? "opacity-50 cursor-not-allowed" : ""}`}
+                } ${error ? "opacity-50 cursor-not-allowed" : ""}`}
               disabled={!!error}
             >
               {/* <img src={BG1} alt="BG1" className="absolute top-0 left-0" /> */}

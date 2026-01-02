@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
 import Logo from "../../assets/images/swap-emp.png";
 import Sett from "../../assets/images/setting.svg";
@@ -44,6 +44,7 @@ import { WSONIC } from "../../utils/abis/wsonicABI";
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
 import OrderListItems from "../limit-orders/LimitOrder";
+import { set } from "zod";
 
 const getWrappedTokenABI = (chainId) => {
   switch (chainId) {
@@ -95,6 +96,11 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
 
+  // Debounce and request tracking for quote fetching
+  const [debouncedAmountIn, setDebouncedAmountIn] = useState("0");
+  const quoteRequestIdRef = useRef(0);
+  const lastCompletedIdRef = useRef(0); // Track last completed request
+
   // Then in your useEffect where you set the route:
   const updateRoute = (route) => {
     setLocalBestRoute(route);
@@ -136,13 +142,17 @@ const Emp = ({ setPadding, setBestRoute }) => {
       const router = new SmartRouter(publicClient, routerAddress);
       // console.log("router info: ", router);
       router.loadAdapters().then(() => {
+        if (adapters && adapters.length > 0) {
+          const adapterAddresses = adapters.map((a) => a.address);
+          router.setAdapters(adapterAddresses);
+        }
         setSmartRouter(router);
       });
       router.setMaxHops(maxHops || 3);
-      router.setMaxAdapters(6);
-      router.setGranularity(5);
+      router.setMaxAdapters(adapters ? adapters.length : 12);
+      router.setGranularity(3);
     }
-  }, [publicClient, routerAddress]);
+  }, [publicClient, routerAddress, adapters]);
 
   // Dynamic Fee Update
   useEffect(() => {
@@ -165,8 +175,6 @@ const Emp = ({ setPadding, setBestRoute }) => {
     }
   }, [chainId, selectedTokenA, selectedTokenB, stableTokens]);
 
-  console.log("protocolFee: ", protocolFee);
-
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
@@ -177,6 +185,15 @@ const Emp = ({ setPadding, setBestRoute }) => {
       setSelectedTokenB(tokenList[1]);
     }
   }, [tokenList]);
+
+  // Debounce amountIn to prevent excessive quote requests
+  // Increased to 600ms to allow slower quote fetching to complete
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedAmountIn(amountIn);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [amountIn]);
 
   // useEffect(() => {
   //   const getQuote = async () => {
@@ -244,13 +261,16 @@ const Emp = ({ setPadding, setBestRoute }) => {
   //   getQuote();
   // }, [smartRouter, amountIn, selectedTokenA, selectedTokenB]);
 
-  // And update the getQuote useEffect:
+  // Quote fetching with debounce and request tracking to prevent stale quotes
   useEffect(() => {
     const getQuote = async () => {
+      // Increment request ID to track this specific request
+      const currentRequestId = ++quoteRequestIdRef.current;
+
       if (
         !smartRouter ||
-        !amountIn ||
-        parseFloat(amountIn) <= 0 ||
+        !debouncedAmountIn ||
+        parseFloat(debouncedAmountIn) <= 0 ||
         !selectedTokenA ||
         !selectedTokenB
       ) {
@@ -261,7 +281,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
       }
       setIsQuoting(true);
       setAmountOut("0");
-      const amountInBigInt = convertToBigInt(amountIn, selectedTokenA.decimal);
+      const amountInBigInt = convertToBigInt(debouncedAmountIn, selectedTokenA.decimal);
       if (amountInBigInt <= 0) {
         setAmountOut("0");
         updateRoute(null);
@@ -276,6 +296,9 @@ const Emp = ({ setPadding, setBestRoute }) => {
         selectedTokenB.address,
         protocolFee
       );
+      // If this request is outdated, ignore the result
+      // Mark this request as the latest completed
+      lastCompletedIdRef.current = currentRequestId;
 
       updateRoute(route); // Use updateRoute instead of setBestRoute
 
@@ -287,7 +310,8 @@ const Emp = ({ setPadding, setBestRoute }) => {
             route.payload.intermediate,
             route.payload.tokenOut,
           ];
-        } else if (route.type === "SPLIT" && route.payload.length > 0) {
+        } else if ((route.type === "SPLIT" || route.type === "NOSPLIT") && route.payload.length > 0) {
+          // NOSPLIT is returned by Multi-hop, Chained Intermediate, Converge Multi-hop strategies
           path = route.payload[0].path;
         } else if (route.type === "WRAP" || route.type === "UNWRAP") {
           path = [route.payload.tokenIn, route.payload.tokenOut];
@@ -307,10 +331,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
     };
 
     getQuote();
-  }, [smartRouter, amountIn, selectedTokenA, selectedTokenB]);
-
-  // Also update the console.log:
-  console.log("selected best route: ", localBestRoute);
+  }, [smartRouter, debouncedAmountIn, selectedTokenA, selectedTokenB]);
 
   useEffect(() => {
     if (address && datas) {
@@ -931,10 +952,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
-            parseFloat(usdValueTokenA)) *
-          100
-        ).toFixed(2)
+        ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
+          parseFloat(usdValueTokenA)) *
+        100
+      ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
@@ -957,14 +978,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
-          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
-        }`}
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
+          }`}
       >
         <div
-          className={`scales8 ${
-            order ? "scales-top scales-top_limit" : "top70"
-          }`}
+          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"
+            }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
@@ -986,11 +1005,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("lg:h-[295px] h-full");
                 setSearchParams({}, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-white text-[#FF9900]"
-                  : "border-[#FF9900] text-black bg-[#FF9900]"
-              } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
+              className={`${order
+                ? "border-white text-[#FF9900]"
+                : "border-[#FF9900] text-black bg-[#FF9900]"
+                } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
             >
               SWAP
             </div>
@@ -1002,11 +1020,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("md:pb-[160px] pb-10");
                 setSearchParams({ tab: "limit" }, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-[#FF9900] text-black bg-[#FF9900]"
-                  : "border-white "
-              }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
+              className={`${order
+                ? "border-[#FF9900] text-black bg-[#FF9900]"
+                : "border-white "
+                }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
             >
               LIMIT ORDER
             </div>
@@ -1042,13 +1059,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedBalance)}`
-                        : `${
-                            tokenBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedBalance)}`
+                          : `${tokenBalance
+                            ? formatNumber(
+                              parseFloat(tokenBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1084,7 +1100,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colorss"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenA.address ? (
+                              activeTokenAddress === selectedTokenA.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
@@ -1103,11 +1119,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1169,6 +1184,8 @@ const Emp = ({ setPadding, setBestRoute }) => {
                   setSelectedTokenA(_tokenB);
                   setSelectedTokenB(_tokenA);
                   setAmountOut("0");
+                  setAmountIn("0");
+                  setDebouncedAmountIn("0");
                 }}
               >
                 <img
@@ -1193,13 +1210,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedChainBalanceTokenB)}`
-                        : `${
-                            tokenBBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedChainBalanceTokenB)}`
+                          : `${tokenBBalance
+                            ? formatNumber(
+                              parseFloat(tokenBBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1234,7 +1250,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colors"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenB.address ? (
+                              activeTokenAddress === selectedTokenB.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
@@ -1253,11 +1269,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1337,20 +1352,18 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${
-                  order
-                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                    : "pt-0 top-0"
-                }`}
+                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${order
+                  ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                  : "pt-0 top-0"
+                  }`}
               >
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`group relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center hover:opacity-80 transition-all ${
-                    isInsufficientBalance()
-                      ? "opacity-50 cursor-not-allowed"
-                      : " group-hover:text-black group-hover:bg-opacity-80"
-                  } font-orbitron text-black lg:text-3xl text-base font-black`}
+                  className={`group relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center hover:opacity-80 transition-all ${isInsufficientBalance()
+                    ? "opacity-50 cursor-not-allowed"
+                    : " group-hover:text-black group-hover:bg-opacity-80"
+                    } font-orbitron text-black lg:text-3xl text-base font-black`}
                 >
                   <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
                   {/* <img
@@ -1468,6 +1481,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
 
       {isSlippageVisible && !order && (
         <SlippageCalculator
+          inputAmount={localBestRoute?.amountOut}
           onSlippageCalculated={handleSlippageCalculated}
           onClose={() => setSlippageVisible(false)}
         />

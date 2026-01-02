@@ -1345,4 +1345,4 @@ export const EmpsealRouterLiteV3 = [
     stateMutability: "payable",
     type: "receive",
   },
-];
+] as const;
