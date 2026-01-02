@@ -12,6 +12,7 @@ import Buybox from "../../assets/images/buy-bg.png";
 import Swapbutton from "../../assets/images/swap-button.svg";
 import CPatch from "../../assets/images/rec-token.svg";
 import Arrow2 from "../../assets/images/arrow-2.svg";
+import Ci from "../../assets/icons/ci.png";
 import Amount from "./Amount";
 import TokensChains from "./TokensChains";
 import { formatEther } from "viem";
@@ -45,8 +46,8 @@ const Emp = ({
   const [order, setOrder] = useState(false);
   const [tokenList, setTokenList] = useState([]);
   const [selectedTokenA, setSelectedTokenA] = useState([]);
-  const [isRateReversed, setIsRateReversed] = useState(false);
   const [selectedTokenB, setSelectedTokenB] = useState([]);
+  const [isRateReversed, setIsRateReversed] = useState(false);
   const [isSelectingTokenA, setIsSelectingTokenA] = useState(true);
   const [amountOut, setAmountOut] = useState("0");
   const [amountIn, setAmountIn] = useState("0");
@@ -88,7 +89,9 @@ const Emp = ({
         );
         const data = await response.json();
         if (data?.results) {
-          setSelectedTokenA(data.results[0]);
+          // setSelectedTokenA(data.results[0]);
+          setSelectedTokenA(data.results);
+          // setTokenList(data.results);
         }
       } catch (error) {
         console.error("Error fetching tokens:", error);
@@ -99,7 +102,9 @@ const Emp = ({
         );
         const data = await response.json();
         if (data?.results) {
-          setSelectedTokenB(data.results[0]);
+          // setSelectedTokenB(data.results[0]);
+          setSelectedTokenB(data.results);
+          // setTokenList(data.results);
         }
       } catch (error) {
         console.error("Error fetching tokens:", error);
@@ -776,7 +781,7 @@ const Emp = ({
                     setSelectedPercentage("");
                     setAmountIn("");
                   }}
-                  className="relative flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left md:w-[280px] w-[130px] justify-center"
+                  className="relative cursor-pointer flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left md:w-[280px] w-[130px] justify-center"
                 >
                   <div
                     className={`relatve flex gap-2 items-center ${
@@ -785,20 +790,20 @@ const Emp = ({
                   >
                     {selectedChainA.image && (
                       <div className="absolute md:px-3 px-1 left-0 right-0 mx-auto flex items-center gap-3 z-10 justify-center text-center">
-                        {/* <img
+                        <img
                           className={`${
-                            selectedChainA?.name?.length > 10
+                            selectedTokenA?.name?.length > 10
                               ? "w-3 md:w-6"
-                              : selectedChainA?.name?.length > 6
+                              : selectedTokenA?.name?.length > 6
                               ? "w-4 md:w-7"
                               : "w-4 md:w-8"
                           }`}
-                          src={selectedChainA?.image}
-                          alt={selectedChainA?.name}
-                        /> */}
+                          src={selectedTokenA?.image}
+                          alt={selectedTokenA?.name}
+                        />
                         <h3
                           className={`font-bold font-orbitron text-center ${
-                            selectedTokenA?.name?.length > 10
+                            selectedTokenA?.name?.length > 8
                               ? "text-[8px] lg:text-[20px]"
                               : selectedTokenA?.name?.length > 6
                               ? "text-[14px] lg:text-xl"
@@ -807,6 +812,7 @@ const Emp = ({
                         >
                           {selectedTokenA?.name}
                         </h3>
+
                         {/* <h3
                           className={`font-bold font-orbitron text-center ${
                             selectedChainA?.name?.length > 10
@@ -820,6 +826,11 @@ const Emp = ({
                         </h3> */}
                       </div>
                     )}
+                    {!selectedTokenA?.name && (
+                      <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-[#FF9900] font-bold font-orbitron md:text-3xl text-base">
+                        Select token
+                      </span>
+                    )}{" "}
                     {/* <img
                       src={CPatch}
                       className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
@@ -830,11 +841,19 @@ const Emp = ({
                         selectedChainA.image ? "left-40-box " : "left-40-box"
                       }`}
                     >
-                      <img
-                        className="md:h-12 h-7 md:p-2 p-1"
-                        src={selectedChainA.image}
-                        alt={selectedChainA.name}
-                      />
+                      {selectedChainA?.image ? (
+                        <img
+                          className="md:h-12 h-7 md:p-2 p-1"
+                          src={selectedChainA.image}
+                          alt={selectedChainA.name || "Chain logo"}
+                        />
+                      ) : (
+                        <img
+                          src={Ci}
+                          alt="ci"
+                          className="md:w-14 md:h-10 h-7 object-contain"
+                        />
+                      )}
                     </div>
                     {/* )} */}
                   </div>
@@ -876,7 +895,7 @@ const Emp = ({
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
                   // );
-                  const FREE_DIGITS = 6;
+                  const FREE_DIGITS = window.innerWidth >= 768 ? 6 : 5;
                   const SHRINK_RATE = 3;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -969,7 +988,6 @@ const Emp = ({
                 </span>
               </div>
             </div>
-
             <div className="flex w-full">
               <div className="w-1/2">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
@@ -989,7 +1007,7 @@ const Emp = ({
                         {/* Chain Image */}
                         {selectedTokenB.image && (
                           <div className="absolute px-3 left-0 right-0 mx-auto flex items-center justify-center gap-3 z-10">
-                            {/* <img
+                            <img
                               className={`${
                                 selectedTokenB?.name?.length > 10
                                   ? "w-3 md:w-6"
@@ -999,7 +1017,7 @@ const Emp = ({
                               }`}
                               src={selectedTokenB?.image}
                               alt={selectedTokenB?.name}
-                            /> */}
+                            />
                             <h3
                               className={`font-bold font-orbitron text-center ${
                                 selectedTokenB?.name?.length > 10
@@ -1013,6 +1031,11 @@ const Emp = ({
                             </h3>
                           </div>
                         )}
+                        {!selectedTokenB?.name && (
+                          <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-black font-bold font-orbitron md:text-3xl text-base">
+                            Select token
+                          </span>
+                        )}{" "}
                         {/* <img
                           src={CPatch}
                           className="md:w-[25px] md:h-[65px] w-[12px] h-[40px] left-bg-ele-none md:left-[168px] left-[122px] md:rotate-[60deg] rotate-[70deg] absolute z-[-1]"
@@ -1025,11 +1048,19 @@ const Emp = ({
                               : "left-40-box"
                           }`}
                         >
-                          <img
-                            className="md:h-12 h-8 md:p-2 p-1"
-                            src={selectedChainB.image}
-                            alt={selectedChainB.name}
-                          />
+                          {selectedChainB?.image ? (
+                            <img
+                              className="md:h-12 h-7 md:p-2 p-1"
+                              src={selectedChainB.image}
+                              alt={selectedChainB.name || "Chain logo"}
+                            />
+                          ) : (
+                            <img
+                              src={Ci}
+                              alt="ci"
+                              className="md:w-14 md:h-10 h-7 object-contain"
+                            />
+                          )}
                           {/* <img
                               className={`${
                                 selectedChainB?.name?.length > 10
@@ -1097,7 +1128,7 @@ const Emp = ({
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
                   // );
-                  const FREE_DIGITS = 6;
+                  const FREE_DIGITS = window.innerWidth >= 768 ? 6 : 5;
                   const SHRINK_RATE = 3;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);

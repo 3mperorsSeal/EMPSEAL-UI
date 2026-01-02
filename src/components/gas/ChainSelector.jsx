@@ -431,7 +431,7 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="text-white">Select Chain</span>
+            <span className="!text-[#FF9900] font-bold font-orbitron md:text-3xl text-base">Select Chain</span>
           )}
         </button>
 
@@ -452,7 +452,7 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="text-black">Select Chain</span>
+            <span className="!text-black font-bold font-orbitron md:text-3xl text-base">Select Chain</span>
           )}
         </button>
       </div>
