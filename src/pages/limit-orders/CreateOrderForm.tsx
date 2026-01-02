@@ -696,7 +696,7 @@ export function CreateOrderForm({
               </div>
             </div>
             <div className="flex w-full">
-              <div className="w-1/2">
+              <div className="md:w-[25%] w-[40%]">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center md:mt-5 mt-6">
                     {/* md:w-[220px] w-[160px] */}
@@ -713,16 +713,16 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none bg-black focus:none px-0 !w-full outline-none"
+                              className="h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none !text-[#FF9900] font-bold font-orbitron md:text-3xl text-base"
                               data-testid="select-token-in"
                             >
-                              <SelectValue placeholder="Select" />
+                              <SelectValue placeholder="Select token" />
                             </SelectTrigger>
-                            <SelectContent className="bg-black text-white">
+                            <SelectContent className="bg-black text-white text-center">
                               {Object.entries(TOKENS).map(
                                 ([address, token]) => (
                                   <SelectItem key={address} value={address}>
-                                    <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 !justify-center">
                                       {/* <Coins className="h-4 w-4" /> */}
                                       <TokenLogo
                                         chainId={369}
@@ -814,7 +814,7 @@ export function CreateOrderForm({
                 </div>
               </div>
 
-              <div className="md:max-w-1/2 w-full">
+              <div className="md:w-[75%] w-[60%]">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex gap-2 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -842,7 +842,7 @@ export function CreateOrderForm({
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
                   // );
-                  const FREE_DIGITS = 10;
+                  const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
                   const SHRINK_RATE = 3;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -939,7 +939,7 @@ export function CreateOrderForm({
               </div>
             </div>
             <div className="flex w-full">
-              <div className="w-1/2">
+              <div className="md:w-[25%] w-[40%]">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-5">
                     <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 md:w-[280px] w-[145px] margin_left">
@@ -955,10 +955,10 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none !bg-[#FFE6C0] focus:none px-0 !w-full outline-none text-black"
+                              className="h-12 border-none text-center !bg-[#FFE6C0] focus:none px-0 !w-full outline-none !text-black font-bold font-orbitron md:text-3xl text-base"
                               data-testid="select-token-out"
                             >
-                              <SelectValue placeholder="Select" />
+                              <SelectValue placeholder="Select token" />
                             </SelectTrigger>
                             <SelectContent className="!bg-[#FFE6C0] text-black">
                               {Object.entries(TOKENS).map(
@@ -1056,7 +1056,7 @@ export function CreateOrderForm({
                 </div>
               </div>
 
-              <div className="md:max-w-1/2 w-full me-3">
+              <div className="md:w-[75%] w-[60%]">
                 {(() => {
                   const value = form.watch("minAmountOut") || "";
 
@@ -1064,7 +1064,7 @@ export function CreateOrderForm({
 
                   const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
 
-                  const FREE_DIGITS = 6;
+                  const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
                   const SHRINK_RATE = 2;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -1079,7 +1079,7 @@ export function CreateOrderForm({
                       {...form.register("minAmountOut")}
                       placeholder="0.0"
                       type="text"
-                      className="!text-white py-2 text-end w-full leading-7 outline-none border-none bg-transparent ps-3 rigamesh !placeholder-white transition-all duration-200 ease-in-out"
+                      className="!text-white py-2 text-end w-full leading-7 outline-none border-none bg-transparent rigamesh !placeholder-white transition-all duration-200 ease-in-out"
                       data-testid="input-amount-in"
                       style={{
                         fontSize: `${dynamicFontSize}px`,
