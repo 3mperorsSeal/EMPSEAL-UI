@@ -445,14 +445,14 @@ const TransferPanel = () => {
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}
               type="button"
-              className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto cursor-pointer button-trans text-center flex justify-center items-center hover:opacity-80 transition-all  group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
+              className="gtw relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto cursor-pointer button-trans text-center flex justify-center items-center transition-all  font-orbitron lg:text-2xl text-base font-extrabold"
             >
               {/* <img
                 className="absolute swap-button1 top-0 bottom-0 my-auto"
                 src={Swapbutton}
                 alt="Swap"
               /> */}
-              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+              <div className="w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
 
               <span>
                 {" "}

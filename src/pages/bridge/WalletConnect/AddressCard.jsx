@@ -68,10 +68,10 @@ export default function AddressCard({
       <p className="text-2xl font-bold roboto">{shortAddress}</p>
       <p className="text-gray-400 font-medium text-xl mb-5">{balance} PLS</p>
       <div
-        className="md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer group-hover:!opacity-80 transition-all"
+        className="gtw md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer transition-all"
         onClick={onCopy}
       >
-        <div className="group-hover:opacity-80 w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
+        <div className="w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
         {/* <img
           src={Copy}
           alt="Copy"
@@ -80,10 +80,10 @@ export default function AddressCard({
         <span className="relative z-10">Copy Address</span>
       </div>
       <div
-        className="mt-6 md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer group-hover:!opacity-80 transition-all"
+        className="mt-6 gtw md:right-[-10px] right-[-5px] relative group text-black bg-[#FF9900] rounded-lg px-6 py-3 w-full font-black text-[28px] font-orbitron text-center cursor-pointer transition-all"
         onClick={onDisconnect}
       >
-        <div className="group-hover:opacity-80 w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
+        <div className="w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div>
         {/* <img
           src={Copy}
           alt="Copy"

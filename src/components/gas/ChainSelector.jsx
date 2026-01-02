@@ -406,14 +406,14 @@ const ChainSelector = ({ onSwitch }) => {
 
   const getFontSizeClass = (text) => {
     const length = text?.toString().length || 0;
-    if (length > 11) return "text-[10px]";
-    if (length > 11) return "text-xl";
-    return "text-xl";
+    if (length > 11) return "text-xs md:text-lg";
+    if (length > 11) return "text-xs md:text-xl";
+    return "text-xs md:text-xl";
   };
 
   return (
     <>
-      <div className="space-y-4 lg:h-[350px] h_cs md:h-[420px] h-[270px] flex flex-col justify-between">
+      <div className="space-y-4 lg:h-[350px] h_cs md:h-[420px] h-[280px] flex flex-col justify-between">
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}
@@ -431,7 +431,9 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="!text-[#FF9900] font-bold font-orbitron md:text-3xl text-base">Select Chain</span>
+            <span className="!text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
+              Select Chain
+            </span>
           )}
         </button>
 
@@ -452,7 +454,9 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="!text-black font-bold font-orbitron md:text-3xl text-base">Select Chain</span>
+            <span className="!text-black font-bold font-orbitron md:text-3xl text-sm">
+              Select Chain
+            </span>
           )}
         </button>
       </div>
