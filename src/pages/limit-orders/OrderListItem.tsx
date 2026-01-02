@@ -10,7 +10,7 @@ import { formatUnits } from "viem";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 const TEST_PROGRESS = true;
 
-const CONTRACT_ADDRESS = "0x92a37eCd8E27a21DF650e0ef1cB7366f9B8f61EF";
+const CONTRACT_ADDRESS = "0x80C12068B84d26c5359653Ba5527746bb999b8c6";
 
 interface OrderListItemProps {
   order: Order;
