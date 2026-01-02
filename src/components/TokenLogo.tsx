@@ -32,7 +32,7 @@ export const TokenLogo = ({ chainId, tokenAddress, symbol, className = "h-5 w-5"
 
     if (logoUrl) {
         return <>
-        {/* <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} /> */}
+        <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} />
         </>
     }
 

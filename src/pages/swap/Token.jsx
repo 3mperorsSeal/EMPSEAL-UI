@@ -152,11 +152,12 @@ const TokenListItem = ({
             "Fetching price..."
           ) : price ? (
             <>
-              ${formatNumber(price)} ≈ ${formatNumber(usdValue)}
+              ${formatNumber(usdValue)}
             </>
           ) : (
             "Price not available"
           )}
+          {/* ${formatNumber(price)} ≈  */}
         </div>
       </div>
     </div>

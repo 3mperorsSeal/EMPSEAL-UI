@@ -7,7 +7,14 @@ import {
 } from "wagmi";
 import { parseEther, formatEther, formatUnits } from "viem";
 import { toast } from "react-toastify";
-import { ArrowDownUp, Loader2, AlertCircle, CheckCircle2 } from "lucide-react";
+import {
+  ArrowDownUp,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+  Check,
+  Copy,
+} from "lucide-react";
 
 import ChainSelector from "./components/ChainSelector";
 import TokenSelector from "./components/TokenSelector";
@@ -50,6 +57,29 @@ const BridgeInterface = () => {
   const destChain = BRIDGE_CONFIG[toChainId];
   const isCorrectChain = chain?.id === fromChainId;
 
+  // Add copy functionality states
+  const [copySuccess, setCopySuccess] = useState(false);
+  const [activeTokenAddress, setActiveTokenAddress] = useState(null);
+  // ----------------------------------------------------------------
+  // COPY ADDRESS HANDLER
+  // ----------------------------------------------------------------
+  const handleCopyAddress = async (address) => {
+    try {
+      await navigator.clipboard.writeText(address);
+      setActiveTokenAddress(address);
+      setCopySuccess(true);
+      toast.success("Address copied to clipboard!");
+
+      // Reset after 2 seconds
+      setTimeout(() => {
+        setCopySuccess(false);
+        setActiveTokenAddress(null);
+      }, 2000);
+    } catch (err) {
+      console.error("Failed to copy address:", err);
+      toast.error("Failed to copy address");
+    }
+  };
   // ----------------------------------------------------------------
   // 2. DATA FETCHING (FEES, ALLOWANCES, BALANCES)
   // ----------------------------------------------------------------
@@ -575,7 +605,20 @@ const BridgeInterface = () => {
                     token={selectedToken}
                     chainId={fromChainId}
                     onClick={() => setIsTokenModalOpen(true)}
+                    className="text-white"
                   />
+                  <button
+                    onClick={() => handleCopyAddress(selectedToken.address)}
+                    className="rounded-md transition-colors ml-2"
+                    title="Copy token address"
+                  >
+                    {copySuccess &&
+                    activeTokenAddress === selectedToken.address ? (
+                      <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                    ) : (
+                      <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-[#FF9900]" />
+                    )}
+                  </button>
                   <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-83px] right-[-50px]">
                     <ChainSelector
                       chain={sourceChain}
@@ -585,7 +628,7 @@ const BridgeInterface = () => {
                 </div>
               </div>
 
-              <div className="md:w-1/2 w-full">
+              <div className="md:w-[75%] w-[60%]">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -643,8 +686,8 @@ const BridgeInterface = () => {
                       formattedValue.replace(/\D/g, "").length || 0;
 
                     const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
-
-                    const FREE_DIGITS = 7; // no shrink up to 10 digits
+                    const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
+                    // const FREE_DIGITS = 7; // no shrink up to 10 digits
                     const SHRINK_RATE = 3; // slow shrink rate
 
                     const excessDigits = Math.max(
@@ -715,14 +758,34 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4">
-                <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 md:h-20 h-12 py-2.5 md:w-[280px] w-[145px] margin_left">
-                  <ChainSelector
-                    chain={destChain}
-                    onClick={() => setIsToChainModalOpen(true)}
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[145px] margin_left">
+                  <TokenSelector
+                    token={selectedToken}
+                    chainId={fromChainId}
+                    onClick={() => setIsTokenModalOpen(true)}
+                    className="text-black"
                   />
+                  <button
+                    onClick={() => handleCopyAddress(selectedToken.address)}
+                    className="rounded-md transition-colors ml-2"
+                    title="Copy token address"
+                  >
+                    {copySuccess &&
+                    activeTokenAddress === selectedToken.address ? (
+                      <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                    ) : (
+                      <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-[#FF9900]" />
+                    )}
+                  </button>
+                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-85px] right-[-53px]">
+                    <ChainSelector
+                      chain={destChain}
+                      onClick={() => setIsToChainModalOpen(true)}
+                    />
+                  </div>
                 </div>
               </div>
-              <div className="md:w-1/2 w-full">
+              <div className="md:w-[75%] w-[60%]">
                 <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -806,7 +869,7 @@ const BridgeInterface = () => {
 
                     const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
 
-                    const FREE_DIGITS = 7; // no shrink up to 10 digits
+                    const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
                     const SHRINK_RATE = 3; // slow shrink rate
 
                     const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -829,7 +892,7 @@ const BridgeInterface = () => {
                               ? "0"
                               : "0.00"
                           }
-                          className="text-[#fff] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent  px-1 rigamesh placeholder-white transition-all duration-200 ease-in-out"
+                          className="text-[#fff] py-2 text-sh text-end w-full leading-7 outline-none border-none bg-transparent px-1 rigamesh placeholder-white transition-all duration-200 ease-in-out"
                           style={{
                             fontSize: `${dynamicFontSize}px`,
                           }}
@@ -894,7 +957,7 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-base font-extrabold"
+            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-sm font-extrabold"
           >
             <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
             {/* <img
