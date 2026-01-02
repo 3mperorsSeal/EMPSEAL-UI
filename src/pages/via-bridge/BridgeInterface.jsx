@@ -751,14 +751,14 @@ const BridgeInterface = () => {
           {/* TO SECTION */}
           <div className="relative text-white bg_swap_box_black">
             {/* <img className="bg-sell w-full" src={Buybox} alt="Buybox" /> */}
-            <div className="flex justify-between gap-3 items-center lg:px-2">
+            <div className="flex justify-between gap-3 items-center">
               <div className="font-orbitron text-white md:text-2xl text-xs font-semibold leading-normal">
                 To
               </div>
             </div>
             <div className="flex w-full">
-              <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[145px] margin_left">
+              <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[130px] margin_left">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
@@ -957,9 +957,9 @@ const BridgeInterface = () => {
         <div className="md:px-1 px-4 2xl:pb-20">
           <button
             type="button"
-            className="group relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all group-hover:text-black group-hover:opacity-80 font-orbitron text-black lg:text-2xl text-sm font-extrabold"
+            className="gtw relative md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans text-center mt-7 h- flex justify-center items-center gap-2 transition-all font-orbitron lg:text-2xl text-sm font-extrabold"
           >
-            <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+            <div className="w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
             {/* <img
               className="absolute swap-button1"
               src={Swapbutton}

@@ -214,18 +214,17 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
         <div className="flex justify-center items-center mt-20 flex-col">
           <button
             onClick={handleResetSlippage}
-            className={`relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl hover:bg-opacity-80 transition-all font-orbitron
+            className={`gtw relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl transition-all font-orbitron
     ${error ? "opacity-100 cursor-not-allowed" : ""}`}
             style={{
               background: "#FF9900",
-              color: "#000",
               border: "2px solid #FF9900",
               // clipPath:
               //   "polygon(0 0, 95% 0, 100% 30%, 100% 100%, 6% 100%, 0 60%)",
             }}
             disabled={!!error}
           >
-            <div className="group-hover:opacity-80 w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div>
+            <div className="w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div>
             Reset Slippage
           </button>
 

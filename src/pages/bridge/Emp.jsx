@@ -827,7 +827,7 @@ const Emp = ({
                       </div>
                     )}
                     {!selectedTokenA?.name && (
-                      <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-[#FF9900] font-bold font-orbitron md:text-3xl text-base">
+                      <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
                         Select token
                       </span>
                     )}{" "}
@@ -1032,7 +1032,7 @@ const Emp = ({
                           </div>
                         )}
                         {!selectedTokenB?.name && (
-                          <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-black font-bold font-orbitron md:text-3xl text-base">
+                          <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-black font-bold font-orbitron md:text-3xl text-sm">
                             Select token
                           </span>
                         )}{" "}
@@ -1217,11 +1217,11 @@ const Emp = ({
                 disabled={
                   loading || amountIn === "0" || !amountIn || !selfAddress
                 }
-                className={`group relative md:w-[360px] w-[250px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans md:mt-12 mt-4 h- flex justify-center items-center  ${
+                className={`gtw relative md:w-[360px] w-[250px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans md:mt-12 mt-4 h- flex justify-center items-center  ${
                   loading || amountIn === "0" || !amountIn || !selfAddress
                     ? "opacity-50 cursor-not-allowed"
-                    : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black lg:text-2xl text-base font-extrabold`}
+                    : ""
+                } font-orbitron lg:text-2xl text-base font-extrabold`}
               >
                 <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
                 {/* <img className="absolute swap-button" src={Swapbutton} /> */}
@@ -1230,11 +1230,11 @@ const Emp = ({
               <button
                 onClick={() => setAmountVisible(true)}
                 disabled={isInsufficientBalance()}
-                className={`group relative md:w-[360px] w-[250px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-16 mb-10 h- flex justify-center items-center ${
+                className={`gtw relative md:w-[360px] w-[250px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-16 mb-10 h- flex justify-center items-center ${
                   isInsufficientBalance() || !amountOut || amountOut === "0"
                     ? "opacity-50 cursor-not-allowed"
-                    : "hover:text-black hover:bg-transparent"
-                } font-orbitron text-black lg:text-2xl text-base font-extrabold`}
+                    : ""
+                } font-orbitron lg:text-2xl text-base font-extrabold`}
               >
                 <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
                 {/* <img className="absolute swap-button" src={Swapbutton} /> */}

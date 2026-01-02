@@ -1292,10 +1292,10 @@ export function CreateOrderForm({
               type="button"
               onClick={handleApproveTokens}
               disabled={isApproving || isCreating || !!tradeError} // || !!minValueError
-              className="group relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-8 h- flex justify-center text-center items-center hover:opacity-80 transition-all group-hover:text-black group-hover:bg-opacity-80 font-orbitron text-black lg:text-[28px] text-xl font-extrabold"
+              className="gtw relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-8 h- flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold"
               data-testid="button-approve-tokens"
             >
-              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
+              <div className="w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
               {/* <img
                 className="absolute swap-button"
                 src={Swapbutton}
@@ -1315,10 +1315,10 @@ export function CreateOrderForm({
               disabled={
                 isApproving || isCreating || !!tradeError || !!limitPriceError // || !!minValueError
               }
-              className="group relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-4 h- flex justify-center text-center items-center hover:opacity-80 transition-all group-hover:text-black group-hover:bg-opacity-80 font-orbitron text-black lg:text-[28px] text-xl font-extrabold"
+              className="gtw relative md:w-[360px] w-[270px] md:h-[68px] h-12 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans mt-4 h- flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold"
               data-testid="button-create-order"
             >
-              <div className="group-hover:opacity-80 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
+              <div className="w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-12"></div>
               {/* <img
                 className="absolute swap-button"
                 src={Swapbutton}

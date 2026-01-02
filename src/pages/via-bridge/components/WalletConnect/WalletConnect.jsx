@@ -88,14 +88,14 @@ export default function WalletConnect({
           return (
             <>
               <button
-                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
                 Connect
               </button>
               <button
-                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -236,7 +236,7 @@ export default function WalletConnect({
             />
             <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
               <button
-                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
+                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
                 onClick={() => setShowPopup(true)}
                 type="button"
               >
@@ -245,7 +245,7 @@ export default function WalletConnect({
             </div>
 
             <button
-              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF9900] text-center font-extrabold"
+              className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
