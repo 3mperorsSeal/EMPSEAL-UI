@@ -60,7 +60,7 @@ const Wallet = () => {
           onChainChange={handleChainChange}
         />
         <Link to="/">
-          <button className="flex items-center justify-center bg-[#FF9900] hover:opacity-80 transition-all text-black text-sm py-2 px-6 rounded-md font-extrabold w-full font-orbitron">
+          <button className="flex items-center justify-center bg-[#FF9900] gtw transition-all text-sm py-2 px-6 rounded-md font-extrabold w-full font-orbitron">
             <span className="ps-3">Home Page</span>
           </button>
         </Link>

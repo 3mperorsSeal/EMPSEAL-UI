@@ -490,9 +490,9 @@ body.bg-pattern {
   letter-spacing: 0.5px;
   transition: background 0.25s ease;
 }
-.bridge-button:hover button {
-  opacity: 0.8;
-}
+// .bridge-button:hover button {
+//   opacity: 0.8;
+// }
 .s_chain {
   background: linear-gradient(
     180deg,
@@ -817,6 +817,14 @@ body.bg-pattern {
     // top: -305px!important;
     z-index: 0;
   }
+  .rt0 {
+    right: 0px;
+  }
+}
+@media (max-width: 1100px) {
+  .rt0 {
+    right: 0px;
+  }
 }
 .token_input::placeholder {
   color: black !important;
@@ -965,6 +973,9 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   }
 }
 @media (max-width: 768px) {
+  .top45 {
+    top: 3rem;
+  }
   .mtb {
     margin-top: 20px;
     margin-bottom: 20px;
@@ -1012,4 +1023,10 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 .terms::-webkit-scrollbar-thumb:hover {
   background: #555;
   border-radius: 12px;
+}
+.gtw{
+  color: black!important;
+}
+.gtw:hover{
+  color: white!important;
 }
