@@ -97,6 +97,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const [protocolFee, setProtocolFee] = useState(21);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
+  const [needsApproval, setNeedsApproval] = useState(false);
 
   // Debounce and request tracking for quote fetching
   const [debouncedAmountIn, setDebouncedAmountIn] = useState("0");
@@ -340,6 +341,63 @@ const Emp = ({ setPadding, setBestRoute }) => {
 
     getQuote();
   }, [smartRouter, debouncedAmountIn, selectedTokenA, selectedTokenB]);
+
+  // Check approval status whenever token or amount changes
+  useEffect(() => {
+    const checkApproval = async () => {
+      if (
+        !address ||
+        !selectedTokenA ||
+        selectedTokenA.address === EMPTY_ADDRESS ||
+        !debouncedAmountIn ||
+        parseFloat(debouncedAmountIn) <= 0
+      ) {
+        setNeedsApproval(false);
+        return;
+      }
+
+      try {
+        const amountInBigInt = convertToBigInt(debouncedAmountIn, selectedTokenA.decimal);
+        const allowance = await checkAllowance(
+          chainId,
+          selectedTokenA.address,
+          address
+        );
+
+        setNeedsApproval(allowance.data < amountInBigInt);
+      } catch (error) {
+        console.error("Error checking allowance:", error);
+      }
+    };
+
+    checkApproval();
+  }, [chainId, address, selectedTokenA, debouncedAmountIn]);
+
+  const handleApprove = async () => {
+    try {
+      setSwapStatus("APPROVING");
+      const amountInBigInt = convertToBigInt(amountIn, selectedTokenA.decimal);
+
+      await callApprove(chainId, selectedTokenA.address, amountInBigInt);
+
+      // Re-check allowance to update UI immediately
+      const allowance = await checkAllowance(
+        chainId,
+        selectedTokenA.address,
+        address
+      );
+
+      if (allowance.data >= amountInBigInt) {
+        setNeedsApproval(false);
+        setSwapStatus("APPROVED");
+        toast.success("Token approved!");
+      }
+    } catch (error) {
+      setSwapStatus("ERROR");
+      console.error("Approval failed:", error);
+      toast.error("Token approval failed");
+    }
+  };
 
   useEffect(() => {
     if (address && datas) {
@@ -595,6 +653,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
     try {
       setSwapStatus("LOADING");
       // Handle approval
+      // Handle approval - REMOVED automatic approval from here
       if (selectedTokenA.address !== EMPTY_ADDRESS) {
         const amountInBigInt =
           localBestRoute.type === "CONVERGE" || localBestRoute.type === "UNWRAP" // Use localBestRoute
@@ -607,17 +666,9 @@ const Emp = ({ setPadding, setBestRoute }) => {
           address
         );
         if (allowance.data < amountInBigInt) {
-          try {
-            setSwapStatus("APPROVING");
-            await callApprove(chainId, selectedTokenA.address, amountInBigInt);
-            setSwapStatus("APPROVED");
-            toast.success("Token approved!");
-          } catch (error) {
-            setSwapStatus("ERROR");
-            console.error("Approval failed:", error);
-            toast.error("Token approval failed");
-            return;
-          }
+          toast.error("Please approve token first");
+          setSwapStatus("IDLE");
+          return;
         }
       }
 
@@ -699,16 +750,33 @@ const Emp = ({ setPadding, setBestRoute }) => {
     } catch (error) {
       setAmountVisible(false);
       setSwapStatus("ERROR");
-      if (
-        error.message &&
-        (error.message.includes("User rejected") ||
-          error.message.includes("User denied"))
-      ) {
-        toast.error("Transaction rejected by user");
-      } else {
-        toast.error(error.message || "Transaction failed");
-      }
+
+      let message = error.message || "Transaction failed";
+
       console.error("Swap failed", error);
+
+      if (message.includes("User rejected") || message.includes("User denied")) {
+        toast.error("Transaction rejected by user");
+        return;
+      }
+
+      // Check for explicit revert reasons
+      if (message.includes("reverted with the following reason:")) {
+        const parts = message.split("reverted with the following reason:");
+        if (parts[1]) {
+          message = parts[1].trim().split("\n")[0];
+        }
+      } else if (message.includes("reverted with reason string")) {
+        const parts = message.split("reverted with reason string");
+        if (parts[1]) {
+          message = parts[1].replace(/'/g, "").trim().split("\n")[0];
+        }
+      } else if (message.length > 60) {
+        // Fallback for other long messages
+        message = message.substring(0, 60) + "...";
+      }
+
+      toast.error(message);
     }
   };
   // const confirmSwap = async () => {
@@ -882,6 +950,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const getButtonText = () => {
     if (isInsufficientBalance()) return "Insufficient Balance";
     if (isQuoting) return "Loading...";
+    if (needsApproval) return "Approve";
     if (order) return "Place Order";
     return "Swap";
   };
@@ -960,18 +1029,18 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
-            parseFloat(usdValueTokenA)) *
-          100
-        ).toFixed(2)
+        ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
+          parseFloat(usdValueTokenA)) *
+        100
+      ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
     const value = parseFloat(impact);
-
-    if (value < 2) return "text-black";
-    if (value >= 2 && value <= 5) return "text-yellow-500";
-    return "text-red-500";
+    // Green for positive (profit), Red for negative (loss)
+    if (value > 0) return "text-green-500";
+    if (value < 0) return "text-red-500";
+    return "text-black";
   };
   //
   // For Limit Tab
@@ -990,14 +1059,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
-          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
-        }`}
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
+          }`}
       >
         <div
-          className={`scales8 ${
-            order ? "scales-top scales-top_limit" : "top70"
-          }`}
+          className={`scales8 ${order ? "scales-top scales-top_limit" : "top70"
+            }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
@@ -1019,11 +1086,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("lg:h-[295px] h-full");
                 setSearchParams({}, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-white text-[#FF9900]"
-                  : "border-[#FF9900] text-black bg-[#FF9900]"
-              } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
+              className={`${order
+                ? "border-white text-[#FF9900]"
+                : "border-[#FF9900] text-black bg-[#FF9900]"
+                } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
             >
               SWAP
             </div>
@@ -1035,11 +1101,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 setPadding("md:pb-[160px] pb-10");
                 setSearchParams({ tab: "limit" }, { replace: true });
               }}
-              className={`${
-                order
-                  ? "border-[#FF9900] text-black bg-[#FF9900]"
-                  : "border-white "
-              }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
+              className={`${order
+                ? "border-[#FF9900] text-black bg-[#FF9900]"
+                : "border-white "
+                }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
             >
               LIMIT ORDER
             </div>
@@ -1075,13 +1140,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedBalance)}`
-                        : `${
-                            tokenBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedBalance)}`
+                          : `${tokenBalance
+                            ? formatNumber(
+                              parseFloat(tokenBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1121,7 +1185,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colorss"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenA.address ? (
+                              activeTokenAddress === selectedTokenA.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
@@ -1154,11 +1218,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1213,7 +1276,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
                       onMouseEnter={() => setDollarInfo(true)}
                       onMouseLeave={() => setDollarInfo(false)}
-                       onClick={() => setDollarInfo((prev) => !prev)}
+                      onClick={() => setDollarInfo((prev) => !prev)}
                     />
 
                     {dollarinfo && (
@@ -1269,13 +1332,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedChainBalanceTokenB)}`
-                        : `${
-                            tokenBBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedChainBalanceTokenB)}`
+                          : `${tokenBBalance
+                            ? formatNumber(
+                              parseFloat(tokenBBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1310,7 +1372,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                             className="rounded-md transition-colors"
                           >
                             {copySuccess &&
-                            activeTokenAddress === selectedTokenB.address ? (
+                              activeTokenAddress === selectedTokenB.address ? (
                               <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                             ) : (
                               <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
@@ -1329,11 +1391,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
-            ${
-              selectedPercentage === value
-                ? " text-white bg-black"
-                : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
-            }`}
+            ${selectedPercentage === value
+                              ? " text-white bg-black"
+                              : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1409,7 +1470,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
                       onMouseEnter={() => setDollarInfo1(true)}
                       onMouseLeave={() => setDollarInfo1(false)}
-                       onClick={() => setDollarInfo1((prev) => !prev)}
+                      onClick={() => setDollarInfo1((prev) => !prev)}
                     />
                     {dollarinfo1 && (
                       <div
@@ -1435,20 +1496,18 @@ const Emp = ({ setPadding, setBestRoute }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${
-                  order
-                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                    : "pt-0 top-0"
-                }`}
+                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${order
+                  ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                  : "pt-0 top-0"
+                  }`}
               >
                 <button
                   onClick={() => setAmountVisible(true)}
                   disabled={isInsufficientBalance()}
-                  className={`gtw relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${
-                    isInsufficientBalance()
-                      ? "opacity-50 cursor-not-allowed"
-                      : " "
-                  } font-orbitron lg:text-3xl text-base font-black`}
+                  className={`gtw relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${isInsufficientBalance()
+                    ? "opacity-50 cursor-not-allowed"
+                    : " "
+                    } font-orbitron lg:text-3xl text-base font-black`}
                 >
                   <div className="group-hover:opacity-100 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
                   {/* <img
@@ -1598,9 +1657,13 @@ const Emp = ({ setPadding, setBestRoute }) => {
             amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
             tokenB={selectedTokenB}
+            refresh={() => { }}
             confirm={confirmSwap}
-            usdValueTokenA={usdValue}
+            handleApprove={handleApprove}
+            needsApproval={needsApproval}
+            usdValueTokenA={usdValueTokenA}
             usdValueTokenB={usdValueTokenB}
+            rate={getRateDisplay()}
           />
         )}
       </div>

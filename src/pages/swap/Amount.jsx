@@ -15,6 +15,9 @@ const Amount = ({
   disabled = false,
   usdValueTokenA,
   usdValueTokenB,
+  needsApproval,
+  handleApprove,
+  rate,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConfirm, setConfirm] = useState(false);
@@ -60,10 +63,10 @@ const Amount = ({
   const priceImpact =
     usdValueTokenA > 0
       ? (
-          ((parseFloat(usdValueTokenA) - parseFloat(usdValueTokenB)) /
-            parseFloat(usdValueTokenA)) *
-          100
-        ).toFixed(2)
+        ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
+          parseFloat(usdValueTokenA)) *
+        100
+      ).toFixed(2)
       : 0;
 
   return (
@@ -123,14 +126,7 @@ const Amount = ({
               <div className="text-white text-sm font-normal roboto">Price</div>
               <div className="text-white text-sm font-normal roboto">
                 1 {tokenA?.ticker} ={" "}
-                {singleToken?.amounts?.length
-                  ? parseFloat(
-                      formatUnits(
-                        singleToken.amounts[singleToken.amounts.length - 1],
-                        parseInt(tokenB.decimal)
-                      )
-                    ).toFixed(6)
-                  : "0"}{" "}
+                {rate}{" "}
                 {tokenB?.ticker}
               </div>
             </div>
@@ -152,14 +148,15 @@ const Amount = ({
                 </div>
                 <img src={Info} alt="info" />
               </div>
-              <div className="text-white text-sm font-normal roboto">
+              <div className={`text-sm font-normal roboto ${parseFloat(priceImpact) > 0 ? "text-green-500" : parseFloat(priceImpact) < 0 ? "text-red-500" : "text-white"
+                }`}>
                 {/* {((amountOut / 1000) * 0.01).toFixed(6)} % */}
                 {priceImpact} %
               </div>
             </div>
             <div className="bridge-button">
               <button
-                onClick={handleClick}
+                onClick={needsApproval ? handleApprove : handleClick}
                 disabled={disabled || isLoading}
                 usdValueTokenA={usdValueTokenA}
                 usdValueTokenB={usdValueTokenB}
@@ -175,7 +172,7 @@ const Amount = ({
                   </div>
                 ) : (
                   <div className="md:text-xl text-base font-black text-center leading-normal uppercase font-orbitron">
-                    Swap
+                    {needsApproval ? "Approve" : "Swap"}
                   </div>
                 )}
               </button>
