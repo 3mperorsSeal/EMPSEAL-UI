@@ -600,7 +600,7 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left md:w-[280px] w-[130px] justify-center">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[115px] justify-center">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
@@ -685,7 +685,12 @@ const BridgeInterface = () => {
                     const outputLength =
                       formattedValue.replace(/\D/g, "").length || 0;
 
-                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                    const defaultFontSize =
+                      window.innerWidth >= 1024
+                        ? 48
+                        : window.innerWidth >= 768
+                        ? 40
+                        : 32;
                     const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
                     // const FREE_DIGITS = 7; // no shrink up to 10 digits
                     const SHRINK_RATE = 3; // slow shrink rate
@@ -696,7 +701,7 @@ const BridgeInterface = () => {
                     );
 
                     const dynamicFontSize = Math.max(
-                      12,
+                      10,
                       defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
@@ -726,7 +731,7 @@ const BridgeInterface = () => {
                               setSelectedPercentage(100);
                             }
                           }}
-                          className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                          className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
                         >
                           MAX AMOUNT
                         </button>
@@ -758,7 +763,7 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[130px] margin_left">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[115px] margin_left_1">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
@@ -867,7 +872,12 @@ const BridgeInterface = () => {
                     const inputLength =
                       formattedValue.replace(/\D/g, "").length || 0;
 
-                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                    const defaultFontSize =
+                      window.innerWidth >= 1024
+                        ? 48
+                        : window.innerWidth >= 768
+                        ? 40
+                        : 32;
 
                     const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
                     const SHRINK_RATE = 3; // slow shrink rate
@@ -875,7 +885,7 @@ const BridgeInterface = () => {
                     const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                     const dynamicFontSize = Math.max(
-                      12,
+                      10,
                       defaultFontSize - excessDigits * SHRINK_RATE
                     );
 

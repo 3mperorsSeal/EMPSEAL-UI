@@ -61,7 +61,7 @@
 //         <img
 //           src={chain.logoURI || githubLogoUrl}
 //           alt={chain.name}
-//           className="w-6 h-6 rounded-full"
+//           className="md:w-6 md:h-6 w-4 h-4 rounded-full"
 //           onError={handleImageError}
 //         />
 //         <span>{chain.name}</span>
@@ -289,7 +289,7 @@ const ChainModal = ({
         }}
         className="flex items-center gap-3 rounded-lg hoverclip my-3 px-3 py-3 cursor-pointer"
       >
-        <ChainLogo chain={chain} className="w-6 h-6 rounded-full" />
+        <ChainLogo chain={chain} className="md:w-6 md:h-6 w-4 h-4 rounded-full" />
         <span className="text-white">{chain.name}</span>
       </div>
     );
@@ -417,11 +417,11 @@ const ChainSelector = ({ onSwitch }) => {
         {/* FROM */}
         <button
           onClick={() => setActiveModal("from")}
-          className="bg-black border-2 border-white rounded-lg md:px-4 px-2 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
+          className="bg-black border-2 border-white rounded-lg md:px-4 px-2 flex items-center justify-center gap-2 md:h-[70px] h-12 lg:w-[250px] md:w-[220px] w-[130px]"
         >
           {fromChain ? (
             <>
-              <ChainLogo chain={fromChain} className="w-6 h-6 rounded-full" />
+              <ChainLogo chain={fromChain} className="md:w-6 md:h-6 w-4 h-4 rounded-full" />
               <span
                 className={`text-white whitespace-nowrap ${getFontSizeClass(
                   fromChain.name
@@ -431,7 +431,7 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="!text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
+            <span className="!text-[#FF9900] font-bold font-orbitron lg:text-3xl md:text-base text-sm">
               Select Chain
             </span>
           )}
@@ -440,11 +440,11 @@ const ChainSelector = ({ onSwitch }) => {
         {/* TO */}
         <button
           onClick={() => setActiveModal("to")}
-          className="bg-[#FFE6C0] border-2 border-white rounded-lg md:px-4 px-2 py-4 flex items-center justify-center gap-2 md:h-[70px] h-12 md:w-[250px] w-[145px]"
+          className="bg-[#FFE6C0] border-2 border-white rounded-lg md:px-4 px-2 py-4 flex items-center justify-center gap-2 md:h-[70px] h-12 lg:w-[250px] md:w-[220px] w-[130px]"
         >
           {toChain ? (
             <>
-              <ChainLogo chain={toChain} className="w-6 h-6 rounded-full" />
+              <ChainLogo chain={toChain} className="md:w-6 md:h-6 w-4 h-4 rounded-full" />
               <span
                 className={`text-black whitespace-nowrap ${getFontSizeClass(
                   toChain.name
@@ -454,7 +454,7 @@ const ChainSelector = ({ onSwitch }) => {
               </span>
             </>
           ) : (
-            <span className="!text-black font-bold font-orbitron md:text-3xl text-sm">
+            <span className="!text-black font-bold font-orbitron lg:text-3xl md:text-base text-sm">
               Select Chain
             </span>
           )}

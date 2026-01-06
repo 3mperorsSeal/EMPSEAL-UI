@@ -257,8 +257,14 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
   }, [bestRoute, chainId]);
 
   return (
-    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
-      <div className="!bg-[#FFE6C0] relative md:max-w-[750px] w-full rounded-2xl clip-bg_r py-10 lg:px-5 md:px-4 px-2 font-orbitron overflow-x-auto whitespace-nowrap">
+    <div
+      onClick={onClose}
+      className="bg-black bg-opacity-40 mt-10 xl:py-12 lg:py-20 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[999999] fade-in-out fade-out"
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        className="!bg-[#FFE6C0] relative md:max-w-[750px] w-full rounded-2xl clip-bg_r py-10 mt30 lg:px-5 md:px-4 px-2 font-orbitron  whitespace-nowrap"
+      >
         <button
           onClick={onClose}
           className="absolute right-4 top-4 md:top-8 md:right-8 text-black tilt font-black text-xl"
@@ -281,7 +287,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
               return (
                 <div
                   key={index}
-                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center bg-black rounded-md md:px-10 px-5 md:py-20 py-10"
+                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center bg-black rounded-md md:px-10 px-5 md:py-16 py-8"
                 >
                   {/* First PercentBox with token in */}
                   <PercentBox
