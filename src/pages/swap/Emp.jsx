@@ -1091,7 +1091,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
                       <div className="flex gap-2 items-center md:mt-5 mt-6">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left md:w-[280px] w-[145px] justify-center">
+                        <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left lg:w-[280px] md:w-[220px] w-[125px] justify-center">
                           {/* {selectedTokenA &&
                           selectedTokenA.image &&
                           selectedTokenA.ticker ? (
@@ -1170,12 +1170,16 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       const inputLength =
                         formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                       const defaultFontSize =
-                        window.innerWidth >= 768 ? 48 : 32;
+                        window.innerWidth >= 1024
+                          ? 48
+                          : window.innerWidth >= 768
+                          ? 40
+                          : 32;
                       // const dynamicFontSize = Math.max(
                       //   12,
                       //   defaultFontSize - inputLength * 1.5
                       // );
-                      const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
+                      const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 4;
                       const SHRINK_RATE = 3;
 
                       const excessDigits = Math.max(
@@ -1184,7 +1188,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       );
 
                       const dynamicFontSize = Math.max(
-                        12,
+                        10,
                         defaultFontSize - excessDigits * SHRINK_RATE
                       );
                       return (
@@ -1213,7 +1217,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
                       onMouseEnter={() => setDollarInfo(true)}
                       onMouseLeave={() => setDollarInfo(false)}
-                       onClick={() => setDollarInfo((prev) => !prev)}
+                      onClick={() => setDollarInfo((prev) => !prev)}
                     />
 
                     {dollarinfo && (
@@ -1286,7 +1290,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                     <div className="flex justify-between gap-4 items-center cursor-pointer">
                       <div className="flex gap-2 items-center md:mt-5 mt-6">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 md:w-[280px] w-[145px] margin_left">
+                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 lg:w-[280px] md:w-[220px] w-[125px] margin_left">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(false);
@@ -1353,7 +1357,11 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         formattedValue.replace(/,/g, "").length || 0;
 
                       const defaultFontSize =
-                        window.innerWidth >= 768 ? 48 : 32;
+                        window.innerWidth >= 1024
+                          ? 48
+                          : window.innerWidth >= 768
+                          ? 40
+                          : 32;
 
                       // const dynamicFontSize = Math.max(
                       //   12,
@@ -1368,7 +1376,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       );
 
                       const dynamicFontSize = Math.max(
-                        12,
+                        10,
                         defaultFontSize - excessDigits * SHRINK_RATE
                       );
 
@@ -1409,7 +1417,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
                       onMouseEnter={() => setDollarInfo1(true)}
                       onMouseLeave={() => setDollarInfo1(false)}
-                       onClick={() => setDollarInfo1((prev) => !prev)}
+                      onClick={() => setDollarInfo1((prev) => !prev)}
                     />
                     {dollarinfo1 && (
                       <div

@@ -781,7 +781,7 @@ const Emp = ({
                     setSelectedPercentage("");
                     setAmountIn("");
                   }}
-                  className="relative cursor-pointer flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left md:w-[280px] w-[130px] justify-center"
+                  className="relative cursor-pointer flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[125px] justify-center"
                 >
                   <div
                     className={`relatve flex gap-2 items-center ${
@@ -827,7 +827,7 @@ const Emp = ({
                       </div>
                     )}
                     {!selectedTokenA?.name && (
-                      <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
+                      <span className="absolute md:px-3 px-1 lg:left-4 left-2 lg:right-0 mx-auto flex items-center justify-center !text-[#FF9900] font-bold font-orbitron lg:text-3xl md:text-base text-sm">
                         Select token
                       </span>
                     )}{" "}
@@ -837,7 +837,7 @@ const Emp = ({
                     /> */}
                     {/* {selectedChainA.image && ( */}
                     <div
-                      className={`relative bg-black md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-2 border-white rounded-lg z-10 md:!left-[11.5rem] !left-[5.8rem] ${
+                      className={`relative bg-black md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-2 border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.8rem] ${
                         selectedChainA.image ? "left-40-box " : "left-40-box"
                       }`}
                     >
@@ -889,7 +889,12 @@ const Emp = ({
                       ""
                     ).length || 0;
 
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                  const defaultFontSize =
+                    window.innerWidth >= 1024
+                      ? 48
+                      : window.innerWidth >= 768
+                      ? 40
+                      : 32;
 
                   // const dynamicFontSize = Math.max(
                   //   12,
@@ -901,7 +906,7 @@ const Emp = ({
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
-                    12,
+                    10,
                     defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
@@ -997,7 +1002,7 @@ const Emp = ({
                         setIsSelectingTokenA(false);
                         setTokenVisible(true);
                       }}
-                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFE6C0] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 md:w-[280px] w-[130px] margin_left"
+                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFE6C0] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[125px] margin_left_1"
                     >
                       <div
                         className={` flex gap-2 items-center ${
@@ -1032,7 +1037,7 @@ const Emp = ({
                           </div>
                         )}
                         {!selectedTokenB?.name && (
-                          <span className="absolute md:px-3 px-1 left-4 right-0 mx-auto flex items-center !text-black font-bold font-orbitron md:text-3xl text-sm">
+                          <span className="absolute md:px-3 px-1 lg:left-4 left-2 lg:right-0 mx-auto flex items-center justify-center !text-black font-bold font-orbitron lg:text-3xl md:text-base text-sm">
                             Select token
                           </span>
                         )}{" "}
@@ -1042,7 +1047,7 @@ const Emp = ({
                         /> */}
                         {/* {selectedChainB.image && ( */}
                         <div
-                          className={`relative bg-black border md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 md:!left-[11.5rem] !left-[5.8rem] ${
+                          className={`relative bg-black border md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.8rem] ${
                             selectedChainB.image
                               ? "left-40-box "
                               : "left-40-box"
@@ -1122,7 +1127,12 @@ const Emp = ({
                       ""
                     ).length || 0;
 
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                  const defaultFontSize =
+                    window.innerWidth >= 1024
+                      ? 48
+                      : window.innerWidth >= 768
+                      ? 40
+                      : 32;
 
                   // const dynamicFontSize = Math.max(
                   //   12,
@@ -1134,7 +1144,7 @@ const Emp = ({
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
-                    12,
+                    10,
                     defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (

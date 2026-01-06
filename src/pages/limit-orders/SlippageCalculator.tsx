@@ -154,7 +154,7 @@ export function SlippageCalculator({
         <div className="flex justify-center items-center mt-8 flex-col gap-2">
           {/* clip-path-polygon */}
           <button
-            className={`gtw relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl transition-all font-orbitron`}
+            className={`gtw bg-[#FF9900] relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl transition-all font-orbitron`}
             // style={{
             //   clipPath:
             //     "polygon(0px 0px, 95% 0px, 100% 30%, 100% 100%, 6% 100%, 0px 60%)",
