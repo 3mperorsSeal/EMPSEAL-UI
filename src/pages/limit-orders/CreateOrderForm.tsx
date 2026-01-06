@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Sellbox from "../../assets/images/sell-box.png";
+// import Sellbox from "../../assets/images/sell-box.png";
 // import LimitBg from "../../assets/images/buy-bg.png";
-import LimitBg from "../../assets/images/limit-bg.png";
+// import LimitBg from "../../assets/images/limit-bg.png";
 import Ar from "../../assets/images/reverse.svg";
-import Swapbutton from "../../assets/images/swap-button.svg";
+// import Swapbutton from "../../assets/images/swap-button.svg";
 
 import {
   createOrderSchema,
@@ -700,7 +700,7 @@ export function CreateOrderForm({
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center md:mt-5 mt-6">
                     {/* md:w-[220px] w-[160px] */}
-                    <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-3 margin_left md:w-[280px] w-[145px] justify-center">
+                    <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-3 margin_left lg:w-[280px] md:w-[220px] w-[125px] justify-center">
                       {tokenInMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -713,7 +713,7 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none !text-[#FF9900] font-bold font-orbitron md:text-3xl text-base"
+                              className="h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none !text-[#FF9900] font-bold font-orbitron lg:text-3xl md:text-base text-xs"
                               data-testid="select-token-in"
                             >
                               <SelectValue placeholder="Select token" />
@@ -837,18 +837,23 @@ export function CreateOrderForm({
                 {(() => {
                   const inputLength =
                     formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                  const defaultFontSize =
+                        window.innerWidth >= 1024
+                          ? 48
+                          : window.innerWidth >= 768
+                          ? 40
+                          : 32;
                   // const dynamicFontSize = Math.max(
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
                   // );
-                  const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
+                  const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 5;
                   const SHRINK_RATE = 3;
 
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
-                    12,
+                    10,
                     defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (
@@ -857,7 +862,7 @@ export function CreateOrderForm({
                       {...form.register("amountIn")}
                       placeholder="0.0"
                       type="text"
-                      className="text-[#000000] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input ps-3 rigamesh placeholder-black transition-all duration-200 ease-in-out"
+                      className="text-[#000000] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input rigamesh placeholder-black transition-all duration-200 ease-in-out"
                       data-testid="input-amount-in"
                       onChange={(e) =>
                         form.setValue("amountIn", e.target.value)
@@ -942,7 +947,7 @@ export function CreateOrderForm({
               <div className="md:w-[25%] w-[40%]">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-5">
-                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 md:w-[280px] w-[145px] margin_left">
+                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 lg:w-[280px] md:w-[220px] w-[125px] margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
@@ -955,7 +960,7 @@ export function CreateOrderForm({
                             }
                           >
                             <SelectTrigger
-                              className="h-12 border-none text-center !bg-[#FFE6C0] focus:none px-0 !w-full outline-none !text-black font-bold font-orbitron md:text-3xl text-base"
+                              className="h-12 border-none text-center !bg-[#FFE6C0] focus:none px-0 !w-full outline-none !text-black font-bold font-orbitron lg:text-3xl md:text-base text-xs"
                               data-testid="select-token-out"
                             >
                               <SelectValue placeholder="Select token" />
@@ -1062,7 +1067,12 @@ export function CreateOrderForm({
 
                   const inputLength = value.replace(/\D/g, "").length;
 
-                  const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                  const defaultFontSize =
+                        window.innerWidth >= 1024
+                          ? 48
+                          : window.innerWidth >= 768
+                          ? 40
+                          : 32;
 
                   const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
                   const SHRINK_RATE = 2;
@@ -1070,7 +1080,7 @@ export function CreateOrderForm({
                   const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
 
                   const dynamicFontSize = Math.max(
-                    12,
+                    10,
                     defaultFontSize - excessDigits * SHRINK_RATE
                   );
                   return (

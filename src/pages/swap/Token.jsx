@@ -120,7 +120,7 @@ const TokenListItem = ({
 
   return (
     <div
-      className="flex justify-between items-center mt-2 cursor-pointer hoverclip p-2 rounded-xl"
+      className="flex justify-between items-center mt-2 cursor-pointer hoverclip md:p-2 p-1 rounded-xl"
       onClick={() => onClick(token)}
     >
       <div className="flex items-center gap-2">
@@ -135,7 +135,7 @@ const TokenListItem = ({
           />
         </div>
         <div>
-          <div className="text-white font-orbitron font-black text-lg roboto leading-relaxed tracking-wide">
+          <div className="text-white font-orbitron font-black md:text-lg text-sm roboto leading-relaxed tracking-wide">
             {token.name}
           </div>
           <div className="text-white text-xs roboto">
@@ -144,10 +144,10 @@ const TokenListItem = ({
         </div>
       </div>
       <div className="text-right">
-        <div className="text-[#FF9900] text-lg font-bold roboto tracking-wide">
+        <div className="text-[#FF9900] md:text-lg text-sm font-bold roboto tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
         </div>
-        <div className="text-white text-xs roboto mt-1">
+        {/* <div className="text-white text-xs roboto mt-1">
           {loadingPrice ? (
             "Fetching price..."
           ) : price ? (
@@ -157,8 +157,8 @@ const TokenListItem = ({
           ) : (
             "Price not available"
           )}
+        </div> */}
           {/* ${formatNumber(price)} ≈  */}
-        </div>
       </div>
     </div>
   );
@@ -412,11 +412,11 @@ const Token = ({ onClose, onSelect }) => {
               Select a token
             </p>
           </div>
-          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-[24px] px-3">
+          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-[24px] px-1">
             {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer roboto rounded-2xl border border-[#FF9900] p-[14px]"
+                className="flex flex-row items-center cursor-pointer roboto md:rounded-2xl rounded-lg border border-[#FF9900] md:p-[14px] p-2"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
                 {/* bg-rec */}

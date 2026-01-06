@@ -263,10 +263,15 @@ const TransferPanel = () => {
                     );
 
                     // const defaultFontSize = 48;
-                    const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+                    const defaultFontSize =
+                      window.innerWidth >= 1024
+                        ? 48
+                        : window.innerWidth >= 768
+                        ? 40
+                        : 32;
                     // const minFontSize = 32;
 
-                    const FREE_DIGITS = 7;
+                    const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 5;
                     const SHRINK_RATE = 3;
 
                     const outputLength = formattedValue.replace(
@@ -284,7 +289,7 @@ const TransferPanel = () => {
                     //   defaultFontSize - excessDigits * SHRINK_RATE
                     // );
                     const dynamicFontSize = Math.max(
-                      12,
+                      10,
                       defaultFontSize - excessDigits * SHRINK_RATE
                     );
 
@@ -314,7 +319,7 @@ const TransferPanel = () => {
                   }}
                   className="relative flex-flex-col justify-end items-end w-full cursor-pointer md:top-6 md:pb-4"
                 >
-                  <p className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl text-[10px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
+                  <p className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
                     Max Amount
                   </p>
                 </div>
@@ -375,18 +380,23 @@ const TransferPanel = () => {
               const value = formattedExpectedAmount || "";
 
               // const defaultFontSize = 48;
-              const defaultFontSize = window.innerWidth >= 768 ? 48 : 32;
+              const defaultFontSize =
+                window.innerWidth >= 1024
+                  ? 48
+                  : window.innerWidth >= 768
+                  ? 40
+                  : 32;
 
               // const minFontSize = 32;
 
-              const FREE_DIGITS = 7;
+              const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
               const SHRINK_RATE = 3;
               const outputLength = value.replace(/\D/g, "").length;
 
               const excessDigits = Math.max(0, outputLength - FREE_DIGITS);
 
               const dynamicFontSize = Math.max(
-                12,
+                10,
                 defaultFontSize - excessDigits * SHRINK_RATE
               );
               // const dynamicFontSize = Math.max(
