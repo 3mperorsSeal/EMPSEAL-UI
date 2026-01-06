@@ -600,7 +600,7 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[115px] justify-center">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[110px] justify-center">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
@@ -619,7 +619,7 @@ const BridgeInterface = () => {
                       <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-[#FF9900]" />
                     )}
                   </button>
-                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-83px] right-[-50px]">
+                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[44px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-83px] right-[-47px]">
                     <ChainSelector
                       chain={sourceChain}
                       onClick={() => setIsFromChainModalOpen(true)}
@@ -763,7 +763,7 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[115px] margin_left_1">
+                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[110px] margin_left_1">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
@@ -782,7 +782,7 @@ const BridgeInterface = () => {
                       <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-[#FF9900]" />
                     )}
                   </button>
-                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[48px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-85px] right-[-53px]">
+                  <div className="absolute bg-black border-2 border-white md:w-[75px] w-[44px] md:h-20 h-12 flex justify-center items-center rounded-lg md:right-[-85px] right-[-50px]">
                     <ChainSelector
                       chain={destChain}
                       onClick={() => setIsToChainModalOpen(true)}

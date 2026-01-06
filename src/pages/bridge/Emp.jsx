@@ -781,7 +781,7 @@ const Emp = ({
                     setSelectedPercentage("");
                     setAmountIn("");
                   }}
-                  className="relative cursor-pointer flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[125px] justify-center"
+                  className="relative cursor-pointer flex md:gap-4 gap-1 items-center bg-black text-white md:border-2 border border-white md:rounded-xl rounded-lg md:h-20 h-12 md:px-6 px-3 md:py-2 py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[120px] justify-center"
                 >
                   <div
                     className={`relatve flex gap-2 items-center ${
@@ -837,7 +837,7 @@ const Emp = ({
                     /> */}
                     {/* {selectedChainA.image && ( */}
                     <div
-                      className={`relative bg-black md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-2 border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.8rem] ${
+                      className={`relative bg-black md:h-20 md:w-[70px] w-11 h-12 md:px-1.5 px-1 flex justify-center items-center border-2 border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.4rem] ${
                         selectedChainA.image ? "left-40-box " : "left-40-box"
                       }`}
                     >
@@ -1002,7 +1002,7 @@ const Emp = ({
                         setIsSelectingTokenA(false);
                         setTokenVisible(true);
                       }}
-                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFE6C0] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[125px] margin_left_1"
+                      className="flex md:gap-4 gap-1 relative items-center justify-center bg-[#FFE6C0] text-black md:border-2 md:h-20 h-12 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[120px] margin_left_1"
                     >
                       <div
                         className={` flex gap-2 items-center ${
@@ -1047,7 +1047,7 @@ const Emp = ({
                         /> */}
                         {/* {selectedChainB.image && ( */}
                         <div
-                          className={`relative bg-black border md:h-20 md:w-[70px] w-12 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.8rem] ${
+                          className={`relative bg-black border md:h-20 md:w-[70px] w-11 h-12 md:px-1.5 px-1 flex justify-center items-center border-white rounded-lg z-10 lg:!left-[11.5rem] md:!left-[9.5rem] !left-[5.4rem] ${
                             selectedChainB.image
                               ? "left-40-box "
                               : "left-40-box"
