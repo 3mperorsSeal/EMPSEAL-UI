@@ -276,7 +276,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
         </h2>
         {/* Split Type */}
         {(bestRoute.type === "SPLIT" || bestRoute.type === "NOSPLIT") && (
-          <div className="flex flex-col gap-6">
+          <div className="flex flex-col gap-6 bg-black rounded-md md:px-10 px-5 md:py-16 py-8">
             {bestRoute.payload.map((pathObj, index) => {
               const firstToken = pathObj.path[0];
               const lastToken = pathObj.path[pathObj.path.length - 1];
@@ -287,7 +287,7 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
               return (
                 <div
                   key={index}
-                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center bg-black rounded-md md:px-10 px-5 md:py-16 py-8"
+                  className="flex flex-wrap lg:flex-nowrap w-full lg:gap-8 md:gap-6 gap-3 justify-center items-center"
                 >
                   {/* First PercentBox with token in */}
                   <PercentBox

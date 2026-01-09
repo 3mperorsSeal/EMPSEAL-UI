@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 // import Sellbox from "../../assets/images/sell-box.png";
@@ -47,6 +47,7 @@ import {
   Cog,
   Info,
   X,
+  InfoIcon,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { useAccount, useBalance } from "wagmi";
@@ -622,6 +623,24 @@ export function CreateOrderForm({
       : formattedInteger;
   };
 
+  //
+  const [inputEl, setInputEl] = useState<HTMLInputElement | null>(null);
+
+  const handleClick = () => {
+    inputEl?.showPicker?.(); // Safely trigger calendar
+  };
+
+  const { ref: formRef, ...rest } = form.register("deadline");
+
+  const mergedRef = (el: HTMLInputElement | null) => {
+    setInputEl(el); // Save to state
+    formRef(el); // Register with React Hook Form
+  };
+
+  //
+  const [dollarinfo, setDollarInfo] = useState(false);
+  const [dollarinfo1, setDollarInfo1] = useState(false);
+
   return (
     <>
       <div
@@ -632,7 +651,7 @@ export function CreateOrderForm({
           {/* Strategy Selection */}
           <div className="flex gap-2 items-start">
             <div>
-              <Label className="text-sm font-medium mb-5 block">
+              <Label className="md:text-base text-sm font-medium mb-5 block">
                 Order Strategy
               </Label>
               <RadioGroup
@@ -647,11 +666,19 @@ export function CreateOrderForm({
                     value={OrderStrategy.SELL}
                     id="strategy-sell"
                   />
-                  <Label htmlFor="strategy-sell">Exit Strategy (Sell)</Label>
+                  <Label
+                    className="md:text-base text-sm"
+                    htmlFor="strategy-sell"
+                  >
+                    Exit Strategy (Sell)
+                  </Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <RadioGroupItem value={OrderStrategy.BUY} id="strategy-buy" />
-                  <Label htmlFor="strategy-buy">
+                  <Label
+                    className="md:text-base text-sm"
+                    htmlFor="strategy-buy"
+                  >
                     Accumulation Strategy (Buy)
                   </Label>
                 </div>
@@ -706,11 +733,11 @@ export function CreateOrderForm({
                           <Select
                             onValueChange={handleTokenInSelect}
                             value={selectedTokenIn || undefined}
-                            disabled={
-                              tokenOutMode === "custom" &&
-                              !getTokenInfo(selectedTokenOut) &&
-                              isAddress(selectedTokenOut)
-                            }
+                            // disabled={
+                            //   tokenOutMode === "custom" &&
+                            //   !getTokenInfo(selectedTokenOut) &&
+                            //   isAddress(selectedTokenOut)
+                            // }
                           >
                             <SelectTrigger
                               className="h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none !text-[#FF9900] font-bold font-orbitron lg:text-3xl md:text-base text-xs"
@@ -738,8 +765,8 @@ export function CreateOrderForm({
                                 )
                               )}
                               <SelectItem value="custom">
-                                <span className="font-medium text-primary">
-                                  Custom Address...
+                                <span className="font-medium text-primary font-orbitron cursor-pointer">
+                                  Custom Address..
                                 </span>
                               </SelectItem>
                             </SelectContent>
@@ -767,7 +794,7 @@ export function CreateOrderForm({
                                 )}
                                 <div className="flex flex-col">
                                   {/* <span className="text-white font-medium text-sm">{customTokenIn.name}</span> */}
-                                  <span className="text-white/70 text-xs">
+                                  <span className="text-white md:text-xl font-bold text-xs">
                                     {customTokenIn.symbol}
                                   </span>
                                 </div>
@@ -775,7 +802,7 @@ export function CreateOrderForm({
                               <button
                                 type="button"
                                 onClick={() => form.setValue("tokenIn", "")}
-                                className="text-white/70 hover:text-white transition-colors"
+                                className="text-white md:text-xl font-bold text-xs tilt"
                               >
                                 <X size={16} />
                               </button>
@@ -785,13 +812,13 @@ export function CreateOrderForm({
                               <Input
                                 {...form.register("tokenIn")}
                                 placeholder="0x..."
-                                className="h-12 bg-transparent !border-none pr-10" // Added padding for logo
+                                className="h-12 bg-transparent !focus:none !outline-0  !border-none md:text-xl text-base !font-bold !font-orbitron" // Added padding for logo
                                 data-testid="input-token-in-custom"
-                                disabled={
-                                  tokenOutMode === "custom" &&
-                                  !getTokenInfo(selectedTokenOut) &&
-                                  isAddress(selectedTokenOut)
-                                }
+                                // disabled={
+                                //   tokenOutMode === "custom" &&
+                                //   !getTokenInfo(selectedTokenOut) &&
+                                //   isAddress(selectedTokenOut)
+                                // }
                               />
                             </div>
                           )}
@@ -803,7 +830,7 @@ export function CreateOrderForm({
                               setTokenInMode("select");
                               form.setValue("tokenIn", "");
                             }}
-                            className="text-xs border-none"
+                            className="md:text-base text-xs border-none font-orbitron"
                           >
                             Back to token list
                           </Button>
@@ -838,11 +865,11 @@ export function CreateOrderForm({
                   const inputLength =
                     formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                   const defaultFontSize =
-                        window.innerWidth >= 1024
-                          ? 48
-                          : window.innerWidth >= 768
-                          ? 40
-                          : 32;
+                    window.innerWidth >= 1024
+                      ? 48
+                      : window.innerWidth >= 768
+                      ? 40
+                      : 32;
                   // const dynamicFontSize = Math.max(
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
@@ -878,16 +905,52 @@ export function CreateOrderForm({
                     ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                     : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
                 </p>
-                <div className="text-right text-white text-sm -mt-[0px] font-bold pe-1 rigamesh truncate text-sh1">
-                  {tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))
+                <div className="text-right relative text-black md:text-base text-[10px] usd-spacing truncate rigamesh text-sh1 flex justify-end gap-1">
+                  {tokenInUSDPrice &&
+                    amountIn &&
+                    !isNaN(parseFloat(amountIn)) && (
+                      <div className="flex items-center gap-1">
+                        <div className="relative inline-block">
+                          <InfoIcon
+                            size={18}
+                            className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
+                            onMouseEnter={() => setDollarInfo(true)}
+                            onMouseLeave={() => setDollarInfo(false)}
+                            onClick={() => setDollarInfo((prev) => !prev)}
+                          />
+
+                          {dollarinfo && (
+                            <div
+                              className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg"
+                              onMouseEnter={() => setDollarInfo(true)}
+                              onMouseLeave={() => setDollarInfo(false)}
+                            >
+                              Dollar value display <br />
+                              The dollar value displayed is fetched from a
+                              3rd-party API. It may not be 100% accurate in some
+                              cases. For accuracy, please check the output
+                              units.
+                            </div>
+                          )}
+                        </div>
+                        <span>
+                          $
+                          {formatNumber(
+                            (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2)
+                          )}
+                        </span>
+                      </div>
+                    )}
+
+                  {/* {tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))
                     ? `$${formatNumber(
                         (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2)
                       )}`
-                    : ""}
+                    : ""} */}
                 </div>
               </div>
             </div>
-            <div className="text-right text-white font-extrabold text-sm -mt-[14px] pe-8 roboto truncate">
+            <div className="text-right text-white font-extrabold text-sm relative roboto truncate">
               {form.formState.errors.amountIn && (
                 <p className="mt-1 text-sm text-destructive">
                   {form.formState.errors.amountIn.message}
@@ -947,17 +1010,17 @@ export function CreateOrderForm({
               <div className="md:w-[25%] w-[40%]">
                 <div className="flex justify-between gap-4 items-center cursor-pointer">
                   <div className="flex gap-2 items-center mt-5">
-                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-3 lg:w-[280px] md:w-[220px] w-[125px] margin_left">
+                    <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-4 px-3 md:py-3 lg:w-[280px] md:w-[220px] w-[125px] margin_left">
                       {tokenOutMode === "select" ? (
                         <div className="space-y-2 w-full">
                           <Select
                             onValueChange={handleTokenOutSelect}
                             value={selectedTokenOut || undefined}
-                            disabled={
-                              tokenInMode === "custom" &&
-                              !getTokenInfo(selectedTokenIn) &&
-                              isAddress(selectedTokenIn)
-                            }
+                            // disabled={
+                            //   tokenInMode === "custom" &&
+                            //   !getTokenInfo(selectedTokenIn) &&
+                            //   isAddress(selectedTokenIn)
+                            // }
                           >
                             <SelectTrigger
                               className="h-12 border-none text-center !bg-[#FFE6C0] focus:none px-0 !w-full outline-none !text-black font-bold font-orbitron lg:text-3xl md:text-base text-xs"
@@ -985,8 +1048,8 @@ export function CreateOrderForm({
                                 )
                               )}
                               <SelectItem value="custom">
-                                <span className="font-medium text-black">
-                                  Custom Address...
+                                <span className="font-medium text-black font-orbitron cursor-pointer">
+                                  Custom Address..
                                 </span>
                               </SelectItem>
                             </SelectContent>
@@ -1014,7 +1077,7 @@ export function CreateOrderForm({
                                 )}
                                 <div className="flex flex-col">
                                   {/* <span className="text-black font-medium text-sm">{customTokenOut.name}</span> */}
-                                  <span className="text-black/70 text-xs">
+                                  <span className="text-black md:text-xl text-xs font-bold">
                                     {customTokenOut.symbol}
                                   </span>
                                 </div>
@@ -1022,7 +1085,7 @@ export function CreateOrderForm({
                               <button
                                 type="button"
                                 onClick={() => form.setValue("tokenOut", "")}
-                                className="text-black/70 hover:text-black transition-colors"
+                                className="text-black md:text-xl text-xs font-bold tilt"
                               >
                                 <X size={16} />
                               </button>
@@ -1032,13 +1095,13 @@ export function CreateOrderForm({
                               <Input
                                 {...form.register("tokenOut")}
                                 placeholder="0x..."
-                                className="h-12 bg-transparent !border-none !text-black pr-10"
+                                className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-xl text-base !font-bold !font-orbitron !text-black"
                                 data-testid="input-token-out-custom"
-                                disabled={
-                                  tokenInMode === "custom" &&
-                                  !getTokenInfo(selectedTokenIn) &&
-                                  isAddress(selectedTokenIn)
-                                }
+                                // disabled={
+                                //   tokenInMode === "custom" &&
+                                //   !getTokenInfo(selectedTokenIn) &&
+                                //   isAddress(selectedTokenIn)
+                                // }
                               />
                             </div>
                           )}
@@ -1050,7 +1113,7 @@ export function CreateOrderForm({
                               setTokenOutMode("select");
                               form.setValue("tokenOut", "");
                             }}
-                            className="text-xs border-none text-black"
+                            className="md:text-base text-xs border-none text-black font-orbitron"
                           >
                             Back to token list
                           </Button>
@@ -1068,11 +1131,11 @@ export function CreateOrderForm({
                   const inputLength = value.replace(/\D/g, "").length;
 
                   const defaultFontSize =
-                        window.innerWidth >= 1024
-                          ? 48
-                          : window.innerWidth >= 768
-                          ? 40
-                          : 32;
+                    window.innerWidth >= 1024
+                      ? 48
+                      : window.innerWidth >= 768
+                      ? 40
+                      : 32;
 
                   const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
                   const SHRINK_RATE = 2;
@@ -1104,7 +1167,7 @@ export function CreateOrderForm({
                 </p>
               </div>
             </div>
-            <div className="text-right text-white font-bold text-sm -mt-[14px] pe-8 roboto truncate">
+            <div className="text-right text-white font-bold text-sm relative roboto truncate">
               {form.formState.errors.minAmountOut && (
                 <p className="mt-1 text-sm text-destructive">
                   {form.formState.errors.minAmountOut.message}
@@ -1119,7 +1182,7 @@ export function CreateOrderForm({
                   {...form.register("limitPrice")}
                   placeholder="Limit Price"
                   type="text"
-                  className="!border !border-[#FF9900] md:h-[54px] h-12 flex gap-2 items-center !bg-transparent bgs rounded-lg w-full px-4 outline-none text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                  className="!border !border-[#FF9900] rigamesh md:h-[54px] h-12 flex gap-2 items-center !bg-transparent bgs rounded-lg w-full px-4 outline-none text-white/opacity-70 md:text-xl text-sm font-normal leading-tight tracking-wide"
                   data-testid="input-limit-price"
                 />
                 {marketPrice && tokenInInfo && tokenOutInfo && (
@@ -1151,8 +1214,32 @@ export function CreateOrderForm({
                 )}
               </div>
               <div className="flex justify-between gap-4 items-center flex-wrap">
-                <div className="mt-1 text-xs text-muted-foreground flex items-center justify-left">
-                  <span className="text-white roboto">
+                <div className="mt-1 md:text-lg text-xs text-muted-foreground flex items-center justify-left">
+                  <span className="text-white font-orbitron">
+                    {marketPrice && tokenInInfo && tokenOutInfo ? (
+                      quoteReversed ? (
+                        <>
+                          Market: <span className="rigamesh">1</span>{" "}
+                          {tokenOutInfo.symbol} ≈{" "}
+                          <span className="rigamesh">
+                            {(1 / parseFloat(marketPrice)).toFixed(8)}
+                          </span>{" "}
+                          {tokenInInfo.symbol}
+                        </>
+                      ) : (
+                        <>
+                          Market: <span className="rigamesh">1</span>{" "}
+                          {tokenInInfo.symbol} ≈{" "}
+                          <span className="rigamesh">{marketPrice}</span>{" "}
+                          {tokenOutInfo.symbol}
+                        </>
+                      )
+                    ) : (
+                      "Price per token (decimal value)"
+                    )}
+                  </span>
+
+                  {/* <span className="text-white font-orbitron">
                     {marketPrice && tokenInInfo && tokenOutInfo
                       ? quoteReversed
                         ? `Market: 1 ${tokenOutInfo.symbol} ≈ ${(
@@ -1160,7 +1247,7 @@ export function CreateOrderForm({
                           ).toFixed(8)} ${tokenInInfo.symbol}`
                         : `Market: 1 ${tokenInInfo.symbol} ≈ ${marketPrice} ${tokenOutInfo.symbol}`
                       : "Price per token (decimal value)"}
-                  </span>
+                  </span> */}
                   {/* {marketPrice && tokenInInfo && tokenOutInfo && (
                     <Button
                       type="button"
@@ -1246,16 +1333,19 @@ export function CreateOrderForm({
                   </span>
                 </div>
                 {/* Deadline */}
-                <input
-                  id="deadline"
-                  {...form.register("deadline")}
-                  type="datetime-local"
-                  className="bg-[#604824] md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
-                  placeholder="Deadline"
-                  data-testid="input-deadline"
-                  min={minDeadline}
-                  max={maxDeadline}
-                />
+                <div onClick={handleClick} className="inline-block">
+                  <input
+                    id="deadline"
+                    {...rest}
+                    ref={mergedRef}
+                    type="datetime-local"
+                    className="cursor bg-[#604824] md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+                    placeholder="Deadline"
+                    data-testid="input-deadline"
+                    min={minDeadline}
+                    max={maxDeadline}
+                  />
+                </div>
               </div>
             </div>
           </div>
@@ -1354,12 +1444,12 @@ export function CreateOrderForm({
           {/*  */}
           <div
             className={`${
-              partialFillEnabled ? "w-[200px]" : "w-[200px]"
+              partialFillEnabled ? "w-[240px]" : "w-[240px]"
             } absolute 2xl:right-[3vw] xl:right-[2vw] md:right-[32vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[44%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">
-                <p className="font-orbitron text-xs font-extrabold">
+                <p className="font-orbitron text-[15px] font-extrabold">
                   Partial Fill :
                 </p>
                 <label className="toggle-switch">
@@ -1388,7 +1478,7 @@ export function CreateOrderForm({
                     onClick={() => setFillMode(1)}
                     className={`${
                       fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 3
                   </button>
@@ -1397,7 +1487,7 @@ export function CreateOrderForm({
                     onClick={() => setFillMode(2)}
                     className={`${
                       fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 5
                   </button>
@@ -1406,12 +1496,12 @@ export function CreateOrderForm({
                     onClick={() => setFillMode(3)}
                     className={`${
                       fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-[10px] font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 10
                   </button>
                 </div>
-                <div className="text-xs text-center font-medium text-black pt-5 pb-2 bg-white rounded-b-lg">
+                <div className="text-[15px] text-center font-medium text-black pt-5 pb-2 bg-white rounded-b-lg">
                   Selected:{" "}
                   {fillMode === 1
                     ? "Split 3"
