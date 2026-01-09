@@ -38,7 +38,7 @@ const BridgePage = () => {
             </p>
             <div className="flex justify-center gap-4 mt-7 md:flex-nowrap flex-wrap md:max-w-[600px] w-full mx-auto md:px-0 px-20">
               {/* Cross Chain Swap */}
-              <Link to="/" className="w-full">
+              {/* <Link to="/" className="w-full">
                 <div
                   className={`${
                     activeTab === "cross"
@@ -50,7 +50,7 @@ const BridgePage = () => {
                 >
                   Cross Chain Swap
                 </div>
-              </Link>
+              </Link> */}
 
               {/* Native Bridge */}
               <Link to="/native-bridge" className="w-full">
