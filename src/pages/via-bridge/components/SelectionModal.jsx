@@ -6,7 +6,7 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center bg-black/90 z-50 px-4"
+      className="fixed inset-0 flex items-center justify-center bg-black/40 z-50 px-4"
       onClick={onClose}
     >
       <div
