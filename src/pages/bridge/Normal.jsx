@@ -175,14 +175,14 @@ const Normal = () => {
             Cross Chain Swaps
           </h2>
           <div className="flex justify-center gap-4 w-full mt-7 md:flex-nowrap flex-wrap md:px-0 px-20">
-            <div
+            {/* <div
               onClick={() => setActiveTab("cross")}
               className={`${
                 activeTab === "cross" ? "border-[#FF9900]" : "border-[#3b3c4e]"
               } cursor-pointer md:max-w-[200px] w-full h-[28px] flex justify-center items-center rounded-md border text-white text-[15px] font-bold roboto`}
             >
               Cross Chain Swap
-            </div>
+            </div> */}
             <Link className="md:max-w-[200px] w-full" to={"/native-bridge"}>
               <div
                 className={`${

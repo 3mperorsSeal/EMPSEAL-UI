@@ -83,14 +83,14 @@ function MyRoutes() {
             />
             <Route path="/nft-marketplace" element={<NFTMarketplace />} />
             <Route path="/item-detail" element={<ItemDetail />} />
-            <Route
+            {/* <Route
               path="/bridge"
               element={
                 <BridgeWrapper>
                   <Bridge />
                 </BridgeWrapper>
               }
-            />
+            /> */}
             <Route
               path="/native-bridge"
               element={
