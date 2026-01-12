@@ -14,6 +14,10 @@ import TermsModal from "../../../swap/TermsModal";
 // import Dis from "../../../assets/images/dis.png";
 // import Copy from "../../../assets/images/copy.png";
 // import Sbg from "../../../assets/images/sbg.png";
+import dummyImage from "../../../../assets/images/emp-logo.png";
+import Base from "../../../../assets/icons/base.svg";
+import Pulse from "../../../../assets/icons/pls.svg";
+import Arbitrum from "../../../../assets/icons/arbitrum.svg";
 
 const ChainChangeHandler = ({
   chain,
@@ -67,7 +71,13 @@ export default function WalletConnect({
       window.location.reload();
     }
   }, [address]);
-
+  //
+  const chainIcons = {
+    base: Base,
+    pulse: Pulse,
+    pulsechain: Pulse,
+    "arbitrum one": Arbitrum,
+  };
   return (
     <ConnectButton.Custom>
       {({
@@ -94,13 +104,13 @@ export default function WalletConnect({
               >
                 Connect
               </button>
-              <button
+              {/* <button
                 className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
                 Select Chain
-              </button>
+              </button> */}
               {showChainPopup && (
                 <ChainPopup
                   setShowChainPopup={setShowChainPopup}
@@ -245,11 +255,35 @@ export default function WalletConnect({
             </div>
 
             <button
-              className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
+              className="wallet-bg-bridge1 gtw transition-all font-extrabold flex items-center justify-center gap-2 px-4"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
-              Select Chain
+              {chain ? (
+                <>
+                  <img
+                    src={
+                      chainIcons[chain.name.toLowerCase()] ||
+                      chain.iconUrl ||
+                      dummyImage
+                    }
+                    alt={chain.name}
+                    className="w-5 h-5 object-contain rounded-full"
+                    onError={(e) => (e.currentTarget.src = dummyImage)}
+                  />
+                  <span
+                    className={
+                      chain.name.length > 11
+                        ? "truncate md:w-[150px] w-[110px]"
+                        : ""
+                    }
+                  >
+                    {chain.name}
+                  </span>
+                </>
+              ) : (
+                "Select Chain"
+              )}
             </button>
 
             {/* Address popup */}

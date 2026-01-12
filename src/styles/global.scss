@@ -773,6 +773,12 @@ body.bg-pattern {
     right: 0px;
     margin: auto;
   }
+   .mw300 {
+    max-width: 300px;
+    width: 100%;
+    margin: auto;
+    border-radius: 10px !important;
+  }
 }
 @media (max-width: 768px) {
   .wallet-bg-bridge {
@@ -802,7 +808,8 @@ body.bg-pattern {
     top: 0px;
     left: 0px;
     right: 0px;
-    width: 145px;
+    // width: 145px;
+    width: 175px;
     margin: auto;
   }
   // .lefts {
@@ -864,8 +871,8 @@ body.bg-pattern {
 }
 .toggle-switch {
   position: relative;
-  width: 21px;
-  height: 14px;
+  width: 25px;
+  height: 16px;
   display: inline-block;
 }
 
@@ -876,7 +883,7 @@ body.bg-pattern {
 .slider {
   position: absolute;
   cursor: pointer;
-  background-color: black;
+  background-color: rgba(0, 0, 0, 0.384);
   border-radius: 34px;
   top: 0;
   left: 0;
@@ -890,8 +897,8 @@ body.bg-pattern {
   content: "";
   height: 10px;
   width: 10px;
-  left: 1.5px;
-  bottom: 2px;
+  left: 4px;
+  bottom: 3px;
   background-color: #ff9900;
   border-radius: 50%;
   transition: 0.4s;

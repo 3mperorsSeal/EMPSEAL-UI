@@ -1053,6 +1053,29 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const [dollarinfo, setDollarInfo] = useState(false);
   const [dollarinfo1, setDollarInfo1] = useState(false);
 
+  //
+  const [selectedPercentageBuy, setSelectedPercentageBuy] = useState("");
+  const handlePercentageChangeBuy = (percentage) => {
+    const parsedPercentage = percentage === "" ? "" : parseInt(percentage);
+    setSelectedPercentageBuy(parsedPercentage);
+
+    // Calculate based on tokenB balance
+    let balance;
+    if (selectedTokenB.address === EMPTY_ADDRESS) {
+      balance = parseFloat(formattedBalance || 0);
+    } else {
+      balance = parseFloat(tokenBBalance?.formatted || 0);
+    }
+
+    const calculatedAmount = balance * (parsedPercentage / 100);
+    setAmountOut(calculatedAmount.toFixed(6));
+  };
+  useEffect(() => {
+    setSelectedPercentageBuy("");
+    setAmountIn("");
+    setAmountOut("0");
+  }, [selectedTokenB]);
+
   return (
     <>
       {/* <div
@@ -1217,11 +1240,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         <button
                           key={value}
                           type="button"
-                          className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${selectedPercentage === value
-                              ? " text-white bg-black"
-                              : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-                            }`}
+                          className={`py-1 border bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
+            ${
+              selectedPercentage === value
+                ? "!text-black !bg-[#FFE6C0] border-[#FFE6C0]"
+                : "bg-[#FFE7C3] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1333,15 +1357,27 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       :{" "}
                     </span>
                     <span className="rigamesh leading-normal">
-                      {isLoading
+                      {/* {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedChainBalanceTokenB)}`
-                          : `${tokenBBalance
-                            ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
+                        ? `${formatNumber(formattedChainBalanceTokenB)}`
+                        : `${
+                            tokenBBalance
+                              ? formatNumber(
+                                  parseFloat(tokenBBalance.formatted).toFixed(6)
+                                )
+                              : "0.00"
+                          }`} */}
+                      {isLoading
+                        ? "Loading.."
+                        : selectedTokenB.address === EMPTY_ADDRESS
+                        ? `${formatNumber(formattedChainBalanceTokenB)}`
+                        : `${
+                            tokenBBalance
+                              ? formatNumber(
+                                  parseFloat(tokenBBalance.formatted).toFixed(6)
+                                )
+                              : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1683,7 +1719,7 @@ const Emp = ({ setPadding, setBestRoute }) => {
           />
         )}
       </div>
-      <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[100px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
+      <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
         <h6 className="font-orbitron md:text-sm text-[10px]">
           <span>
             <span className="font-extrabold">Min Received</span> :{" "}
