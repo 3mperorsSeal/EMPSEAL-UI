@@ -1,7 +1,7 @@
 import { useState } from "react";
 import RoutingSplitModal from "./RoutingSplitModal";
 
-export default function RoutingButton({ bestRoute }) {
+export default function RoutingButton({ bestRoute, tokenA, tokenB }) {
   const [isRoutingModalOpen, setIsRoutingModalOpen] = useState(false);
 
   // Check if we have a valid bestRoute to enable the button
@@ -14,8 +14,8 @@ export default function RoutingButton({ bestRoute }) {
         onClick={() => setIsRoutingModalOpen(true)}
         disabled={!hasValidRoute}
         className={`rounded-md-r rounded px-4 py-2 font-bold font-orbitron ${hasValidRoute
-            ? "bg-[#FF9900] text-black hover:opacity-80 cursor-pointer"
-            : ""
+          ? "bg-[#FF9900] text-black hover:opacity-80 cursor-pointer"
+          : ""
           }`}
       >
         {hasValidRoute ? `Routing (${bestRoute.type})` : ""}
@@ -26,6 +26,8 @@ export default function RoutingButton({ bestRoute }) {
           isOpen={isRoutingModalOpen}
           onClose={() => setIsRoutingModalOpen(false)}
           bestRoute={bestRoute}
+          tokenA={tokenA}
+          tokenB={tokenB}
         />
       )}
     </>

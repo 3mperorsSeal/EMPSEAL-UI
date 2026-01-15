@@ -38,7 +38,6 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title, chainId }) =>
             const isToken = item.address !== undefined;
             const logo = isToken ? null : LogoService.getChainLogo(item.id);
 
-            console.log("SelectionModal item:", item, "isToken:", isToken, "logo:", logo);
             return (
               <div
                 key={item.id}
