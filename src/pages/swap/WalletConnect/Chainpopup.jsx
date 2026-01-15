@@ -29,8 +29,6 @@ const ChainPopup = ({
     pulse: Pulse,
     pulsechain: Pulse,
     sonic: Sonic,
-    pulsechain: Pulse, // local import
-    ethereum: Ethereum, // local import
     "bnb smart chain": BNB, // local import
     "arbitrum one": Arbitrum, // local import
     avalanche: Avalanche, // local import
@@ -92,7 +90,6 @@ const ChainPopup = ({
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIKmPOe5bVW147dDpEkRGpmnceagyTOr0c-Q&s",
     morph:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTovaGDebI_0rH6JiRXIhwUnUVRV1NmyyJWHA&s",
-    sonic: "https://s2.coinmarketcap.com/static/img/coins/200x200/32684.png",
   };
 
   return (
@@ -169,10 +166,9 @@ const ChainPopup = ({
                     switchChain({ chainId: c.id });
                     setShowChainPopup(false);
                   }}
-                  className={`group relative mt-4 flex items-center px-1 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hoverclip ${
-                    isActive ? "" : ""
+                  className={`group relative mt-4 flex items-center px-1 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hoverclip ${isActive ? "" : ""
                     // sc1
-                  }`}
+                    }`}
                 >
                   <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
                     <img
@@ -191,9 +187,8 @@ const ChainPopup = ({
                     />
                   </div> */}
                   <span
-                    className={`font-orbitron text-2xl text-center px-3 ${
-                      isActive ? "text-[#fff]" : "text-[#fff]"
-                    }`}
+                    className={`font-orbitron text-2xl text-center px-3 ${isActive ? "text-[#fff]" : "text-[#fff]"
+                      }`}
                   >
                     {c.name}
                   </span>

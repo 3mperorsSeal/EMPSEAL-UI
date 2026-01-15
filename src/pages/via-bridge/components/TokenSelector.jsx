@@ -12,6 +12,7 @@ const TokenSelector = ({ token, chainId, onClick }) => {
           chainId={chainId}
           tokenAddress={token.address}
           symbol={token.symbol}
+          logoURI={token.logoURI}
           className="md:w-10 md:h-10 w-5"
         />
         <span className="md:text-2xl text-[10px] font-medium">{token.symbol}</span>

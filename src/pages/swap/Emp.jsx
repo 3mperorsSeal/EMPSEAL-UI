@@ -58,7 +58,7 @@ const getWrappedTokenABI = (chainId) => {
   }
 };
 
-const Emp = ({ setPadding, setBestRoute }) => {
+const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const [isAmountVisible, setAmountVisible] = useState(false);
   const [isSlippageVisible, setSlippageVisible] = useState(false);
   const [isSlippageApplied, setIsSlippageApplied] = useState(false);
@@ -67,6 +67,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
   const [isRateReversed, setIsRateReversed] = useState(false);
   const [selectedTokenA, setSelectedTokenA] = useState(Tokens[0]);
   const [selectedTokenB, setSelectedTokenB] = useState(Tokens[1]);
+
+  useEffect(() => {
+    if (onTokensChange) {
+      onTokensChange(selectedTokenA, selectedTokenB);
+    }
+  }, [selectedTokenA, selectedTokenB, onTokensChange]);
   // const [selectedTokenA, setSelectedTokenA] = useState(null);
   // const [selectedTokenB, setSelectedTokenB] = useState(null);
   const [isSelectingTokenA, setIsSelectingTokenA] = useState(true);
@@ -1194,11 +1200,11 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           >
                             <img
                               className="md:w-9 md:h-9 w-4 h-4"
-                              src={selectedTokenA.image}
+                              src={selectedTokenA.image || selectedTokenA.logoURI}
                               alt={selectedTokenA.name}
                             />
                             <div className="text-[#FF9900] lg:text-3xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
-                              {selectedTokenA.ticker}
+                              {selectedTokenA.ticker || selectedTokenA.symbol}
                             </div>
                           </div>
                           <button
@@ -1241,11 +1247,10 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           key={value}
                           type="button"
                           className={`py-1 border bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${
-              selectedPercentage === value
-                ? "!text-black !bg-[#FFE6C0] border-[#FFE6C0]"
-                : "bg-[#FFE7C3] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? "!text-black !bg-[#FFE6C0] border-[#FFE6C0]"
+                              : "bg-[#FFE7C3] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1260,8 +1265,8 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         window.innerWidth >= 1024
                           ? 48
                           : window.innerWidth >= 768
-                          ? 40
-                          : 32;
+                            ? 40
+                            : 32;
                       // const dynamicFontSize = Math.max(
                       //   12,
                       //   defaultFontSize - inputLength * 1.5
@@ -1371,13 +1376,12 @@ const Emp = ({ setPadding, setBestRoute }) => {
                       {isLoading
                         ? "Loading.."
                         : selectedTokenB.address === EMPTY_ADDRESS
-                        ? `${formatNumber(formattedChainBalanceTokenB)}`
-                        : `${
-                            tokenBBalance
-                              ? formatNumber(
-                                  parseFloat(tokenBBalance.formatted).toFixed(6)
-                                )
-                              : "0.00"
+                          ? `${formatNumber(formattedChainBalanceTokenB)}`
+                          : `${tokenBBalance
+                            ? formatNumber(
+                              parseFloat(tokenBBalance.formatted).toFixed(6)
+                            )
+                            : "0.00"
                           }`}
                     </span>
                   </div>
@@ -1398,11 +1402,11 @@ const Emp = ({ setPadding, setBestRoute }) => {
                           >
                             <img
                               className="md:w-9 md:h-9 w-4 h-4"
-                              src={selectedTokenB.image}
+                              src={selectedTokenB.image || selectedTokenB.logoURI}
                               alt={selectedTokenB.name}
                             />
                             <div className="text-dark lg:text-3xl text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
-                              {selectedTokenB.ticker}
+                              {selectedTokenB.ticker || selectedTokenB.symbol}
                             </div>
                           </div>
                           <button
@@ -1457,8 +1461,8 @@ const Emp = ({ setPadding, setBestRoute }) => {
                         window.innerWidth >= 1024
                           ? 48
                           : window.innerWidth >= 768
-                          ? 40
-                          : 32;
+                            ? 40
+                            : 32;
 
                       // const dynamicFontSize = Math.max(
                       //   12,

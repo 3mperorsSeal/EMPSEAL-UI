@@ -126,7 +126,7 @@
 import React, { useEffect, useState } from "react";
 import { useChainConfig } from "../../hooks/useChainConfig";
 
-export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
+export default function RoutingSplitModal({ isOpen, onClose, bestRoute, tokenA, tokenB }) {
   // if (!isOpen || !bestRoute || bestRoute.type !== "SPLIT") return null;
   if (!isOpen || !bestRoute) return null;
 
@@ -156,6 +156,14 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
     // First check if we already have it cached
     if (tokenImages[address]) {
       return tokenImages[address];
+    }
+
+    // Check passed tokens first for custom tokens
+    if (tokenA && tokenA.address.toLowerCase() === address.toLowerCase()) {
+      return tokenA.image || tokenA.logoURI;
+    }
+    if (tokenB && tokenB.address.toLowerCase() === address.toLowerCase()) {
+      return tokenB.image || tokenB.logoURI;
     }
 
     // Then check tokenList from current chain
@@ -188,6 +196,14 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute }) {
         (token) => token?.address?.toLowerCase() === wethAddress?.toLowerCase()
       );
       return wrappedToken ? wrappedToken.symbol || wrappedToken.ticker : "WETH";
+    }
+
+    // Check passed tokens
+    if (tokenA && tokenA.address.toLowerCase() === address.toLowerCase()) {
+      return tokenA.ticker || tokenA.symbol;
+    }
+    if (tokenB && tokenB.address.toLowerCase() === address.toLowerCase()) {
+      return tokenB.ticker || tokenB.symbol;
     }
 
     const token = tokenList.find(

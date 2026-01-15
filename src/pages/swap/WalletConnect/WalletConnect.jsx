@@ -88,8 +88,6 @@ export default function WalletConnect({
     pulse: Pulse,
     pulsechain: Pulse,
     sonic: Sonic,
-    pulsechain: Pulse, // local import
-    ethereum: Ethereum, // local import
     "bnb smart chain": BNB, // local import
     "arbitrum one": Arbitrum, // local import
     avalanche: Avalanche, // local import
@@ -151,7 +149,6 @@ export default function WalletConnect({
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIKmPOe5bVW147dDpEkRGpmnceagyTOr0c-Q&s",
     morph:
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTovaGDebI_0rH6JiRXIhwUnUVRV1NmyyJWHA&s",
-    sonic: "https://s2.coinmarketcap.com/static/img/coins/200x200/32684.png",
   };
   return (
     <ConnectButton.Custom>
@@ -255,10 +252,10 @@ export default function WalletConnect({
                                   ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
                                   : // "https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
                                   connector.name.includes("WalletConnect")
-                                  ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
-                                  : connector.name.includes("Coinbase")
-                                  ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
-                                  : "https://rainbowkit.com/icons/wallet.svg"
+                                    ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
+                                    : connector.name.includes("Coinbase")
+                                      ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
+                                      : "https://rainbowkit.com/icons/wallet.svg"
                               }
                               alt={connector.name}
                               className="w-8 h-8 relative z-10 flex flex-shrink-0 object-contain rounded-full"

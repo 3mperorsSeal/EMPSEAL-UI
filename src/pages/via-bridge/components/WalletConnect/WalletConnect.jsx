@@ -18,6 +18,10 @@ import dummyImage from "../../../../assets/images/emp-logo.png";
 import Base from "../../../../assets/icons/base.svg";
 import Pulse from "../../../../assets/icons/pls.svg";
 import Arbitrum from "../../../../assets/icons/arbitrum.svg";
+import OP from "../../../../assets/icons/op.svg";
+import BNB from "../../../../assets/icons/binance.svg";
+import Polygon from "../../../../assets/icons/polygon.svg";
+import Avalanche from "../../../../assets/icons/avalanche.svg";
 
 const ChainChangeHandler = ({
   chain,
@@ -74,9 +78,18 @@ export default function WalletConnect({
   //
   const chainIcons = {
     base: Base,
+    "base mainnet": Base,
     pulse: Pulse,
     pulsechain: Pulse,
+    "pulsechain mainnet": Pulse,
     "arbitrum one": Arbitrum,
+    arbitrum: Arbitrum,
+    optimism: OP,
+    "op mainnet": OP,
+    "bnb smart chain": BNB,
+    bnb: BNB,
+    polygon: Polygon,
+    avalanche: Avalanche,
   };
   return (
     <ConnectButton.Custom>
@@ -180,10 +193,10 @@ export default function WalletConnect({
                                   ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
                                   : // "https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
                                   connector.name.includes("WalletConnect")
-                                  ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
-                                  : connector.name.includes("Coinbase")
-                                  ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
-                                  : "https://rainbowkit.com/icons/wallet.svg"
+                                    ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
+                                    : connector.name.includes("Coinbase")
+                                      ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
+                                      : "https://rainbowkit.com/icons/wallet.svg"
                               }
                               alt={connector.name}
                               className="w-8 h-8 relative z-10 flex flex-shrink-0 object-contain rounded-full"

@@ -178,7 +178,8 @@ const Token = ({ onClose, onSelect }) => {
         name,
         symbol,
         decimal,
-        logoURI: null,
+        logoURI: `https://tokens.app.pulsex.com/images/tokens/${address}.png`,
+        image: `https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/${address}.png`,
         ticker: symbol,
       };
     } catch (error) {

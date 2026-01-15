@@ -10,6 +10,13 @@ import RoutingButton from "./RoutingButton";
 const Normal = () => {
   const [padding, setPadding] = useState("lg:min-h-[429px] h-full");
   const [bestRoute, setBestRoute] = useState(null);
+  const [tokenA, setTokenA] = useState(null);
+  const [tokenB, setTokenB] = useState(null);
+
+  const handleTokensChange = (tA, tB) => {
+    setTokenA(tA);
+    setTokenB(tB);
+  };
 
   return (
     <>
@@ -19,14 +26,18 @@ const Normal = () => {
             <div className="md:hidden block">
               <Wallet />
             </div>
-            <Emp setPadding={setPadding} setBestRoute={setBestRoute} />
+            <Emp
+              setPadding={setPadding}
+              setBestRoute={setBestRoute}
+              onTokensChange={handleTokensChange}
+            />
           </div>
           <div className="md:max-w-[474px] w-full">
             <div className="md:block hidden">
               <Wallet />
             </div>
             <div className="mt-3 lg:fixed absolute md:left-0 lefts lefts01 2xl:bottom-[32%] lg:bottom-[33%] md:bottom-[27%] bottom-[312px]">
-              <RoutingButton bestRoute={bestRoute} />
+              <RoutingButton bestRoute={bestRoute} tokenA={tokenA} tokenB={tokenB} />
             </div>
             <div className="mt-3 hidden">
               <Graph padding={padding} />
