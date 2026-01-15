@@ -21,7 +21,7 @@ import TokenSelector from "./components/TokenSelector";
 import SelectionModal from "./components/SelectionModal";
 import RecentTransactions from "../../components/RecentTransactions";
 import { useRecentTransactions } from "../../hooks/useRecentTransactions";
-import { BRIDGE_CONFIG } from "./config/bridgeConfig";
+import { BRIDGE_CONFIG, getTokensArray, getTokenById, getDefaultToken, hasToken } from "./config/bridgeConfig";
 import UpDownAr from "../../assets/images/reverse.svg";
 import Sellbox from "../../assets/images/sell-box.png";
 import Buybox from "../../assets/images/buy-bg.png";
@@ -44,7 +44,7 @@ const BridgeInterface = () => {
   const [fromChainId, setFromChainId] = useState(369);
   const [toChainId, setToChainId] = useState(8453);
   const [selectedToken, setSelectedToken] = useState(
-    BRIDGE_CONFIG[fromChainId].tokens[0]
+    getDefaultToken(369) // Initialize with first token on PulseChain
   );
 
   const [isFromChainModalOpen, setIsFromChainModalOpen] = useState(false);
@@ -86,8 +86,8 @@ const BridgeInterface = () => {
 
   const [bridgeFees, setBridgeFees] = useState(null);
 
-  const bridgeFeesAbi = sourceChain.abi;
-  const bridgeFeesContractAddress = sourceChain.bridge;
+  const bridgeFeesAbi = selectedToken?.abi;
+  const bridgeFeesContractAddress = selectedToken?.bridge;
 
   // PulseChain (Synthetic) -> 369 | Base (Collateral) -> 8453
   // const bridgeFeesDestChainId =
@@ -118,9 +118,9 @@ const BridgeInterface = () => {
       address: sourceChain.usdcAddress,
       abi: ERC20_ABI,
       functionName: "allowance",
-      args: [address, sourceChain.bridge],
+      args: [address, selectedToken?.bridge],
       chainId: fromChainId,
-      query: { enabled: !!address && !!sourceChain.usdcAddress },
+      query: { enabled: !!address && !!sourceChain.usdcAddress && !!selectedToken?.bridge },
     });
   // Balance
   const { data: usdcBalance, refetch: refetchUsdcBalance } = useReadContract({
@@ -141,9 +141,9 @@ const BridgeInterface = () => {
     address: sourceChain.wrappedGasTokenAddress,
     abi: ERC20_ABI,
     functionName: "allowance",
-    args: [address, sourceChain.bridge],
+    args: [address, selectedToken?.bridge],
     chainId: fromChainId,
-    query: { enabled: !!address && !!sourceChain.wrappedGasTokenAddress },
+    query: { enabled: !!address && !!sourceChain.wrappedGasTokenAddress && !!selectedToken?.bridge },
   });
   // Balance
   const {
@@ -170,12 +170,12 @@ const BridgeInterface = () => {
   // Allowance
   const { data: tokenAllowance, refetch: refetchTokenAllowance } =
     useReadContract({
-      address: selectedToken.address,
+      address: selectedToken?.address,
       abi: ERC20_ABI,
       functionName: "allowance",
-      args: [address, sourceChain.bridge],
+      args: [address, selectedToken?.bridge],
       chainId: fromChainId,
-      query: { enabled: !!address && !!selectedToken.address },
+      query: { enabled: !!address && !!selectedToken?.address && !!selectedToken?.bridge },
     });
 
   // ----------------------------------------------------------------
@@ -333,7 +333,7 @@ const BridgeInterface = () => {
           address: selectedToken.address,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [sourceChain.bridge, amountBigInt],
+          args: [selectedToken.bridge, amountBigInt],
           chainId: fromChainId,
         });
         toast.info(`Approving ${selectedToken.symbol}...`);
@@ -346,7 +346,7 @@ const BridgeInterface = () => {
           address: sourceChain.usdcAddress,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [sourceChain.bridge, bridgeFees[3]],
+          args: [selectedToken.bridge, bridgeFees[3]],
           chainId: fromChainId,
         });
         toast.info("Approving USDC...");
@@ -359,7 +359,7 @@ const BridgeInterface = () => {
           address: sourceChain.wrappedGasTokenAddress,
           abi: ERC20_ABI,
           functionName: "approve",
-          args: [sourceChain.bridge, bridgeFees[2]],
+          args: [selectedToken.bridge, bridgeFees[2]],
           chainId: fromChainId,
         });
         toast.info("Approving Wrapped Gas Token...");
@@ -374,15 +374,15 @@ const BridgeInterface = () => {
   const handleBridge = useCallback(async () => {
     try {
       const amountBigInt = parseEther(amount);
-      let abiToUse = sourceChain.abi;
+      const abiToUse = selectedToken?.abi;
 
       if (!abiToUse) {
-        toast.error("Unsupported chain type");
+        toast.error("Unsupported token type");
         return;
       }
 
       executeBridge({
-        address: sourceChain.bridge,
+        address: selectedToken.bridge,
         abi: abiToUse,
         functionName: "bridge",
         args: [toChainId, recipient, amountBigInt],
@@ -394,13 +394,19 @@ const BridgeInterface = () => {
       toast.error("Bridge failed");
       console.error(error);
     }
-  }, [amount, sourceChain, toChainId, recipient, fromChainId, executeBridge]);
+  }, [amount, selectedToken, toChainId, recipient, fromChainId, executeBridge]);
 
   const handleSwapDirection = () => {
-    setFromChainId(toChainId);
-    setToChainId(fromChainId);
+    const newFromChainId = toChainId;
+    const newToChainId = fromChainId;
+
+    // Find the same token on the new source chain
+    const newToken = getTokenById(newFromChainId, selectedToken?.id);
+
+    setFromChainId(newFromChainId);
+    setToChainId(newToChainId);
     setAmount("");
-    setSelectedToken(BRIDGE_CONFIG[toChainId].tokens[0]);
+    setSelectedToken(newToken || getDefaultToken(newFromChainId));
   };
 
   const handlePercentageChange = (value) => {
@@ -613,7 +619,7 @@ const BridgeInterface = () => {
                     title="Copy token address"
                   >
                     {copySuccess &&
-                    activeTokenAddress === selectedToken.address ? (
+                      activeTokenAddress === selectedToken.address ? (
                       <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                     ) : (
                       <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-[#FF9900]" />
@@ -636,11 +642,10 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? " text-white bg-black"
-                    : "bg-black text-white hover:border-black hover:bg-[#FF9900] hover:text-black"
-                }`}
+                ${selectedPercentage === value
+                          ? " text-white bg-black"
+                          : "bg-black text-white hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -689,8 +694,8 @@ const BridgeInterface = () => {
                       window.innerWidth >= 1024
                         ? 48
                         : window.innerWidth >= 768
-                        ? 40
-                        : 32;
+                          ? 40
+                          : 32;
                     const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
                     // const FREE_DIGITS = 7; // no shrink up to 10 digits
                     const SHRINK_RATE = 3; // slow shrink rate
@@ -776,7 +781,7 @@ const BridgeInterface = () => {
                     title="Copy token address"
                   >
                     {copySuccess &&
-                    activeTokenAddress === selectedToken.address ? (
+                      activeTokenAddress === selectedToken.address ? (
                       <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                     ) : (
                       <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-[#FF9900]" />
@@ -798,11 +803,10 @@ const BridgeInterface = () => {
                       key={value}
                       type="button"
                       className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? " text-white bg-black"
-                    : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
-                }`}
+                ${selectedPercentage === value
+                          ? " text-white bg-black"
+                          : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                       disabled={isLoading}
                     >
@@ -876,8 +880,8 @@ const BridgeInterface = () => {
                       window.innerWidth >= 1024
                         ? 48
                         : window.innerWidth >= 768
-                        ? 40
-                        : 32;
+                          ? 40
+                          : 32;
 
                     const FREE_DIGITS = window.innerWidth >= 768 ? 7 : 6;
                     const SHRINK_RATE = 3; // slow shrink rate
@@ -932,7 +936,7 @@ const BridgeInterface = () => {
             />
             <button
               className={`!absolute !bg-transparent w-[100px] h-12 hover:opacity-70 bg-black !border !border-white top-4 right-4 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
-              // onClick={handleSelfButtonClick}
+            // onClick={handleSelfButtonClick}
             >
               Self
             </button>
@@ -986,8 +990,11 @@ const BridgeInterface = () => {
         onClose={() => setIsFromChainModalOpen(false)}
         items={Object.values(BRIDGE_CONFIG).filter((c) => c.id !== toChainId)}
         onSelect={(chain) => {
-          setFromChainId(chain.id);
-          setSelectedToken(chain.tokens[0]);
+          const chainId = typeof chain.id === 'string' ? parseInt(chain.id) : chain.id;
+          // Try to keep the same token if it exists on the new chain
+          const sameToken = getTokenById(chainId, selectedToken?.id);
+          setFromChainId(chainId);
+          setSelectedToken(sameToken || getDefaultToken(chainId));
           setIsFromChainModalOpen(false);
         }}
         title="Select From Chain"
@@ -995,9 +1002,14 @@ const BridgeInterface = () => {
       <SelectionModal
         isOpen={isToChainModalOpen}
         onClose={() => setIsToChainModalOpen(false)}
-        items={Object.values(BRIDGE_CONFIG).filter((c) => c.id !== fromChainId)}
+        items={Object.values(BRIDGE_CONFIG).filter((c) => {
+          const chainId = typeof c.id === 'string' ? parseInt(c.id) : c.id;
+          // Only show chains that have the currently selected token
+          return chainId !== fromChainId && hasToken(chainId, selectedToken?.id);
+        })}
         onSelect={(chain) => {
-          setToChainId(chain.id);
+          const chainId = typeof chain.id === 'string' ? parseInt(chain.id) : chain.id;
+          setToChainId(chainId);
           setIsToChainModalOpen(false);
         }}
         title="Select To Chain"
@@ -1005,12 +1017,13 @@ const BridgeInterface = () => {
       <SelectionModal
         isOpen={isTokenModalOpen}
         onClose={() => setIsTokenModalOpen(false)}
-        items={sourceChain.tokens.map((t) => ({ ...t, id: t.address }))}
+        items={getTokensArray(fromChainId).map((t) => ({ ...t, id: t.id }))}
         onSelect={(token) => {
           setSelectedToken(token);
           setIsTokenModalOpen(false);
         }}
         title="Select Token"
+        chainId={fromChainId}
       />
 
       {/* Info / Logs */}

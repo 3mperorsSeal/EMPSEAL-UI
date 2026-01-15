@@ -7,12 +7,18 @@ interface TokenLogoProps {
     tokenAddress: string;
     symbol?: string;
     className?: string;
+    logoURI?: string;
 }
 
-export const TokenLogo = ({ chainId, tokenAddress, symbol, className = "h-5 w-5" }: TokenLogoProps) => {
+export const TokenLogo = ({ chainId, tokenAddress, symbol, className = "h-5 w-5", logoURI }: TokenLogoProps) => {
     const [logoUrl, setLogoUrl] = useState<string | null>(null);
 
     useEffect(() => {
+        if (logoURI) {
+            setLogoUrl(logoURI);
+            return;
+        }
+
         let mounted = true;
 
         const fetchLogo = async () => {
@@ -28,11 +34,11 @@ export const TokenLogo = ({ chainId, tokenAddress, symbol, className = "h-5 w-5"
         return () => {
             mounted = false;
         };
-    }, [chainId, tokenAddress]);
+    }, [chainId, tokenAddress, logoURI]);
 
     if (logoUrl) {
         return <>
-        <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} />
+            <img src={logoUrl} alt={symbol} className={`rounded-full ${className}`} />
         </>
     }
 

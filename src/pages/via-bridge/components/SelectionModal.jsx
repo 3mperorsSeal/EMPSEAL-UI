@@ -1,8 +1,12 @@
 import { X } from "lucide-react";
 import { LogoService } from "../../../services/LogoService";
+import { TokenLogo } from "../../../components/TokenLogo";
 
-const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
+const SelectionModal = ({ isOpen, onClose, items, onSelect, title, chainId }) => {
   if (!isOpen) return null;
+
+  // Determine if items are tokens (have 'address' property) or chains
+  const isTokenList = items.length > 0 && items[0]?.address !== undefined;
 
   return (
     <div
@@ -30,25 +34,40 @@ const SelectionModal = ({ isOpen, onClose, items, onSelect, title }) => {
         {/* Items */}
         <div className="max-h-60 overflow-y-auto">
           {items.map((item) => {
-            const logo = LogoService.getChainLogo(item.id);
+            // For tokens, use TokenLogo; for chains, use chain logo
+            const isToken = item.address !== undefined;
+            const logo = isToken ? null : LogoService.getChainLogo(item.id);
 
+            console.log("SelectionModal item:", item, "isToken:", isToken, "logo:", logo);
             return (
               <div
                 key={item.id}
                 onClick={() => onSelect(item)}
                 className="p-3.5 flex items-center gap-3 hoverclip rounded-lg cursor-pointer my-3.5"
               >
-                {logo && (
+                {isToken ? (
                   <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
-                    <img
-                      src={logo}
-                      alt={item.name}
-                      className="w-full rounded-full"
+                    <TokenLogo
+                      chainId={chainId}
+                      tokenAddress={item.address}
+                      symbol={item.symbol}
+                      logoURI={item.logoURI}
+                      className="w-full h-full rounded-full"
                     />
                   </div>
+                ) : (
+                  logo && (
+                    <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                      <img
+                        src={logo}
+                        alt={item.name}
+                        className="w-full rounded-full"
+                      />
+                    </div>
+                  )
                 )}
                 <span className="font-medium text-white text-2xl">
-                  {item.name}
+                  {item.name || item.symbol}
                 </span>
               </div>
             );
