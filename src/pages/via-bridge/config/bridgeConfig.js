@@ -73,29 +73,7 @@ export const BRIDGE_CONFIG = {
         address: "0xa489CeA254e8649F5b4BA1A4708ed348425606BE",
         symbol: "pHEX",
         name: "PulseChain HEX",
-        bridge: "0x98157757917C59C381734eEEb740523a63725F78", // From tokens-list is deployedAt 2026-01-15T11:27..., need to verify bridge address. 
-        // Wait, tokens-list.json schema says "address" is the token address. For collateral chain, bridge is usually separate?
-        // Looking at tokens-list.json: "pulsechain": { "address": "0xa489CeA254e8649F5b4BA1A4708ed348425606BE", ... }
-        // For collateral tokens, previously configured tokens have a 'bridge' address different from 'address'. 
-        // I don't have the bridge address for pHEX in tokens-list.json, only the token address? 
-        // Actually, looking at CONFIG for COCK: address != bridge. 
-        // Looking at tokens-list.json again for COCK: "pulsechain": { "address": "0x12b42e964294dCF79f44E11FB4A9c23698f475d4"... }
-        // In CONFIG for COCK: address: "0x40b...6FE", bridge: "0x12b...5d4".
-        // It seems tokens-list.json 'address' corresponds to the BRIDGE address for Collateral chain? 
-        // Let's check COCK in tokens-list.json again.
-        // COCK pulsechain address in tokens-list: 0x12b42e964294dCF79f44E11FB4A9c23698f475d4. 
-        // In bridgeConfig: bridge: 0x12b42e964294dCF79f44E11FB4A9c23698f475d4. 
-        // So tokens-list.json 'address' IS the bridge address for Collateral chain? 
-        // AND for Synthetic chain? 
-        // Synthetic: Base COCK address in list: 0xE78...4FA. In config: address=0xE78...4FA, bridge=0xE78...4FA.
-        // So for Synthetic, Token Address = Bridge Address. 
-        // For Collateral, Token Address != Bridge Address. 
-        // I need the ORIGINAL token address for pHEX on PulseChain to put in 'address'. 
-        // The value in tokens-list.json for PulseChain is likely the BRIDGE address or the token address?
-        // Let's assume the value in tokens-list.json for PulseChain is the BRIDGE address (since it matches the bridge field for COCK).
-        // I need to find the underlying pHEX address on PulseChain.
-        // HEX on PulseChain is 0x2b591e99afE9f329442f8306055Ec6f025542524. 
-        // I will use that for 'address' and the json value for 'bridge'.
+        bridge: "0x98157757917C59C381734eEEb740523a63725F78",
         address: "0x2b591e99afE9f329442f8306055Ec6f025542524",
         bridge: "0xa489CeA254e8649F5b4BA1A4708ed348425606BE",
         abiType: "collateral",
