@@ -70,11 +70,9 @@ export const BRIDGE_CONFIG = {
       },
       pHEX: {
         id: "pHEX",
-        address: "0xa489CeA254e8649F5b4BA1A4708ed348425606BE",
+        address: "0x2b591e99afE9f32eAA6214f7B7629768c40Eeb39",
         symbol: "pHEX",
         name: "PulseChain HEX",
-        bridge: "0x98157757917C59C381734eEEb740523a63725F78",
-        address: "0x2b591e99afE9f329442f8306055Ec6f025542524",
         bridge: "0xa489CeA254e8649F5b4BA1A4708ed348425606BE",
         abiType: "collateral",
         abi: COLLATERAL_BRIDGE_ABI,
