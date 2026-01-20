@@ -290,30 +290,22 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       }
       setIsQuoting(true);
       setAmountOut("0");
-      const amountInBigInt = convertToBigInt(
+      const quoteResult = await smartRouter.getBestQuoteFromUser(
         debouncedAmountIn,
-        selectedTokenA.decimal
-      );
-      if (amountInBigInt <= 0) {
-        setAmountOut("0");
-        updateRoute(null);
-        setRoute([]);
-        setIsQuoting(false);
-        return;
-      }
-
-      const route = await smartRouter.getBestQuote(
-        amountInBigInt,
         selectedTokenA.address,
         selectedTokenB.address,
         protocolFee
       );
+
+      const route = quoteResult.route;
+
       // If this request is outdated, ignore the result
       // Mark this request as the latest completed
       lastCompletedIdRef.current = currentRequestId;
 
       updateRoute(route); // Use updateRoute instead of setBestRoute
 
+      // Handle route response
       if (route) {
         let path = [];
         if (route.type === "CONVERGE") {
@@ -332,12 +324,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           path = [route.payload.tokenIn, route.payload.tokenOut];
         }
         setRoute(path);
-
-        const amountOutFormatted = formatUnits(
-          route.amountOut,
-          selectedTokenB.decimal
-        );
-        setAmountOut(amountOutFormatted);
+        setAmountOut(quoteResult.amountOutFormatted);
       } else {
         setAmountOut("0");
         setRoute([]);
