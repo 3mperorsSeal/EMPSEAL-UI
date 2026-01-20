@@ -290,44 +290,52 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       }
       setIsQuoting(true);
       setAmountOut("0");
-      const quoteResult = await smartRouter.getBestQuoteFromUser(
-        debouncedAmountIn,
-        selectedTokenA.address,
-        selectedTokenB.address,
-        protocolFee
-      );
 
-      const route = quoteResult.route;
+      try {
+        const quoteResult = await smartRouter.getBestQuoteFromUser(
+          debouncedAmountIn,
+          selectedTokenA.address,
+          selectedTokenB.address,
+          protocolFee
+        );
 
-      // If this request is outdated, ignore the result
-      // Mark this request as the latest completed
-      lastCompletedIdRef.current = currentRequestId;
+        const route = quoteResult.route;
 
-      updateRoute(route); // Use updateRoute instead of setBestRoute
+        // If this request is outdated, ignore the result
+        // Mark this request as the latest completed
+        lastCompletedIdRef.current = currentRequestId;
 
-      // Handle route response
-      if (route) {
-        let path = [];
-        if (route.type === "CONVERGE") {
-          path = [
-            route.payload.tokenIn,
-            route.payload.intermediate,
-            route.payload.tokenOut,
-          ];
-        } else if (
-          (route.type === "SPLIT" || route.type === "NOSPLIT") &&
-          route.payload.length > 0
-        ) {
-          // NOSPLIT is returned by Multi-hop, Chained Intermediate, Converge Multi-hop strategies
-          path = route.payload[0].path;
-        } else if (route.type === "WRAP" || route.type === "UNWRAP") {
-          path = [route.payload.tokenIn, route.payload.tokenOut];
+        updateRoute(route); // Use updateRoute instead of setBestRoute
+
+        // Handle route response
+        if (route) {
+          let path = [];
+          if (route.type === "CONVERGE") {
+            path = [
+              route.payload.tokenIn,
+              route.payload.intermediate,
+              route.payload.tokenOut,
+            ];
+          } else if (
+            (route.type === "SPLIT" || route.type === "NOSPLIT") &&
+            route.payload.length > 0
+          ) {
+            // NOSPLIT is returned by Multi-hop, Chained Intermediate, Converge Multi-hop strategies
+            path = route.payload[0].path;
+          } else if (route.type === "WRAP" || route.type === "UNWRAP") {
+            path = [route.payload.tokenIn, route.payload.tokenOut];
+          }
+          setRoute(path);
+          setAmountOut(quoteResult.amountOutFormatted);
+        } else {
+          setAmountOut("0");
+          setRoute([]);
         }
-        setRoute(path);
-        setAmountOut(quoteResult.amountOutFormatted);
-      } else {
+      } catch (error) {
+        console.error("[Emp] Quote error:", error);
         setAmountOut("0");
         setRoute([]);
+        updateRoute(null);
       }
       setIsQuoting(false);
     };

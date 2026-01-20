@@ -38,8 +38,20 @@ export function parseTokenAmount(
     amount: string,
     decimals: number
 ): bigint {
-    // Remove any commas
-    const cleanAmount = amount.replace(/,/g, "");
+    // Validation
+    if (!amount || amount.trim() === "") {
+        throw new Error("Amount cannot be empty");
+    }
+    if (decimals < 0 || decimals > 77) {
+        throw new Error(`Invalid decimals: ${decimals}`);
+    }
+
+    const cleanAmount = amount.replace(/,/g, "").trim();
+
+    // Validate numeric format
+    if (!/^\d+(\.\d+)?$/.test(cleanAmount)) {
+        throw new Error(`Invalid amount format: ${amount}`);
+    }
 
     // Split into integer and decimal parts
     const [integerPart, decimalPart = ""] = cleanAmount.split(".");
@@ -450,13 +462,14 @@ export class SmartRouter {
 
         const results = await this.publicClient.multicall({ contracts: calls });
 
-        return results
+        const quotes = results
             .map((res, i) => ({
                 adapter: this.adapters[i],
                 amountOut: (res.result as bigint) || 0n,
             }))
             .filter((q) => q.amountOut > 0n)
             .sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1));
+        return quotes;
     }
 
     private async findBestMultiHopPath(
@@ -619,20 +632,11 @@ export class SmartRouter {
         // 2. Convert user input to wei
         const amountInWei = parseTokenAmount(amountInUser, decimalsIn);
 
-        console.log("🔍 Quote Request:", {
-            amountInUser,
-            amountInWei: amountInWei.toString(),
-            tokenIn: normalizedTokenIn,
-            tokenOut: normalizedTokenOut,
-            decimalsIn,
-            decimalsOut,
-        });
-
         // 3. Get best route (using wei)
         const route = await this.getBestQuote(
             amountInWei,
-            tokenIn,
-            tokenOut,
+            normalizedTokenIn,
+            normalizedTokenOut,
             fee
         );
 
@@ -651,12 +655,6 @@ export class SmartRouter {
             decimalsOut,
             6
         );
-
-        console.log("✅ Quote Result:", {
-            amountOut: route.amountOut.toString(),
-            amountOutFormatted,
-            routeType: route.type,
-        });
 
         return {
             route,
@@ -739,7 +737,7 @@ export class SmartRouter {
             multiHopResult,
             convergeMultiHopResult,
             hybridResult,
-            // multiStageConvergeSplitResult, // COMMENTED OUT FOR TESTING
+            // multiStageConvergeSplitResult,
         ] = await Promise.allSettled([
             withTimeout(
                 this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
@@ -766,7 +764,6 @@ export class SmartRouter {
                 STRATEGY_TIMEOUT,
                 'findHybridSplit'
             ),
-            // COMMENTED OUT FOR TESTING:
             // withTimeout(
             //     this.findMultiStageConvergeSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
             //     STRATEGY_TIMEOUT,
@@ -793,7 +790,6 @@ export class SmartRouter {
                 : null;
         const hybrid =
             hybridResult.status === "fulfilled" ? hybridResult.value : null;
-        // COMMENTED OUT FOR TESTING:
         // const multiStageConvergeSplit =
         //     multiStageConvergeSplitResult.status === "fulfilled" ? multiStageConvergeSplitResult.value : null;
 
@@ -804,51 +800,8 @@ export class SmartRouter {
             return null;
         }
 
-        // 1. Determine Baseline Anchor
-        let baselineAmount = 0n;
-        if (split && split.amountOut > 0n) {
-            baselineAmount = split.amountOut;
-        } else if (multiHop && multiHop.amountOut > 0n) {
-            baselineAmount = multiHop.amountOut;
-        }
-
-        let safeCandidates = candidates;
-
-        if (baselineAmount > 0n) {
-            const threshold = baselineAmount + (baselineAmount / 2n);
-
-            safeCandidates = candidates.filter(c => {
-                if (c.amountOut > threshold) {
-                    // console.warn(`[SmartRouter] Discarding Suspicious strategy (Baseline Filter): ${c.type} amount ${c.amountOut} > baseline ${baselineAmount}`);
-                    return false;
-                }
-                return true;
-            });
-
-        } else if (candidates.length >= 2) {
-            const sorted = [...candidates].sort((a, b) => (a.amountOut > b.amountOut ? 1 : -1));
-            const medianIndex = Math.floor(sorted.length / 2);
-            const median = sorted[medianIndex].amountOut;
-
-            const threshold = median + (median / 5n);
-
-            safeCandidates = candidates.filter(c => {
-                if (c.amountOut > threshold) {
-                    // console.warn(`[SmartRouter] Discarding Suspicious strategy (Median Filter): ${c.type} amount ${c.amountOut} > threshold ${threshold}`);
-                    return false;
-                }
-                return true;
-            });
-        }
-
-        if (safeCandidates.length === 0) {
-            // console.warn("[SmartRouter] All routes filtered! Reverting to safest available (Split/MultiHop or lowest)");
-            if (split) safeCandidates = [split];
-            else if (multiHop) safeCandidates = [multiHop];
-            else safeCandidates = candidates;
-        }
-
-        const winner = safeCandidates.reduce((best, current) =>
+        // Simply select the route with the highest amountOut
+        const winner = candidates.reduce((best, current) =>
             current.amountOut > best.amountOut ? current : best
         );
 
@@ -857,7 +810,6 @@ export class SmartRouter {
         else if (winner === split) winnerName = "Direct";
         else if (winner === convergeMultiHop) winnerName = "Converge Multi-hop";
         else if (winner === hybrid) winnerName = "Hybrid Split";
-        // COMMENTED OUT FOR TESTING:
         // else if (winner === multiStageConvergeSplit) winnerName = "Multi-Stage Converge Split";
         else winnerName = "Multi-hop";
 
