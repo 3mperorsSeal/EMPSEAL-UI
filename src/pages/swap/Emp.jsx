@@ -65,8 +65,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const [isTokenVisible, setTokenVisible] = useState(false);
   const [order, setOrder] = useState(false);
   const [isRateReversed, setIsRateReversed] = useState(false);
-  const [selectedTokenA, setSelectedTokenA] = useState(Tokens[0]);
-  const [selectedTokenB, setSelectedTokenB] = useState(Tokens[1]);
+  const [selectedTokenA, setSelectedTokenA] = useState(null);
+  const [selectedTokenB, setSelectedTokenB] = useState(null);
 
   useEffect(() => {
     if (onTokensChange) {
@@ -188,12 +188,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
 
-  useEffect(() => {
-    if (tokenList?.length > 0) {
-      setSelectedTokenA(tokenList[0]);
-      setSelectedTokenB(tokenList[1]);
-    }
-  }, [tokenList]);
+  // useEffect(() => {
+  //   if (tokenList?.length > 0) {
+  //     setSelectedTokenA(tokenList[0]);
+  //     setSelectedTokenB(tokenList[1]);
+  //   }
+  // }, [tokenList]);
 
   // Debounce amountIn to prevent excessive quote requests
   // Increased to 600ms to allow slower quote fetching to complete
@@ -431,7 +431,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
   const { data: tokenBalance, isLoading } = useBalance({
     address: address, // Use the connected wallet address
-    token: selectedTokenA.address, // Token address of TokenA
+    token: selectedTokenA?.address, // Token address of TokenA
     watch: true,
   });
 
@@ -442,7 +442,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
   const { data: tokenBBalance } = useBalance({
     address: address, // Use the connected wallet address
-    token: selectedTokenB.address, // Token address of TokenA
+    token: selectedTokenB?.address, // Token address of TokenA
     watch: true,
   });
 
@@ -460,7 +460,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
   // Calculate the amount based on the selected percentage
   const calculateAmount = (percentage) => {
-    if (!percentage) return "";
+    if (!percentage || !selectedTokenA) return "";
 
     let balance;
     if (
@@ -936,6 +936,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   // };
 
   const isInsufficientBalance = () => {
+    if (!selectedTokenA) return false;
     const inputAmount = parseFloat(amountIn) || 0;
     const balance =
       selectedTokenA.address === EMPTY_ADDRESS
@@ -1166,7 +1167,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                       :{" "}
                     </span>
                     <span className="rigamesh leading-normal">
-                      {isLoading
+                      {!selectedTokenA
+                        ? "0.00"
+                        : isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
                           ? `${formatNumber(formattedBalance)}`
@@ -1198,28 +1201,38 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                             }}
                             className="flex items-center md:gap-4 gap-1"
                           >
-                            <img
-                              className="md:w-9 md:h-9 w-4 h-4"
-                              src={selectedTokenA.image || selectedTokenA.logoURI}
-                              alt={selectedTokenA.name}
-                            />
-                            <div className="text-[#FF9900] lg:text-3xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
-                              {selectedTokenA.ticker || selectedTokenA.symbol}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleCopyAddress(selectedTokenA.address)
-                            }
-                            className="rounded-md transition-colorss"
-                          >
-                            {copySuccess &&
-                              activeTokenAddress === selectedTokenA.address ? (
-                              <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                            {selectedTokenA ? (
+                              <>
+                                <img
+                                  className="md:w-9 md:h-9 w-4 h-4"
+                                  src={selectedTokenA.image || selectedTokenA.logoURI}
+                                  alt={selectedTokenA.name}
+                                />
+                                <div className="text-[#FF9900] lg:text-3xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
+                                  {selectedTokenA.ticker || selectedTokenA.symbol}
+                                </div>
+                              </>
                             ) : (
-                              <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
+                              <span className="text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
+                                Select token
+                              </span>
                             )}
-                          </button>
+                          </div>
+                          {selectedTokenA && (
+                            <button
+                              onClick={() =>
+                                handleCopyAddress(selectedTokenA.address)
+                              }
+                              className="rounded-md transition-colorss"
+                            >
+                              {copySuccess &&
+                                activeTokenAddress === selectedTokenA.address ? (
+                                <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                              ) : (
+                                <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
+                              )}
+                            </button>
+                          )}
                           {/* </>
                           ) : (
                             <div
@@ -1373,7 +1386,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                                 )
                               : "0.00"
                           }`} */}
-                      {isLoading
+                      {!selectedTokenB
+                        ? "0.00"
+                        : isLoading
                         ? "Loading.."
                         : selectedTokenB.address === EMPTY_ADDRESS
                           ? `${formatNumber(formattedChainBalanceTokenB)}`
@@ -1400,28 +1415,38 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                             }}
                             className="flex items-center justify-center md:gap-4 gap-1"
                           >
-                            <img
-                              className="md:w-9 md:h-9 w-4 h-4"
-                              src={selectedTokenB.image || selectedTokenB.logoURI}
-                              alt={selectedTokenB.name}
-                            />
-                            <div className="text-dark lg:text-3xl text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
-                              {selectedTokenB.ticker || selectedTokenB.symbol}
-                            </div>
-                          </div>
-                          <button
-                            onClick={() =>
-                              handleCopyAddress(selectedTokenB.address)
-                            }
-                            className="rounded-md transition-colors"
-                          >
-                            {copySuccess &&
-                              activeTokenAddress === selectedTokenB.address ? (
-                              <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                            {selectedTokenB ? (
+                              <>
+                                <img
+                                  className="md:w-9 md:h-9 w-4 h-4"
+                                  src={selectedTokenB.image || selectedTokenB.logoURI}
+                                  alt={selectedTokenB.name}
+                                />
+                                <div className="text-dark lg:text-3xl text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
+                                  {selectedTokenB.ticker || selectedTokenB.symbol}
+                                </div>
+                              </>
                             ) : (
-                              <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
+                              <span className="text-dark font-bold font-orbitron md:text-3xl text-sm">
+                                Select token
+                              </span>
                             )}
-                          </button>
+                          </div>
+                          {selectedTokenB && (
+                            <button
+                              onClick={() =>
+                                handleCopyAddress(selectedTokenB.address)
+                              }
+                              className="rounded-md transition-colors"
+                            >
+                              {copySuccess &&
+                                activeTokenAddress === selectedTokenB.address ? (
+                                <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
+                              ) : (
+                                <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
+                              )}
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -1723,7 +1748,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           />
         )}
       </div>
-      <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
+      {selectedTokenA && selectedTokenB && (
+        <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
         <h6 className="font-orbitron md:text-sm text-[10px]">
           <span>
             <span className="font-extrabold">Min Received</span> :{" "}
@@ -1761,6 +1787,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           </span>
         </h6>
       </div>
+      )}
     </>
   );
 };

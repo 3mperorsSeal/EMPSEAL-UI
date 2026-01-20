@@ -41,11 +41,9 @@ const BridgeInterface = () => {
   // 1. STATE & CONFIG
   // ----------------------------------------------------------------
 
-  const [fromChainId, setFromChainId] = useState(369);
-  const [toChainId, setToChainId] = useState(8453);
-  const [selectedToken, setSelectedToken] = useState(
-    getDefaultToken(369) // Initialize with first token on PulseChain
-  );
+  const [fromChainId, setFromChainId] = useState(null);
+  const [toChainId, setToChainId] = useState(null);
+  const [selectedToken, setSelectedToken] = useState(null);
 
   const [isFromChainModalOpen, setIsFromChainModalOpen] = useState(false);
   const [isToChainModalOpen, setIsToChainModalOpen] = useState(false);
@@ -53,8 +51,8 @@ const BridgeInterface = () => {
   const [amount, setAmount] = useState("1");
   const [recipient, setRecipient] = useState("");
 
-  const sourceChain = BRIDGE_CONFIG[fromChainId];
-  const destChain = BRIDGE_CONFIG[toChainId];
+  const sourceChain = fromChainId ? BRIDGE_CONFIG[fromChainId] : null;
+  const destChain = toChainId ? BRIDGE_CONFIG[toChainId] : null;
   const isCorrectChain = chain?.id === fromChainId;
 
   // Add copy functionality states
@@ -115,21 +113,21 @@ const BridgeInterface = () => {
   // Allowance
   const { data: usdcAllowance, refetch: refetchUsdcAllowance } =
     useReadContract({
-      address: sourceChain.usdcAddress,
+      address: sourceChain?.usdcAddress,
       abi: ERC20_ABI,
       functionName: "allowance",
       args: [address, selectedToken?.bridge],
       chainId: fromChainId,
-      query: { enabled: !!address && !!sourceChain.usdcAddress && !!selectedToken?.bridge },
+      query: { enabled: !!address && !!sourceChain && !!sourceChain.usdcAddress && !!selectedToken?.bridge },
     });
   // Balance
   const { data: usdcBalance, refetch: refetchUsdcBalance } = useReadContract({
-    address: sourceChain.usdcAddress,
+    address: sourceChain?.usdcAddress,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [address],
     chainId: fromChainId,
-    query: { enabled: !!address && !!sourceChain.usdcAddress },
+    query: { enabled: !!address && !!sourceChain && !!sourceChain.usdcAddress },
   });
 
   // --- WRAPPED GAS TOKEN DATA (WPLS/WETH) ---
@@ -138,34 +136,34 @@ const BridgeInterface = () => {
     data: wrappedGasTokenAllowance,
     refetch: refetchWrappedGasTokenAllowance,
   } = useReadContract({
-    address: sourceChain.wrappedGasTokenAddress,
+    address: sourceChain?.wrappedGasTokenAddress,
     abi: ERC20_ABI,
     functionName: "allowance",
     args: [address, selectedToken?.bridge],
     chainId: fromChainId,
-    query: { enabled: !!address && !!sourceChain.wrappedGasTokenAddress && !!selectedToken?.bridge },
+    query: { enabled: !!address && !!sourceChain && !!sourceChain.wrappedGasTokenAddress && !!selectedToken?.bridge },
   });
   // Balance
   const {
     data: wrappedGasTokenBalance,
     refetch: refetchWrappedGasTokenBalance,
   } = useReadContract({
-    address: sourceChain.wrappedGasTokenAddress,
+    address: sourceChain?.wrappedGasTokenAddress,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [address],
     chainId: fromChainId,
-    query: { enabled: !!address && !!sourceChain.wrappedGasTokenAddress },
+    query: { enabled: !!address && !!sourceChain && !!sourceChain.wrappedGasTokenAddress },
   });
 
   // --- SOURCE TOKEN DATA ---
-  // Balance
   const { data: tokenBalance, refetch: refetchTokenBalance } = useReadContract({
-    address: selectedToken.address,
+    address: selectedToken?.address,
     abi: ERC20_ABI,
     functionName: "balanceOf",
     args: [address],
     chainId: fromChainId,
+    query: { enabled: !!address && !!selectedToken?.address && !!fromChainId },
   });
   // Allowance
   const { data: tokenAllowance, refetch: refetchTokenAllowance } =
@@ -175,7 +173,7 @@ const BridgeInterface = () => {
       functionName: "allowance",
       args: [address, selectedToken?.bridge],
       chainId: fromChainId,
-      query: { enabled: !!address && !!selectedToken?.address && !!selectedToken?.bridge },
+      query: { enabled: !!address && !!selectedToken?.address && !!selectedToken?.bridge && !!fromChainId },
     });
 
   // ----------------------------------------------------------------
@@ -305,9 +303,9 @@ const BridgeInterface = () => {
       addTransaction({
         hash: bridgeHash,
         timestamp: Date.now(),
-        fromChainName: sourceChain.name,
-        toChainName: destChain.name,
-        explorerUrl: sourceChain.explorer,
+        fromChainName: sourceChain?.name || "Unknown",
+        toChainName: destChain?.name || "Unknown",
+        explorerUrl: sourceChain?.explorer,
       });
       setAmount("");
       refetchAll();
@@ -428,7 +426,7 @@ const BridgeInterface = () => {
   const renderButton = useCallback(() => {
     if (!address) return <button disabled>Connect Wallet</button>;
     if (!isCorrectChain)
-      return <button disabled>Switch to {sourceChain.name}</button>;
+      return <button disabled>Switch to {sourceChain?.name}</button>;
     if (isBridged)
       return (
         <button disabled>
@@ -566,7 +564,7 @@ const BridgeInterface = () => {
   return (
     <>
       <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-4 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
-        {!isCorrectChain && address && (
+        {!isCorrectChain && address && sourceChain && (
           <div className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3">
             <AlertCircle className="w-5 h-5 text-[#FF9900] mt-0.5 flex-shrink-0" />
             <div>
@@ -574,7 +572,7 @@ const BridgeInterface = () => {
                 Wrong Network
               </p>
               <p className="text-sm text-[#FF9900]">
-                Please switch to {sourceChain.name}
+                Please switch to {sourceChain?.name}
               </p>
             </div>
           </div>
@@ -606,12 +604,18 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center bg-black !text-white md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[110px] justify-center">
+                <div className="flex relative z-20 md:gap-2 gap-1 md:h-20 h-12 items-center bg-black !text-[#FF9900] md:border-2 border border-white md:rounded-xl rounded-lg md:px-3 px-1 md:py-[18px] py-2.5 margin_left_1 lg:w-[280px] md:w-[220px] w-[110px] justify-center">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
-                    onClick={() => setIsTokenModalOpen(true)}
-                    className="text-white"
+                    onClick={() => {
+                      if (!fromChainId) {
+                        toast.error("Please select chain first");
+                        return;
+                      }
+                      setIsTokenModalOpen(true);
+                    }}
+                    className="text-[#FF9900]"
                   />
                   <button
                     onClick={() => handleCopyAddress(selectedToken.address)}
@@ -768,12 +772,12 @@ const BridgeInterface = () => {
             </div>
             <div className="flex w-full">
               <div className="flex md:w-1/2 w-[40%] justify-between rounded-2xl py-4 md:mt-0 mt-3">
-                <div className="flex relative z-20 md:gap-4 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[110px] margin_left_1">
+                <div className="flex relative z-20 md:gap-2 gap-1 md:h-20 h-12 items-center justify-center bg-[#FFE6C0] text-black md:border-2 border border-white rounded-lg md:px-3 px-1 md:py-2 py-2.5 lg:w-[280px] md:w-[220px] w-[110px] margin_left_1">
                   <TokenSelector
                     token={selectedToken}
                     chainId={fromChainId}
                     onClick={() => setIsTokenModalOpen(true)}
-                    className="text-black"
+                    className="!text-[#000000]"
                   />
                   <button
                     onClick={() => handleCopyAddress(selectedToken.address)}
@@ -992,9 +996,10 @@ const BridgeInterface = () => {
         onSelect={(chain) => {
           const chainId = typeof chain.id === 'string' ? parseInt(chain.id) : chain.id;
           // Try to keep the same token if it exists on the new chain
-          const sameToken = getTokenById(chainId, selectedToken?.id);
+          // const sameToken = getTokenById(chainId, selectedToken?.id);
           setFromChainId(chainId);
-          setSelectedToken(sameToken || getDefaultToken(chainId));
+          setSelectedToken(null);
+          setToChainId(null);
           setIsFromChainModalOpen(false);
         }}
         title="Select From Chain"
@@ -1004,6 +1009,8 @@ const BridgeInterface = () => {
         onClose={() => setIsToChainModalOpen(false)}
         items={Object.values(BRIDGE_CONFIG).filter((c) => {
           const chainId = typeof c.id === 'string' ? parseInt(c.id) : c.id;
+          // If no token selected, show all chains except from
+          if (!selectedToken) return chainId !== fromChainId;
           // Only show chains that have the currently selected token
           return chainId !== fromChainId && hasToken(chainId, selectedToken?.id);
         })}
