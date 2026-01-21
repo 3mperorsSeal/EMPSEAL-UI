@@ -36,6 +36,7 @@ import {
   EMPTY_ADDRESS,
 } from "../../utils/contractCalls";
 import { toast } from "react-toastify";
+import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
@@ -100,7 +101,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const [localBestRoute, setLocalBestRoute] = useState(null);
 
   const [isQuoting, setIsQuoting] = useState(false);
-  const [protocolFee, setProtocolFee] = useState(21);
+  const [protocolFee, setProtocolFee] = useState(28);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
   const [needsApproval, setNeedsApproval] = useState(false);
@@ -109,6 +110,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const [debouncedAmountIn, setDebouncedAmountIn] = useState("0");
   const quoteRequestIdRef = useRef(0);
   const lastCompletedIdRef = useRef(0); // Track last completed request
+
+  // Price monitor state
+  const [initialQuote, setInitialQuote] = useState("");
+  const [showPriceAlert, setShowPriceAlert] = useState(false);
+  const [newQuote, setNewQuote] = useState("");
+  const [percentChange, setPercentChange] = useState(0);
 
   // Then in your useEffect where you set the route:
   const updateRoute = (route) => {
@@ -175,12 +182,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
         isStable(selectedTokenA.address) ||
         isStable(selectedTokenB.address)
       ) {
-        setProtocolFee(10); // 0.10% for stable pairs
+        setProtocolFee(15); // 0.15% for stable pairs
       } else {
-        setProtocolFee(21); // 0.21% for volatile pairs
+        setProtocolFee(28); // 0.28% for volatile pairs
       }
     } else {
-      setProtocolFee(21); // Default for other chains or if undefined
+      setProtocolFee(28); // Default for other chains or if undefined
     }
   }, [chainId, selectedTokenA, selectedTokenB, stableTokens]);
 
@@ -982,10 +989,35 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const minToReceive = amountOut * 0.0024;
   const minToReceiveAfterFee = amountOut - minToReceive;
 
-  // effect to clear amountOut when tokens are swapped
+  // effect to clear amountOut and quotes when tokens are swapped
   useEffect(() => {
     setAmountOut("0");
+    setInitialQuote("");
+    setNewQuote("");
+    setShowPriceAlert(false);
   }, [selectedTokenA, selectedTokenB]);
+
+  // Use price monitor hook
+  const { hasChanged } = usePriceMonitor({
+    initialQuote,
+    currentQuote: amountOut,
+    enabled: !!initialQuote && !!amountOut && !isNaN(amountOut),
+    threshold: 0.001, // Temporarily lowered for testing (normal: 0.1)
+    onPriceChange: (newQ, percent) => {
+      setNewQuote(newQ);
+      setPercentChange(percent);
+      setShowPriceAlert(true);
+    },
+  });
+
+  const handleAcceptNewQuote = () => {
+    setInitialQuote(newQuote);
+    setShowPriceAlert(false);
+  };
+
+  const handleRejectNewQuote = () => {
+    setShowPriceAlert(false);
+  };
 
   // Market
   const calculateLimitPrice1 = () => {
@@ -1570,7 +1602,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                   }`}
               >
                 <button
-                  onClick={() => setAmountVisible(true)}
+                  onClick={() => {
+                    if (amountOut && parseFloat(amountOut) > 0) {
+                      setInitialQuote(amountOut);
+                      setAmountVisible(true);
+                    }
+                  }}
                   disabled={isInsufficientBalance()}
                   className={`gtw relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${isInsufficientBalance()
                     ? "opacity-50 cursor-not-allowed"
@@ -1720,7 +1757,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       <div aria-label="Modal">
         {isAmountVisible && (
           <Amount
-            onClose={() => setAmountVisible(false)}
+            onClose={() => {
+              setAmountVisible(false);
+              setInitialQuote("");
+              setNewQuote("");
+              setShowPriceAlert(false);
+            }}
             amountIn={amountIn}
             amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
@@ -1732,6 +1774,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             usdValueTokenA={usdValueTokenA}
             usdValueTokenB={usdValueTokenB}
             rate={getRateDisplay()}
+            showPriceAlert={showPriceAlert}
+            newQuote={newQuote}
+            initialQuote={initialQuote}
+            percentChange={percentChange}
+            onAcceptNewQuote={handleAcceptNewQuote}
+            onRejectNewQuote={handleRejectNewQuote}
           />
         )}
       </div>

@@ -55,5 +55,6 @@ export function useChainConfig() {
     isSupported: !!currentChain,
     maxHops: currentChain?.maxHops || 2,
     stableTokens: currentChain?.stableTokens || [],
+    blockTime: currentChain?.blockTime || 10, // default to 15 seconds if not defined
   };
 }

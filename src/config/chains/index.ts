@@ -18,6 +18,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "Otterscan",
     rpcUrl: "https://rpc.pulsechain.com",
     maxHops: 3,
+    blockTime: 10,
     stableTokens: [
       "0x15d38573d2feeb82e7ad5187ab8c1d52810b1f07",
       "0x0cb6f5a34ad42ec934882a05265a7d5f59b51a2f",
@@ -40,6 +41,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "Oklink",
     rpcUrl: "https://ethw.public-rpc.com",
     maxHops: 3,
+    blockTime: 12,
   },
   //sonic
   146: {
@@ -57,5 +59,6 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorerName: "sonicscan",
     rpcUrl: "https://rpc.soniclabs.com",
     maxHops: 2,
+    blockTime: 1,
   },
 };

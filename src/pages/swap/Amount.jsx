@@ -18,6 +18,12 @@ const Amount = ({
   needsApproval,
   handleApprove,
   rate,
+  showPriceAlert,
+  newQuote,
+  initialQuote,
+  percentChange,
+  onAcceptNewQuote,
+  onRejectNewQuote,
 }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isConfirm, setConfirm] = useState(false);
@@ -54,7 +60,7 @@ const Amount = ({
     const [integerPart, decimalPart] = value.split(".");
     const formattedInteger = integerPart
       .replace(/\D/g, "")
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+      .replace(/\B(?=(\d{3})+(?!\\d))/g, ",");
     return decimalPart !== undefined
       ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}`
       : formattedInteger;
@@ -154,10 +160,44 @@ const Amount = ({
                 {priceImpact} %
               </div>
             </div>
+
+            {/* Price Alert */}
+            {showPriceAlert && (
+              <div className="p-4 rounded-xl w-full mt-4 border-2 border-[#FF9900] bg-[#FF9900]/10">
+                <h3 className="text-lg font-bold roboto mb-3 text-[#FF9900]">
+                  Price Update
+                </h3>
+                <div className="mb-4">
+                  <p className="text-sm font-normal roboto text-white mb-2">
+                    The price has {percentChange > 0 ? 'increased' : 'decreased'} by{" "}
+                    <span className={`font-bold ${percentChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {Math.abs(percentChange).toFixed(2)}%
+                    </span>
+                  </p>
+                  <div className="flex justify-between items-center text-sm font-normal roboto mt-2">
+                    <span className="text-white">Previous:</span>
+                    <span className="text-white">{parseFloat(initialQuote || 0).toFixed(6)} {tokenB?.ticker}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-sm font-normal roboto mt-2">
+                    <span className="text-white">New:</span>
+                    <span className={`font-bold ${percentChange > 0 ? 'text-green-500' : 'text-red-500'}`}>
+                      {parseFloat(newQuote || 0).toFixed(6)} {tokenB?.ticker}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={onAcceptNewQuote}
+                  className="w-full px-4 py-3 bg-[#FF9900] text-black rounded-xl hover:bg-opacity-80 transition-colors text-sm font-bold roboto uppercase"
+                >
+                  Accept New Price
+                </button>
+              </div>
+            )}
+
             <div className="bridge-button">
               <button
                 onClick={needsApproval ? handleApprove : handleClick}
-                disabled={disabled || isLoading}
+                disabled={disabled || isLoading || showPriceAlert}
                 usdValueTokenA={usdValueTokenA}
                 usdValueTokenB={usdValueTokenB}
                 className="gtw relative w-full rounded-xl py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center border border-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
