@@ -298,13 +298,23 @@ export default function WalletConnect({
         }
         if (chain.unsupported && !allowUnsupported) {
           return (
-            <button
-              className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
-              onClick={() => setShowChainPopup(true)}
-              type="button"
-            >
-              Wrong Network
-            </button>
+            <>
+              <button
+                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
+                onClick={() => setShowChainPopup(true)}
+                type="button"
+              >
+                Wrong Network
+              </button>
+              {showChainPopup && (
+                <ChainPopup
+                  setShowChainPopup={setShowChainPopup}
+                  availableChains={availableChains}
+                  chain={chain}
+                  switchChain={switchChain}
+                />
+              )}
+            </>
           );
         }
         return (

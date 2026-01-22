@@ -4,6 +4,7 @@ import {
   useReadContract,
   useWriteContract,
   useWaitForTransactionReceipt,
+  useSwitchChain,
 } from "wagmi";
 import { parseEther, formatEther, formatUnits } from "viem";
 import { toast } from "react-toastify";
@@ -34,6 +35,7 @@ import { ERC20_ABI } from "../../utils/via-bridge-abis/index";
 
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
+  const { switchChain } = useSwitchChain();
   const { transactions, addTransaction, clearTransactions } =
     useRecentTransactions();
 
@@ -108,6 +110,12 @@ const BridgeInterface = () => {
       setBridgeFees(fetchedBridgeFees);
     }
   }, [fetchedBridgeFees]);
+
+  useEffect(() => {
+    if (!selectedToken) {
+      setBridgeFees(null);
+    }
+  }, [selectedToken]);
 
   // --- USDC DATA ---
   // Allowance
@@ -426,7 +434,11 @@ const BridgeInterface = () => {
   const renderButton = useCallback(() => {
     if (!address) return <button disabled>Connect Wallet</button>;
     if (!isCorrectChain)
-      return <button disabled>Switch to {sourceChain?.name}</button>;
+      return (
+        <button onClick={() => switchChain({ chainId: fromChainId })}>
+          Switch to {sourceChain?.name}
+        </button>
+      );
     if (isBridged)
       return (
         <button disabled>
@@ -565,14 +577,17 @@ const BridgeInterface = () => {
     <>
       <div className="md:max-w-[710px] mx-auto w-full md:px-1 px-4 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 mt-4 scales-b scales-top scales-top_via">
         {!isCorrectChain && address && sourceChain && (
-          <div className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3">
+          <div
+            className="mb-10 p-4 bg-yellow-900/20 border border-yellow-800 rounded-lg flex items-start gap-3 cursor-pointer hover:bg-yellow-900/30 transition-all"
+            onClick={() => switchChain({ chainId: fromChainId })}
+          >
             <AlertCircle className="w-5 h-5 text-[#FF9900] mt-0.5 flex-shrink-0" />
             <div>
               <p className="text-sm font-medium text-[#FF9900]">
                 Wrong Network
               </p>
               <p className="text-sm text-[#FF9900]">
-                Please switch to {sourceChain?.name}
+                Click to switch to {sourceChain?.name}
               </p>
             </div>
           </div>

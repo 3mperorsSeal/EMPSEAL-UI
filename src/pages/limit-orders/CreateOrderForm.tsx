@@ -670,7 +670,7 @@ export function CreateOrderForm({
                     className="md:text-base text-sm"
                     htmlFor="strategy-sell"
                   >
-                    Exit Strategy (Sell)
+                    Exit (Sell High)
                   </Label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -679,7 +679,7 @@ export function CreateOrderForm({
                     className="md:text-base text-sm"
                     htmlFor="strategy-buy"
                   >
-                    Accumulation Strategy (Buy)
+                    Accumulation (Buy Low)
                   </Label>
                 </div>
               </RadioGroup>
@@ -708,17 +708,17 @@ export function CreateOrderForm({
                 <span className="rigamesh leading-normal">
                   {tokenInMode === "select"
                     ? tokenInBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          {/* {tokenInInfo?.symbol || "Tokens"} */}
-                        </span>
-                      )
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        {/* {tokenInInfo?.symbol || "Tokens"} */}
+                      </span>
+                    )
                     : tokenInBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          {/* {customTokenIn?.symbol || "Tokens"} */}
-                        </span>
-                      )}
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        {/* {customTokenIn?.symbol || "Tokens"} */}
+                      </span>
+                    )}
                 </span>
               </div>
             </div>
@@ -733,11 +733,11 @@ export function CreateOrderForm({
                           <Select
                             onValueChange={handleTokenInSelect}
                             value={selectedTokenIn || undefined}
-                            // disabled={
-                            //   tokenOutMode === "custom" &&
-                            //   !getTokenInfo(selectedTokenOut) &&
-                            //   isAddress(selectedTokenOut)
-                            // }
+                          // disabled={
+                          //   tokenOutMode === "custom" &&
+                          //   !getTokenInfo(selectedTokenOut) &&
+                          //   isAddress(selectedTokenOut)
+                          // }
                           >
                             <SelectTrigger
                               className="h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none !text-[#FF9900] font-bold font-orbitron lg:text-3xl md:text-base text-xs"
@@ -814,11 +814,11 @@ export function CreateOrderForm({
                                 placeholder="0x..."
                                 className="h-12 bg-transparent !focus:none !outline-0  !border-none md:text-xl text-base !font-bold !font-orbitron" // Added padding for logo
                                 data-testid="input-token-in-custom"
-                                // disabled={
-                                //   tokenOutMode === "custom" &&
-                                //   !getTokenInfo(selectedTokenOut) &&
-                                //   isAddress(selectedTokenOut)
-                                // }
+                              // disabled={
+                              //   tokenOutMode === "custom" &&
+                              //   !getTokenInfo(selectedTokenOut) &&
+                              //   isAddress(selectedTokenOut)
+                              // }
                               />
                             </div>
                           )}
@@ -849,13 +849,12 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border border-black bg-black text-white flex justify-center items-center rounded-xl md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-      ${
-        selectedPercentage === value
-          ? "text-white bg-black"
-          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
-      }`}
+      ${selectedPercentage === value
+                          ? "text-white bg-black"
+                          : "bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
-                      // disabled={isLoading}
+                    // disabled={isLoading}
                     >
                       {value}%
                     </button>
@@ -868,8 +867,8 @@ export function CreateOrderForm({
                     window.innerWidth >= 1024
                       ? 48
                       : window.innerWidth >= 768
-                      ? 40
-                      : 32;
+                        ? 40
+                        : 32;
                   // const dynamicFontSize = Math.max(
                   //   12,
                   //   defaultFontSize - inputLength * 1.5
@@ -993,16 +992,16 @@ export function CreateOrderForm({
                 <span className="rigamesh leading-normal">
                   {tokenOutBalance === "select"
                     ? tokenOutBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                        </span>
-                      )
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                      </span>
+                    )
                     : tokenOutBalance && (
-                        <span className="rigamesh leading-normal">
-                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                          {/* {customTokenOut?.symbol || "Tokens"} */}
-                        </span>
-                      )}
+                      <span className="rigamesh leading-normal">
+                        {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                        {/* {customTokenOut?.symbol || "Tokens"} */}
+                      </span>
+                    )}
                 </span>
               </div>
             </div>
@@ -1016,11 +1015,11 @@ export function CreateOrderForm({
                           <Select
                             onValueChange={handleTokenOutSelect}
                             value={selectedTokenOut || undefined}
-                            // disabled={
-                            //   tokenInMode === "custom" &&
-                            //   !getTokenInfo(selectedTokenIn) &&
-                            //   isAddress(selectedTokenIn)
-                            // }
+                          // disabled={
+                          //   tokenInMode === "custom" &&
+                          //   !getTokenInfo(selectedTokenIn) &&
+                          //   isAddress(selectedTokenIn)
+                          // }
                           >
                             <SelectTrigger
                               className="h-12 border-none text-center !bg-[#FFE6C0] focus:none px-0 !w-full outline-none !text-black font-bold font-orbitron lg:text-3xl md:text-base text-xs"
@@ -1097,11 +1096,11 @@ export function CreateOrderForm({
                                 placeholder="0x..."
                                 className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-xl text-base !font-bold !font-orbitron !text-black"
                                 data-testid="input-token-out-custom"
-                                // disabled={
-                                //   tokenInMode === "custom" &&
-                                //   !getTokenInfo(selectedTokenIn) &&
-                                //   isAddress(selectedTokenIn)
-                                // }
+                              // disabled={
+                              //   tokenInMode === "custom" &&
+                              //   !getTokenInfo(selectedTokenIn) &&
+                              //   isAddress(selectedTokenIn)
+                              // }
                               />
                             </div>
                           )}
@@ -1134,8 +1133,8 @@ export function CreateOrderForm({
                     window.innerWidth >= 1024
                       ? 48
                       : window.innerWidth >= 768
-                      ? 40
-                      : 32;
+                        ? 40
+                        : 32;
 
                   const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
                   const SHRINK_RATE = 2;
@@ -1443,9 +1442,8 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div
-            className={`${
-              partialFillEnabled ? "w-[240px]" : "w-[240px]"
-            } absolute 2xl:right-[3vw] xl:right-[2vw] md:right-[32vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[44%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
+            className={`${partialFillEnabled ? "w-[240px]" : "w-[240px]"
+              } absolute 2xl:right-[3vw] xl:right-[2vw] md:right-[32vw] flex flex-col lefts11 2xl:top-[25%] xl:top-[30%] md:top-[40%] mdlg top-[44%] bg-[#FF9900] rounded-lg font-orbitron shadow-md border borer-white`}
           >
             <div className="text-black p-4">
               <div className="flex gap-2 justify-center items-center">
@@ -1476,27 +1474,24 @@ export function CreateOrderForm({
                   <button
                     type="button"
                     onClick={() => setFillMode(1)}
-                    className={`${
-                      fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${fillMode === 1 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                      } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 3
                   </button>
                   <button
                     type="button"
                     onClick={() => setFillMode(2)}
-                    className={`${
-                      fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${fillMode === 2 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                      } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 5
                   </button>
                   <button
                     type="button"
                     onClick={() => setFillMode(3)}
-                    className={`${
-                      fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
-                    } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                    className={`${fillMode === 3 ? "bg-[#FF9900]" : "bg-[#F4AC3F]"
+                      } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                   >
                     Split 10
                   </button>
@@ -1506,10 +1501,10 @@ export function CreateOrderForm({
                   {fillMode === 1
                     ? "Split 3"
                     : fillMode === 2
-                    ? "Split 5"
-                    : fillMode === 3
-                    ? "Split 10"
-                    : "None"}
+                      ? "Split 5"
+                      : fillMode === 3
+                        ? "Split 10"
+                        : "None"}
                 </div>
               </>
             )}

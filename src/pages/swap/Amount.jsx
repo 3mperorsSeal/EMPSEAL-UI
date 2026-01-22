@@ -60,7 +60,7 @@ const Amount = ({
     const [integerPart, decimalPart] = value.split(".");
     const formattedInteger = integerPart
       .replace(/\D/g, "")
-      .replace(/\B(?=(\d{3})+(?!\\d))/g, ",");
+      .replace(/\B(?=(\d{3})+(?!\d))/g, ",");
     return decimalPart !== undefined
       ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}`
       : formattedInteger;
