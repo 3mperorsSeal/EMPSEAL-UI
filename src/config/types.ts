@@ -15,4 +15,5 @@ export interface ChainConfig {
   rpcUrl: string;
   maxHops: number;
   stableTokens?: string[];
+  blockTime: number; // in seconds
 }
