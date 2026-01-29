@@ -23,6 +23,7 @@ export function useChainConfig() {
   const [tokenList, setTokenList] = useState<Token[]>([]);
   const [adapters, setAdapters] = useState<Adapter[]>([]);
   const [featureTokens, setfeatureTokens] = useState<Token[]>([]);
+  const [whitelistedTokens, setWhitelistedTokens] = useState<Token[]>([]);
 
   const currentChain = chainId ? SUPPORTED_CHAINS[chainId] : undefined;
 
@@ -38,12 +39,19 @@ export function useChainConfig() {
       token.featured === true
     ) || [];
     setfeatureTokens(featureTokensForChain);
+
+    const whitelistedTokensForChain = CHAIN_TOKENS[chainId]?.filter(token =>
+      token.whitelisted === true
+    ) || [];
+    setWhitelistedTokens(whitelistedTokensForChain);
+
   }, [chainId]);
 
   return {
     chain: currentChain,
     chainId,
     tokenList,
+    whitelistedTokens,
     adapters,
     featureTokens,
     symbol: currentChain?.symbol,

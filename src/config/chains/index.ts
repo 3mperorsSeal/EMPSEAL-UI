@@ -48,7 +48,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     chainId: 146,
     name: "Sonic",
     symbol: "sonic",
-    routerAddress: "0xd8016e376e15b20Fc321a37fD69DC42cfDf951Bb",
+    routerAddress: "0x6c481A43EdA77D4E5a666b5A338c5426De2e90B0",
     wethAddress: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38",
     priceApi: {
       baseUrl: "https://api.geckoterminal.com/api/v2",
@@ -58,7 +58,12 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     blockExplorer: "https://sonicscan.org/tx/",
     blockExplorerName: "sonicscan",
     rpcUrl: "https://rpc.soniclabs.com",
-    maxHops: 2,
+    maxHops: 3,
     blockTime: 1,
+    stableTokens: [
+      "0x29219dd400f2Bf60E5a23d13Be72B486D4038894", // USDC.e
+      "0xd3DCe716f3eF535C5Ff8d041c1A41C3bd89b97aE", // scUSD
+      "0x6047828dc181963ba44974801FF68e538dA5eaF9", // USDT
+    ],
   },
 };

@@ -136,6 +136,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     chainId,
     symbol,
     tokenList,
+    whitelistedTokens,
     adapters,
     routerAddress,
     wethAddress,
@@ -153,22 +154,58 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
   // console.log("selected best route: ", bestRoute);
+  // console.log("whitelisted tokens: ", whitelistedTokens);
   useEffect(() => {
-    if (publicClient && routerAddress) {
-      const router = new SmartRouter(publicClient, routerAddress);
-      // console.log("router info: ", router);
+    let isCancelled = false; // Guard against stale async updates
+
+    if (publicClient && routerAddress && chainId) {
+      // console.log("[SmartRouter] Initializing for chainId:", chainId, "router:", routerAddress);
+      const router = new SmartRouter(publicClient, routerAddress, chainId);
+
       router.loadAdapters().then(() => {
+        // Check if this effect has been cancelled (chain changed during loading)
+        if (isCancelled) {
+          // console.log("[SmartRouter] Skipping stale initialization for chainId:", chainId);
+          return;
+        }
+
+        // console.log("[SmartRouter] Loaded adapters from contract for chainId:", chainId);
+        // console.log("[SmartRouter] Adapters from config:", adapters?.length, "Trusted tokens from config:", whitelistedTokens?.length);
+
+        // Override with config adapters if available
         if (adapters && adapters.length > 0) {
           const adapterAddresses = adapters.map((a) => a.address);
           router.setAdapters(adapterAddresses);
         }
-        setSmartRouter(router);
+
+        // Override with config trusted tokens if available
+        if (whitelistedTokens && whitelistedTokens.length > 0) {
+          // console.log("[SmartRouter] Setting trusted tokens from config:", whitelistedTokens.length);
+          const trustedTokenAddresses = whitelistedTokens.map(t => t.address);
+          router.setTrustedTokens(trustedTokenAddresses);
+        }
+
+        // Only set the router if we haven't been cancelled
+        if (!isCancelled) {
+          setSmartRouter(router);
+        }
+      }).catch((error) => {
+        if (!isCancelled) {
+          console.error("[SmartRouter] Failed to load adapters:", error);
+        }
       });
+
       router.setMaxHops(maxHops || 3);
       router.setMaxAdapters(adapters ? adapters.length : 12);
       router.setGranularity(3);
     }
-  }, [publicClient, routerAddress, adapters]);
+
+    // Cleanup function - runs when dependencies change before next effect
+    return () => {
+      isCancelled = true;
+      // console.log("[SmartRouter] Cleanup - cancelling previous initialization");
+    };
+  }, [publicClient, routerAddress, adapters, whitelistedTokens, chainId]);
 
   // Dynamic Fee Update
   useEffect(() => {
@@ -195,12 +232,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
 
-  // useEffect(() => {
-  //   if (tokenList?.length > 0) {
-  //     setSelectedTokenA(tokenList[0]);
-  //     setSelectedTokenB(tokenList[1]);
-  //   }
-  // }, [tokenList]);
+  // Reset selected tokens when chain changes
+  useEffect(() => {
+    setSelectedTokenA(null);
+    setSelectedTokenB(null);
+  }, [chainId]);
 
   // Debounce amountIn to prevent excessive quote requests
   // Increased to 600ms to allow slower quote fetching to complete
@@ -1197,15 +1233,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                       {!selectedTokenA
                         ? "0.00"
                         : isLoading
-                        ? "Loading.."
-                        : selectedTokenA.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedBalance)}`
-                          : `${tokenBalance
-                            ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
-                          }`}
+                          ? "Loading.."
+                          : selectedTokenA.address === EMPTY_ADDRESS
+                            ? `${formatNumber(formattedBalance)}`
+                            : `${tokenBalance
+                              ? formatNumber(
+                                parseFloat(tokenBalance.formatted).toFixed(6)
+                              )
+                              : "0.00"
+                            }`}
                     </span>
                   </div>
                 </div>
@@ -1416,15 +1452,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                       {!selectedTokenB
                         ? "0.00"
                         : isLoading
-                        ? "Loading.."
-                        : selectedTokenB.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedChainBalanceTokenB)}`
-                          : `${tokenBBalance
-                            ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
-                          }`}
+                          ? "Loading.."
+                          : selectedTokenB.address === EMPTY_ADDRESS
+                            ? `${formatNumber(formattedChainBalanceTokenB)}`
+                            : `${tokenBBalance
+                              ? formatNumber(
+                                parseFloat(tokenBBalance.formatted).toFixed(6)
+                              )
+                              : "0.00"
+                            }`}
                     </span>
                   </div>
                 </div>
@@ -1793,43 +1829,43 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       </div>
       {selectedTokenA && selectedTokenB && (
         <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
-        <h6 className="font-orbitron md:text-sm text-[10px]">
-          <span>
-            <span className="font-extrabold">Min Received</span> :{" "}
-            <span className="rigamesh truncate">
-              {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
+          <h6 className="font-orbitron md:text-sm text-[10px]">
+            <span>
+              <span className="font-extrabold">Min Received</span> :{" "}
+              <span className="rigamesh truncate">
+                {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
+              </span>
+              <span className="font-extrabold">{selectedTokenB.ticker}</span>
             </span>
-            <span className="font-extrabold">{selectedTokenB.ticker}</span>
-          </span>
-        </h6>
-        <h6 className="font-orbitron md:text-sm text-[10px] py-3">
-          <span>
-            <span className="font-extrabold">Rate :</span>{" "}
-            <span className="font-bold">1</span>{" "}
-            <span className="font-extrabold">
-              {isRateReversed ? selectedTokenB.ticker : selectedTokenA.ticker} ={" "}
+          </h6>
+          <h6 className="font-orbitron md:text-sm text-[10px] py-3">
+            <span>
+              <span className="font-extrabold">Rate :</span>{" "}
+              <span className="font-bold">1</span>{" "}
+              <span className="font-extrabold">
+                {isRateReversed ? selectedTokenB.ticker : selectedTokenA.ticker} ={" "}
+              </span>
+              <span className="rigamesh truncate">{getRateDisplay()}</span>{" "}
+              <span className="font-extrabold">
+                {isRateReversed ? selectedTokenA.ticker : selectedTokenB.ticker}
+              </span>
             </span>
-            <span className="rigamesh truncate">{getRateDisplay()}</span>{" "}
-            <span className="font-extrabold">
-              {isRateReversed ? selectedTokenA.ticker : selectedTokenB.ticker}
+          </h6>
+          <h6 className="font-orbitron md:text-sm text-[10px]">
+            <span>
+              <span className="font-extrabold">Price Impact:</span>{" "}
+              <span
+                className={`rigamesh truncate ${getPriceImpactColor(
+                  priceImpact
+                )}`}
+              >
+                {" "}
+                {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
+                {priceImpact} %
+              </span>
             </span>
-          </span>
-        </h6>
-        <h6 className="font-orbitron md:text-sm text-[10px]">
-          <span>
-            <span className="font-extrabold">Price Impact:</span>{" "}
-            <span
-              className={`rigamesh truncate ${getPriceImpactColor(
-                priceImpact
-              )}`}
-            >
-              {" "}
-              {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
-              {priceImpact} %
-            </span>
-          </span>
-        </h6>
-      </div>
+          </h6>
+        </div>
       )}
     </>
   );

@@ -1,11 +1,12 @@
-import { PublicClient, parseAbi } from "viem";
+import { PublicClient, parseAbi, Abi } from "viem";
 import {
     BestRouteResult,
     ConvergeTrade,
     Hop,
     SplitPath,
 } from "../types/router";
-import { EmpsealRouterLiteV3 } from "../lite/EmpsealRouterLiteV3";
+import { getRouterABI, EmpsealRouterLiteV3 } from "../lite";
+
 
 // Simple Adapter ABI for querying
 const IAdapterAbi = parseAbi([
@@ -91,6 +92,8 @@ interface TokenInfo {
 export class SmartRouter {
     private publicClient: PublicClient;
     private routerAddress: `0x${string}`;
+    private chainId: number;
+    private routerABI: Abi;
     private adapters: `0x${string}`[] = [];
     private wnativeAddress: `0x${string}` | null = null;
     private trustedTokens: `0x${string}`[] = [];
@@ -104,9 +107,11 @@ export class SmartRouter {
     private granularity = 5;
     private maxHops = 4;
 
-    constructor(publicClient: PublicClient, routerAddress: `0x${string}`) {
+    constructor(publicClient: PublicClient, routerAddress: `0x${string}`, chainId: number = 369) {
         this.publicClient = publicClient;
         this.routerAddress = routerAddress;
+        this.chainId = chainId;
+        this.routerABI = getRouterABI(chainId) as Abi;
     }
 
     /**
@@ -117,7 +122,7 @@ export class SmartRouter {
             // Load adapters count
             const adapterCount = await this.publicClient.readContract({
                 address: this.routerAddress,
-                abi: EmpsealRouterLiteV3,
+                abi: this.routerABI,
                 functionName: "adaptersCount",
             });
 
@@ -125,7 +130,7 @@ export class SmartRouter {
             for (let i = 0; i < Number(adapterCount); i++) {
                 adapterCalls.push({
                     address: this.routerAddress,
-                    abi: EmpsealRouterLiteV3,
+                    abi: this.routerABI,
                     functionName: "ADAPTERS",
                     args: [i],
                 });
@@ -139,7 +144,7 @@ export class SmartRouter {
             // Load WNATIVE
             const wnative = await this.publicClient.readContract({
                 address: this.routerAddress,
-                abi: EmpsealRouterLiteV3,
+                abi: this.routerABI,
                 functionName: "WNATIVE",
             });
             this.wnativeAddress = wnative as `0x${string}`;
@@ -147,7 +152,7 @@ export class SmartRouter {
             // Load trusted tokens
             const trustedCount = await this.publicClient.readContract({
                 address: this.routerAddress,
-                abi: EmpsealRouterLiteV3,
+                abi: this.routerABI,
                 functionName: "trustedTokensCount",
             });
 
@@ -155,7 +160,7 @@ export class SmartRouter {
             for (let i = 0; i < Number(trustedCount); i++) {
                 trustedCalls.push({
                     address: this.routerAddress,
-                    abi: EmpsealRouterLiteV3,
+                    abi: this.routerABI,
                     functionName: "TRUSTED_TOKENS",
                     args: [i],
                 });
@@ -167,6 +172,12 @@ export class SmartRouter {
             this.trustedTokens = trustedResults.map(
                 (res) => res.result as `0x${string}`
             );
+            // console.log("[SmartRouter] Loaded from contract:", {
+            //     adaptersCount: this.adapters.length,
+            //     trustedTokensCount: this.trustedTokens.length,
+            //     trustedTokens: this.trustedTokens,
+            //     wnativeAddress: this.wnativeAddress,
+            // });
         } catch (error) {
             console.error("Failed to load router config:", error);
             throw error;
@@ -179,10 +190,20 @@ export class SmartRouter {
 
     setAdapters(adapters: `0x${string}`[]) {
         this.adapters = adapters;
+        // console.log("[SmartRouter] Adapters set:", adapters.length);
     }
 
     setTrustedTokens(tokens: `0x${string}`[]) {
         this.trustedTokens = tokens;
+    }
+
+    // Getter methods for debugging
+    getTrustedTokens(): `0x${string}`[] {
+        return this.trustedTokens;
+    }
+
+    getAdapters(): `0x${string}`[] {
+        return this.adapters;
     }
 
     setMaxAdapters(max: number) {
@@ -460,7 +481,30 @@ export class SmartRouter {
             args: [amountIn, tokenIn, tokenOut],
         }));
 
+        // console.log('[SmartRouter] getAllAdapterQuotes:', {
+        //     amountIn: amountIn.toString(),
+        //     tokenIn,
+        //     tokenOut,
+        //     adaptersCount: this.adapters.length,
+        //     adapters: this.adapters.slice(0, 3).join(', ') + '...',
+        // });
+
         const results = await this.publicClient.multicall({ contracts: calls });
+
+        // Log raw results for debugging
+        const successCount = results.filter(r => r.status === 'success').length;
+        const failureCount = results.filter(r => r.status === 'failure').length;
+        // console.log('[SmartRouter] Adapter query results:', {
+        //     total: results.length,
+        //     success: successCount,
+        //     failure: failureCount,
+        // });
+
+        // Log first failure for debugging
+        const firstFailure = results.find(r => r.status === 'failure');
+        if (firstFailure && firstFailure.status === 'failure') {
+            console.error('[SmartRouter] First adapter failure:', firstFailure.error);
+        }
 
         const quotes = results
             .map((res, i) => ({
@@ -469,6 +513,8 @@ export class SmartRouter {
             }))
             .filter((q) => q.amountOut > 0n)
             .sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1));
+
+        // console.log('[SmartRouter] Valid quotes with amountOut > 0:', quotes.length);
         return quotes;
     }
 
@@ -673,7 +719,20 @@ export class SmartRouter {
         tokenOut: `0x${string}`,
         fee: number = 0
     ): Promise<BestRouteResult | null> {
+        // console.log("[SmartRouter] getBestQuote called:", {
+        //     tokenIn,
+        //     tokenOut,
+        //     amountIn: amountIn.toString(),
+        //     adaptersCount: this.adapters.length,
+        //     trustedTokensCount: this.trustedTokens.length,
+        //     wnativeAddress: this.wnativeAddress,
+        // });
+
         if (!this.wnativeAddress || this.trustedTokens.length === 0) {
+            console.error("[SmartRouter] Router not initialized:", {
+                wnativeAddress: this.wnativeAddress,
+                trustedTokens: this.trustedTokens.length
+            });
             throw new Error("Router not initialized. Call loadAdapters() first.");
         }
 
@@ -771,13 +830,19 @@ export class SmartRouter {
             // ),
         ]);
 
-        // Log any rejected strategies for debugging
-        // const strategyNames = ['converge', 'split', 'multiHop', 'convergeMultiHop', 'hybrid', 'multiStageConvergeSplit'];
-        // [convergeResult, splitResult, multiHopResult, convergeMultiHopResult, hybridResult, multiStageConvergeSplitResult].forEach((result, i) => {
-        //   if (result.status === "rejected") {
-        //     console.error(`[SmartRouter] ${strategyNames[i]} REJECTED:`, result.reason);
-        //   }
-        // });
+        // Log all strategy results for debugging
+        const strategyNames = ['converge', 'split', 'multiHop', 'convergeMultiHop', 'hybrid'];
+        const allResults = [convergeResult, splitResult, multiHopResult, convergeMultiHopResult, hybridResult];
+        // console.log('[SmartRouter] Strategy results:');
+        allResults.forEach((result, i) => {
+            if (result.status === "rejected") {
+                console.error(`[SmartRouter] ${strategyNames[i]} REJECTED:`, result.reason);
+            } else if (result.value === null) {
+                // console.log(`[SmartRouter] ${strategyNames[i]}: null (no route found)`);
+            } else {
+                // console.log(`[SmartRouter] ${strategyNames[i]}: amountOut =`, result.value?.amountOut?.toString() || '0');
+            }
+        });
 
         const converge =
             convergeResult.status === "fulfilled" ? convergeResult.value : null;
@@ -796,7 +861,10 @@ export class SmartRouter {
         const candidates = [converge, split, multiHop, convergeMultiHop, hybrid /*, multiStageConvergeSplit */]
             .filter((c): c is BestRouteResult => c !== null && c.amountOut > 0n);
 
+        // console.log('[SmartRouter] Valid candidates count:', candidates.length);
+
         if (candidates.length === 0) {
+            console.warn('[SmartRouter] No valid routes found - all strategies returned null or 0 amountOut');
             return null;
         }
 
