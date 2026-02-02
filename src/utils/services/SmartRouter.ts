@@ -681,8 +681,8 @@ export class SmartRouter {
         // 3. Get best route (using wei)
         const route = await this.getBestQuote(
             amountInWei,
-            normalizedTokenIn,
-            normalizedTokenOut,
+            tokenIn,
+            tokenOut,
             fee
         );
 

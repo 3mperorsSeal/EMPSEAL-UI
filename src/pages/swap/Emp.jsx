@@ -41,6 +41,10 @@ import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
 import { WSONIC } from "../../utils/abis/wsonicABI";
+import { WETH } from "../../utils/abis/wethBaseABI";
+import { WSEI } from "../../utils/abis/wseiABI";
+import { WBERA } from "../../utils/abis/wberaABI";
+import { WRBTC } from "../../utils/abis/wrbtcABI";
 
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
@@ -53,6 +57,14 @@ const getWrappedTokenABI = (chainId) => {
       return WETHW;
     case 146:
       return WSONIC;
+    case 8453:
+      return WETH;
+    case 1329:
+      return WSEI;
+    case 80094:
+      return WBERA;
+    case 30:
+      return WRBTC;
     case 369:
     default:
       return WPLS;
@@ -148,29 +160,31 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   } = useChainConfig();
   // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
+  console.log("Chain symbol: ", symbol);
+
   const DEADLINE_MINUTES = 10;
   const deadline = Math.floor(Date.now() / 1000) + DEADLINE_MINUTES * 60;
 
   // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
   // console.log("selected best route: ", bestRoute);
-  // console.log("whitelisted tokens: ", whitelistedTokens);
+  console.log("whitelisted tokens: ", whitelistedTokens);
   useEffect(() => {
     let isCancelled = false; // Guard against stale async updates
 
     if (publicClient && routerAddress && chainId) {
-      // console.log("[SmartRouter] Initializing for chainId:", chainId, "router:", routerAddress);
+      console.log("[SmartRouter] Initializing for chainId:", chainId, "router:", routerAddress);
       const router = new SmartRouter(publicClient, routerAddress, chainId);
 
       router.loadAdapters().then(() => {
         // Check if this effect has been cancelled (chain changed during loading)
         if (isCancelled) {
-          // console.log("[SmartRouter] Skipping stale initialization for chainId:", chainId);
+          console.log("[SmartRouter] Skipping stale initialization for chainId:", chainId);
           return;
         }
 
-        // console.log("[SmartRouter] Loaded adapters from contract for chainId:", chainId);
-        // console.log("[SmartRouter] Adapters from config:", adapters?.length, "Trusted tokens from config:", whitelistedTokens?.length);
+        console.log("[SmartRouter] Loaded adapters from contract for chainId:", chainId);
+        console.log("[SmartRouter] Adapters from config:", adapters?.length, "Trusted tokens from config:", whitelistedTokens?.length);
 
         // Override with config adapters if available
         if (adapters && adapters.length > 0) {
@@ -180,7 +194,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
         // Override with config trusted tokens if available
         if (whitelistedTokens && whitelistedTokens.length > 0) {
-          // console.log("[SmartRouter] Setting trusted tokens from config:", whitelistedTokens.length);
+          console.log("[SmartRouter] Setting trusted tokens from config:", whitelistedTokens.length);
           const trustedTokenAddresses = whitelistedTokens.map(t => t.address);
           router.setTrustedTokens(trustedTokenAddresses);
         }
@@ -203,7 +217,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     // Cleanup function - runs when dependencies change before next effect
     return () => {
       isCancelled = true;
-      // console.log("[SmartRouter] Cleanup - cancelling previous initialization");
+      console.log("[SmartRouter] Cleanup - cancelling previous initialization");
     };
   }, [publicClient, routerAddress, adapters, whitelistedTokens, chainId]);
 
@@ -228,6 +242,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     }
   }, [chainId, selectedTokenA, selectedTokenB, stableTokens]);
 
+  console.log("protocol fee: ", protocolFee);
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
@@ -566,96 +581,94 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     setMinAmountOut("0");
   };
 
-  useEffect(() => {
-    const fetchConversionRateTokenA = async () => {
-      try {
-        // Check if required values are available
-        if (!currentChain?.name || !selectedTokenA?.address) {
-          console.error("Missing required data for token A price fetch");
-          return;
-        }
+  const fetchTokenPrice = async (tokenAddress) => {
+    if (!tokenAddress || !symbol) return null;
 
-        // Determine which address to use for the API call
-        const addressToFetch =
-          selectedTokenA?.address === EMPTY_ADDRESS && wethAddress
-            ? wethAddress?.toLowerCase()
-            : selectedTokenA?.address?.toLowerCase();
+    const addressToFetch =
+      tokenAddress === EMPTY_ADDRESS && wethAddress
+        ? wethAddress.toLowerCase()
+        : tokenAddress.toLowerCase();
 
-        const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
-        );
+    // 1. Try GeckoTerminal
+    try {
+      const response = await fetch(
+        `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
+      );
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
+      if (response.ok) {
         const data = await response.json();
-
-        // Validate and extract token prices
         const tokenPrices = data?.data?.attributes?.token_prices;
-        if (!tokenPrices) {
-          throw new Error("Token prices not found");
+        if (tokenPrices && tokenPrices[addressToFetch]) {
+          return tokenPrices[addressToFetch];
         }
+      }
+    } catch (error) {
+      console.warn("GeckoTerminal fetch failed, trying fallback:", error.message);
+    }
 
-        // Use the correct address to look up the price
-        const tokenPrice =
-          selectedTokenA?.address === EMPTY_ADDRESS
-            ? tokenPrices[wethAddress?.toLowerCase()]
-            : tokenPrices[addressToFetch];
+    // 2. Fallback to DexScreener
+    try {
+      const response = await fetch(
+        `https://api.dexscreener.com/latest/dex/tokens/${addressToFetch}`
+      );
 
-        setConversionRate(tokenPrice);
-      } catch (error) {
-        console.error("Error fetching token price:", error.message);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.pairs && data.pairs.length > 0) {
+          // Find first pair where this token is the base token
+          const pair = data.pairs.find(
+            (p) => p.baseToken.address.toLowerCase() === addressToFetch
+          );
+          if (pair && pair.priceUsd) {
+            return pair.priceUsd;
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Fallback fetch failed:", error.message);
+    }
+
+    return null;
+  };
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const fetchConversionRateTokenA = async () => {
+      if (!selectedTokenA?.address) return;
+
+      const price = await fetchTokenPrice(selectedTokenA.address);
+
+      if (!isCancelled && price) {
+        setConversionRate(price);
       }
     };
 
     fetchConversionRateTokenA();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [chainId, selectedTokenA?.address, wethAddress]);
 
   useEffect(() => {
+    let isCancelled = false;
+
     const fetchConversionRateTokenB = async () => {
-      try {
-        // Check if required values are available
-        if (!currentChain?.name || !selectedTokenB?.address) {
-          console.error("Missing required data for token B price fetch");
-          return;
-        }
+      if (!selectedTokenB?.address) return;
 
-        // Determine which address to use for the API call
-        const addressToFetch =
-          selectedTokenB?.address === EMPTY_ADDRESS && wethAddress
-            ? wethAddress?.toLowerCase()
-            : selectedTokenB?.address?.toLowerCase();
+      const price = await fetchTokenPrice(selectedTokenB.address);
 
-        const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        // Validate and extract token prices
-        const tokenPrices = data?.data?.attributes?.token_prices;
-        if (!tokenPrices) {
-          throw new Error("Token prices not found");
-        }
-
-        // Use the correct address to look up the price
-        const tokenPrice =
-          selectedTokenB?.address === EMPTY_ADDRESS
-            ? tokenPrices[wethAddress?.toLowerCase()]
-            : tokenPrices[addressToFetch];
-
-        setConversionRateTokenB(tokenPrice);
-      } catch (error) {
-        console.error("Error fetching token price:", error.message);
+      if (!isCancelled && price) {
+        setConversionRateTokenB(price);
       }
     };
 
     fetchConversionRateTokenB();
+
+    return () => {
+      isCancelled = true;
+    };
   }, [chainId, selectedTokenB?.address, wethAddress]);
 
   // Helper Functions
