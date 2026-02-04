@@ -5,6 +5,7 @@ import Graph from "./Graph";
 import X from "../../assets/images/x.svg";
 import L from "../../assets/images/linked.svg";
 import Y from "../../assets/images/youtube.svg";
+import BG from "../../assets/images/empx-bg.webp";
 import RoutingButton from "./RoutingButton";
 
 const Normal = () => {
@@ -21,6 +22,7 @@ const Normal = () => {
   return (
     <>
       <div className="pt-3 pb-10 relative">
+        <img src={BG} alt="Background" className="w-full h-full fixed top-0 left-0 -z-10" />
         <div className="mx-auto w-full px-4 flex flex-col justify-start xl:gap-4 gap-4 items-start 2xl:pt-1 py-2 md:flex-nowrap flex-wrap">
           <div className="w-full">
             <div className="md:hidden block">

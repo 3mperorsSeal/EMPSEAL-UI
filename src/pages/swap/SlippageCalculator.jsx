@@ -157,7 +157,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
           >
             <path
               d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-              stroke="#ffff"
+              stroke="#ff9900"
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -165,7 +165,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
           </svg>
         </button>
 
-        <h2 className="text-white text-xl font-bold mb-4 roboto text-center">
+        <h2 className="text-white text-xl font-bold mb-4 font-orbitron text-center">
           Slippage Settings
         </h2>
 
@@ -214,17 +214,17 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
         <div className="flex justify-center items-center mt-20 flex-col">
           <button
             onClick={handleResetSlippage}
-            className={`gtw relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-black md:text-2xl text-xl transition-all font-orbitron
+            className={`gtw relative w-full md:h-16 rounded-xl h-12 flex items-center justify-center font-roboto font-bold md:text-2xl text-xl transition-all font-orbitron
     ${error ? "opacity-100 cursor-not-allowed" : ""}`}
             style={{
-              background: "#FF9900",
-              border: "2px solid #FF9900",
+              background: "#F59216",
+              border: "2px solid #F59216",
               // clipPath:
               //   "polygon(0 0, 95% 0, 100% 30%, 100% 100%, 6% 100%, 0 60%)",
             }}
             disabled={!!error}
           >
-            <div className="w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div>
+            {/* <div className="w-full absolute md:top-4 top-1 md:-left-4 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl md:h-[58px] h-[50px]"></div> */}
             Reset Slippage
           </button>
 

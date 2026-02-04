@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import Logo from "../../assets/images/swap-emp.png";
+import Logo from "../../assets/images/empx-new.svg";
 import Sett from "../../assets/images/setting.svg";
 import Ar from "../../assets/images/reverse.svg";
 import Sellbox from "../../assets/images/sell-box.png";
@@ -175,7 +175,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     if (selectedTokenA && selectedTokenB) {
       const isStable = (address) =>
         stableTokens?.some(
-          (stable) => stable.toLowerCase() === address.toLowerCase()
+          (stable) => stable.toLowerCase() === address.toLowerCase(),
         ) || false;
 
       if (
@@ -303,7 +303,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           debouncedAmountIn,
           selectedTokenA.address,
           selectedTokenB.address,
-          protocolFee
+          protocolFee,
         );
 
         const route = quoteResult.route;
@@ -365,11 +365,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       }
 
       try {
-        const amountInBigInt = convertToBigInt(debouncedAmountIn, selectedTokenA.decimal);
+        const amountInBigInt = convertToBigInt(
+          debouncedAmountIn,
+          selectedTokenA.decimal,
+        );
         const allowance = await checkAllowance(
           chainId,
           selectedTokenA.address,
-          address
+          address,
         );
 
         setNeedsApproval(allowance.data < amountInBigInt);
@@ -392,7 +395,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       const allowance = await checkAllowance(
         chainId,
         selectedTokenA.address,
-        address
+        address,
       );
 
       if (allowance.data >= amountInBigInt) {
@@ -546,7 +549,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             : selectedTokenA?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`,
         );
 
         if (!response.ok) {
@@ -592,7 +595,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             : selectedTokenB?.address?.toLowerCase();
 
         const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`
+          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`,
         );
 
         if (!response.ok) {
@@ -650,7 +653,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     } else {
       console.error(
         "Missing or invalid conversion rate:",
-        conversionRateTokenB
+        conversionRateTokenB,
       );
     }
   }, [amountOut, conversionRateTokenB]);
@@ -671,7 +674,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
         const allowance = await checkAllowance(
           chainId,
           selectedTokenA.address,
-          address
+          address,
         );
         if (allowance.data < amountInBigInt) {
           toast.error("Please approve token first");
@@ -763,7 +766,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
       console.error("Swap failed", error);
 
-      if (message.includes("User rejected") || message.includes("User denied")) {
+      if (
+        message.includes("User rejected") ||
+        message.includes("User denied")
+      ) {
         toast.error("Transaction rejected by user");
         return;
       }
@@ -1063,10 +1069,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-        ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
-          parseFloat(usdValueTokenA)) *
-        100
-      ).toFixed(2)
+          ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
+            parseFloat(usdValueTokenA)) *
+          100
+        ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
@@ -1116,12 +1122,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           className={`w-full rounded-xl xl:py-10 pt-20 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-4 relative`}
         > */}
       <div
-        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
-          }`}
+        className={`w-full rounded-xl xl:pb-10 lg:pt-1 pt-20 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-4 relative ${
+          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-10 lg:pb-0 pb-80"
+        }`}
       >
         <div
-          className={`scales8 ${order ? `scales-top ${address ? "scales-top_limit" : ""}` : "top70"
-            }`}
+          className={`scales8 ${
+            order ? `scales-top ${address ? "scales-top_limit" : ""}` : "top70"
+          }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-6 px-3 pb-4">
             <h1 className="md:text-5xl text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
@@ -1136,35 +1144,22 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
               )}
             </h1>
           </div>
-          <div className="lg:max-w-[700px] md:max-w-[600px] mx-auto w-full flex gap-3 items-center md:justify-start justify-start md:flex-nowrap flex- my-6 lg:px-1 px-0">
+          <div className="lg:max-w-[700px] md:max-w-[600px] mx-auto w-full flex gap-3 items-center md:justify-start justify-start md:flex-nowrap flex- mt-6 mb-8 lg:px-1 px-0">
             <div
               onClick={() => {
                 setOrder(false);
                 setPadding("lg:h-[295px] h-full");
                 setSearchParams({}, { replace: true });
               }}
-              className={`${order
-                ? "border-white text-[#FF9900]"
-                : "border-[#FF9900] text-black bg-[#FF9900]"
-                } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
+              className={`${
+                order
+                  ? "border-white text-[#FF9900]"
+                  : "border-[#F59216] text-black bg-[#F59216]"
+              } cursor-pointer hoverswap transition-all leading-none md:w-[100px] w-[52px] md:h-[47px] h-7 flex justify-center items-center md:rounded-lg rounded-md border md:text-sm text-[7px] font-bold font-orbitron`}
             >
               SWAP
             </div>
             {/* bg-swap-grad */}
-            {/* bg-swap-grad */}
-            <div
-              onClick={() => {
-                setOrder(true);
-                setPadding("md:pb-[160px] pb-10");
-                setSearchParams({ tab: "limit" }, { replace: true });
-              }}
-              className={`${order
-                ? "border-[#FF9900] text-black bg-[#FF9900]"
-                : "border-white "
-                }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
-            >
-              LIMIT ORDER
-            </div>
             <div
               onClick={() => setSlippageVisible(true)}
               className="shrink-0 md:w-[47px] md:h-[47px] w-7 h-7 border border-white rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
@@ -1175,6 +1170,21 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                 className="md:w-[26px] w-[14px] group-hover:animate-[spin_3s_linear_infinite]"
               />
             </div>
+            {/* bg-swap-grad */}
+            <div
+              onClick={() => {
+                setOrder(true);
+                setPadding("md:pb-[160px] pb-10");
+                setSearchParams({ tab: "limit" }, { replace: true });
+              }}
+              className={`${
+                order
+                  ? "border-[#F59216] text-black bg-[#F59216]"
+                  : "border-white "
+              }  md:w-[154px] w-[79px] md:h-[47px] leading-none h-7 flex justify-center items-center md:rounded-lg rounded-md border text-[#FF9900] md:text-sm text-[7px] font-bold font-orbitron cursor-pointer hoverswap transition-all`}
+            >
+              LIMIT ORDER
+            </div>
           </div>
           {/* Swap */}
           {!order ? (
@@ -1182,39 +1192,42 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
               <div className="relative bg_swap_box">
                 {/* <img className="bg-sell w-full" src={Sellbox} alt="sellbox" /> */}
                 <div className="flex justify-between gap-3 items-center">
-                  <div className="font-orbitron text-dark-400 md:text-2xl text-xs font-semibold leading-normal">
+                  <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
                     You Sell
                   </div>
-                  <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
-                    <span className="font-extrabold font-orbitron leading-normal">
+                  <div className="md:text-xl text-[10px] font-orbitron">
+                    <span className="font-semibold leading-normal text-[#FF9900]">
                       BAL
                     </span>
-                    <span className="font-bold font-orbitron leading-normal">
+                    <span className="font-semibold leading-normal text-[#FF9900]">
                       {" "}
                       :{" "}
                     </span>
-                    <span className="rigamesh leading-normal">
+                    <span className="text-white leading-normal">
                       {!selectedTokenA
                         ? "0.00"
                         : isLoading
-                        ? "Loading.."
-                        : selectedTokenA.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedBalance)}`
-                          : `${tokenBalance
-                            ? formatNumber(
-                              parseFloat(tokenBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
-                          }`}
+                          ? "Loading.."
+                          : selectedTokenA.address === EMPTY_ADDRESS
+                            ? `${formatNumber(formattedBalance)}`
+                            : `${
+                                tokenBalance
+                                  ? formatNumber(
+                                      parseFloat(
+                                        tokenBalance.formatted,
+                                      ).toFixed(6),
+                                    )
+                                  : "0.00"
+                              }`}
                     </span>
                   </div>
                 </div>
-                <div className="flex w-full mt-2">
-                  <div className="md:w-[25%] w-[40%]">
-                    <div className="flex justify-between gap-4 items-center cursor-pointer">
-                      <div className="flex gap-2 items-center md:mt-5 mt-6">
+                <div className="flex w-full mt-6 gap-10">
+                  <div className="lg:md:max-w-[200px] w-full">
+                    <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
+                      <div className="flex gap-2 items-center w-full">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-4 gap-1 items-center bg-black md:border-2 border border-white md:rounded-xl rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 margin_left lg:w-[280px] md:w-[220px] w-[125px] justify-center">
+                        <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[10px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full">
                           {/* {selectedTokenA &&
                           selectedTokenA.image &&
                           selectedTokenA.ticker ? (
@@ -1226,21 +1239,25 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               setSelectedPercentage("");
                               setAmountIn("");
                             }}
-                            className="flex items-center md:gap-4 gap-1"
+                            className="flex items-center md:gap-4 gap-1 w-full"
                           >
                             {selectedTokenA ? (
                               <>
                                 <img
                                   className="md:w-9 md:h-9 w-4 h-4"
-                                  src={selectedTokenA.image || selectedTokenA.logoURI}
+                                  src={
+                                    selectedTokenA.image ||
+                                    selectedTokenA.logoURI
+                                  }
                                   alt={selectedTokenA.name}
                                 />
-                                <div className="text-[#FF9900] lg:text-3xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
-                                  {selectedTokenA.ticker || selectedTokenA.symbol}
+                                <div className="text-white lg:text-xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
+                                  {selectedTokenA.ticker ||
+                                    selectedTokenA.symbol}
                                 </div>
                               </>
                             ) : (
-                              <span className="text-[#FF9900] font-bold font-orbitron md:text-3xl text-sm">
+                              <span className="text-white font-extrabold font-orbitron md:text-xl text-sm capitalize">
                                 Select token
                               </span>
                             )}
@@ -1253,60 +1270,27 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               className="rounded-md transition-colorss"
                             >
                               {copySuccess &&
-                                activeTokenAddress === selectedTokenA.address ? (
+                              activeTokenAddress === selectedTokenA.address ? (
                                 <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                               ) : (
                                 <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-white" />
                               )}
                             </button>
                           )}
-                          {/* </>
-                          ) : (
-                            <div
-                              onClick={() => {
-                                setIsSelectingTokenA(true);
-                                setTokenVisible(true);
-                              }}
-                              className="flex items-center justify-center w-full"
-                            >
-                              <span className="absolute left-0 right-0 mx-auto flex items-center justify-center !text-[#FF9900] font-bold font-orbitron md:text-3xl text-base">
-                                Select token
-                              </span>
-                            </div>
-                          )} */}
                         </div>
                       </div>
                     </div>
                   </div>
-
-                  <div className="md:w-[75%] w-[60%]">
-                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 md:ml-0 ml-[-40px] justify-end">
-                      <span></span>
-                      {[25, 50, 75, 100].map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`py-1 border bg-black text-white flex justify-center items-center rounded-[10px] md:text-[12px] text-[7px] font-extrabold font-orbitron md:w-[70px] w-11 px-2
-            ${selectedPercentage === value
-                              ? "!text-black !bg-[#FFE6C0] border-[#FFE6C0]"
-                              : "bg-[#FFE7C3] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-                            }`}
-                          onClick={() => handlePercentageChange(value)}
-                          disabled={isLoading}
-                        >
-                          {value}%
-                        </button>
-                      ))}
-                    </div>
+                  <div className="w-full h-[53px]">
                     {(() => {
                       const inputLength =
                         formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                       const defaultFontSize =
                         window.innerWidth >= 1024
-                          ? 48
+                          ? 20
                           : window.innerWidth >= 768
-                            ? 40
-                            : 32;
+                            ? 20
+                            : 20;
                       // const dynamicFontSize = Math.max(
                       //   12,
                       //   defaultFontSize - inputLength * 1.5
@@ -1316,12 +1300,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
                       const excessDigits = Math.max(
                         0,
-                        inputLength - FREE_DIGITS
+                        inputLength - FREE_DIGITS,
                       );
 
                       const dynamicFontSize = Math.max(
                         10,
-                        defaultFontSize - excessDigits * SHRINK_RATE
+                        defaultFontSize - excessDigits * SHRINK_RATE,
                       );
                       return (
                         <input
@@ -1333,7 +1317,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                           }
                           value={formatNumber(amountIn)}
                           onChange={(e) => handleInputChange(e.target.value)}
-                          className="text-[#000000] text-sh py-2 text-end w-full outline-none border-none bg-transparent token_input rigamesh placeholder-black transition-all duration-200 ease-in-out"
+                          className="font-orbitron font-extrabold text-white bg-[#352E26] rounded-[10px] pr-10 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out"
                           style={{
                             fontSize: `${dynamicFontSize}px`,
                           }}
@@ -1342,7 +1326,31 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                     })()}
                   </div>
                 </div>
-                <div className="text-right relative text-black md:text-base text-[10px] usd-spacing truncate rigamesh text-sh1 flex justify-end gap-1">
+                <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
+                  <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
+                    Market Price: 52.6489
+                  </p>
+                  <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 justify-end">
+                    <span></span>
+                    {[25, 50, 75, 100].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[7px] font-medium font-orbitron md:w-[70px] w-11 px-2
+            ${
+              selectedPercentage === value
+                ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+            }`}
+                        onClick={() => handlePercentageChange(value)}
+                        disabled={isLoading}
+                      >
+                        {value}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div className="text-right relative text-white md:text-base text-[10px] usd-spacing truncate font-orbitron mt-2 text-sh1 flex justify-end gap-1">
                   <div className="relative inline-block">
                     <InfoIcon
                       size={18}
@@ -1392,16 +1400,18 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
               <div className="relative bg_swap_box_black">
                 {/* <img className="bg-sell w-full" src={Buybox} alt="Buybox" /> */}
                 <div className="flex justify-between gap-3 items-center">
-                  <div className="font-orbitron text-white md:text-2xl text-xs font-semibold leading-normal">
+                  <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
                     You Buy
                   </div>
-                  <div className="text-center absolute -top-8 md:right-0 right-5 gap-3 2xl:px-6 lg:px-4 lg:py-3 rounded-lg mt-2 border border-white bg-[#FFE6C0] md:text-sm text-[10px] px-2 py-2">
-                    <span className="font-extrabold leading-normal">BAL</span>
-                    <span className="font-bold font-orbitron leading-normal">
+                  <div className="md:text-xl text-[10px] font-orbitron">
+                    <span className="font-semibold leading-normal text-[#FF9900]">
+                      BAL
+                    </span>{" "}
+                    <span className="font-semibold leading-normal text-[#FF9900]">
                       {" "}
                       :{" "}
                     </span>
-                    <span className="rigamesh leading-normal">
+                    <span className="text-white leading-normal">
                       {/* {isLoading
                         ? "Loading.."
                         : selectedTokenA.address === EMPTY_ADDRESS
@@ -1416,25 +1426,28 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                       {!selectedTokenB
                         ? "0.00"
                         : isLoading
-                        ? "Loading.."
-                        : selectedTokenB.address === EMPTY_ADDRESS
-                          ? `${formatNumber(formattedChainBalanceTokenB)}`
-                          : `${tokenBBalance
-                            ? formatNumber(
-                              parseFloat(tokenBBalance.formatted).toFixed(6)
-                            )
-                            : "0.00"
-                          }`}
+                          ? "Loading.."
+                          : selectedTokenB.address === EMPTY_ADDRESS
+                            ? `${formatNumber(formattedChainBalanceTokenB)}`
+                            : `${
+                                tokenBBalance
+                                  ? formatNumber(
+                                      parseFloat(
+                                        tokenBBalance.formatted,
+                                      ).toFixed(6),
+                                    )
+                                  : "0.00"
+                              }`}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex w-full mt-2">
-                  <div className="md:w-[25%] w-[40%]">
-                    <div className="flex justify-between gap-4 items-center cursor-pointer">
-                      <div className="flex gap-2 items-center md:mt-5 mt-6">
+                <div className="flex w-full mt-6 gap-10">
+                  <div className="lg:md:max-w-[200px] w-full">
+                    <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
+                      <div className="flex gap-2 items-center w-full">
                         {/* md:w-[220px] w-[160px] */}
-                        <div className="flex md:gap-4 gap-1 items-center justify-center bg-[#FFE6C0] md:border-2 border border-white rounded-lg md:px-6 px-3 md:py-[18px] py-2.5 lg:w-[280px] md:w-[220px] w-[125px] margin_left">
+                        <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[10px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full">
                           <div
                             onClick={() => {
                               setIsSelectingTokenA(false);
@@ -1446,15 +1459,19 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               <>
                                 <img
                                   className="md:w-9 md:h-9 w-4 h-4"
-                                  src={selectedTokenB.image || selectedTokenB.logoURI}
+                                  src={
+                                    selectedTokenB.image ||
+                                    selectedTokenB.logoURI
+                                  }
                                   alt={selectedTokenB.name}
                                 />
-                                <div className="text-dark lg:text-3xl text-sm font-bold font-orbitron leading-normal appearance-none outline-none">
-                                  {selectedTokenB.ticker || selectedTokenB.symbol}
+                                <div className="text-white lg:text-xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none">
+                                  {selectedTokenB.ticker ||
+                                    selectedTokenB.symbol}
                                 </div>
                               </>
                             ) : (
-                              <span className="text-dark font-bold font-orbitron md:text-3xl text-sm">
+                              <span className="text-white font-extrabold font-orbitron md:text-xl text-sm capitalize">
                                 Select token
                               </span>
                             )}
@@ -1467,7 +1484,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               className="rounded-md transition-colors"
                             >
                               {copySuccess &&
-                                activeTokenAddress === selectedTokenB.address ? (
+                              activeTokenAddress === selectedTokenB.address ? (
                                 <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                               ) : (
                                 <Copy className="md:w-4 md:h-4 w-3 h-3 text-black hover:text-black" />
@@ -1478,27 +1495,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                       </div>
                     </div>
                   </div>
-                  <div className="md:w-[75%] w-[60%]">
-                    {/*  */}
-                    <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 mb-2 md:ml-0 ml-[-40px] justify-end">
-                      <span></span>
-                      {[25, 50, 75, 100].map((value) => (
-                        <button
-                          key={value}
-                          type="button"
-                          className={`py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[12px] text-[7px] md:w-[70px] w-11 font-extrabold font-orbitron px-2
-            ${selectedPercentage === value
-                              ? " text-white bg-black"
-                              : "bg-[#FF9900] text-[#040404] hover:border-[#FF9900] hover:bg-transparent hover:text-[#FF9900]"
-                            }`}
-                          onClick={() => handlePercentageChange(value)}
-                          disabled={isLoading}
-                        >
-                          {value}%
-                        </button>
-                      ))}
-                    </div>
-                    {/*  */}
+                  <div className="w-full h-[53px]">
                     {(() => {
                       const numericValue = Number(amountOut);
 
@@ -1511,10 +1508,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
                       const defaultFontSize =
                         window.innerWidth >= 1024
-                          ? 48
+                          ? 20
                           : window.innerWidth >= 768
-                            ? 40
-                            : 32;
+                            ? 20
+                            : 20;
 
                       // const dynamicFontSize = Math.max(
                       //   12,
@@ -1525,18 +1522,18 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
                       const excessDigits = Math.max(
                         0,
-                        outputLength - FREE_DIGITS
+                        outputLength - FREE_DIGITS,
                       );
 
                       const dynamicFontSize = Math.max(
                         10,
-                        defaultFontSize - excessDigits * SHRINK_RATE
+                        defaultFontSize - excessDigits * SHRINK_RATE,
                       );
 
                       return (
                         <>
                           {isQuoting ? (
-                            <span className="text-white animate-pulse text-right w-full flex justify-end">
+                            <span className="font-orbitron text-white animate-pulse text-right w-full flex justify-end">
                               Calculating...
                             </span>
                           ) : (
@@ -1546,7 +1543,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               value={formattedValue}
                               onChange={handleOutputChange}
                               readOnly
-                              className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input rigamesh placeholder-white transition-all duration-200 ease-in-out"
+                              className="font-orbitron font-extrabold text-white bg-[#352E26] rounded-[10px] pr-10 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out"
                               style={{
                                 fontSize: `${dynamicFontSize}px`,
                               }}
@@ -1557,13 +1554,36 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                     })()}
                   </div>
                 </div>
-
+                <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
+                  <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
+                    Market Price: 52.6489
+                  </p>
+                  <div className="text-zinc-200 text-[10px] font-normal roboto leading-normal flex md:gap-2 gap-1 justify-end">
+                    <span></span>
+                    {[25, 50, 75, 100].map((value) => (
+                      <button
+                        key={value}
+                        type="button"
+                        className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[7px] font-medium font-orbitron md:w-[70px] w-11 px-2
+            ${
+              selectedPercentage === value
+                ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+            }`}
+                        onClick={() => handlePercentageChange(value)}
+                        disabled={isLoading}
+                      >
+                        {value}%
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 {/* <div className="text-right text-white text-sm -mt-[0px] pe-8 rigamesh truncate text-sh1">
                   {conversionRateTokenB
                     ? `$${formatNumber(usdValueTokenB)}`
                     : "Fetching Rate..."}
                 </div> */}
-                <div className="text-right text-white usd-spacing md:text-base text-[10px] rigamesh truncate text-sh1 flex justify-end gap-1 relative">
+                <div className="text-right relative text-white md:text-base text-[10px] usd-spacing truncate font-orbitron mt-2 text-sh1 flex justify-end gap-1">
                   <div className="relative inline-block">
                     <InfoIcon
                       size={18}
@@ -1596,10 +1616,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                 </div>
               </div>
               <div
-                className={`relative flex justify-center flex-row md:mt-16 mt-11 xl:pt-0 ${order
-                  ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                  : "pt-0 top-0"
-                  }`}
+                className={`relative flex justify-center flex-row md:mt-14 mt-11 xl:pt-0 ${
+                  order
+                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                    : "pt-0 top-0"
+                }`}
               >
                 <button
                   onClick={() => {
@@ -1609,12 +1630,13 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                     }
                   }}
                   disabled={isInsufficientBalance()}
-                  className={`gtw relative z-50 md:w-[360px] w-[200px] md:h-[68px] h-11 bg-[#FF9900] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${isInsufficientBalance()
-                    ? "opacity-50 cursor-not-allowed"
-                    : " "
-                    } font-orbitron lg:text-3xl text-base font-black`}
+                  className={`gtw relative z-50 w-full uppercase md:h-[68px] h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${
+                    isInsufficientBalance()
+                      ? "opacity-50 cursor-not-allowed"
+                      : " "
+                  } font-orbitron lg:text-2xl text-base font-extrabold`}
                 >
-                  <div className="group-hover:opacity-100 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div>
+                  {/* <div className="group-hover:opacity-100 w-full absolute md:top-4 top-2 md:-left-5 -left-3 z-[-1] bg-transparent border-2 border-[#FF9900] md:rounded-[10px] rounded-md md:h-[68px] h-11"></div> */}
                   {/* <img
                     className="absolute swap-button"
                     src={Swapbutton}
@@ -1767,7 +1789,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
             tokenB={selectedTokenB}
-            refresh={() => { }}
+            refresh={() => {}}
             confirm={confirmSwap}
             handleApprove={handleApprove}
             needsApproval={needsApproval}
@@ -1793,43 +1815,44 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
       </div>
       {selectedTokenA && selectedTokenB && (
         <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
-        <h6 className="font-orbitron md:text-sm text-[10px]">
-          <span>
-            <span className="font-extrabold">Min Received</span> :{" "}
-            <span className="rigamesh truncate">
-              {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
+          <h6 className="font-orbitron md:text-sm text-[10px]">
+            <span>
+              <span className="font-extrabold">Min Received</span> :{" "}
+              <span className="rigamesh truncate">
+                {formatNumber(parseFloat(minToReceiveAfterFee).toFixed(6))}{" "}
+              </span>
+              <span className="font-extrabold">{selectedTokenB.ticker}</span>
             </span>
-            <span className="font-extrabold">{selectedTokenB.ticker}</span>
-          </span>
-        </h6>
-        <h6 className="font-orbitron md:text-sm text-[10px] py-3">
-          <span>
-            <span className="font-extrabold">Rate :</span>{" "}
-            <span className="font-bold">1</span>{" "}
-            <span className="font-extrabold">
-              {isRateReversed ? selectedTokenB.ticker : selectedTokenA.ticker} ={" "}
+          </h6>
+          <h6 className="font-orbitron md:text-sm text-[10px] py-3">
+            <span>
+              <span className="font-extrabold">Rate :</span>{" "}
+              <span className="font-bold">1</span>{" "}
+              <span className="font-extrabold">
+                {isRateReversed ? selectedTokenB.ticker : selectedTokenA.ticker}{" "}
+                ={" "}
+              </span>
+              <span className="rigamesh truncate">{getRateDisplay()}</span>{" "}
+              <span className="font-extrabold">
+                {isRateReversed ? selectedTokenA.ticker : selectedTokenB.ticker}
+              </span>
             </span>
-            <span className="rigamesh truncate">{getRateDisplay()}</span>{" "}
-            <span className="font-extrabold">
-              {isRateReversed ? selectedTokenA.ticker : selectedTokenB.ticker}
+          </h6>
+          <h6 className="font-orbitron md:text-sm text-[10px]">
+            <span>
+              <span className="font-extrabold">Price Impact:</span>{" "}
+              <span
+                className={`rigamesh truncate ${getPriceImpactColor(
+                  priceImpact,
+                )}`}
+              >
+                {" "}
+                {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
+                {priceImpact} %
+              </span>
             </span>
-          </span>
-        </h6>
-        <h6 className="font-orbitron md:text-sm text-[10px]">
-          <span>
-            <span className="font-extrabold">Price Impact:</span>{" "}
-            <span
-              className={`rigamesh truncate ${getPriceImpactColor(
-                priceImpact
-              )}`}
-            >
-              {" "}
-              {/* {((amountOut / 1000) * 0.01).toFixed(3)} % */}
-              {priceImpact} %
-            </span>
-          </span>
-        </h6>
-      </div>
+          </h6>
+        </div>
       )}
     </>
   );

@@ -7,11 +7,7 @@ import { useBalance } from "wagmi";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import Web3 from "web3";
 
-const TokenListItem = ({
-  token,
-  walletAddress,
-  onClick,
-}) => {
+const TokenListItem = ({ token, walletAddress, onClick }) => {
   const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
     address: walletAddress,
     token:
@@ -42,16 +38,16 @@ const TokenListItem = ({
           />
         </div>
         <div>
-          <div className="text-white font-orbitron font-black md:text-lg text-sm roboto leading-relaxed tracking-wide">
+          <div className="text-[#FFD484] font-orbitron font-black md:text-lg text-sm font-orbitron leading-relaxed tracking-wide">
             {token.name}
           </div>
-          <div className="text-white text-xs roboto">
+          <div className="text-white text-xs font-orbitron">
             {token.symbol || token.ticker}
           </div>
         </div>
       </div>
       <div className="text-right">
-        <div className="text-[#FF9900] md:text-lg text-sm font-bold roboto tracking-wide">
+        <div className="text-[#FFD484] md:text-lg text-sm font-bold font-orbitron tracking-wide">
           {balanceLoading ? "Loading..." : formattedBalance}
         </div>
       </div>
@@ -109,7 +105,7 @@ const Token = ({ onClose, onSelect }) => {
         (token.ticker &&
           token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (token.address &&
-          token.address.toLowerCase().includes(searchQuery.toLowerCase()))
+          token.address.toLowerCase().includes(searchQuery.toLowerCase())),
     )
     .sort((a, b) => a.name.localeCompare(b.name));
 
@@ -196,7 +192,7 @@ const Token = ({ onClose, onSelect }) => {
     try {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        (token) => token.address.toLowerCase() === address.toLowerCase()
+        (token) => token.address.toLowerCase() === address.toLowerCase(),
       );
 
       if (existingToken) {
@@ -225,7 +221,7 @@ const Token = ({ onClose, onSelect }) => {
     if (web3.utils.isAddress(searchQuery)) {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        (token) => token.address.toLowerCase() === searchQuery.toLowerCase()
+        (token) => token.address.toLowerCase() === searchQuery.toLowerCase(),
       );
 
       if (existingToken) {
@@ -285,7 +281,7 @@ const Token = ({ onClose, onSelect }) => {
           {/* <img src={Clip} /> */}
           <svg
             onClick={onClose}
-            className="absolute cursor-pointer md:right-14 right-7 top-12 tilt"
+            className="absolute cursor-pointer md:right-14 right-7 top-11 tilt"
             width={18}
             height={19}
             viewBox="0 0 18 19"
@@ -294,15 +290,14 @@ const Token = ({ onClose, onSelect }) => {
           >
             <path
               d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-              stroke="#ffff"
+              stroke="#ff9900"
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-
           <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Select a token
             </p>
           </div>
@@ -310,7 +305,7 @@ const Token = ({ onClose, onSelect }) => {
             {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer roboto md:rounded-2xl rounded-lg border border-[#FF9900] md:p-[14px] p-2"
+                className="flex flex-row items-center cursor-pointer roboto md:rounded-2xl rounded-lg small_box md:p-[14px] p-2"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
                 {/* bg-rec */}
@@ -333,37 +328,47 @@ const Token = ({ onClose, onSelect }) => {
             ))}
           </div>
           <div className="flex gap-4 items-center justify-center cursor-pointer mt-1 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Search token
             </p>
           </div>
           {/* bg-search */}
-          <div className="mt-3 relative px-[10px] h-[54px] w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
-            <input
-              type="text"
-              placeholder="Search token name or paste address"
-              className="bg-transparent rounded-[4.83px] h-[43px] text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
+          <div className="mt-3 relative h-[55px] w-full flex gap-2 items-center border border-[#382B19] rounded-xl bg-[#382B19] ">
             <button
-              className="ms-4"
+              className="ml-3"
               onClick={() => handleTokenLookup(searchQuery)}
             >
               <svg
                 className="flex flex-shrink-0 cursor-pointer"
-                width={24}
-                height={24}
-                viewBox="0 0 24 24"
+                width={26}
+                height={26}
+                viewBox="0 0 26 26"
                 fill="none"
                 xmlns="http://www.w3.org/2000/svg"
               >
                 <path
-                  d="M18.8632 19.0535L13.3482 13.5375C10.8947 15.2818 7.51414 14.8552 5.57102 12.556C3.62792 10.257 3.7706 6.85254 5.89925 4.72413C8.02735 2.59479 11.4322 2.45149 13.7317 4.3945C16.0311 6.3375 16.458 9.71849 14.7137 12.1721L20.2287 17.688L18.8642 19.0526L18.8632 19.0535ZM9.99282 4.95765C8.16287 4.95724 6.58411 6.24178 6.21237 8.03356C5.84064 9.82534 6.7781 11.6319 8.45718 12.3596C10.1363 13.0871 12.0955 12.5358 13.1486 11.0392C14.2018 9.54268 14.0594 7.51235 12.8078 6.17743L13.3916 6.75644L12.7335 6.10023L12.7219 6.08865C11.9999 5.36217 11.0171 4.95489 9.99282 4.95765Z"
-                  fill="#5C5C5C"
+                  d="M11.9167 20.5833C16.7031 20.5833 20.5833 16.7031 20.5833 11.9167C20.5833 7.1302 16.7031 3.25 11.9167 3.25C7.1302 3.25 3.25 7.1302 3.25 11.9167C3.25 16.7031 7.1302 20.5833 11.9167 20.5833Z"
+                  stroke="#FF9900"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M22.7496 22.7501L18.0371 18.0376"
+                  stroke="#FF9900"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
                 />
               </svg>
             </button>
+            <input
+              type="text"
+              placeholder="Search token name or paste address"
+              className="bg-[#382B19] rounded-lg h-full text-[#FF9900] w-full px-3 outline-none border-none placeholder:text-[#FF9900] text-sm font-normal roboto leading-tight tracking-wide"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
           </div>
 
           {/* <hr className="h-px my-8 bg-gray-200 border-[#3b3c4e] h-hr" /> */}
