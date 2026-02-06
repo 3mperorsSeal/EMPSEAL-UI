@@ -139,7 +139,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     chainId: 30,
     name: 'Rootstock',
     symbol: "rootstock",
-    routerAddress: '0xe40c877e06095417557C3bB874F4e2e8D08f11Fd',
+    routerAddress: '0x4482933CfbD06Efe305Ab8Fd2c077ebfD8bFF818',
     wethAddress: '0x542fda317318ebf1d3deaf76e0b632741a7e677d',
     priceApi: {
       baseUrl: 'https://api.geckoterminal.com/api/v2',
