@@ -10,6 +10,7 @@ import Avalanche from "../../../assets/icons/avalanche.svg";
 import Polygon from "../../../assets/icons/polygon.svg";
 import OP from "../../../assets/icons/op.svg";
 import Base from "../../../assets/icons/base.svg";
+import Berachain from "../../../assets/icons/berachain.svg";
 
 const ChainPopup = ({
   setShowChainPopup,
@@ -37,6 +38,7 @@ const ChainPopup = ({
     "cronos mainnet":
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK7JCGpwklwB4QMz4g7NoNTd1Epuyi48zgS91loU1-b2RHCK5W",
     base: Base, // local import
+    berachain: Berachain, // local import
     blast:
       "https://cdn.prod.website-files.com/65a6baa1a3f8ed336f415cb4/65a6c461965bf28af43b80bc_Logo%20Yellow%20on%20Transparent%20Background.png",
     "manta pacific mainnet":

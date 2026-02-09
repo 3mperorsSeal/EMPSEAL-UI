@@ -113,6 +113,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   const [localBestRoute, setLocalBestRoute] = useState(null);
 
   const [isQuoting, setIsQuoting] = useState(false);
+  const [isLoadingBetterQuote, setIsLoadingBetterQuote] = useState(false);
   const [protocolFee, setProtocolFee] = useState(28);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
@@ -160,7 +161,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   } = useChainConfig();
   // const [isDirectRoute, setIsDirectRoute] = useState(false);
 
-  console.log("Chain symbol: ", symbol);
+  // console.log("Chain symbol: ", symbol);
 
   const DEADLINE_MINUTES = 10;
   const deadline = Math.floor(Date.now() / 1000) + DEADLINE_MINUTES * 60;
@@ -168,23 +169,23 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
 
   // console.log("selected best route: ", bestRoute);
-  console.log("whitelisted tokens: ", whitelistedTokens);
+  // console.log("whitelisted tokens: ", whitelistedTokens);
   useEffect(() => {
     let isCancelled = false; // Guard against stale async updates
 
     if (publicClient && routerAddress && chainId) {
-      console.log("[SmartRouter] Initializing for chainId:", chainId, "router:", routerAddress);
+      // console.log("[SmartRouter] Initializing for chainId:", chainId, "router:", routerAddress);
       const router = new SmartRouter(publicClient, routerAddress, chainId);
 
       router.loadAdapters().then(() => {
         // Check if this effect has been cancelled (chain changed during loading)
         if (isCancelled) {
-          console.log("[SmartRouter] Skipping stale initialization for chainId:", chainId);
+          // console.log("[SmartRouter] Skipping stale initialization for chainId:", chainId);
           return;
         }
 
-        console.log("[SmartRouter] Loaded adapters from contract for chainId:", chainId);
-        console.log("[SmartRouter] Adapters from config:", adapters?.length, "Trusted tokens from config:", whitelistedTokens?.length);
+        // console.log("[SmartRouter] Loaded adapters from contract for chainId:", chainId);
+        // console.log("[SmartRouter] Adapters from config:", adapters?.length, "Trusted tokens from config:", whitelistedTokens?.length);
 
         // Override with config adapters if available
         if (adapters && adapters.length > 0) {
@@ -194,7 +195,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
 
         // Override with config trusted tokens if available
         if (whitelistedTokens && whitelistedTokens.length > 0) {
-          console.log("[SmartRouter] Setting trusted tokens from config:", whitelistedTokens.length);
+          // console.log("[SmartRouter] Setting trusted tokens from config:", whitelistedTokens.length);
           const trustedTokenAddresses = whitelistedTokens.map(t => t.address);
           router.setTrustedTokens(trustedTokenAddresses);
         }
@@ -217,7 +218,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     // Cleanup function - runs when dependencies change before next effect
     return () => {
       isCancelled = true;
-      console.log("[SmartRouter] Cleanup - cancelling previous initialization");
+      // console.log("[SmartRouter] Cleanup - cancelling previous initialization");
     };
   }, [publicClient, routerAddress, adapters, whitelistedTokens, chainId]);
 
@@ -242,7 +243,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
     }
   }, [chainId, selectedTokenA, selectedTokenB, stableTokens]);
 
-  console.log("protocol fee: ", protocolFee);
+  // console.log("protocol fee: ", protocolFee);
   const handleCloseSuccessModal = () => {
     setSwapStatus("IDLE"); // Reset status when closing modal
   };
@@ -329,6 +330,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
   // }, [smartRouter, amountIn, selectedTokenA, selectedTokenB]);
 
   // Quote fetching with debounce and request tracking to prevent stale quotes
+  // Uses progressive quoting: shows Phase 1 quote early, updates if Phase 2 finds better
   useEffect(() => {
     const getQuote = async () => {
       // Increment request ID to track this specific request
@@ -344,26 +346,23 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
         setAmountOut("0");
         updateRoute(null);
         setRoute([]);
+        setIsLoadingBetterQuote(false);
         return;
       }
       setIsQuoting(true);
+      setIsLoadingBetterQuote(false);
       setAmountOut("0");
 
-      try {
-        const quoteResult = await smartRouter.getBestQuoteFromUser(
-          debouncedAmountIn,
-          selectedTokenA.address,
-          selectedTokenB.address,
-          protocolFee
-        );
+      // Helper to process route and update UI
+      const processQuoteResult = (quoteResult, isFinal) => {
+        // Check if this request is still current
+        if (currentRequestId !== quoteRequestIdRef.current) {
+          return; // Stale request, ignore
+        }
 
         const route = quoteResult.route;
-
-        // If this request is outdated, ignore the result
-        // Mark this request as the latest completed
         lastCompletedIdRef.current = currentRequestId;
-
-        updateRoute(route); // Use updateRoute instead of setBestRoute
+        updateRoute(route);
 
         // Handle route response
         if (route) {
@@ -378,7 +377,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             (route.type === "SPLIT" || route.type === "NOSPLIT") &&
             route.payload.length > 0
           ) {
-            // NOSPLIT is returned by Multi-hop, Chained Intermediate, Converge Multi-hop strategies
             path = route.payload[0].path;
           } else if (route.type === "WRAP" || route.type === "UNWRAP") {
             path = [route.payload.tokenIn, route.payload.tokenOut];
@@ -389,13 +387,37 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
           setAmountOut("0");
           setRoute([]);
         }
+
+        // Update loading states
+        if (!isFinal) {
+          // Phase 1 complete, still searching for better routes
+          setIsQuoting(false);
+          setIsLoadingBetterQuote(true);
+        } else {
+          // All phases complete
+          setIsQuoting(false);
+          setIsLoadingBetterQuote(false);
+        }
+      };
+
+      try {
+        await smartRouter.getBestQuoteFromUserProgressive(
+          debouncedAmountIn,
+          selectedTokenA.address,
+          selectedTokenB.address,
+          protocolFee,
+          (quoteResult, isFinal) => {
+            processQuoteResult(quoteResult, isFinal);
+          }
+        );
       } catch (error) {
         console.error("[Emp] Quote error:", error);
         setAmountOut("0");
         setRoute([]);
         updateRoute(null);
+        setIsQuoting(false);
+        setIsLoadingBetterQuote(false);
       }
-      setIsQuoting(false);
     };
 
     getQuote();
@@ -1589,17 +1611,24 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
                               Calculating...
                             </span>
                           ) : (
-                            <input
-                              type="text"
-                              placeholder="0.00"
-                              value={formattedValue}
-                              onChange={handleOutputChange}
-                              readOnly
-                              className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input rigamesh placeholder-white transition-all duration-200 ease-in-out"
-                              style={{
-                                fontSize: `${dynamicFontSize}px`,
-                              }}
-                            />
+                            <div className="flex flex-col items-end w-full">
+                              <input
+                                type="text"
+                                placeholder="0.00"
+                                value={formattedValue}
+                                onChange={handleOutputChange}
+                                readOnly
+                                className="text-[#fff] text-sh py-2 text-end w-full leading-7 outline-none border-none bg-transparent token_input rigamesh placeholder-white transition-all duration-200 ease-in-out"
+                                style={{
+                                  fontSize: `${dynamicFontSize}px`,
+                                }}
+                              />
+                              {isLoadingBetterQuote && (
+                                <span className="text-yellow-400 text-xs animate-pulse mt-[-4px]">
+                                  Finding better routes...
+                                </span>
+                              )}
+                            </div>
                           )}
                         </>
                       );

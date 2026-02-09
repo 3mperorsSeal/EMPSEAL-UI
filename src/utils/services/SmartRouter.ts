@@ -467,6 +467,12 @@ export class SmartRouter {
         tokenIn: `0x${string}`,
         tokenOut: `0x${string}`
     ): Promise<Array<{ adapter: `0x${string}`; amountOut: bigint }>> {
+        // DECIMAL-AWARE: Skip if input amount is too small
+        const MIN_INPUT_UNITS = 1000n; // At least 1000 wei
+        if (amountIn < MIN_INPUT_UNITS) {
+            return [];
+        }
+
         const calls = this.adapters.map((adapter) => ({
             address: adapter,
             abi: IAdapterAbi,
@@ -476,12 +482,14 @@ export class SmartRouter {
 
         const results = await this.publicClient.multicall({ contracts: calls });
 
+        // DECIMAL-AWARE: Filter outputs that are too small
+        const MIN_OUTPUT_UNITS = 10n; // At least 10 wei of output
         const quotes = results
             .map((res, i) => ({
                 adapter: this.adapters[i],
                 amountOut: (res.result as bigint) || 0n,
             }))
-            .filter((q) => q.amountOut > 0n)
+            .filter((q) => q.amountOut >= MIN_OUTPUT_UNITS)
             .sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1));
 
         return quotes;
@@ -499,94 +507,71 @@ export class SmartRouter {
         adapters: `0x${string}`[];
         amountOut: bigint;
     } | null> {
-        // Check for direct route first
-        if (depth === 0 || currentPath.length === 0) {
-            const directQuotes = await this.getAllAdapterQuotes(
-                amountIn,
-                tokenIn,
-                tokenOut
-            );
-            if (directQuotes.length > 0) {
-                return {
-                    path: [tokenIn, tokenOut],
-                    adapters: [directQuotes[0].adapter],
-                    amountOut: directQuotes[0].amountOut,
-                };
-            }
-            if (depth >= this.maxHops - 1) {
-                return null;
-            }
+        const indent = '  '.repeat(depth);
+
+        // ALWAYS check for direct route at EVERY depth level
+        const directQuotes = await this.getAllAdapterQuotes(
+            amountIn,
+            tokenIn,
+            tokenOut
+        );
+
+        if (directQuotes.length > 0) {
+            return {
+                path: [tokenIn, tokenOut],
+                adapters: [directQuotes[0].adapter],
+                amountOut: directQuotes[0].amountOut,
+            };
+        }
+
+        // No direct route found - check if we can go deeper
+        if (depth >= this.maxHops - 1) {
+            return null;
         }
 
         visited.add(tokenIn.toLowerCase());
-
-        // Filter valid intermediates
-        const validIntermediates = this.trustedTokens.filter(
-            (t) =>
-                !visited.has(t.toLowerCase()) &&
-                t.toLowerCase() !== tokenIn.toLowerCase() &&
-                t.toLowerCase() !== tokenOut.toLowerCase()
-        );
-
-        if (validIntermediates.length === 0) {
-            return null;
-        }
-
-        // Run ALL first-leg queries in parallel
-        const firstLegResults = await Promise.all(
-            validIntermediates.map(async (intermediate) => {
-                const quotes = await this.getAllAdapterQuotes(
-                    amountIn,
-                    tokenIn,
-                    intermediate
-                );
-                return {
-                    intermediate,
-                    bestQuote: quotes.length > 0 ? quotes[0] : null
-                };
-            })
-        );
-
-        // Filter to intermediates with valid first legs
-        const validFirstLegs = firstLegResults.filter(r => r.bestQuote !== null);
-
-        if (validFirstLegs.length === 0) {
-            return null;
-        }
-
-        // Run ALL recursive calls in parallel
-        const recursiveResults = await Promise.all(
-            validFirstLegs.map(async ({ intermediate, bestQuote }) => {
-                const restOfPath = await this.findBestMultiHopPath(
-                    bestQuote!.amountOut,
-                    intermediate,
-                    tokenOut,
-                    new Set(visited),
-                    [...currentPath, tokenIn],
-                    depth + 1
-                );
-                return {
-                    intermediate,
-                    firstLegAdapter: bestQuote!.adapter,
-                    restOfPath
-                };
-            })
-        );
-
-        // Find best path from all results
         let bestPath: {
             path: `0x${string}`[];
             adapters: `0x${string}`[];
             amountOut: bigint;
         } | null = null;
 
-        for (const result of recursiveResults) {
-            if (result.restOfPath) {
-                const totalAmountOut = result.restOfPath.amountOut;
+        // Sequential loop to avoid RPC explosion
+        for (const intermediate of this.trustedTokens) {
+            if (
+                visited.has(intermediate.toLowerCase()) ||
+                intermediate.toLowerCase() === tokenIn.toLowerCase() ||
+                intermediate.toLowerCase() === tokenOut.toLowerCase()
+            ) {
+                continue;
+            }
+
+            const firstLegQuotes = await this.getAllAdapterQuotes(
+                amountIn,
+                tokenIn,
+                intermediate
+            );
+            if (firstLegQuotes.length === 0) {
+                continue;
+            }
+
+            const firstLegBest = firstLegQuotes[0];
+
+            const restOfPath = await this.findBestMultiHopPath(
+                firstLegBest.amountOut,
+                intermediate,
+                tokenOut,
+                new Set(visited),
+                [...currentPath, tokenIn],
+                depth + 1
+            );
+
+            if (restOfPath) {
+                const totalAmountOut = restOfPath.amountOut;
                 if (!bestPath || totalAmountOut > bestPath.amountOut) {
                     bestPath = {
-                        path: [tokenIn, ...result.restOfPath.path.slice(1)],
-                        adapters: [result.firstLegAdapter, ...result.restOfPath.adapters],
+                        path: [tokenIn, ...restOfPath.path],
+                        adapters: [firstLegBest.adapter, ...restOfPath.adapters],
                         amountOut: totalAmountOut,
                     };
                 }
@@ -710,6 +695,253 @@ export class SmartRouter {
     }
 
     /**
+     * Progressive Quote Entry Point (User-friendly)
+     * Emits Phase 1 quote immediately, then updates with best quote when all strategies complete.
+     * 
+     * @param amountInUser - Human readable amount (e.g., "1000" for 1000 tokens)
+     * @param tokenIn - Input token address
+     * @param tokenOut - Output token address
+     * @param fee - Fee in basis points (e.g., 30 = 0.3%)
+     * @param onQuoteUpdate - Callback when a quote is found. isFinal=false for Phase 1, true when all complete.
+     */
+    async getBestQuoteFromUserProgressive(
+        amountInUser: string,
+        tokenIn: `0x${string}`,
+        tokenOut: `0x${string}`,
+        fee: number = 0,
+        onQuoteUpdate: (result: {
+            route: BestRouteResult | null;
+            amountInWei: bigint;
+            amountOutWei: bigint;
+            amountOutFormatted: string;
+        }, isFinal: boolean) => void
+    ): Promise<{
+        route: BestRouteResult | null;
+        amountInWei: bigint;
+        amountOutWei: bigint;
+        amountOutFormatted: string;
+    }> {
+        // 1. Get token decimals
+        const normalizedTokenIn = this.normalizeToken(tokenIn);
+        const normalizedTokenOut = this.normalizeToken(tokenOut);
+
+        const decimalsIn = await this.getTokenDecimals(normalizedTokenIn);
+        const decimalsOut = await this.getTokenDecimals(normalizedTokenOut);
+
+        // 2. Convert user input to wei
+        const amountInWei = parseTokenAmount(amountInUser, decimalsIn);
+
+        // Helper to format result
+        const formatResult = (route: BestRouteResult | null) => {
+            if (!route) {
+                return {
+                    route: null,
+                    amountInWei,
+                    amountOutWei: 0n,
+                    amountOutFormatted: "0",
+                };
+            }
+            return {
+                route,
+                amountInWei,
+                amountOutWei: route.amountOut,
+                amountOutFormatted: formatTokenAmount(route.amountOut, decimalsOut, 6),
+            };
+        };
+
+        // 3. Get best route progressively
+        const finalRoute = await this.getBestQuoteProgressive(
+            amountInWei,
+            tokenIn,
+            tokenOut,
+            fee,
+            (route, isFinal) => {
+                onQuoteUpdate(formatResult(route), isFinal);
+            }
+        );
+
+        return formatResult(finalRoute);
+    }
+
+    /**
+     * Progressive Quote: Emits Phase 1 quote immediately, then best quote when all complete.
+     * Phase 1 (fast, ~2-3s): findStandardSplit, findNoSplit, findDirectNoSplit
+     * Phase 2 (slow, ~10-12s): findConvergePath, findConvergeMultiHop, findHybridSplit
+     * 
+     * @param onQuoteUpdate - Callback when a quote is found. isFinal=false for Phase 1, true when all complete.
+     */
+    async getBestQuoteProgressive(
+        amountIn: bigint,
+        tokenIn: `0x${string}`,
+        tokenOut: `0x${string}`,
+        fee: number = 0,
+        onQuoteUpdate: (quote: BestRouteResult | null, isFinal: boolean) => void
+    ): Promise<BestRouteResult | null> {
+
+        if (!this.wnativeAddress || this.trustedTokens.length === 0) {
+            console.error("[SmartRouter] Router not initialized");
+            throw new Error("Router not initialized. Call loadAdapters() first.");
+        }
+
+        const normalizedTokenIn = this.normalizeToken(tokenIn);
+        const normalizedTokenOut = this.normalizeToken(tokenOut);
+
+        // Check for direct wrap/unwrap - these are instant
+        const isWrapping =
+            this.isNative(tokenIn) &&
+            normalizedTokenOut.toLowerCase() === this.wnativeAddress.toLowerCase();
+        const isUnwrapping =
+            normalizedTokenIn.toLowerCase() === this.wnativeAddress.toLowerCase() &&
+            this.isNative(tokenOut);
+
+        if (isWrapping) {
+            const result: BestRouteResult = {
+                type: "WRAP",
+                amountOut: amountIn,
+                payload: { tokenIn, tokenOut, amountIn },
+                gasEstimate: 0n,
+            };
+            onQuoteUpdate(result, true); // Instant, so it's final
+            return result;
+        }
+
+        if (isUnwrapping) {
+            const result: BestRouteResult = {
+                type: "UNWRAP",
+                amountOut: amountIn,
+                payload: { tokenIn, tokenOut, amountIn },
+                gasEstimate: 0n,
+            };
+            onQuoteUpdate(result, true); // Instant, so it's final
+            return result;
+        }
+
+        if (this.convergeOnly) {
+            const convergeResult = await this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut);
+            onQuoteUpdate(convergeResult, true);
+            return convergeResult;
+        }
+
+        const STRATEGY_TIMEOUT = 12000;
+        let bestSoFar: BestRouteResult | null = null;
+
+        // ============================================================================
+        // PHASE 1: Fast strategies (emit early quote)
+        // ============================================================================
+        const phase1Start = Date.now();
+
+        const phase1Results = await Promise.allSettled([
+            withTimeout(
+                this.findStandardSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findStandardSplit'
+            ),
+            withTimeout(
+                this.findNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findNoSplit'
+            ),
+            withTimeout(
+                this.findDirectNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findDirectNoSplit'
+            ),
+        ]);
+
+        const phase1Time = Date.now() - phase1Start;
+        // console.log(`[SmartRouter] Progressive: Phase 1 complete in ${phase1Time}ms`);
+
+        // Extract Phase 1 results
+        const [splitResult, multiHopResult, directNoSplitResult] = phase1Results;
+        const split = splitResult.status === "fulfilled" ? splitResult.value : null;
+        const multiHop = multiHopResult.status === "fulfilled" ? multiHopResult.value : null;
+        const directNoSplit = directNoSplitResult.status === "fulfilled" ? directNoSplitResult.value : null;
+
+        // Find best Phase 1 result
+        const phase1Candidates = [split, multiHop, directNoSplit]
+            .filter((c): c is BestRouteResult => c !== null && c.amountOut > 0n);
+
+        if (phase1Candidates.length > 0) {
+            bestSoFar = phase1Candidates.reduce((best, current) =>
+                current.amountOut > best.amountOut ? current : best
+            );
+            onQuoteUpdate(bestSoFar, false); // Not final yet
+        }
+
+        // ============================================================================
+        // PHASE 2: Slow strategies (update if better quote found)
+        // ============================================================================
+        const phase2Start = Date.now();
+
+        const phase2Results = await Promise.allSettled([
+            withTimeout(
+                this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findConvergePath'
+            ),
+            withTimeout(
+                this.findConvergeMultiHop(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findConvergeMultiHop'
+            ),
+            withTimeout(
+                this.findHybridSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findHybridSplit'
+            ),
+        ]);
+
+        const phase2Time = Date.now() - phase2Start;
+        // console.log(`[SmartRouter] Progressive: Phase 2 complete in ${phase2Time}ms`);
+
+        // Extract Phase 2 results
+        const [convergeResult, convergeMultiHopResult, hybridResult] = phase2Results;
+        const converge = convergeResult.status === "fulfilled" ? convergeResult.value : null;
+        const convergeMultiHop = convergeMultiHopResult.status === "fulfilled" ? convergeMultiHopResult.value : null;
+        const hybrid = hybridResult.status === "fulfilled" ? hybridResult.value : null;
+
+        // Combine all candidates
+        const allCandidates = [split, multiHop, directNoSplit, converge, convergeMultiHop, hybrid]
+            .filter((c): c is BestRouteResult => c !== null && c.amountOut > 0n);
+
+        if (allCandidates.length === 0) {
+            console.error('No valid routes found');
+            onQuoteUpdate(null, true);
+            return null;
+        }
+
+        // Find overall best result
+        const finalBest = allCandidates.reduce((best, current) =>
+            current.amountOut > best.amountOut ? current : best
+        );
+
+        // Apply fallback mechanism for complex strategies
+        const FALLBACK_THRESHOLD = 0.20;
+        const splitOutput = split && split.amountOut > 0n ? Number(split.amountOut) : 0;
+        const noSplitOutput = multiHop && multiHop.amountOut > 0n ? Number(multiHop.amountOut) : 0;
+        const directNoSplitOutput = directNoSplit && directNoSplit.amountOut > 0n ? Number(directNoSplit.amountOut) : 0;
+        const bestBaselineOutput = Math.max(splitOutput, noSplitOutput, directNoSplitOutput);
+
+        const isComplexStrategy = finalBest !== split && finalBest !== multiHop && finalBest !== directNoSplit;
+
+        let winner = finalBest;
+        if (isComplexStrategy && bestBaselineOutput > 0) {
+            const winnerOutput = Number(finalBest.amountOut);
+            const outputDifference = (bestBaselineOutput - winnerOutput) / bestBaselineOutput;
+
+            if (outputDifference > FALLBACK_THRESHOLD) {
+                // Use best baseline instead
+                if (bestBaselineOutput === splitOutput && split) winner = split;
+                else if (bestBaselineOutput === directNoSplitOutput && directNoSplit) winner = directNoSplit;
+                else if (multiHop) winner = multiHop;
+            }
+        }
+
+        onQuoteUpdate(winner, true);
+        return winner;
+    }
+
+    /**
      * Main Entry Point: Get best quote
      */
     async getBestQuote(
@@ -786,12 +1018,13 @@ export class SmartRouter {
         // Phase 2: Expensive strategies (converge, hybrid, convergeMultiHop)
         // ============================================================================
 
-        const STRATEGY_TIMEOUT = 6000;   // 6 seconds for all strategies
+        const STRATEGY_TIMEOUT = 15000;   // 15 seconds for all strategies
 
         // console.log('[SmartRouter] Running all strategies concurrently...');
         const startTime = Date.now();
 
         // Start BOTH phases in parallel
+        const phase1Start = Date.now();
         const phase1Promise = Promise.allSettled([
             withTimeout(
                 this.findStandardSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
@@ -803,8 +1036,14 @@ export class SmartRouter {
                 STRATEGY_TIMEOUT,
                 'findNoSplit'
             ),
+            withTimeout(
+                this.findDirectNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                STRATEGY_TIMEOUT,
+                'findDirectNoSplit'
+            ),
         ]);
 
+        const phase2Start = Date.now();
         const phase2Promise = Promise.allSettled([
             withTimeout(
                 this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
@@ -826,12 +1065,17 @@ export class SmartRouter {
         // Wait for BOTH phases to complete (they run in parallel)
         const [phase1Results, phase2Results] = await Promise.all([phase1Promise, phase2Promise]);
 
+        const phase1Time = Date.now() - phase1Start;
+        const phase2Time = Date.now() - phase2Start;
         const totalTime = Date.now() - startTime;
 
+        // console.log(`[SmartRouter] Timing: Phase1=${phase1Time}ms, Phase2=${phase2Time}ms, Total=${totalTime}ms`);
+
         // Extract Phase 1 results
-        const [splitResult, multiHopResult] = phase1Results;
+        const [splitResult, multiHopResult, directNoSplitResult] = phase1Results;
         const split = splitResult.status === "fulfilled" ? splitResult.value : null;
         const multiHop = multiHopResult.status === "fulfilled" ? multiHopResult.value : null;
+        const directNoSplit = directNoSplitResult.status === "fulfilled" ? directNoSplitResult.value : null;
 
         // Extract Phase 2 results
         const [convergeResult, convergeMultiHopResult, hybridResult] = phase2Results;
@@ -840,11 +1084,11 @@ export class SmartRouter {
         const hybrid = hybridResult.status === "fulfilled" ? hybridResult.value : null;
 
         // Combine all candidates
-        const candidates = [converge, split, multiHop, convergeMultiHop, hybrid]
+        const candidates = [converge, split, multiHop, directNoSplit, convergeMultiHop, hybrid]
             .filter((c): c is BestRouteResult => c !== null && c.amountOut > 0n);
 
         if (candidates.length === 0) {
-            console.error('[SmartRouter] No valid routes found - all strategies returned null or 0 amountOut');
+            console.error('[SmartRouter] No valid routes found');
             return null;
         }
 
@@ -856,26 +1100,39 @@ export class SmartRouter {
         let winnerName = "Unknown";
         if (winner === converge) winnerName = "Omni-Converge";
         else if (winner === split) winnerName = "Direct";
+        else if (winner === directNoSplit) winnerName = "Direct NoSplit";
         else if (winner === convergeMultiHop) winnerName = "Converge Multi-hop";
         else if (winner === hybrid) winnerName = "Hybrid Split";
         // else if (winner === multiStageConvergeSplit) winnerName = "Multi-Stage Converge Split";
         else winnerName = "Multi-hop";
 
         // Enhanced Fallback Mechanism
-        // Compare winner against the BEST of simpler strategies (split and multiHop)
+        // Compare winner against the BEST of simpler strategies (split, multiHop, directNoSplit)
         // This protects against bad quotes from complex strategies (converge/hybrid)
         const FALLBACK_THRESHOLD = 0.20; // 20% - if baseline is more than 20% better, use it
 
-        // Find the best baseline from simpler strategies
+        // Find the best baseline from simpler strategies (including directNoSplit)
         const splitOutput = split && split.amountOut > 0n ? Number(split.amountOut) : 0;
         const noSplitOutput = multiHop && multiHop.amountOut > 0n ? Number(multiHop.amountOut) : 0;
-        const bestBaselineOutput = Math.max(splitOutput, noSplitOutput);
-        const bestBaseline = bestBaselineOutput === splitOutput && split ? split : multiHop;
-        const bestBaselineName = bestBaseline === split ? "Direct Split" : "Multi-hop";
+        const directNoSplitOutput = directNoSplit && directNoSplit.amountOut > 0n ? Number(directNoSplit.amountOut) : 0;
+        const bestBaselineOutput = Math.max(splitOutput, noSplitOutput, directNoSplitOutput);
+
+        let bestBaseline: BestRouteResult | null = null;
+        let bestBaselineName = "";
+        if (bestBaselineOutput === splitOutput && split) {
+            bestBaseline = split;
+            bestBaselineName = "Direct Split";
+        } else if (bestBaselineOutput === directNoSplitOutput && directNoSplit) {
+            bestBaseline = directNoSplit;
+            bestBaselineName = "Direct NoSplit";
+        } else if (multiHop) {
+            bestBaseline = multiHop;
+            bestBaselineName = "Multi-hop";
+        }
 
         // Only check fallback if winner is a COMPLEX strategy (converge, hybrid, convergeMultiHop)
         // and not already one of the baselines
-        const isComplexStrategy = winner !== split && winner !== multiHop;
+        const isComplexStrategy = winner !== split && winner !== multiHop && winner !== directNoSplit;
 
         if (isComplexStrategy && bestBaseline && bestBaselineOutput > 0) {
             const winnerOutput = Number(winner.amountOut);
@@ -889,7 +1146,7 @@ export class SmartRouter {
                 return bestBaseline;
             }
         } else if (!isComplexStrategy) {
-            console.log(`[SmartRouter] No fallback needed - winner is already a baseline strategy`);
+            // console.log(`[SmartRouter] No fallback needed - winner is already a baseline strategy`);
         }
 
         return winner;
@@ -1117,6 +1374,50 @@ export class SmartRouter {
     }
 
     /**
+     * Strategy: Direct NoSplit (On-chain Router queryNoSplit)
+     * Uses the router's on-chain queryNoSplit function to find the best single adapter.
+     * This is a simple fallback strategy when complex routing fails.
+     */
+    private async findDirectNoSplit(
+        amountIn: bigint,
+        tokenIn: `0x${string}`,
+        tokenOut: `0x${string}`
+    ): Promise<BestRouteResult | null> {
+        try {
+            // Call the router's on-chain queryNoSplit function
+            const result = await this.publicClient.readContract({
+                address: this.routerAddress,
+                abi: this.routerABI,
+                functionName: "queryNoSplit",
+                args: [amountIn, tokenIn, tokenOut],
+            }) as { adapter: `0x${string}`; tokenIn: `0x${string}`; tokenOut: `0x${string}`; amountOut: bigint };
+
+            // Check if we got a valid result
+            if (!result || result.amountOut === 0n || result.adapter === "0x0000000000000000000000000000000000000000") {
+                return null;
+            }
+
+            const payload: SplitPath[] = [
+                {
+                    path: [tokenIn, tokenOut],
+                    adapters: [result.adapter],
+                    proportion: 10000,
+                },
+            ];
+
+            return {
+                type: "NOSPLIT",
+                amountOut: result.amountOut,
+                payload,
+                gasEstimate: 0n,
+            };
+        } catch (error) {
+            console.error("[SmartRouter] findDirectNoSplit failed:", error);
+            return null;
+        }
+    }
+
+    /**
      * Strategy: Converge Multi-Hop
      * (Uses WNATIVE as pivot for multi-hop on both sides)
      */
@@ -1226,56 +1527,34 @@ export class SmartRouter {
             });
         }
 
-        // Filter valid intermediates
-        const validIntermediates = this.trustedTokens.filter(
-            (t) =>
-                t.toLowerCase() !== tokenIn.toLowerCase() &&
-                t.toLowerCase() !== tokenOut.toLowerCase()
-        );
+        // Sequential loop to avoid RPC explosion
+        for (const intermediate of this.trustedTokens) {
+            if (
+                intermediate.toLowerCase() === tokenIn.toLowerCase() ||
+                intermediate.toLowerCase() === tokenOut.toLowerCase()
+            ) {
+                continue;
+            }
 
-        // Run ALL first-leg queries in parallel
-        const firstLegResults = await Promise.all(
-            validIntermediates.map(async (intermediate) => {
-                const quotes = await this.getAllAdapterQuotes(
-                    amountIn,
-                    tokenIn,
-                    intermediate
-                );
-                return {
-                    intermediate,
-                    quotes,
-                    bestQuote: quotes.length > 0 ? quotes[0] : null
-                };
-            })
-        );
+            const firstLegQuotes = await this.getAllAdapterQuotes(
+                amountIn,
+                tokenIn,
+                intermediate
+            );
 
-        // Filter to only intermediates that have first-leg liquidity
-        const validFirstLegs = firstLegResults.filter(r => r.bestQuote !== null);
+            if (firstLegQuotes.length === 0) continue;
 
-        // Run ALL second-leg queries in parallel
-        const secondLegResults = await Promise.all(
-            validFirstLegs.map(async ({ intermediate, bestQuote }) => {
-                const quotes = await this.getAllAdapterQuotes(
-                    bestQuote!.amountOut,
-                    intermediate,
-                    tokenOut
-                );
-                return {
-                    intermediate,
-                    firstLegAdapter: bestQuote!.adapter,
-                    secondLegQuotes: quotes,
-                    bestSecondLeg: quotes.length > 0 ? quotes[0] : null
-                };
-            })
-        );
+            const secondLegQuotes = await this.getAllAdapterQuotes(
+                firstLegQuotes[0].amountOut,
+                intermediate,
+                tokenOut
+            );
 
-        // Collect valid multi-hop paths
-        for (const result of secondLegResults) {
-            if (result.bestSecondLeg) {
+            if (secondLegQuotes.length > 0) {
                 allPaths.push({
-                    path: [tokenIn, result.intermediate, tokenOut],
-                    adapters: [result.firstLegAdapter, result.bestSecondLeg.adapter],
-                    amountOut: result.bestSecondLeg.amountOut,
+                    path: [tokenIn, intermediate, tokenOut],
+                    adapters: [firstLegQuotes[0].adapter, secondLegQuotes[0].adapter],
+                    amountOut: secondLegQuotes[0].amountOut,
                 });
             }
         }
@@ -1318,7 +1597,9 @@ export class SmartRouter {
                         tokenIn,
                         intermediate
                     );
-                    if (inputQuotes.length === 0) return null;
+                    if (inputQuotes.length === 0) {
+                        return null;
+                    }
 
                     const { splits: inputSplits, totalOut: totalIntermediate } =
                         await this.findOptimalSplit(
@@ -1328,7 +1609,9 @@ export class SmartRouter {
                             inputQuotes
                         );
 
-                    if (totalIntermediate === 0n) return null;
+                    if (totalIntermediate === 0n) {
+                        return null;
+                    }
 
                     // Leg 2: Intermediate -> Out
                     const outputQuotes = await this.getAllAdapterQuotes(
@@ -1336,7 +1619,9 @@ export class SmartRouter {
                         intermediate,
                         tokenOut
                     );
-                    if (outputQuotes.length === 0) return null;
+                    if (outputQuotes.length === 0) {
+                        return null;
+                    }
 
                     const { splits: outputSplits, totalOut: finalAmount } =
                         await this.findOptimalSplit(
