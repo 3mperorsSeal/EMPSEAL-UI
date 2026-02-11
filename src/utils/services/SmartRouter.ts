@@ -114,7 +114,7 @@ export class SmartRouter {
 
     // Liquidity validation configuration
     private maxPriceImpact = 5.0;        // Filter routes with >5% price impact
-    private slippageSafetyMargin = 15;   // Basis points haircut on final output (15 = 1.5%)
+    private slippageSafetyMargin = 0;   // Basis points haircut on final output (15 = 1.5%)
 
     constructor(publicClient: PublicClient, routerAddress: `0x${string}`, chainId: number = 369) {
         this.publicClient = publicClient;
