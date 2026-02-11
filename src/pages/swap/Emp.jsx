@@ -1858,6 +1858,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange }) => {
             percentChange={percentChange}
             onAcceptNewQuote={handleAcceptNewQuote}
             onRejectNewQuote={handleRejectNewQuote}
+            swapStatus={swapStatus}
           />
         )}
       </div>

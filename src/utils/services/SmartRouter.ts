@@ -47,7 +47,12 @@ export function parseTokenAmount(
         throw new Error(`Invalid decimals: ${decimals}`);
     }
 
-    const cleanAmount = amount.replace(/,/g, "").trim();
+    let cleanAmount = amount.replace(/,/g, "").trim();
+
+    // Auto-fix: if starts with '.', prepend '0'
+    if (cleanAmount.startsWith(".")) {
+        cleanAmount = "0" + cleanAmount;
+    }
 
     // Validate numeric format
     if (!/^\d+(\.\d+)?$/.test(cleanAmount)) {
@@ -106,6 +111,10 @@ export class SmartRouter {
     private convergeOnly = false;
     private granularity = 5;
     private maxHops = 4;
+
+    // Liquidity validation configuration
+    private maxPriceImpact = 5.0;        // Filter routes with >5% price impact
+    private slippageSafetyMargin = 15;   // Basis points haircut on final output (15 = 1.5%)
 
     constructor(publicClient: PublicClient, routerAddress: `0x${string}`, chainId: number = 369) {
         this.publicClient = publicClient;
@@ -462,37 +471,103 @@ export class SmartRouter {
         return { bestOutput, bestSplits, bestRawStrategy };
     }
 
+    /**
+     * Liquidity-Aware Adapter Quotes via Quote Ratio Method
+     * Queries each adapter at 3 amounts (50%, 100%, 200%) to detect shallow pools.
+     * Filters out adapters with excessive price impact or poor liquidity.
+     * Works universally across all DEX types (V2, V3, Curve, Velodrome, etc.)
+     */
     private async getAllAdapterQuotes(
         amountIn: bigint,
         tokenIn: `0x${string}`,
         tokenOut: `0x${string}`
     ): Promise<Array<{ adapter: `0x${string}`; amountOut: bigint }>> {
         // DECIMAL-AWARE: Skip if input amount is too small
-        const MIN_INPUT_UNITS = 1000n; // At least 1000 wei
+        const MIN_INPUT_UNITS = 1000n;
         if (amountIn < MIN_INPUT_UNITS) {
             return [];
         }
 
-        const calls = this.adapters.map((adapter) => ({
-            address: adapter,
-            abi: IAdapterAbi,
-            functionName: "query",
-            args: [amountIn, tokenIn, tokenOut],
-        }));
+        // Test with 3 different amounts to measure liquidity depth
+        const testAmounts = [
+            amountIn / 2n,    // 50% of amount
+            amountIn,         // 100% (actual amount)
+            amountIn * 2n,    // 200% of amount
+        ];
+
+        // Build multicall for all adapters × all test amounts (single RPC round-trip)
+        const calls = this.adapters.flatMap((adapter) =>
+            testAmounts.map((amount) => ({
+                address: adapter,
+                abi: IAdapterAbi,
+                functionName: "query",
+                args: [amount, tokenIn, tokenOut],
+            }))
+        );
 
         const results = await this.publicClient.multicall({ contracts: calls });
 
-        // DECIMAL-AWARE: Filter outputs that are too small
-        const MIN_OUTPUT_UNITS = 10n; // At least 10 wei of output
-        const quotes = results
-            .map((res, i) => ({
-                adapter: this.adapters[i],
-                amountOut: (res.result as bigint) || 0n,
-            }))
-            .filter((q) => q.amountOut >= MIN_OUTPUT_UNITS)
-            .sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1));
+        const MIN_OUTPUT_UNITS = 10n;
+        const quotes: Array<{ adapter: `0x${string}`; amountOut: bigint }> = [];
 
-        return quotes;
+        for (let i = 0; i < this.adapters.length; i++) {
+            const adapter = this.adapters[i];
+
+            // Get 3 quotes for this adapter
+            const quoteResults = [
+                results[i * 3 + 0],
+                results[i * 3 + 1],
+                results[i * 3 + 2],
+            ];
+
+            // Skip if any query failed
+            if (quoteResults.some((q) => q.status === "failure")) continue;
+
+            const amounts = quoteResults.map((q) => (q.result as bigint) || 0n);
+
+            // Skip if any quote is 0 or actual output too small
+            if (amounts.some((a) => a === 0n)) continue;
+            if (amounts[1] < MIN_OUTPUT_UNITS) continue;
+
+            // Calculate rates for each test amount
+            const rates = amounts.map((q, idx) =>
+                Number(q) / Number(testAmounts[idx])
+            );
+
+            // Price impact = rate degradation from best (smallest amount) to worst (largest amount)
+            const bestRate = Math.max(...rates);
+            const worstRate = Math.min(...rates);
+            const priceImpact = bestRate > 0 ? ((bestRate - worstRate) / bestRate) * 100 : 100;
+
+            // Linearity check: how well does output scale with input?
+            // 2x input vs 0.5x input should give ~4x output ratio for a deep pool
+            const scaleFactor = Number(amounts[2]) / Number(amounts[0]);
+            const expectedScale = 4.0;
+            const linearity = Math.min(1, scaleFactor / expectedScale);
+
+            // Liquidity score (0-100)
+            let liquidityScore = 100;
+            liquidityScore -= priceImpact * 10;        // -10 per 1% impact
+            liquidityScore -= (1 - linearity) * 50;    // -50 if no linearity
+            liquidityScore = Math.max(0, Math.min(100, liquidityScore));
+
+            // Filter non-viable routes
+            if (priceImpact > this.maxPriceImpact || liquidityScore < 30) {
+                // console.warn(
+                //     `[LiquidityCheck] Filtered ${adapter.slice(0, 10)}...: ` +
+                //     `${priceImpact.toFixed(2)}% impact, score: ${liquidityScore.toFixed(0)}`
+                // );
+                continue;
+            }
+
+            quotes.push({
+                adapter,
+                amountOut: amounts[1], // Use actual amount quote
+            });
+        }
+
+        // Sort by amountOut descending
+        return quotes.sort((a, b) => (b.amountOut > a.amountOut ? 1 : -1));
     }
 
     private async findBestMultiHopPath(
@@ -816,13 +891,16 @@ export class SmartRouter {
             return result;
         }
 
+        // Calculate fee only for other route types
+        const amountAfterFee = this.calculateAmountAfterFee(amountIn, fee);
+
         if (this.convergeOnly) {
-            const convergeResult = await this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut);
+            const convergeResult = await this.findConvergePath(amountAfterFee, normalizedTokenIn, normalizedTokenOut);
             onQuoteUpdate(convergeResult, true);
             return convergeResult;
         }
 
-        const STRATEGY_TIMEOUT = 12000;
+        const STRATEGY_TIMEOUT = 15000;
         let bestSoFar: BestRouteResult | null = null;
 
         // ============================================================================
@@ -832,17 +910,17 @@ export class SmartRouter {
 
         const phase1Results = await Promise.allSettled([
             withTimeout(
-                this.findStandardSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findStandardSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findStandardSplit'
             ),
             withTimeout(
-                this.findNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findNoSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findNoSplit'
             ),
             withTimeout(
-                this.findDirectNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findDirectNoSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findDirectNoSplit'
             ),
@@ -875,17 +953,17 @@ export class SmartRouter {
 
         const phase2Results = await Promise.allSettled([
             withTimeout(
-                this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findConvergePath(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findConvergePath'
             ),
             withTimeout(
-                this.findConvergeMultiHop(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findConvergeMultiHop(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findConvergeMultiHop'
             ),
             withTimeout(
-                this.findHybridSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findHybridSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findHybridSplit'
             ),
@@ -899,6 +977,15 @@ export class SmartRouter {
         const converge = convergeResult.status === "fulfilled" ? convergeResult.value : null;
         const convergeMultiHop = convergeMultiHopResult.status === "fulfilled" ? convergeMultiHopResult.value : null;
         const hybrid = hybridResult.status === "fulfilled" ? hybridResult.value : null;
+
+        // console.log(`[SmartRouter] Strategy Results:`, {
+        //     splitResult: split ? Number(split.amountOut) : "Error/Timeout",
+        //     multiHopResult: multiHop ? Number(multiHop.amountOut) : "Error/Timeout",
+        //     directNoSplitResult: directNoSplit ? Number(directNoSplit.amountOut) : "Error/Timeout",
+        //     convergeResult: converge ? Number(converge.amountOut) : "Error/Timeout",
+        //     convergeMultiHopResult: convergeMultiHop ? Number(convergeMultiHop.amountOut) : "Error/Timeout",
+        //     hybridResult: hybrid ? Number(hybrid.amountOut) : "Error/Timeout",
+        // });
 
         // Combine all candidates
         const allCandidates = [split, multiHop, directNoSplit, converge, convergeMultiHop, hybrid]
@@ -935,6 +1022,31 @@ export class SmartRouter {
                 else if (bestBaselineOutput === directNoSplitOutput && directNoSplit) winner = directNoSplit;
                 else if (multiHop) winner = multiHop;
             }
+        }
+
+        // Outlier Detection: Compare winner vs second-best candidate
+        // If winner is >15% above second-best, it's likely an inflated quote
+        if (allCandidates.length >= 2) {
+            const sorted = [...allCandidates].sort((a, b) =>
+                b.amountOut > a.amountOut ? 1 : b.amountOut < a.amountOut ? -1 : 0
+            );
+            const secondBest = sorted[1];
+            const gap = Number(winner.amountOut - secondBest.amountOut) / Number(secondBest.amountOut);
+
+            if (gap > 0.15) {
+                // console.warn(
+                //     `[SmartRouter] Outlier detected: winner ${Number(winner.amountOut)} is ${(gap * 100).toFixed(1)}% above second-best ${Number(secondBest.amountOut)}. Using second-best.`
+                // );
+                winner = secondBest;
+            }
+        }
+
+        // Apply safety margin to prevent slippage reverts
+        if (winner.type !== "WRAP" && winner.type !== "UNWRAP" && this.slippageSafetyMargin > 0) {
+            winner = {
+                ...winner,
+                amountOut: (winner.amountOut * BigInt(10000 - this.slippageSafetyMargin)) / 10000n,
+            };
         }
 
         onQuoteUpdate(winner, true);
@@ -1000,8 +1112,7 @@ export class SmartRouter {
         const amountAfterFee = this.calculateAmountAfterFee(amountIn, fee);
         if (this.convergeOnly) {
             const convergeResult = await this.findConvergePath(
-                // amountAfterFee,
-                amountIn,
+                amountAfterFee,
                 normalizedTokenIn,
                 normalizedTokenOut
             );
@@ -1027,17 +1138,17 @@ export class SmartRouter {
         const phase1Start = Date.now();
         const phase1Promise = Promise.allSettled([
             withTimeout(
-                this.findStandardSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findStandardSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findStandardSplit'
             ),
             withTimeout(
-                this.findNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findNoSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findNoSplit'
             ),
             withTimeout(
-                this.findDirectNoSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findDirectNoSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findDirectNoSplit'
             ),
@@ -1046,17 +1157,17 @@ export class SmartRouter {
         const phase2Start = Date.now();
         const phase2Promise = Promise.allSettled([
             withTimeout(
-                this.findConvergePath(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findConvergePath(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findConvergePath'
             ),
             withTimeout(
-                this.findConvergeMultiHop(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findConvergeMultiHop(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findConvergeMultiHop'
             ),
             withTimeout(
-                this.findHybridSplit(amountIn, normalizedTokenIn, normalizedTokenOut),
+                this.findHybridSplit(amountAfterFee, normalizedTokenIn, normalizedTokenOut),
                 STRATEGY_TIMEOUT,
                 'findHybridSplit'
             ),
@@ -1093,7 +1204,7 @@ export class SmartRouter {
         }
 
         // Select the route with the highest amountOut
-        const winner = candidates.reduce((best, current) =>
+        let winner = candidates.reduce((best, current) =>
             current.amountOut > best.amountOut ? current : best
         );
 
@@ -1147,6 +1258,31 @@ export class SmartRouter {
             }
         } else if (!isComplexStrategy) {
             // console.log(`[SmartRouter] No fallback needed - winner is already a baseline strategy`);
+        }
+
+        // Outlier Detection: Compare winner vs second-best candidate
+        // If winner is >15% above second-best, it's likely an inflated quote
+        if (candidates.length >= 2) {
+            const sorted = [...candidates].sort((a, b) =>
+                b.amountOut > a.amountOut ? 1 : b.amountOut < a.amountOut ? -1 : 0
+            );
+            const secondBest = sorted[1];
+            const gap = Number(winner.amountOut - secondBest.amountOut) / Number(secondBest.amountOut);
+
+            if (gap > 0.15) {
+                // console.warn(
+                //     `[SmartRouter] Outlier detected: winner ${Number(winner.amountOut)} is ${(gap * 100).toFixed(1)}% above second-best ${Number(secondBest.amountOut)}. Using second-best.`
+                // );
+                winner = secondBest;
+            }
+        }
+
+        // Apply safety margin to prevent slippage reverts
+        if (winner.type !== "WRAP" && winner.type !== "UNWRAP" && this.slippageSafetyMargin > 0) {
+            winner = {
+                ...winner,
+                amountOut: (winner.amountOut * BigInt(10000 - this.slippageSafetyMargin)) / 10000n,
+            };
         }
 
         return winner;
