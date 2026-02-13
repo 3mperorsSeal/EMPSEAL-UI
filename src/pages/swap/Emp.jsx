@@ -1381,39 +1381,52 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   </div>
                   <img src={Bar} alt="bar" className="w-full my-4" />
                   {/*  */}
-                  <div className="flex justify-between gap-2 items-center">
-                    <div>
-                      <div className="text-[#FF9900] text-base font-bold font-orbitron">
-                        Min Received :
-                        <span className="text-[#FF9900] text-base font-normal rigamesh">
-                          {" "}
-                          45874.4
-                        </span>
-                        USDC
+                  {selectedTokenA && selectedTokenB && (
+                    <div className="flex justify-between gap-2 items-center">
+                      <div>
+                        <div className="text-[#FF9900] text-base font-bold font-orbitron">
+                          Min Received :
+                          <span className="text-[#FF9900] text-base font-normal rigamesh">
+                            {" "}
+                            {formatNumber(
+                              parseFloat(minToReceiveAfterFee).toFixed(6),
+                            )}
+                          </span>
+                          {selectedTokenB.ticker}
+                        </div>
+                        <div className="text-[#FF9900] text-base font-bold font-orbitron">
+                          Rate :
+                          <span className="text-[#FF9900] text-base font-normal rigamesh">
+                            {" "}
+                            1
+                          </span>
+                          {isRateReversed
+                            ? selectedTokenB.ticker
+                            : selectedTokenA.ticker}{" "}
+                          =
+                          <span className="text-[#FF9900] text-base font-normal rigamesh">
+                            {" "}
+                            {getRateDisplay()}
+                          </span>
+                          {isRateReversed
+                            ? selectedTokenA.ticker
+                            : selectedTokenB.ticker}
+                        </div>
                       </div>
-                      <div className="text-[#FF9900] text-base font-bold font-orbitron">
-                        Rate :
-                        <span className="text-[#FF9900] text-base font-normal rigamesh">
-                          {" "}
-                          1
-                        </span>
-                        LINK
-                        <span className="text-[#FF9900] text-base font-normal rigamesh">
-                          {" "}
-                          45874.4
-                        </span>
-                        USDC
+                      <div className="flex gap-4 items-center">
+                        <div
+                          className={`font-orbitron truncate ${getPriceImpactColor(
+                            priceImpact,
+                          )}`}
+                        >
+                          Price Impact
+                        </div>
+                        <div className="text-center text-black text-base font-normal font-orbitron px-3 py-1 bg-[#FFE3BA] rounded-lg">
+                          {priceImpact} %
+                        </div>
                       </div>
                     </div>
-                    <div className="flex gap-4 items-center">
-                      <div className="text-[#FFE3BA] text-sm font-normal font-orbitron">
-                        Price Impact
-                      </div>
-                      <div className="text-center text-black text-base font-normal font-orbitron px-3 py-1 bg-[#FFE3BA] rounded-lg">
-                        1%
-                      </div>
-                    </div>
-                  </div>
+                  )}
                 </div>
               </div>
             </>
@@ -1492,7 +1505,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
           />
         )}
       </div>
-      {selectedTokenA && selectedTokenB && (
+      {/* {selectedTokenA && selectedTokenB && (
         <div className="xl:fixed absolute bg-[#FFE6C0] left-0 lefts mw300 2xl:bottom-[9%] lg:bottom-[5%] bottom-[120px] scale8 border-4 border-l-2 border-[#FF9900] md:p-6 p-4 rounded-xl-view">
           <h6 className="font-orbitron md:text-sm text-[10px]">
             <span>
@@ -1531,7 +1544,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
             </span>
           </h6>
         </div>
-      )}
+      )} */}
     </>
   );
 };
