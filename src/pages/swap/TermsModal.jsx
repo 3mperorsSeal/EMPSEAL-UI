@@ -30,7 +30,7 @@ export default function TermsModal({ onClose }) {
       >
         <path
           d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-          stroke="#ff9900"
+          stroke="#fff"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"

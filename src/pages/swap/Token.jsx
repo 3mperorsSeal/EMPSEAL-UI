@@ -55,7 +55,7 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
   );
 };
 
-const Token = ({ onClose, onSelect }) => {
+const Token = ({ onClose, onSelect, isLimitOrder }) => {
   const { chainId, tokenList, featureTokens, isSupported } = useChainConfig();
   const [searchQuery, setSearchQuery] = useState("");
   const [tokenDetails, setTokenDetails] = useState(null);
@@ -290,7 +290,7 @@ const Token = ({ onClose, onSelect }) => {
           >
             <path
               d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-              stroke="#ff9900"
+              stroke="#fff"
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
@@ -364,7 +364,7 @@ const Token = ({ onClose, onSelect }) => {
             </button>
             <input
               type="text"
-              placeholder="Search token name or paste address"
+              placeholder={isLimitOrder ? "Search Limit Orders token" : "Search token name or paste address"}
               className="bg-[#382B19] rounded-lg h-full text-[#FF9900] w-full px-3 outline-none border-none placeholder:text-[#FF9900] text-sm font-normal roboto leading-tight tracking-wide"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}

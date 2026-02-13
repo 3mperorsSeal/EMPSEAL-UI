@@ -1,9 +1,7 @@
 import { useRef, useEffect } from "react";
-import Min from "../../../assets/images/empx-new.svg";
-import Dis from "../../../assets/images/dis.png";
-import Copy from "../../../assets/images/copy.png";
 import { useBalance } from "wagmi";
 import { formatEther } from "viem";
+import EL from "../../../assets/images/emp-logo.png";
 
 export default function AddressCard({
   address,
@@ -44,7 +42,7 @@ export default function AddressCard({
     >
       <svg
         onClick={onClose}
-        className="absolute cursor-pointer md:right-10 right-4 md:top-12 top-4 tilt"
+        className="absolute cursor-pointer md:right-10 right-4 md:top-12 top-4 tilt text-white hover:text-[#FF9900]"
         width={18}
         height={19}
         viewBox="0 0 18 19"
@@ -53,17 +51,16 @@ export default function AddressCard({
       >
         <path
           d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-          stroke="#FF9900"
+          stroke="currentColor"
           strokeWidth={2}
           strokeLinecap="round"
           strokeLinejoin="round"
         />
       </svg>
-      <img
-        src={Min}
-        alt="Avatar"
-        className="md:w-[150px] w-16 rounded-full object-contain"
-      />
+      <h2 className="md:text-2xl capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+        <img src={EL} alt="EL" className="w-10 object-contain" />
+        Address
+      </h2>
       <div className="bg-[#382B19] py-10 w-full rounded-xl text-center mb-8 mt-3">
         <p className="text-3xl text-[#FFD484] font-bold font-orbitron">
           {shortAddress}
@@ -98,23 +95,12 @@ export default function AddressCard({
             strokeLinejoin="round"
           />
         </svg>
-        {/* <div className="w-full absolute md:top-4 top-4 md:-left-5 -left-5 lg:z-[-1] bg-transparent border-2 border-[#FF9900] rounded-[10px] h-[68px]"></div> */}
-        {/* <img
-          src={Copy}
-          alt="Copy"
-          className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto z-0"
-        /> */}
         <span className="relative z-10">Copy Address</span>
       </div>
       <div
         className="mt-2 relative hoverclip_2 flex gap-2 items-center justify-center text-white rounded-lg px-6 py-3 w-full font-bold text-xl font-orbitron text-center cursor-pointer transition-all"
         onClick={onDisconnect}
       >
-        {/* <img
-          src={Copy}
-          alt="Copy"
-          className="absolute left-0 right-0 top-0 bottom-0 mx-auto my-auto z-0"
-        /> */}
         <span className="relative z-10">Disconnect</span>
       </div>
     </div>

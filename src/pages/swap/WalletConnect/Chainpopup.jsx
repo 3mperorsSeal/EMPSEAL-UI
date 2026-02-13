@@ -10,6 +10,7 @@ import Avalanche from "../../../assets/icons/avalanche.svg";
 import Polygon from "../../../assets/icons/polygon.svg";
 import OP from "../../../assets/icons/op.svg";
 import Base from "../../../assets/icons/base.svg";
+import EL from "../../../assets/images/emp-logo.png";
 
 const ChainPopup = ({
   setShowChainPopup,
@@ -98,7 +99,7 @@ const ChainPopup = ({
         <div className="md:max-w-[618px] w-full rounded-3xl relative py-6 md:px-8 px-4 mx-auto clip-bg">
           <svg
             onClick={() => setShowChainPopup(false)}
-            className="absolute cursor-pointer md:right-10 right-7 top-14 tilt"
+            className="absolute cursor-pointer md:right-10 right-7 top-14 tilt text-white hover:text-[#FF9900]"
             width={20}
             height={20}
             viewBox="0 0 18 19"
@@ -107,20 +108,17 @@ const ChainPopup = ({
           >
             <path
               d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-              stroke="#FF9900"
+              stroke="currentColor"
               strokeWidth={2}
               strokeLinecap="round"
               strokeLinejoin="round"
             />
           </svg>
-
-          {/* Title */}
-          <h2 className="md:text-2xl capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest md:mt-10 mt-5">
+          <h2 className="mt-4 md:text-2xl capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+            <img src={EL} alt="EL" className="w-10 object-contain" />
             Select Chain
           </h2>
 
-          {/* Search bar */}
-          {/* bg-search */}
           <div className="mt-8 relative px-[10px] h-[54px] w-full flex gap-2 items-center bg-[#382B19] rounded-xl">
             <svg
               className="flex flex-shrink-0 cursor-pointer"
@@ -157,15 +155,6 @@ const ChainPopup = ({
           {/* Chain cards */}
           <div className="md:mt-6 mt-4 w-full overflow-y-auto h-[250px] chain_scroll md:px-2 px-2">
             {filteredChains.map((c) => {
-              // console.log("Chain:", {
-              //   id: c.id,
-              //   name: c.name,
-              //   icon: c.icon,
-              //   image:c.image,
-              //   logo:c.logo,
-              //   logoURI:c.logoURI,
-              //   iconType: typeof c.icon,
-              // });
               const isActive = chain?.id === c.id;
               const chainKey = c.name.toLowerCase();
               const chainIcon = chainIcons[chainKey] || dummyImage;
@@ -176,7 +165,7 @@ const ChainPopup = ({
                     switchChain({ chainId: c.id });
                     setShowChainPopup(false);
                   }}
-                  className={`group relative mt-2 flex items-center px-2 gap-2 cursor-pointer rounded-lg py-3 w-full transition-all roboto hoverclip ${
+                  className={`group relative mt-2 flex items-center px-2 gap-2 cursor-pointer rounded-lg text-[#FFD484] hover:text-white py-3 w-full transition-all roboto hoverclip ${
                     isActive ? "" : ""
                     // sc1
                   }`}
@@ -189,17 +178,9 @@ const ChainPopup = ({
                       onError={(e) => (e.currentTarget.src = dummyImage)}
                     />
                   </div>
-                  {/* <div className="w-6 h-6 rounded-full flex justify-center items-center">
-                    <img
-                      src={c.icon || dummyImage}
-                      alt={c.name}
-                      onError={(e) => (e.currentTarget.src = dummyImage)}
-                      className="w-6 h-6 object-contain"
-                    />
-                  </div> */}
                   <span
-                    className={`font-orbitron text-2xl text-center px-3 ${
-                      isActive ? "text-[#fff]" : "text-[#fff]"
+                    className={`font-orbitron text-xl font-semibold text-center px-3 ${
+                      isActive ? "" : ""
                     }`}
                   >
                     {c.name}

@@ -3,6 +3,7 @@ import { z } from "zod";
 export enum OrderStrategy {
   BUY = "BUY",
   SELL = "SELL",
+  BRACKET = "BRACKET",
 }
 
 // Order data structure matching the smart contract

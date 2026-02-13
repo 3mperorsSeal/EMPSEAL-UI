@@ -2,19 +2,17 @@
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useEffect, useState } from "react";
 import ChainPopup from "./Chainpopup";
-
 import dummyImage from "../../../assets/images/emp-logo.png";
 import Eth from "../../../assets/icons/eth.svg";
 import Pulse from "../../../assets/icons/pls.svg";
 import Sonic from "../../../assets/icons/sonic.png";
 import Base from "../../../assets/icons/base.svg";
-// import Pulse from "../../../assets/icons/pls.svg";
 import Arbitrum from "../../../assets/icons/arbitrum.svg";
-import Ethereum from "../../../assets/icons/eth.svg";
 import BNB from "../../../assets/icons/binance.svg";
 import Avalanche from "../../../assets/icons/avalanche.svg";
 import Polygon from "../../../assets/icons/polygon.svg";
 import OP from "../../../assets/icons/op.svg";
+import EL from "../../../assets/images/emp-logo.png";
 
 import {
   useAccount,
@@ -25,9 +23,6 @@ import {
 } from "wagmi";
 import AddressCard from "./AddressCard";
 import TermsModal from "../TermsModal";
-// import Dis from "../../../assets/images/dis.png";
-// import Copy from "../../../assets/images/copy.png";
-// import Sbg from "../../../assets/images/sbg.png";
 
 const ChainChangeHandler = ({
   chain,
@@ -170,19 +165,12 @@ export default function WalletConnect({
           return (
             <>
               <button
-                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
+                className="new_shad !bg-black !rounded-2xl !text-[#FF9900] transition-all text-center font-extrabold"
                 onClick={() => setShowConnectPopup(true)}
                 type="button"
               >
-                Connect
+                Connect Wallet
               </button>
-              {/* <button
-                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
-                onClick={() => setShowChainPopup(true)}
-                type="button"
-              >
-                Select Chain
-              </button> */}
               {showChainPopup && (
                 <ChainPopup
                   setShowChainPopup={setShowChainPopup}
@@ -211,15 +199,16 @@ export default function WalletConnect({
                     >
                       <path
                         d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
-                        stroke="#ff9900"
+                        stroke="#fff"
                         strokeWidth={2}
                         strokeLinecap="round"
                         strokeLinejoin="round"
                       />
                     </svg>
 
-                    <h2 className="md:text-2xl text-xl font-bold text-white mb-2 text-center">
-                      Connect a wallet to EmpX
+                    <h2 className="mt-4 md:text-2xl capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+                      <img src={EL} alt="EL" className="w-10 object-contain" />
+                      Wallet Connect
                     </h2>
                     <div className="relative my-5">
                       <svg
@@ -325,7 +314,7 @@ export default function WalletConnect({
           return (
             <>
               <button
-                className="wallet-bg-bridge1 hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
+                className="new_shad !bg-black !rounded-2xl hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >
@@ -351,18 +340,8 @@ export default function WalletConnect({
               switchChain={switchChain}
               allowUnsupported={allowUnsupported}
             />
-            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
-              <button
-                className="wallet-bg-bridge1 gtw transition-all text-center font-extrabold"
-                onClick={() => setShowPopup(true)}
-                type="button"
-              >
-                Disconnect
-              </button>
-            </div>
-
             <button
-              className="wallet-bg-bridge1 gtw transition-all font-extrabold flex items-center justify-center gap-2 px-4"
+              className="new_shad !bg-black !rounded-2xl transition-all flex items-center justify-center gap-2 px-2"
               onClick={() => setShowChainPopup(true)}
               type="button"
             >
@@ -378,7 +357,7 @@ export default function WalletConnect({
                     className="w-5 h-5 object-contain rounded-full"
                     onError={(e) => (e.currentTarget.src = dummyImage)}
                   />
-                  <span
+                  {/* <span
                     className={
                       chain.name.length > 11
                         ? "truncate md:w-[150px] w-[110px]"
@@ -386,12 +365,21 @@ export default function WalletConnect({
                     }
                   >
                     {chain.name}
-                  </span>
+                  </span> */}
                 </>
               ) : (
                 "Select Chain"
               )}
             </button>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <button
+                className="new_shad !bg-black !text-[#FF9900] !rounded-2xl transition-all text-center font-extrabold font-orbitron"
+                onClick={() => setShowPopup(true)}
+                type="button"
+              >
+                Disconnect
+              </button>
+            </div>
 
             {/* Address popup */}
             {showPopup && (

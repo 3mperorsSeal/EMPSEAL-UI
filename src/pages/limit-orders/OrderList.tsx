@@ -33,7 +33,7 @@ const LOCAL_STORAGE_ORDERS_KEY_PREFIX = "limit-orders-";
 const loadOrdersFromLocalStorage = (userAddress: string): Order[] => {
   try {
     const storedOrders = localStorage.getItem(
-      `${LOCAL_STORAGE_ORDERS_KEY_PREFIX}${userAddress}`
+      `${LOCAL_STORAGE_ORDERS_KEY_PREFIX}${userAddress}`,
     );
     return storedOrders ? JSON.parse(storedOrders) : [];
   } catch (error) {
@@ -46,7 +46,7 @@ const saveOrdersToLocalStorage = (userAddress: string, orders: Order[]) => {
   try {
     localStorage.setItem(
       `${LOCAL_STORAGE_ORDERS_KEY_PREFIX}${userAddress}`,
-      JSON.stringify(orders)
+      JSON.stringify(orders),
     );
   } catch (error) {
     console.error("Failed to save orders to local storage:", error);
@@ -70,13 +70,12 @@ export function OrderList({
   const isPulseChain = chainId === 369;
 
   const [cancellingOrderId, setCancellingOrderId] = useState<string | null>(
-    null
+    null,
   );
   const [allOrders, setAllOrders] = useState<Order[]>([]);
   const [filterStatus, setFilterStatus] = useState<string>("All");
   const { data: writeContractHash, writeContract } = useWriteContract();
   const lastHandledTxHash = useRef<string | null>(null);
-
 
   useEffect(() => {
     setAllOrders(loadOrdersFromLocalStorage(userAddress));
@@ -123,22 +122,24 @@ export function OrderList({
 
   const activeOrders = activeOrdersData
     ? (activeOrdersData as any[]).map((order: any) => {
-      const tokenOutInfo = getTokenInfo(order.tokenOut);
-      return {
-        id: order.id.toString(),
-        user: order.user,
-        tokenIn: order.tokenIn,
-        tokenOut: order.tokenOut,
-        amountIn: order.amountIn.toString(),
-        minAmountOut: order.minAmountOut.toString(),
-        limitPrice: order.limitPrice.toString(),
-        deadline: order.deadline.toString(),
-        allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
-        filledAmount: order.filledAmount.toString(),
-        status: ["active", "fulfilled", "cancelled", "expired"][order.status] || "unknown",
-        tokenOutDecimals: tokenOutInfo?.decimals || 18,
-      };
-    })
+        const tokenOutInfo = getTokenInfo(order.tokenOut);
+        return {
+          id: order.id.toString(),
+          user: order.user,
+          tokenIn: order.tokenIn,
+          tokenOut: order.tokenOut,
+          amountIn: order.amountIn.toString(),
+          minAmountOut: order.minAmountOut.toString(),
+          limitPrice: order.limitPrice.toString(),
+          deadline: order.deadline.toString(),
+          allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
+          filledAmount: order.filledAmount.toString(),
+          status:
+            ["active", "fulfilled", "cancelled", "expired"][order.status] ||
+            "unknown",
+          tokenOutDecimals: tokenOutInfo?.decimals || 18,
+        };
+      })
     : [];
 
   useEffect(() => {
@@ -150,14 +151,14 @@ export function OrderList({
   useEffect(() => {
     if (activeOrders && isPulseChain) {
       const mergedOrdersMap = new Map<string, Order>(
-        allOrders.map((o) => [o.id, o])
+        allOrders.map((o) => [o.id, o]),
       );
 
       // Handle shell order created when orderId was not immediately available
       const shellOrder = mergedOrdersMap.get("unknown");
       if (shellOrder) {
         const newActiveOrder = activeOrders.find(
-          (ao) => !allOrders.some((o) => o.id === ao.id)
+          (ao) => !allOrders.some((o) => o.id === ao.id),
         );
 
         if (newActiveOrder) {
@@ -176,11 +177,15 @@ export function OrderList({
 
       // Merge fresh data from contract into existing orders
       activeOrders.forEach((activeOrder) => {
-        const existingOrder = (mergedOrdersMap.get(activeOrder.id) || {}) as any;
+        const existingOrder = (mergedOrdersMap.get(activeOrder.id) ||
+          {}) as any;
 
         let newStatus = activeOrder.status;
-        if (existingOrder.status === 'cancelled' && activeOrder.status === 'active') {
-          newStatus = 'cancelled';
+        if (
+          existingOrder.status === "cancelled" &&
+          activeOrder.status === "active"
+        ) {
+          newStatus = "cancelled";
         }
 
         mergedOrdersMap.set(activeOrder.id, {
@@ -234,8 +239,9 @@ export function OrderList({
     if (result.isSuccess) {
       onStatusMessage({
         type: "success",
-        message: `Fetched ${(result.data as any[])?.length ?? 0
-          } active order(s)`,
+        message: `Fetched ${
+          (result.data as any[])?.length ?? 0
+        } active order(s)`,
       });
     }
   };
@@ -292,14 +298,14 @@ export function OrderList({
   const handleStatusChange = (orderId: string, newStatus: string) => {
     setAllOrders((prevOrders) =>
       prevOrders.map((order) =>
-        order.id === orderId ? { ...order, status: newStatus } : order
-      )
+        order.id === orderId ? { ...order, status: newStatus } : order,
+      ),
     );
   };
 
   const handleRemoveOrder = (orderId: string) => {
     setAllOrders((prevOrders) =>
-      prevOrders.filter((order) => order.id !== orderId)
+      prevOrders.filter((order) => order.id !== orderId),
     );
   };
 
@@ -311,7 +317,7 @@ export function OrderList({
           return prevOrders.map((order) =>
             order.id === details.orderId
               ? { ...order, txHash: details.txHash, strategy: details.strategy }
-              : order
+              : order,
           );
         }
         const newOrderShell: Order = {
@@ -336,7 +342,7 @@ export function OrderList({
         return [...prevOrders, newOrderShell];
       });
     },
-    [userAddress]
+    [userAddress],
   );
 
   useEffect(() => {
@@ -372,12 +378,13 @@ export function OrderList({
   });
 
   return (
-    <div className="text-white w-full sctable md:max-w-[1050px] mx-auto">
-      <div className="flex justify-between items-center flex-wrap gap-4">
-        <button className="font-orbitron px-6 py-2 bg-[#FF9900] text-black md:w-[220px] h-[70px] md:text-base text-sm font-extrabold border border-[#FF9900] rounded-t-[10px] font-orbitron transition-all duration-200">
+    // sctable
+    <div className="text-white lg:max-w-[1200px] md:max-w-[1200px] mx-auto w-full pt-5">
+      <div className="flex justify-between items-center flex-wrap gap-4 mb-5 w-full">
+        <div className="font-orbitron md:text-4xl text-2xl font-extrabold text-[#FF9900]">
           Your Orders
-        </button>
-        <div className="flex gap-2 items-center flex-wrap md:mb-0 mb-2">
+        </div>
+        <div className="flex gap-2 items-center flex-wrap">
           <Select value={filterStatus} onValueChange={setFilterStatus}>
             <SelectTrigger className="w-[180px] border border-[#FF9900] bg-black text-white">
               <SelectValue placeholder="Filter by status" />
@@ -399,14 +406,14 @@ export function OrderList({
             className="border border-[#FF9900]"
           >
             <RefreshCw
-              className={`mr-2 h-4 w-4 ${isLoading && isPulseChain ? "animate-spin" : ""
-                }`}
+              className={`mr-2 h-4 w-4 ${
+                isLoading && isPulseChain ? "animate-spin" : ""
+              }`}
             />
             {isLoading && isPulseChain ? "Fetching..." : "Refresh"}
           </Button>
         </div>
       </div>
-
       <div className="clip-bg1 w-full md:rounded-tr-2xl md:rounded-0 rounded-2xl rounded-b-2xl lg:py-8 lg:px-8 md:px-6 px-4 md:py-6 py-6 space-y-3">
         {!isPulseChain ? (
           <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-border bg-muted/20 p-8 text-center">
@@ -452,6 +459,6 @@ export function OrderList({
           </div>
         )}
       </div>
-    </div>
+    </div>  
   );
 }
