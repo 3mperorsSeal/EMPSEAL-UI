@@ -336,8 +336,9 @@ import { useReadContract, useWatchContractEvent } from "wagmi";
 import { formatUnits } from "viem";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 import { TokenLogo } from "../../components/TokenLogo";
+import { Badge } from "../../components/ui/badge";
 
-const CONTRACT_ADDRESS = "0x80C12068B84d26c5359653Ba5527746bb999b8c6";
+const CONTRACT_ADDRESS = "0xF4856ce8BE6E992819167D55C82a1Fae09Ddd9E2";
 
 interface OrderListItemProps {
   order: Order;
@@ -545,6 +546,16 @@ export function OrderListItem({
             <div className="absolute z-50 bg-black border border-[#FF9900] p-2 rounded text-xs whitespace-nowrap">
               Full Order ID: {getStrategyName()} {order.id}
             </div>
+          )}
+          {order.groupId && order.groupId !== "0" && (
+            <Badge variant="outline" className="ml-2 border-[#FF9900] text-[#FF9900] text-xs">
+              {order.fundsDeposited ? "Active Bracket" : "Pending Bracket Leg"}
+            </Badge>
+          )}
+          {order.groupRole !== undefined && order.groupRole !== 0 && (
+            <Badge variant="secondary" className="ml-2 text-xs">
+              {["None", "Entry", "StopLoss", "TakeProfit"][order.groupRole]}
+            </Badge>
           )}
         </div>
 

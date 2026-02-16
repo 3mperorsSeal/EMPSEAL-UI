@@ -26,8 +26,10 @@ import {
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
+import type { OrderGroup } from "./schema";
+import { GroupType } from "./schema";
 
-const CONTRACT_ADDRESS = "0x80C12068B84d26c5359653Ba5527746bb999b8c6";
+const CONTRACT_ADDRESS = "0xF4856ce8BE6E992819167D55C82a1Fae09Ddd9E2";
 const LOCAL_STORAGE_ORDERS_KEY_PREFIX = "limit-orders-";
 
 const loadOrdersFromLocalStorage = (userAddress: string): Order[] => {
@@ -134,10 +136,11 @@ export function OrderList({
           deadline: order.deadline.toString(),
           allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
           filledAmount: order.filledAmount.toString(),
-          status:
-            ["active", "fulfilled", "cancelled", "expired"][order.status] ||
-            "unknown",
+          status: ["active", "fulfilled", "cancelled", "expired"][order.status] || "unknown",
           tokenOutDecimals: tokenOutInfo?.decimals || 18,
+          groupId: order.groupId?.toString(),
+          groupRole: order.groupRole,
+          fundsDeposited: order.fundsDeposited,
         };
       })
     : [];
@@ -169,6 +172,9 @@ export function OrderList({
             fillMode: 0,
             maxSplits: 0,
             fillCount: 0,
+            groupId: "0",
+            groupRole: GroupType.None,
+            fundsDeposited: false,
           };
           mergedOrdersMap.set(newActiveOrder.id, completeOrder);
           mergedOrdersMap.delete("unknown");
@@ -196,6 +202,9 @@ export function OrderList({
           ...existingOrder,
           ...activeOrder,
           status: newStatus,
+          groupId: activeOrder.groupId,
+          groupRole: activeOrder.groupRole,
+          fundsDeposited: activeOrder.fundsDeposited,
         });
       });
 
@@ -338,6 +347,9 @@ export function OrderList({
           fillMode: 0,
           maxSplits: 0,
           fillCount: 0,
+          groupId: "0",
+          groupRole: GroupType.None,
+          fundsDeposited: false,
         };
         return [...prevOrders, newOrderShell];
       });

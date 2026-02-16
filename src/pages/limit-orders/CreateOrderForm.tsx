@@ -41,7 +41,13 @@ import { TokenLogo } from "../../components/TokenLogo";
 import { LogoService } from "../../services/LogoService";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
-const CONTRACT_ADDRESS = "0x80C12068B84d26c5359653Ba5527746bb999b8c6";
+const CONTRACT_ADDRESS = "0xF4856ce8BE6E992819167D55C82a1Fae09Ddd9E2";
+
+enum OrderMode {
+  STANDARD = "standard",
+  BRACKET = "bracket",
+  POSITION = "position",
+}
 
 interface CreateOrderFormProps {
   onStatusMessage: (message: StatusMessage) => void;
@@ -64,6 +70,9 @@ export function CreateOrderForm({
   const [showBracketSettings, setShowBracketSettings] = useState(false);
   const [takeProfitPrice, setTakeProfitPrice] = useState<string>("");
   const [stopLossPrice, setStopLossPrice] = useState<string>("");
+  const [stopLossDeadline, setStopLossDeadline] = useState<string>("");
+  const [takeProfitDeadline, setTakeProfitDeadline] = useState<string>("");
+  const [orderMode, setOrderMode] = useState<OrderMode>(OrderMode.STANDARD);
 
   const { address: userAddress } = useAccount();
   const [isApproving, setIsApproving] = useState(false);
@@ -198,16 +207,20 @@ export function CreateOrderForm({
     }
   }, [selectedTokenIn, selectedTokenOut, tokenInMode, tokenOutMode]);
 
+  // Calculate minAmountOut when amountIn, limitPrice, or slippage changes
   useEffect(() => {
-    const handler = setTimeout(() => {
+    const calculateMinAmountOut = () => {
+      const limitPriceValue = form.getValues("limitPrice");
+      const amountInValue = form.getValues("amountIn");
+      
       if (
-        amountIn &&
-        !isNaN(parseFloat(amountIn)) &&
-        currentLimitPrice &&
-        !isNaN(parseFloat(currentLimitPrice))
+        amountInValue &&
+        !isNaN(parseFloat(amountInValue)) &&
+        limitPriceValue &&
+        !isNaN(parseFloat(limitPriceValue))
       ) {
-        const amountInFloat = parseFloat(amountIn);
-        const limitPriceFloat = parseFloat(currentLimitPrice);
+        const amountInFloat = parseFloat(amountInValue);
+        const limitPriceFloat = parseFloat(limitPriceValue);
         const expectedAmountOut = amountInFloat * limitPriceFloat;
 
         // Apply slippage
@@ -215,14 +228,22 @@ export function CreateOrderForm({
         const slippageAdjustedAmount =
           expectedAmountOut * (1 - numericSlippage / 100);
 
-        form.setValue("minAmountOut", slippageAdjustedAmount.toFixed(6));
+        form.setValue("minAmountOut", slippageAdjustedAmount.toFixed(6), {
+          shouldValidate: false,
+          shouldDirty: true,
+        });
       }
-    }, 500); // Debounce time
-
-    return () => {
-      clearTimeout(handler);
     };
-  }, [amountIn, currentLimitPrice, slippage, form]);
+
+    // Subscribe to form value changes
+    const subscription = form.watch((value, { name }) => {
+      if (name === "limitPrice" || name === "amountIn") {
+        calculateMinAmountOut();
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [form, slippage]);
 
   useEffect(() => {
     setQuoteReversed(false);
@@ -458,42 +479,137 @@ export function CreateOrderForm({
         Math.floor(new Date(data.deadline).getTime() / 1000),
       );
       const mode = partialFillEnabled ? fillMode : 0;
+      const orderType = data.strategy === OrderStrategy.SELL ? 0 : 1; // 0 for SELL, 1 for BUY
 
-      const orderTypeMap = {
-        [OrderStrategy.SELL]: 0,
-        [OrderStrategy.BUY]: 1,
-        [OrderStrategy.BRACKET]: 2,
-      } as const;
+      let hash: `0x${string}`;
 
-      const orderType = orderTypeMap[data.strategy];
+      // Validation for bracket orders (SELL only)
+      if (orderMode === OrderMode.BRACKET) {
+        const sl = parseFloat(stopLossPrice);
+        const tp = parseFloat(takeProfitPrice);
 
-      // For bracket orders, you might need additional parameters
-      // This depends on your contract implementation
-      const args: any[] = [
-        data.tokenIn as `0x${string}`,
-        data.tokenOut as `0x${string}`,
-        amountIn,
-        minAmountOut,
-        limitPrice,
-        deadline,
-        mode,
-        orderType,
-      ];
+        if (!stopLossPrice || !takeProfitPrice || isNaN(sl) || isNaN(tp)) {
+          onStatusMessage({ type: "error", message: "Please enter valid Stop Loss and Take Profit prices" });
+          setIsCreating(false);
+          return;
+        }
 
-      // If bracket order, add take profit and stop loss
-      if (data.strategy === OrderStrategy.BRACKET) {
-        const takeProfit = parseUnits(takeProfitPrice || "0", 18);
-        const stopLoss = parseUnits(stopLossPrice || "0", 18);
-        args.push(takeProfit, stopLoss);
+        // Bracket orders are SELL only: enforce SL > TP
+        if (sl <= tp) {
+          onStatusMessage({ type: "error", message: "Stop Loss Price must be GREATER than Take Profit Price" });
+          setIsCreating(false);
+          return;
+        }
       }
-      // Add additional bracket parameters - adjust based on your contract
 
-      const hash = await writeContract(config, {
-        address: CONTRACT_ADDRESS,
-        abi: LIMIT_ORDER_ABI,
-        functionName: "createOrder",
-        args,
-      });
+      if (orderMode === OrderMode.POSITION) {
+        if (!data.tokenOut || data.tokenOut === zeroAddress) {
+          onStatusMessage({ type: "error", message: "Please select a Token to Protect Into (Exit Token)" });
+          setIsCreating(false);
+          return;
+        }
+
+        const sl = parseFloat(stopLossPrice);
+        const tp = parseFloat(takeProfitPrice);
+
+        if (!stopLossPrice || !takeProfitPrice || isNaN(sl) || isNaN(tp)) {
+          onStatusMessage({ type: "error", message: "Please enter valid Stop Loss and Take Profit prices" });
+          setIsCreating(false);
+          return;
+        }
+
+        // Position orders are always SELL protection: enforce SL > TP
+        if (sl <= tp) {
+          onStatusMessage({ type: "error", message: "For Position Protection, Stop Loss Price must be GREATER than Take Profit Price" });
+          setIsCreating(false);
+          return;
+        }
+      }
+
+      if (orderMode === OrderMode.STANDARD) {
+        hash = await writeContract(config, {
+          address: CONTRACT_ADDRESS,
+          abi: LIMIT_ORDER_ABI,
+          functionName: "createOrder",
+          args: [
+            data.tokenIn as `0x${string}`,
+            data.tokenOut as `0x${string}`,
+            amountIn,
+            minAmountOut,
+            limitPrice,
+            deadline,
+            mode,
+            orderType,
+          ],
+        });
+      } else if (orderMode === OrderMode.BRACKET) {
+        const slPrice = parseUnits(stopLossPrice, 18);
+        const tpPrice = parseUnits(takeProfitPrice, 18);
+
+        // Helper to calc min out
+        const calcMinOut = (amount: bigint, price: bigint) => {
+          return (amount * price) / BigInt(1e18);
+        };
+
+        const slMinOut = calcMinOut(amountIn, slPrice);
+        const tpMinOut = calcMinOut(amountIn, tpPrice);
+
+        // Single expiry for both SL and TP
+        const bracketExpiry = BigInt(Math.floor(new Date(takeProfitDeadline).getTime() / 1000));
+
+        hash = await writeContract(config, {
+          address: CONTRACT_ADDRESS,
+          abi: LIMIT_ORDER_ABI,
+          functionName: "createBracketOrder",
+          args: [
+            data.tokenIn as `0x${string}`,
+            data.tokenOut as `0x${string}`,
+            amountIn,
+            minAmountOut, // Entry Min Out
+            limitPrice,   // Entry Limit Price
+            deadline,     // Entry Deadline
+            orderType,    // Entry Order Type
+            data.tokenIn as `0x${string}`,  // Exit Token
+            slPrice,
+            slMinOut,
+            bracketExpiry,
+            tpPrice,
+            tpMinOut,
+            bracketExpiry
+          ],
+        });
+      } else {
+        // Position Bracket
+        const slPrice = parseUnits(stopLossPrice, 18);
+        const tpPrice = parseUnits(takeProfitPrice, 18);
+
+        const calcMinOut = (amount: bigint, price: bigint) => {
+          return (amount * price) / BigInt(1e18);
+        };
+
+        const slMinOut = calcMinOut(amountIn, slPrice);
+        const tpMinOut = calcMinOut(amountIn, tpPrice);
+
+        // Single expiry for both SL and TP
+        const bracketExpiry = BigInt(Math.floor(new Date(takeProfitDeadline).getTime() / 1000));
+
+        hash = await writeContract(config, {
+          address: CONTRACT_ADDRESS,
+          abi: LIMIT_ORDER_ABI,
+          functionName: "createPositionBracket",
+          args: [
+            data.tokenIn as `0x${string}`,
+            data.tokenOut as `0x${string}`, // Exit Token
+            amountIn,
+            slPrice,
+            slMinOut,
+            bracketExpiry,
+            tpPrice,
+            tpMinOut,
+            bracketExpiry
+          ]
+        });
+      }
 
       onStatusMessage({
         type: "info",
@@ -529,6 +645,8 @@ export function CreateOrderForm({
       setShowBracketSettings(false);
       setTakeProfitPrice("");
       setStopLossPrice("");
+      setTakeProfitDeadline("");
+      setOrderMode(OrderMode.STANDARD);
 
       // Only trigger the client update if we actually found a valid ID
       if (newOrderId !== "new") {
@@ -652,85 +770,131 @@ export function CreateOrderForm({
         >
           <div className="md:max-w-[700px] w-full">
             {/* Strategy Selection */}
-            <div className="mb-4 md:max-w-[650px] w-full mx-auto border-[2.43px] border-[#FFA600] rounded-lg px-4 py-2 bg-black">
-              <div className="text-center text-[#FF9900] md:text-xl font-bold text-sm font-orbitron">
-                Select Strategy
-              </div>
-
-              <div className="flex justify-center gap-5 items-center mt-2 md:flex-nowrap flex-wrap">
-                {/* Sell Strategy Button */}
-                <div className="md:w-[170px] w-[120px] mx-auto flex flex-col items-center">
-                  <button
-                    type="button"
-                    className={`
-                      w-28 h-12 p-4 md:text-3xl text-xl
-                      rounded-2xl flex justify-center items-center
-                      transition-all duration-200
-                      ${
-                        form.watch("strategy") === OrderStrategy.SELL
-                          ? "bg-black border border-[#FF9900] text-[#FF9900]"
-                          : "bg-black text-white hover:bg-[#1a1a1a]"
-                      }
-                    `}
-                    onClick={() =>
-                      form.setValue("strategy", OrderStrategy.SELL)
-                    }
-                    data-testid="button-strategy-sell"
-                  >
-                    Sell
-                  </button>
-                  <div className="md:mt-2 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
-                    Sell High : Exit Strategy
+            <div className="mb-4 md:max-w-[850px] w-full mx-auto border-[2.43px] border-[#FFA600] rounded-lg px-4 py-2 bg-black">
+              <div className="flex justify-center gap-8 md:gap-16 items-start mt-2 md:flex-nowrap flex-wrap">
+                {/* Limit Orders Group */}
+                <div className="flex flex-col items-center">
+                  <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
+                    Limit Orders
+                  </div>
+                  <div className="flex gap-3">
+                    {/* Sell Strategy Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        type="button"
+                        className={`
+                          w-24 h-10 p-3 md:text-2xl text-lg
+                          rounded-2xl flex justify-center items-center
+                          transition-all duration-200
+                          ${
+                            form.watch("strategy") === OrderStrategy.SELL && orderMode === OrderMode.STANDARD
+                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          }
+                        `}
+                        onClick={() => {
+                          form.setValue("strategy", OrderStrategy.SELL);
+                          setOrderMode(OrderMode.STANDARD);
+                          setShowBracketSettings(false);
+                        }}
+                        data-testid="button-strategy-sell"
+                      >
+                        Sell
+                      </button>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                        Sell High
+                      </div>
+                    </div>
+                    {/* Buy Strategy Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        type="button"
+                        className={`
+                          w-24 h-10 p-3 md:text-2xl text-lg
+                          rounded-2xl flex justify-center items-center
+                          transition-all duration-200
+                          ${
+                            form.watch("strategy") === OrderStrategy.BUY && orderMode === OrderMode.STANDARD
+                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          }
+                        `}
+                        onClick={() => {
+                          form.setValue("strategy", OrderStrategy.BUY);
+                          setOrderMode(OrderMode.STANDARD);
+                          setShowBracketSettings(false);
+                        }}
+                        data-testid="button-strategy-buy"
+                      >
+                        Buy
+                      </button>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                        Buy Low
+                      </div>
+                    </div>
                   </div>
                 </div>
-                {/* Buy Strategy Button */}
-                <div className="md:w-[170px] w-[120px] mx-auto flex flex-col items-center">
-                  <button
-                    type="button"
-                    className={`
-                      w-28 h-12 p-4 md:text-3xl text-xl
-                      rounded-2xl flex justify-center items-center
-                      transition-all duration-200
-                      ${
-                        form.watch("strategy") === OrderStrategy.BUY
-                          ? "bg-black border border-[#FF9900] text-[#FF9900]"
-                          : "bg-black text-white hover:bg-[#1a1a1a]"
-                      }
-                    `}
-                    onClick={() => form.setValue("strategy", OrderStrategy.BUY)}
-                    data-testid="button-strategy-buy"
-                  >
-                    Buy
-                  </button>
-                  <div className="md:mt-2 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
-                    Buy Low : Entry Strategy
-                  </div>
-                </div>
 
-                {/* Bracket Strategy Button */}
-                <div className=" mx-auto flex flex-col items-center">
-                  <button
-                    type="button"
-                    className={`
-                     h-12 p-4 md:text-3xl text-xl
-                    rounded-2xl flex justify-center items-center
-                    transition-all duration-200
-                    ${
-                      form.watch("strategy") === OrderStrategy.BRACKET
-                        ? "bg-black border border-[#FF9900] text-[#FF9900]"
-                        : "bg-black text-white hover:bg-[#1a1a1a]"
-                    }
-                  `}
+                {/* Bracket/Protection Group */}
+                <div className="flex flex-col items-center">
+                  <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
+                    Bracket & Protection
+                  </div>
+                  <div className="flex gap-3">
+                    {/* Bracket Strategy Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        type="button"
+                        className={`
+                          w-28 h-10 p-3 md:text-2xl text-lg
+                          rounded-2xl flex justify-center items-center
+                          transition-all duration-200
+                          ${
+                            orderMode === OrderMode.BRACKET
+                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          }
+                        `}
                     onClick={() => {
-                      form.setValue("strategy", OrderStrategy.BRACKET);
+                      setOrderMode(OrderMode.BRACKET);
                       setShowBracketSettings(true);
+                      form.setValue("strategy", OrderStrategy.SELL); // Bracket orders are SELL only
                     }}
-                    data-testid="button-bracket-buy"
-                  >
-                    Bracket
-                  </button>
-                  <div className="md:mt-2 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
-                    Stop Loss & Take Profit
+                        data-testid="button-bracket"
+                      >
+                        Bracket
+                      </button>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                        Entry + SL/TP
+                      </div>
+                    </div>
+                    {/* Position Protection Button */}
+                    <div className="flex flex-col items-center">
+                      <button
+                        type="button"
+                        className={`
+                          w-28 h-10 p-3 md:text-2xl text-lg
+                          rounded-2xl flex justify-center items-center
+                          transition-all duration-200
+                          ${
+                            orderMode === OrderMode.POSITION
+                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          }
+                        `}
+                        onClick={() => {
+                          setOrderMode(OrderMode.POSITION);
+                          setShowBracketSettings(true);
+                          form.setValue("strategy", OrderStrategy.SELL); // Position orders are always SELL
+                        }}
+                        data-testid="button-position"
+                      >
+                        Position
+                      </button>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                        Protect Holdings
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -746,7 +910,7 @@ export function CreateOrderForm({
             <div className="relative bg_swap_box">
               <div className="flex justify-between gap-3 items-center">
                 <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
-                  In Address
+                  {orderMode === OrderMode.POSITION ? "Protected Token" : "In Address"}
                 </div>
                 <div className="md:text-xl text-[10px] font-orbitron">
                   <span className="font-semibold leading-normal text-[#FF9900]">
@@ -915,7 +1079,7 @@ export function CreateOrderForm({
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                 <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: 52.6489
+                  Market Price: {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
                 </p>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
@@ -999,7 +1163,7 @@ export function CreateOrderForm({
             <div className="relative pb-4 bg_swap_box_black">
               <div className="flex justify-between gap-3 items-center lg:px-2">
                 <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
-                  Out Address
+                  {orderMode === OrderMode.POSITION ? "Exit Token" : "Out Address"}
                 </div>
                 <div className="md:text-xl text-[10px] font-orbitron">
                   <span className="font-semibold leading-normal text-[#FF9900]">
@@ -1168,7 +1332,7 @@ export function CreateOrderForm({
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                 <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: 52.6489
+                  Market Price: {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
                 </p>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
@@ -1360,8 +1524,8 @@ export function CreateOrderForm({
                   isCreating ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  (currentStrategy === OrderStrategy.BRACKET &&
-                    (!takeProfitPrice || !stopLossPrice))
+                  (showBracketSettings &&
+                    (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
                 className="gtw relative w-full md:h-[68px] h-12 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold"
                 data-testid="button-create-order"
@@ -1372,6 +1536,8 @@ export function CreateOrderForm({
                     Creating...
                   </>
                 ) : (
+                  orderMode === OrderMode.POSITION ? "Create Position Protection" : 
+                  orderMode === OrderMode.BRACKET ? "Create Bracket Order" : 
                   "Create Order"
                 )}
               </button>
@@ -1386,6 +1552,8 @@ export function CreateOrderForm({
           </div>
           {/*  */}
           <div className="lg:max-w-[550px] md:max-w-[700px] w-full !mt-0">
+            {/* Entry Price - Hidden for Position orders */}
+            {orderMode !== OrderMode.POSITION && (
             <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
               <div className="flex justify-between gap-2 items-center">
                 <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron">
@@ -1407,6 +1575,7 @@ export function CreateOrderForm({
                   </div>
                   {marketPrice && tokenInInfo && tokenOutInfo && (
                     <button
+                      type="button"
                       onClick={() => setQuoteReversed((prev) => !prev)}
                       className="absolute right-0 top-[-25px] w-[25px] md:h-[25px] h-6 shrink-0 flex items-center justify-center rounded-lg !border !border-[#FF9900]"
                     >
@@ -1525,9 +1694,19 @@ export function CreateOrderForm({
                 )}
               </div>
             </div>
+            )}
             {/* Bracket Settings */}
             {showBracketSettings && (
               <>
+                {/* Bracket Direction Helper */}
+                {orderMode === OrderMode.BRACKET && (
+                  <div className="mb-4 p-3 bg-black/50 border border-[#FF9900]/30 rounded-lg">
+                    <p className="text-[#FFE3BA] text-sm text-center font-orbitron">
+                      Bracket Order: Set Stop Loss ABOVE and Take Profit BELOW entry price
+                    </p>
+                  </div>
+                )}
+                
                 <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5 mt-5">
                   {/* Stop Loss Section */}
                   <div className="w-full">
@@ -1582,8 +1761,8 @@ export function CreateOrderForm({
                             setStopLossPercent(percent);
                             if (marketPrice) {
                               const market = Number(marketPrice);
-                              const stopLossValue =
-                                market * (1 - percent / 100);
+                              // Bracket orders are SELL only: SL above market (1 + percent)
+                              const stopLossValue = market * (1 + percent / 100);
                               setStopLossPrice(stopLossValue.toFixed(4));
                             }
                           }}
@@ -1681,8 +1860,8 @@ export function CreateOrderForm({
                             setTakeProfitPercent(percent);
                             if (marketPrice) {
                               const market = Number(marketPrice);
-                              const takeProfitValue =
-                                market * (1 + percent / 100);
+                              // Bracket orders are SELL only: TP below market (1 - percent)
+                              const takeProfitValue = market * (1 - percent / 100);
                               setTakeProfitPrice(takeProfitValue.toFixed(4));
                             }
                           }}
@@ -1723,6 +1902,25 @@ export function CreateOrderForm({
                         </div>
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Target Price
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* SL/TP Expiry */}
+                    <div className="mt-4">
+                      <div className="flex gap-4 items-center px-4 md:flex-nowrap flex-wrap">
+                        <div className="md:text-lg text-base text-[#FF9900]">
+                          SL/TP Expiry{" "}
+                        </div>
+                        <div>
+                          <input
+                            type="datetime-local"
+                            value={takeProfitDeadline}
+                            onChange={(e) => setTakeProfitDeadline(e.target.value)}
+                            className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                            min={minDeadline}
+                            max={maxDeadline}
+                          />
                         </div>
                       </div>
                     </div>
@@ -1966,8 +2164,8 @@ export function CreateOrderForm({
                   isCreating ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  (currentStrategy === OrderStrategy.BRACKET &&
-                    (!takeProfitPrice || !stopLossPrice))
+                  (showBracketSettings &&
+                    (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
                 className="gtw relative w-full md:h-[68px] h-12 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold"
                 data-testid="button-create-order"
@@ -1978,6 +2176,8 @@ export function CreateOrderForm({
                     Creating...
                   </>
                 ) : (
+                  orderMode === OrderMode.POSITION ? "Create Position Protection" : 
+                  orderMode === OrderMode.BRACKET ? "Create Bracket Order" : 
                   "Create Order"
                 )}
               </button>
