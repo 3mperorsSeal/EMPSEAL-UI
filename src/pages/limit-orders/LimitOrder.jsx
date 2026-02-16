@@ -14,7 +14,7 @@ const ToastContent = ({ message }) => (
     )}
   </div>
 );
-export default function LimitOrder({ slippage }) {
+export default function LimitOrder({ slippage, onOpenSlippage = () => {} }) {
   const { address, isConnected } = useAccount();
 
   const [newOrderCounter, setNewOrderCounter] = useState(0);
@@ -47,7 +47,8 @@ export default function LimitOrder({ slippage }) {
   };
 
   return (
-    <div className="w-full pt-2 lg:pb-16 pb-[20rem] text-white rounded-lg font-orbitron">
+    // lg:pb-16 pb-[20rem]
+    <div className="w-full pt-2 pb-2 text-white rounded-lg font-orbitron">
       <div className="space-y-8">
         {isConnected && address ? (
           <>
@@ -55,6 +56,7 @@ export default function LimitOrder({ slippage }) {
               onStatusMessage={handleStatusMessage}
               onOrderCreated={handleOrderCreated}
               slippage={slippage}
+              onOpenSlippage={onOpenSlippage}
             />
             <OrderList
               userAddress={address}
