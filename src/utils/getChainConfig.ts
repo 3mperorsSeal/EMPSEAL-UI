@@ -18,9 +18,36 @@ export const getChainConfig = (chainId: number) => {
     case 146:
       return {
         routerAddress:
-          "0xd8016e376e15b20Fc321a37fD69DC42cfDf951Bb" as `0x${string}`,
+          "0x6c481A43EdA77D4E5a666b5A338c5426De2e90B0" as `0x${string}`,
         wethAddress:
           "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38" as `0x${string}`,
+      };
+    case 8453:
+      return {
+        routerAddress: "0xcd9F04848221DFd0F218e330bA5b03d5ae744Cb2" as `0x${string}`,
+        wethAddress:
+          "0x4200000000000000000000000000000000000006" as `0x${string}`,
+      };
+    case 1329:
+      return {
+        routerAddress:
+          "0xC450f0887A94D1B2ad4b1b05734bEfe860919A2B" as `0x${string}`,
+        wethAddress:
+          "0xe30fedd158a2e3b13e9badaeabafc5516e95e8c7" as `0x${string}`,
+      };
+    case 80094:
+      return {
+        routerAddress:
+          "0x86B1b88B2BBFe49999fA9A415270997ed1Bfd803" as `0x${string}`,
+        wethAddress: 
+          "0x6969696969696969696969696969696969696969" as `0x${string}`,
+      };
+    case 30:
+      return {
+        routerAddress:
+          "0x1C232F01118CB8B424793ae03F870aa7D0ac7f77" as `0x${string}`,
+        wethAddress:
+          "0x542fda317318ebf1d3deaf76e0b632741a7e677d" as `0x${string}`,
       };
     default:
       throw new Error(`Chain ${chainId} not supported`);

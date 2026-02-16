@@ -9,8 +9,20 @@ import { SwapStatus, TradeInfo } from "./types/interface";
 import { WPLS } from "./abis/wplsABI";
 import { WETHW } from "./abis/wethwABI";
 import { WSONIC } from "./abis/wsonicABI";
+import { WETH } from "./abis/wethBaseABI";
+import { WSEI } from "./abis/wseiABI";
+import { WBERA } from "./abis/wberaABI";
+import { WRBTC } from "./abis/wrbtcABI";
 import { config } from "../Wagmi/config";
-import { ETHW_ROUTER_ABI, PLS_ROUTER_ABI, SONIC_ROUTER_ABI } from "./abis/empSealRouterAbi";
+import { 
+  ETHW_ROUTER_ABI, 
+  PLS_ROUTER_ABI, 
+  SONIC_ROUTER_ABI,
+  BASECHAIN_ROUTER_ABI,
+  SEI_ROUTER_ABI,
+  BERA_ROUTER_ABI,
+  ROOTSTOCK_ROUTER_ABI
+} from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
 import { getChainConfig } from "./getChainConfig";
@@ -35,6 +47,30 @@ const ROUTER_FUNCTION_NAMES = {
     swapFromNative: "swapNoSplitFromETH",
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Base
+  8453: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Sei
+  1329: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Berachain
+  80094: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
+  // Rootstock
+  30: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
   }
 } as const;
 
@@ -53,6 +89,14 @@ const getWrappedTokenABI = (chainId: number) => {
       return WETHW;
     case 146: // Sonic
       return WSONIC;
+    case 8453: // Base
+      return WETH;
+    case 1329: // Sei
+      return WSEI;
+    case 80094: // Berachain
+      return WBERA;
+    case 30: // Rootstock
+      return WRBTC;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -69,6 +113,14 @@ const getRouterABI = (chainId: number) => {
       return ETHW_ROUTER_ABI;
     case 146: // Sonic
       return SONIC_ROUTER_ABI;
+    case 8453: // Base
+      return BASECHAIN_ROUTER_ABI;
+    case 1329: // Sei
+      return SEI_ROUTER_ABI;
+    case 80094: // Berachain
+      return BERA_ROUTER_ABI;
+    case 30: // Rootstock
+      return ROOTSTOCK_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;
@@ -227,8 +279,9 @@ const swapNoSplitFromEth = async (
 const swap = async (chainId: number,tradeInfo: TradeInfo, userAddress: Address) => {
   try {
     const {routerAddress} = getCurrentChainConfig(chainId);
+    const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
-      abi: ETHW_ROUTER_ABI,
+      abi: routerABI,
       address: routerAddress,
       functionName: "swapNoSplit",
       args: [
