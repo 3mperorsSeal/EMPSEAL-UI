@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Emp from "./Emp";
 import Wallet from "./Wallet";
-import Graph from "./Graph";
+// import Graph from "./Graph";
 import X from "../../assets/images/x.svg";
 import L from "../../assets/images/linked.svg";
 import Y from "../../assets/images/youtube.svg";
@@ -55,9 +55,9 @@ const Normal = () => {
                 tokenB={tokenB}
               />
             </div>
-            <div className="mt-3 hidden">
+            {/* <div className="mt-3 hidden">
               <Graph padding={padding} />
-            </div>
+            </div> */}
           </div>
         </div>
         {/* Social buttons */}

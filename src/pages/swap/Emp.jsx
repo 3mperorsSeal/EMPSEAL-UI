@@ -1,34 +1,61 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
+import Logo from "../../assets/images/swap-emp.png";
+import Sett from "../../assets/images/setting.svg";
 import Ar from "../../assets/images/reverse.svg";
 import Bar from "../../assets/images/bar.png";
+import Sellbox from "../../assets/images/sell-box.png";
+import Buybox from "../../assets/images/buy-bg.png";
+import Swapbutton from "../../assets/images/swap-button.svg";
+
+import Usdc from "../../assets/images/usdc.svg";
+import Refresh from "../../assets/images/refresh.svg";
+import Info from "../../assets/images/info.svg";
+import { Link } from "react-router-dom";
 import Amount from "./Amount";
 import Token from "./Token";
-import { formatEther } from "viem";
+import { formatEther, formatUnits } from "viem";
 import {
   useAccount,
   useBalance,
   usePublicClient,
   useWriteContract,
+  useReadContract,
 } from "wagmi";
 import SlippageCalculator from "./SlippageCalculator";
 import { EmpsealRouterLiteV3 } from "../../utils/lite/EmpsealRouterLiteV3";
+import Tokens from "../tokenList.json";
 import { useStore } from "../../redux/store/routeStore";
 import Transaction from "./Transaction";
 import { Copy, Check, InfoIcon } from "lucide-react";
 import { useChainConfig } from "../../hooks/useChainConfig";
-import { SmartRouter } from "../../utils/services/SmartRouter";
+import ProvidersListNew from "../bridge/ProvidersList-new";
+// import { SmartRouter } from "../../utils/services/SmartRouter";
 import {
   checkAllowance,
   callApprove,
   EMPTY_ADDRESS,
 } from "../../utils/contractCalls";
+import { swapTokens } from "../../utils/contractCalls";
+import { 
+  PLS_ROUTER_ABI, 
+  ETHW_ROUTER_ABI, 
+  SONIC_ROUTER_ABI,
+  BASECHAIN_ROUTER_ABI,
+  SEI_ROUTER_ABI,
+  BERA_ROUTER_ABI,
+  ROOTSTOCK_ROUTER_ABI
+} from "../../utils/abis/empSealRouterAbi";
 import { toast } from "react-toastify";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
 import { WSONIC } from "../../utils/abis/wsonicABI";
+import { WETH } from "../../utils/abis/wethBaseABI";
+import { WSEI } from "../../utils/abis/wseiABI";
+import { WBERA } from "../../utils/abis/wberaABI";
+import { WRBTC } from "../../utils/abis/wrbtcABI";
 
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
@@ -41,9 +68,37 @@ const getWrappedTokenABI = (chainId) => {
       return WETHW;
     case 146:
       return WSONIC;
+    case 8453:
+      return WETH;
+    case 1329:
+      return WSEI;
+    case 80094:
+      return WBERA;
+    case 30:
+      return WRBTC;
     case 369:
     default:
       return WPLS;
+  }
+};
+
+const getRouterABI = (chainId) => {
+  switch (chainId) {
+    case 10001:
+      return ETHW_ROUTER_ABI;
+    case 146:
+      return SONIC_ROUTER_ABI;
+    case 8453:
+      return BASECHAIN_ROUTER_ABI;
+    case 1329:
+      return SEI_ROUTER_ABI;
+    case 80094:
+      return BERA_ROUTER_ABI;
+    case 30:
+      return ROOTSTOCK_ROUTER_ABI;
+    case 369:
+    default:
+      return PLS_ROUTER_ABI;
   }
 };
 
@@ -92,20 +147,23 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const [conversionRate, setConversionRate] = useState(null);
   const [conversionRateTokenB, setConversionRateTokenB] = useState(null);
   const [isPartialFill, setIsPartialFill] = useState(false);
-  const [smartRouter, setSmartRouter] = useState(null);
+  // const [smartRouter, setSmartRouter] = useState(null);
   // const [bestRoute, setBestRoute] = useState(null);
-  const [localBestRoute, setLocalBestRoute] = useState(null);
+  // const [localBestRoute, setLocalBestRoute] = useState(null);
 
   const [isQuoting, setIsQuoting] = useState(false);
+  const [isLoadingBetterQuote, setIsLoadingBetterQuote] = useState(false);
   const [protocolFee, setProtocolFee] = useState(28);
   const publicClient = usePublicClient();
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
   const [needsApproval, setNeedsApproval] = useState(false);
+  const [tradeInfo, setTradeInfo] = useState(undefined);
+
 
   // Debounce and request tracking for quote fetching
   const [debouncedAmountIn, setDebouncedAmountIn] = useState("0");
-  const quoteRequestIdRef = useRef(0);
-  const lastCompletedIdRef = useRef(0); // Track last completed request
+  // const quoteRequestIdRef = useRef(0);
+  // const lastCompletedIdRef = useRef(0); // Track last completed request
 
   // Price monitor state
   const [initialQuote, setInitialQuote] = useState("");
@@ -113,13 +171,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const [newQuote, setNewQuote] = useState("");
   const [percentChange, setPercentChange] = useState(0);
 
-  // Then in your useEffect where you set the route:
-  const updateRoute = (route) => {
-    setLocalBestRoute(route);
-    if (setBestRoute) {
-      setBestRoute(route);
-    }
-  };
+  // New state variables
+  const [lastUpdated, setLastUpdated] = useState(null);
+  const [isSell, setIsSell] = useState(true);
 
   const { writeContractAsync } = useWriteContract();
   // Toggle function
@@ -141,30 +195,139 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     maxHops,
     stableTokens,
   } = useChainConfig();
-  // const [isDirectRoute, setIsDirectRoute] = useState(false);
+
+  const convertToBigInt = (amount, decimals) => {
+    // Add input validation
+    if (!amount || isNaN(amount) || !decimals || isNaN(decimals)) {
+      return BigInt(0);
+    }
+
+    try {
+      const parsedAmount = parseFloat(amount);
+      const parsedAmountIn = BigInt(Math.floor(parsedAmount * Math.pow(10, 6)));
+
+      if (decimals >= 6) {
+        return parsedAmountIn * BigInt(10) ** BigInt(decimals - 6);
+      } else {
+        return parsedAmountIn / BigInt(10) ** BigInt(6 - decimals);
+      }
+    } catch (error) {
+      console.error("Error converting to BigInt:", error);
+      return BigInt(0);
+    }
+  };
+
+  // Check if it's a direct route (native to wrapped or wrapped to native)
+  const isDirectRoute = useMemo(() => {
+    return (
+      (selectedTokenA?.address === EMPTY_ADDRESS && selectedTokenB?.address === wethAddress) ||
+      (selectedTokenA?.address === wethAddress && selectedTokenB?.address === EMPTY_ADDRESS)
+    );
+  }, [selectedTokenA?.address, selectedTokenB?.address, wethAddress]);
+
+  // Get the appropriate router ABI based on chainId
+  const routerABI = useMemo(() => getRouterABI(chainId), [chainId]);
+
+  // Use findBestPath to get quotes from the router contract
+  const {
+    data,
+    isLoading: quoteLoading,
+    refetch: quoteRefresh,
+    error,
+  } = useReadContract({
+    abi: routerABI,
+    address: routerAddress,
+    functionName: "findBestPath",
+    args: [
+      amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+        ? convertToBigInt(
+            parseFloat(amountIn),
+            parseInt(selectedTokenA.decimal) || 18
+          )
+        : BigInt(0),
+      selectedTokenA?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenA?.address || EMPTY_ADDRESS,
+      selectedTokenB?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenB?.address || EMPTY_ADDRESS,
+      BigInt(maxHops?.toString() || "3"),
+    ],
+    enabled: !isDirectRoute && !!selectedTokenA && !!selectedTokenB && !!amountIn && parseFloat(amountIn) > 0,
+  });
+
+  // Get single token price for rate display
+  const { data: singleToken, refetch: singleTokenRefresh } = useReadContract({
+    abi: routerABI,
+    address: routerAddress,
+    functionName: "findBestPath",
+    args: [
+      selectedTokenA?.decimal
+        ? convertToBigInt(1, parseInt(selectedTokenA.decimal))
+        : BigInt(0),
+      selectedTokenA?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenA?.address || EMPTY_ADDRESS,
+      selectedTokenB?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenB?.address || EMPTY_ADDRESS,
+      BigInt(maxHops?.toString() || "3"),
+    ],
+    enabled: !isDirectRoute && !!selectedTokenA && !!selectedTokenB,
+  });
+
+  // Update quoting state based on loading
+  useEffect(() => {
+    setIsQuoting(quoteLoading);
+  }, [quoteLoading]);
 
   const DEADLINE_MINUTES = 10;
   const deadline = Math.floor(Date.now() / 1000) + DEADLINE_MINUTES * 60;
 
-  // console.log("Chain Config:", { chain,wethAddress, routerAddress, currentChain, chainId, tokenList, adapters, blockExplorer, blockExplorerName });
-
-  // console.log("selected best route: ", bestRoute);
+  // Process findBestPath data to update quotes
   useEffect(() => {
-    if (publicClient && routerAddress) {
-      const router = new SmartRouter(publicClient, routerAddress);
-      // console.log("router info: ", router);
-      router.loadAdapters().then(() => {
-        if (adapters && adapters.length > 0) {
-          const adapterAddresses = adapters.map((a) => a.address);
-          router.setAdapters(adapterAddresses);
-        }
-        setSmartRouter(router);
-      });
-      router.setMaxHops(maxHops || 3);
-      router.setMaxAdapters(adapters ? adapters.length : 12);
-      router.setGranularity(3);
+    if (isDirectRoute) {
+      setDirectRoute();
+      return;
     }
-  }, [publicClient, routerAddress, adapters]);
+
+    if (!data || !data.amounts || data.amounts.length === 0) {
+      handleEmptyData();
+      return;
+    }
+
+    // Check if router found a valid path (needs at least 2 amounts and 2 path elements)
+    if (data.amounts.length < 2 || !data.path || data.path.length < 2) {
+      console.warn("Router could not find a valid path for this token pair", {
+        amounts: data.amounts,
+        path: data.path,
+        adapters: data.adapters,
+        tokenIn: selectedTokenA?.address,
+        tokenOut: selectedTokenB?.address,
+      });
+      handleEmptyData();
+      return;
+    }
+
+    if (!selectedTokenB) {
+      setAmountOut("0");
+      setTradeInfo(undefined);
+      return;
+    }
+
+    setCalculatedRoute();
+  }, [data, selectedTokenA, selectedTokenB, amountIn, isDirectRoute]);
+
+  // Refresh quotes when tokens or amount changes
+  useEffect(() => {
+    if (quoteRefresh) {
+      quoteRefresh();
+    }
+    if (singleTokenRefresh) {
+      singleTokenRefresh();
+    }
+    setPath([selectedTokenA?.address, selectedTokenB?.address]);
+  }, [amountIn, selectedTokenA, selectedTokenB, quoteRefresh, singleTokenRefresh]);
 
   // Dynamic Fee Update
   useEffect(() => {
@@ -198,76 +361,83 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     return () => clearTimeout(timer);
   }, [amountIn]);
 
-  // Quote fetching with debounce and request tracking to prevent stale quotes
-  useEffect(() => {
-    const getQuote = async () => {
-      // Increment request ID to track this specific request
-      const currentRequestId = ++quoteRequestIdRef.current;
+  // Helper Functions
+  const handleEmptyData = () => {
+    setAmountOut("0");
+    setTradeInfo(undefined);
+    setRoute([selectedTokenA?.address, selectedTokenB?.address]);
+  };
 
-      if (
-        !smartRouter ||
-        !debouncedAmountIn ||
-        parseFloat(debouncedAmountIn) <= 0 ||
-        !selectedTokenA ||
-        !selectedTokenB
-      ) {
-        setAmountOut("0");
-        updateRoute(null);
-        setRoute([]);
-        return;
-      }
-      setIsQuoting(true);
+  // Set direct route (native to wrapped or vice versa)
+  const setDirectRoute = () => {
+    if (!amountIn || parseFloat(amountIn) <= 0) {
       setAmountOut("0");
+      return;
+    }
 
-      try {
-        const quoteResult = await smartRouter.getBestQuoteFromUser(
-          debouncedAmountIn,
-          selectedTokenA.address,
-          selectedTokenB.address,
-          protocolFee,
-        );
+    const tokenAAddress = selectedTokenA?.address === EMPTY_ADDRESS
+      ? wethAddress
+      : selectedTokenA?.address || EMPTY_ADDRESS;
 
-        const route = quoteResult.route;
+    const tokenBAddress = selectedTokenB?.address === EMPTY_ADDRESS
+      ? wethAddress
+      : selectedTokenB?.address || EMPTY_ADDRESS;
 
-        lastCompletedIdRef.current = currentRequestId;
+    // Set route with replaced native token address
+    setRoute([tokenAAddress, tokenBAddress]);
+    setAdapter([]); // No adapters needed for direct routes
 
-        updateRoute(route); // Use updateRoute instead of setBestRoute
+    // For direct routes, amount out should be same as amount in
+    setAmountOut(amountIn);
 
-        // Handle route response
-        if (route) {
-          let path = [];
-          if (route.type === "CONVERGE") {
-            path = [
-              route.payload.tokenIn,
-              route.payload.intermediate,
-              route.payload.tokenOut,
-            ];
-          } else if (
-            (route.type === "SPLIT" || route.type === "NOSPLIT") &&
-            route.payload.length > 0
-          ) {
-            // NOSPLIT is returned by Multi-hop, Chained Intermediate, Converge Multi-hop strategies
-            path = route.payload[0].path;
-          } else if (route.type === "WRAP" || route.type === "UNWRAP") {
-            path = [route.payload.tokenIn, route.payload.tokenOut];
-          }
-          setRoute(path);
-          setAmountOut(quoteResult.amountOutFormatted);
-        } else {
-          setAmountOut("0");
-          setRoute([]);
-        }
-      } catch (error) {
-        console.error("[Emp] Quote error:", error);
-        setAmountOut("0");
-        setRoute([]);
-        updateRoute(null);
-      }
-      setIsQuoting(false);
+    // Create trade object directly without using findBestPath data
+    const amountInBigInt = amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+      ? convertToBigInt(parseFloat(amountIn), parseInt(selectedTokenA.decimal) || 18)
+      : BigInt(0);
+
+    const trade = {
+      amountIn: amountInBigInt,
+      amountOut: amountInBigInt, // Same as input for direct routes
+      amounts: [amountInBigInt, amountInBigInt], // Only start and end amounts
+      path: [tokenAAddress, tokenBAddress],
+      pathTokens: [selectedTokenA, selectedTokenB],
+      adapters: [], // No adapters for direct routes
     };
+    
+    setTradeInfo(trade);
+    setIsSlippageApplied(false);
+  };
 
-    getQuote();
-  }, [smartRouter, debouncedAmountIn, selectedTokenA, selectedTokenB]);
+  // Process the findBestPath result and set the calculated route
+  const setCalculatedRoute = () => {
+    if (isDirectRoute) return;
+    if (!data || !data.amounts || data.amounts.length === 0) {
+      console.error("Invalid swap data received");
+      return;
+    }
+
+    const amountOutValue = formatUnits(
+      data.amounts[data.amounts.length - 1],
+      parseInt(selectedTokenB.decimal)
+    );
+    setAmountOut(amountOutValue);
+
+    const trade = {
+      amountIn: data.amounts[0],
+      amountOut: data.amounts[data.amounts.length - 1],
+      amounts: data.amounts,
+      path: data.path,
+      pathTokens: data.path.map(
+        (pathAddress) =>
+          tokenList.find((token) => token.address === pathAddress) || tokenList[0]
+      ),
+      adapters: data.adapters,
+    };
+    setRoute(data.path);
+    setAdapter(data.adapters);
+    setTradeInfo(trade);
+    setIsSlippageApplied(false);
+  };
 
   // Check approval status whenever token or amount changes
   useEffect(() => {
@@ -408,7 +578,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   };
 
   // const WETH_ADDRESS = "0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990";
-  const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
+  // const EMPTY_ADDRESS = "0x0000000000000000000000000000000000000000";
 
   const handleTokenSelect = (token) => {
     if (isSelectingTokenA) {
@@ -417,27 +587,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       setSelectedTokenB(token);
     }
     setTokenVisible(false);
-  };
-
-  const convertToBigInt = (amount, decimals) => {
-    // Add input validation
-    if (!amount || isNaN(amount) || !decimals || isNaN(decimals)) {
-      return BigInt(0);
-    }
-
-    try {
-      const parsedAmount = parseFloat(amount);
-      const parsedAmountIn = BigInt(Math.floor(parsedAmount * Math.pow(10, 6)));
-
-      if (decimals >= 6) {
-        return parsedAmountIn * BigInt(10) ** BigInt(decimals - 6);
-      } else {
-        return parsedAmountIn / BigInt(10) ** BigInt(6 - decimals);
-      }
-    } catch (error) {
-      console.error("Error converting to BigInt:", error);
-      return BigInt(0);
-    }
   };
 
   const handleSlippageCalculated = (adjustedAmount) => {
@@ -544,13 +693,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     fetchConversionRateTokenB();
   }, [chainId, selectedTokenB?.address, wethAddress]);
 
-  // Helper Functions
-  const handleEmptyData = () => {
-    setAmountOut("0");
-    setTradeInfo(undefined);
-    setRoute([selectedTokenA?.address, selectedTokenB?.address]);
-  };
-
   useEffect(() => {
     if (conversionRate && !isNaN(conversionRate)) {
       const valueInUSD = (
@@ -578,144 +720,50 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   }, [amountOut, conversionRateTokenB]);
 
   const confirmSwap = async () => {
-    if (!localBestRoute) return; // Use localBestRoute instead of bestRoute
-
-    try {
-      setSwapStatus("LOADING");
-      // Handle approval
-      // Handle approval - REMOVED automatic approval from here
-      if (selectedTokenA.address !== EMPTY_ADDRESS) {
-        const amountInBigInt =
-          localBestRoute.type === "CONVERGE" || localBestRoute.type === "UNWRAP" // Use localBestRoute
-            ? localBestRoute.payload.amountIn
-            : convertToBigInt(amountIn, selectedTokenA.decimal);
-
-        const allowance = await checkAllowance(
-          chainId,
-          selectedTokenA.address,
-          address,
-        );
-        if (allowance.data < amountInBigInt) {
-          toast.error("Please approve token first");
-          setSwapStatus("IDLE");
-          return;
-        }
-      }
-
-      setSwapStatus("SWAPPING");
-      const minAmountOut = (localBestRoute.amountOut * 995n) / 1000n; // Use localBestRoute
-      const protocolFeeBigInt = BigInt(protocolFee);
-
-      let tx;
-      if (localBestRoute.type === "WRAP") {
-        // Use localBestRoute
-        tx = await writeContractAsync({
-          address: wethAddress,
-          abi: getWrappedTokenABI(chainId),
-          functionName: "deposit",
-          value: localBestRoute.payload.amountIn, // Use localBestRoute
-        });
-      } else if (localBestRoute.type === "UNWRAP") {
-        // Use localBestRoute
-        tx = await writeContractAsync({
-          address: wethAddress,
-          abi: getWrappedTokenABI(chainId),
-          functionName: "withdraw",
-          args: [localBestRoute.payload.amountIn], // Use localBestRoute
-        });
-      } else if (localBestRoute.type === "CONVERGE") {
-        // Use localBestRoute
-        tx = await writeContractAsync({
-          address: routerAddress,
-          abi: EmpsealRouterLiteV3,
-          functionName: "executeConvergeSwap",
-          args: [
-            localBestRoute.payload, // Use localBestRoute
-            minAmountOut,
-            address,
-            protocolFeeBigInt,
-            deadline,
-          ],
-          value:
-            selectedTokenA.address === EMPTY_ADDRESS
-              ? localBestRoute.payload.amountIn
-              : 0n,
-        });
-      } else {
-        // SPLIT
-        tx = await writeContractAsync({
-          address: routerAddress,
-          abi: EmpsealRouterLiteV3,
-          functionName: "executeSplitSwap",
-          args: [
-            localBestRoute.payload, // Use localBestRoute
-            convertToBigInt(amountIn, selectedTokenA.decimal),
-            minAmountOut,
-            address,
-            protocolFeeBigInt,
-            deadline,
-          ],
-          value:
-            selectedTokenA.address === EMPTY_ADDRESS
-              ? convertToBigInt(amountIn, selectedTokenA.decimal)
-              : 0n,
-        });
-      }
-      setSwapHash(tx);
-
-      toast.info("Waiting for transaction confirmation...");
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash: tx,
-      });
-
-      if (receipt.status === "success") {
-        setAmountVisible(false);
-        setSwapStatus("SWAPPED");
-        setSwapSuccess(true);
-        toast.success("Transaction Confirmed!");
-      } else {
-        setAmountVisible(false);
-        throw new Error("Transaction reverted on-chain.");
-      }
-    } catch (error) {
-      setAmountVisible(false);
-      setSwapStatus("ERROR");
-
-      let message = error.message || "Transaction failed";
-
-      console.error("Swap failed", error);
-
-      if (
-        message.includes("User rejected") ||
-        message.includes("User denied")
-      ) {
-        toast.error("Transaction rejected by user");
-        return;
-      }
-
-      // Check for explicit revert reasons
-      if (message.includes("reverted with the following reason:")) {
-        const parts = message.split("reverted with the following reason:");
-        if (parts[1]) {
-          message = parts[1].trim().split("\n")[0];
-        }
-      } else if (message.includes("reverted with reason string")) {
-        const parts = message.split("reverted with reason string");
-        if (parts[1]) {
-          message = parts[1].replace(/'/g, "").trim().split("\n")[0];
-        }
-      } else if (message.length > 60) {
-        // Fallback for other long messages
-        message = message.substring(0, 60) + "...";
-      }
-
-      toast.error(message);
+    if (selectedTokenA.address == selectedTokenB.address) {
+      return null;
     }
+    await swapTokens(
+      (_swapStatus) => {
+        setSwapStatus(_swapStatus);
+      },
+      (hash) => {
+        setSwapHash(hash);
+      },
+      selectedTokenA?.address,
+      selectedTokenB?.address,
+      address,
+      tradeInfo,
+      chainId
+    )
+      .then(() => {
+        setSwapSuccess(true); // Set success on transaction completion
+        setAmountVisible(false);
+      })
+      .catch((error) => {
+        console.error("Swap failed", error);
+        setSwapSuccess(false);
+      });
   };
 
   const getRateDisplay = () => {
-    if (!amountIn || !amountOut || +amountOut === 0) return "0";
-    const rate = parseFloat(amountOut) / parseFloat(amountIn);
+    // Check if we have valid single token data with at least 2 amounts (input and output)
+    if (!singleToken?.amounts || singleToken.amounts.length < 2) {
+      // Fallback: calculate rate from current amountIn/amountOut if available
+      if (amountIn && amountOut && parseFloat(amountIn) > 0 && parseFloat(amountOut) > 0) {
+        const rate = parseFloat(amountOut) / parseFloat(amountIn);
+        return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
+      }
+      return "0";
+    }
+
+    const rate = parseFloat(
+      formatUnits(
+        singleToken.amounts[singleToken.amounts.length - 1],
+        parseInt(selectedTokenB.decimal)
+      )
+    );
+
     return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
   };
 
@@ -1443,7 +1491,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       </div>
       {isSlippageVisible && !order && (
         <SlippageCalculator
-          inputAmount={localBestRoute?.amountOut}
+          inputAmount={tradeInfo?.amountOut}
           onSlippageCalculated={handleSlippageCalculated}
           onClose={() => setSlippageVisible(false)}
         />
@@ -1493,6 +1541,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
             percentChange={percentChange}
             onAcceptNewQuote={handleAcceptNewQuote}
             onRejectNewQuote={handleRejectNewQuote}
+            swapStatus={swapStatus}
           />
         )}
       </div>
@@ -1501,7 +1550,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
           <Token
             onClose={() => setTokenVisible(false)}
             onSelect={handleTokenSelect}
-            isLimitOrder={order}
           />
         )}
       </div>

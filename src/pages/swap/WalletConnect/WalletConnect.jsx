@@ -13,6 +13,8 @@ import Avalanche from "../../../assets/icons/avalanche.svg";
 import Polygon from "../../../assets/icons/polygon.svg";
 import OP from "../../../assets/icons/op.svg";
 import EL from "../../../assets/images/emp-logo.png";
+import Berachain from "../../../assets/icons/berachain.svg";
+
 
 import {
   useAccount,
@@ -83,6 +85,7 @@ export default function WalletConnect({
     pulse: Pulse,
     pulsechain: Pulse,
     sonic: Sonic,
+    berachain: Berachain,
     "bnb smart chain": BNB, // local import
     "arbitrum one": Arbitrum, // local import
     avalanche: Avalanche, // local import
