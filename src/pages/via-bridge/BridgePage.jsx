@@ -56,8 +56,8 @@ const BridgePage = () => {
               {/* Native Bridge */}
               <Link to="/native-bridge" className="w-full">
                 <div
-                  className={`${
-                    activeTab === "native" ? "border-[#FF9900]" : "border-white"
+                  className={`border-2 ${
+                    activeTab === "native" ? "border-[#FF9900]" : "border-black bg-black"
                   } 
       px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
       rounded-md border text-white text-[15px] font-bold roboto`}
@@ -69,9 +69,9 @@ const BridgePage = () => {
               {/* Via Bridge */}
               <Link to="/via-bridge" className="w-full">
                 <div
-                  className={`${
+                  className={`border-2 ${
                     activeTab === "viabridge"
-                      ? "border-[#FF9900]"
+                      ? "border-[#FF9900] bg-black"
                       : "border-white"
                   } 
       px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 

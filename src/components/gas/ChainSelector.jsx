@@ -223,8 +223,8 @@ const ChainSelector = ({ onSwitch }) => {
 
   const getFontSizeClass = (text) => {
     const length = text?.toString().length || 0;
-    if (length > 11) return "text-xs md:text-lg";
-    if (length > 11) return "text-xs md:text-xl";
+    if (length > 10) return "text-xs md:text-base";
+    // if (length > 10) return "text-xs md:text-xl";
     return "text-xs md:text-xl";
   };
 
@@ -242,8 +242,9 @@ const ChainSelector = ({ onSwitch }) => {
                 chain={fromChain}
                 className="md:w-6 md:h-6 w-4 h-4 rounded-full"
               />
+              {/* lg:text-xl text-sm */}
               <span
-                className={`text-white lg:text-xl text-sm font-bold font-orbitron leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
+                className={`text-white font-bold font-orbitron leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
                   fromChain.name,
                 )}`}
               >

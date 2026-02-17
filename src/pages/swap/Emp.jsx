@@ -1382,7 +1382,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                       )}
                     </div>
                     {conversionRateTokenB ? (
-                      <span className="usd-spacing">
+                      <span className="font-orbitron">
                         ${formatNumber(usdValueTokenB)}
                       </span>
                     ) : (

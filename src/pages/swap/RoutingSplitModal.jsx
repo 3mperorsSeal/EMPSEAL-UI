@@ -123,7 +123,7 @@
 //   );
 // }
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useChainConfig } from "../../hooks/useChainConfig";
 
 export default function RoutingSplitModal({ isOpen, onClose, bestRoute, tokenA, tokenB }) {

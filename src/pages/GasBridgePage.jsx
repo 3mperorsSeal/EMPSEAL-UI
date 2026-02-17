@@ -24,7 +24,7 @@ export default function GasBridgePage() {
           </div>
         </div>
         <TransferPanel />
-        <div className="md:mt-5 mt-4 md:max-w-[900px] w-full mx-auto p-4">
+        <div className="md:mt-5 mt-4 md:max-w-[1000px] w-full mx-auto p-4">
           <TransactionHistory />
         </div>
       </div>

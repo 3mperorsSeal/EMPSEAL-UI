@@ -254,7 +254,7 @@ export default function WalletConnect({
           return (
             <>
               <button
-                className="new_shad !bg-black !rounded-2xl hover:opacity-80 transition-all text-[#FF494A] font-extrabold"
+                className="new_shad !bg-black !rounded-2xl hover:opacity-80 transition-all !text-[#FF494A] font-extrabold"
                 onClick={() => setShowChainPopup(true)}
                 type="button"
               >

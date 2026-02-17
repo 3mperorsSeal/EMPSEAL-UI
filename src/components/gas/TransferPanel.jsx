@@ -241,7 +241,7 @@ const TransferPanel = () => {
                         value={amount}
                         onChange={handleAmountChange}
                         placeholder="0.1"
-                        className="font-orbitron font-extrabold text-white  rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
+                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
                         style={{
                           fontSize: `${dynamicFontSize}px`,
                         }}
@@ -394,7 +394,7 @@ const TransferPanel = () => {
                 className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 pr-32 py-12 bg-transparent text-white font-orbitron md:text-xl text-sm truncate outline-none"
               />
               <button
-                className={`!absolute !bg-transparent md:w-[120px] w-[100px] md:h-12 h-12 hover:opacity-70 bg-black !border !border-[#FF9900] top-3 right-3 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
+                className={`!absolute !bg-transparent md:w-[100px] w-20 md:h-12 h-12 hover:opacity-70 bg-black !border !border-[#FF9900] top-3 right-3 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
                 // onClick={handleSelfButtonClick}
               >
                 Self
