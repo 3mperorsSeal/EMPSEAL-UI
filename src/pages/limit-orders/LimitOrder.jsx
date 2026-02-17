@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { CreateOrderForm } from "./CreateOrderForm";
 import { OrderList } from "./OrderList";
 import { useAccount } from "wagmi";
-import { toast } from "react-toastify";
+import { toast } from "../../utils/toastHelper";
 
 const ToastContent = ({ message }) => (
   <div className="space-y-1">

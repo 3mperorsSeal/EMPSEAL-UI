@@ -1982,14 +1982,14 @@ export function CreateOrderForm({
             {showBracketSettings && (
               <>
                 {/* Bracket Direction Helper */}
-                {orderMode === OrderMode.BRACKET && (
+                {/* {orderMode === OrderMode.BRACKET && (
                   <div className="mb-4 p-3 bg-black border-4 border-[#FF9900] rounded-lg">
                     <p className="text-white text-sm text-center font-orbitron">
                       Bracket Order: Set Stop Loss ABOVE and Take Profit BELOW
                       entry price
                     </p>
                   </div>
-                )}
+                )} */}
 
                 <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
                   {/* Stop Loss Section */}

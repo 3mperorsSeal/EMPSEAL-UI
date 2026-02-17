@@ -7,7 +7,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 import { parseEther, formatEther, formatUnits } from "viem";
-import { toast } from "react-toastify";
+import { toast } from "../../utils/toastHelper";
 import {
   ArrowDownUp,
   Loader2,

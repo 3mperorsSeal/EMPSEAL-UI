@@ -198,17 +198,17 @@ const Amount = ({
             <div className="bridge-button">
               <button
                 onClick={needsApproval ? handleApprove : handleClick}
-                disabled={disabled || isLoading || showPriceAlert || swapStatus === "APPROVING"}
+                disabled={disabled || isLoading || showPriceAlert || swapStatus === "APPROVING" || swapStatus === "WAITING_FOR_CONFIRMATION" || swapStatus === "SWAPPING"}
                 usdValueTokenA={usdValueTokenA}
                 usdValueTokenB={usdValueTokenB}
                 className="gtw relative w-full rounded-xl py-4 bg-[#FF9900] flex gap-4 items-center mt-6 justify-center border border-[#FF9900] disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
               >
                 <div className="w-full absolute md:top-2 top-2 md:-left-3 -left-3 z-[1] bg-transparent border-2 border-[#FF9900] rounded-xl h-[58px]"></div>
-                {isLoading || swapStatus === "APPROVING" ? (
+                {isLoading || swapStatus === "APPROVING" || swapStatus === "WAITING_FOR_CONFIRMATION" || swapStatus === "SWAPPING" ? (
                   <div className="flex items-center gap-2">
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span className="md:text-xl text-base font-black font-orbitron">
-                      {swapStatus === "APPROVING" ? "Approving..." : "Processing..."}
+                      {swapStatus === "APPROVING" ? "Approving..." : swapStatus === "WAITING_FOR_CONFIRMATION" ? "Waiting for confirmation..." : swapStatus === "SWAPPING" ? "Swapping..." : "Processing..."}
                     </span>
                   </div>
                 ) : (

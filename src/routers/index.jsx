@@ -14,7 +14,7 @@ import BridgeWrapper from "../components/BridgeWrapper";
 import WagmiProviderWrapper from "../Wagmi/WagmiProvider";
 import { Provider } from "react-redux";
 import store from "../redux/store/store";
-import { ToastContainer } from "react-toastify";
+import { ToastContainer, Slide } from "react-toastify";
 import { useEffect } from "react";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { pulsechain, sonic, sei, rootstock } from "wagmi/chains";
@@ -45,7 +45,22 @@ const SwapWrapper = ({ children }) => (
     <Provider store={store}>
       <ChainSwitcher>
         {children}
-        <ToastContainer position="top-right" theme="dark" autoClose={5000} />
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar={true}
+          newestOnTop={true}
+          closeOnClick={false}
+          rtl={false}
+          pauseOnFocusLoss={true}
+          draggable={true}
+          pauseOnHover={true}
+          theme="dark"
+          transition={Slide}
+          toastClassName="empseal-toast"
+          bodyClassName="empseal-toast-body"
+          closeButton={false}
+        />
       </ChainSwitcher>
     </Provider>
   </WagmiProviderWrapper>
@@ -55,7 +70,22 @@ const ViaBridgeWrapper = ({ children }) => (
   <WagmiProviderWrapper appType="via-bridge">
     <Provider store={store}>
       {children}
-      <ToastContainer position="top-right" theme="dark" autoClose={5000} />
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss={true}
+        draggable={true}
+        pauseOnHover={true}
+        theme="dark"
+        transition={Slide}
+        toastClassName="empseal-toast"
+        bodyClassName="empseal-toast-body"
+        closeButton={false}
+      />
     </Provider>
   </WagmiProviderWrapper>
 );

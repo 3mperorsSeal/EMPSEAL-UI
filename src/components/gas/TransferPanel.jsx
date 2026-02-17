@@ -4,7 +4,7 @@ import { useGasBridgeStore } from "../../redux/store/gasBridgeStore";
 import { useGetCalldataQuote } from "../../hooks/useGasBridgeAPI";
 import { useGasBridgeTx } from "../../hooks/useGasBridgeTx";
 import { formatEther } from "viem";
-import { toast } from "react-toastify";
+import { toast } from "../../utils/toastHelper";
 import ChainSelector from "../../components/gas/ChainSelector";
 import UpDownAr from "../../assets/images/reverse.svg";
 

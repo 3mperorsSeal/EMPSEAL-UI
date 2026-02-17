@@ -232,14 +232,14 @@ export function OrderListItem({
               Full Order ID: {getStrategyName()} {order.id}
             </div>
           )}
-          {order.groupId && order.groupId !== "0" && (
+          {/* {order.groupId && order.groupId !== "0" && (
             <Badge
               variant="outline"
               className="ml-2 border-[#FF9900] text-[#FF9900] text-xs"
             >
               {order.fundsDeposited ? "Active Bracket" : "Pending Bracket Leg"}
             </Badge>
-          )}
+          )} */}
           {order.groupRole !== undefined && order.groupRole !== 0 && (
             <Badge variant="secondary" className="ml-2 text-xs">
               {["None", "Entry", "StopLoss", "TakeProfit"][order.groupRole]}

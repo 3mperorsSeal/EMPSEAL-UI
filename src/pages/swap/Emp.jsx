@@ -46,7 +46,7 @@ import {
   BERA_ROUTER_ABI,
   ROOTSTOCK_ROUTER_ABI
 } from "../../utils/abis/empSealRouterAbi";
-import { toast } from "react-toastify";
+import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 
 import { WPLS } from "../../utils/abis/wplsABI";
@@ -329,6 +329,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     setPath([selectedTokenA?.address, selectedTokenB?.address]);
   }, [amountIn, selectedTokenA, selectedTokenB, quoteRefresh, singleTokenRefresh]);
 
+  // Reset selected tokens when chain changes
+  useEffect(() => {
+    setSelectedTokenA(null);
+    setSelectedTokenB(null);
+  }, [chainId]);
+
   // Dynamic Fee Update
   useEffect(() => {
     if (selectedTokenA && selectedTokenB) {
@@ -424,7 +430,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
 
     const trade = {
       amountIn: data.amounts[0],
-      amountOut: data.amounts[data.amounts.length - 1],
+      amountOut: 
+        (data.amounts[data.amounts.length - 1] * BigInt(98)) / BigInt(100),
       amounts: data.amounts,
       path: data.path,
       pathTokens: data.path.map(
@@ -491,6 +498,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
         setNeedsApproval(false);
         setSwapStatus("APPROVED");
         toast.success("Token approved!");
+        
+        // Show waiting for confirmation before proceeding to swap
+        setSwapStatus("WAITING_FOR_CONFIRMATION");
+        
+        // Automatically proceed to swap after successful approval
+        await confirmSwap();
       }
     } catch (error) {
       setSwapStatus("ERROR");
@@ -734,7 +747,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       selectedTokenB?.address,
       address,
       tradeInfo,
-      chainId
+      chainId,
+      protocolFee
     )
       .then(() => {
         setSwapSuccess(true); // Set success on transaction completion
@@ -1125,7 +1139,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   </div>
                   <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                     <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                      Market Price: 52.6489
+                      Market Price: {selectedTokenA && selectedTokenB && getRateDisplay() !== "0" ? getRateDisplay() : "--"}
                     </p>
                     <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                       <span></span>
@@ -1171,9 +1185,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                         </div>
                       )}
                     </div>
-                    {conversionRate
-                      ? `$${formatNumber(usdValue)}`
-                      : "Fetching Rate..."}
+                    {selectedTokenA ? (
+                      conversionRate ? `$${formatNumber(usdValue)}` : "Fetching Rate..."
+                    ) : "$0.00"}
                   </div>
                 </div>
                 <div
@@ -1336,7 +1350,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   </div>
                   <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                     <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                      Market Price: 52.6489
+                      Market Price: {selectedTokenA && selectedTokenB && getRateDisplay() !== "0" ? getRateDisplay() : "--"}
                     </p>
                     <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                       <span></span>
@@ -1381,12 +1395,16 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                         </div>
                       )}
                     </div>
-                    {conversionRateTokenB ? (
-                      <span className="font-orbitron">
-                        ${formatNumber(usdValueTokenB)}
-                      </span>
+                    {selectedTokenB ? (
+                      conversionRateTokenB ? (
+                        <span className="font-orbitron">
+                          ${formatNumber(usdValueTokenB)}
+                        </span>
+                      ) : (
+                        "Fetching Rate..."
+                      )
                     ) : (
-                      "Fetching Rate..."
+                      "$0.00"
                     )}
                   </div>
                 </div>
