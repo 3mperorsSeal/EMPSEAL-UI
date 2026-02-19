@@ -19,6 +19,7 @@ import { useEffect } from "react";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
 import { pulsechain, sonic, sei, rootstock } from "wagmi/chains";
 import ViaBridge from "../pages/via-bridge/BridgePage";
+import NotFound from "../pages/NotFound";
 
 const GasBridgePage = lazy(() => import("../pages/GasBridgePage"));
 
@@ -147,7 +148,7 @@ function MyRoutes() {
                 </BridgeWrapper>
               }
             />
-            <Route path="*" element={<div>404 Not Found</div>} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
         {/* </Base> */}

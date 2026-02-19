@@ -8,6 +8,44 @@ import { toast } from "../../utils/toastHelper";
 import ChainSelector from "../../components/gas/ChainSelector";
 import UpDownAr from "../../assets/images/reverse.svg";
 
+// Chain ID to network symbol mapping for GeckoTerminal API
+const CHAIN_SYMBOLS = {
+  369: "pulsechain",
+  10001: "ethw",
+  146: "sonic",
+  8453: "base",
+  1329: "sei-network",
+  80094: "berachain",
+  30: "rootstock",
+  1: "ethereum",
+  137: "polygon",
+  42161: "arbitrum",
+  10: "optimism",
+  56: "bsc",
+  43114: "avalanche",
+  250: "fantom",
+  324: "zksync",
+};
+
+// Wrapped token addresses for native token price fetching
+const WRAPPED_TOKENS = {
+  369: "0xA1077a294dDE1B09bB078844df40758a5D0f9a27", // WPLS
+  10001: "0x7Bf88d2c0e32dE92CdaF2D43CcDc23e8Edfd5990", // WETHW
+  146: "0x039e2fB66102314Ce7b64Ce5Ce3E5183bc94aD38", // WSONIC
+  8453: "0x4200000000000000000000000000000000000006", // WETH (Base)
+  1329: "0xe30fedd158a2e3b13e9badaeabafc5516e95e8c7", // WSEI
+  80094: "0x6969696969696969696969696969696969696969", // WBERA
+  30: "0x542fda317318ebf1d3deaf76e0b632741a7e677d", // WRBTC
+  1: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2", // WETH
+  137: "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619", // WETH (Polygon)
+  42161: "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1", // WETH (Arbitrum)
+  10: "0x4200000000000000000000000000000000000006", // WETH (Optimism)
+  56: "0xbb4CdB9CBd36B01bD1cBaEBF2De08d9173bc095c", // WBNB
+  43114: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7", // WAVAX
+  250: "0x21be370D5312f44cB42ce377BC9b8a0cEF1A4C83", // WFTM
+  324: "0x5AEa5775959fBC2557Cc8789bC1bf90A239D9a91", // WETH (zkSync)
+};
+
 // A simple debounce hook
 const useDebounce = (value, delay) => {
   const [debouncedValue, setDebouncedValue] = useState(value);
@@ -104,6 +142,14 @@ const TransferPanel = () => {
   const [selectedPercentage, setSelectedPercentage] = useState(null);
   const balance = balanceData ? Number(balanceData.formatted) : 0;
 
+  // Token price states for native tokens (from and to chains)
+  const [fromTokenPrice, setFromTokenPrice] = useState(null);
+  const [toTokenPrice, setToTokenPrice] = useState(null);
+  const [fromUsdValue, setFromUsdValue] = useState("0.00");
+  const [toUsdValue, setToUsdValue] = useState("0.00");
+  const [isFromPriceLoading, setIsFromPriceLoading] = useState(false);
+  const [isToPriceLoading, setIsToPriceLoading] = useState(false);
+
   const truncateToSixDecimals = (value) => {
     if (!value) return "";
     let str = value.toString();
@@ -172,6 +218,113 @@ const TransferPanel = () => {
 
     return Math.max(12, baseSize - length * 1.5);
   };
+
+  // Fetch native token prices for both chains
+  useEffect(() => {
+    const fetchFromChainPrice = async () => {
+      if (!fromChainId) {
+        setFromTokenPrice(null);
+        setFromUsdValue("0.00");
+        return;
+      }
+
+      setIsFromPriceLoading(true);
+
+      try {
+        const networkSymbol = CHAIN_SYMBOLS[fromChainId];
+        const wrappedTokenAddress = WRAPPED_TOKENS[fromChainId];
+
+        if (!networkSymbol || !wrappedTokenAddress) {
+          console.log(`Chain ${fromChainId} not supported for price fetching`);
+          setFromTokenPrice(null);
+          setIsFromPriceLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/${networkSymbol}/token_price/${wrappedTokenAddress.toLowerCase()}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tokenPrices = data?.data?.attributes?.token_prices;
+
+        if (tokenPrices && tokenPrices[wrappedTokenAddress.toLowerCase()]) {
+          const price = tokenPrices[wrappedTokenAddress.toLowerCase()];
+          setFromTokenPrice(price);
+
+          // Calculate USD value
+          const amountNum = parseFloat(amount) || 0;
+          const priceNum = parseFloat(price) || 0;
+          setFromUsdValue((amountNum * priceNum).toFixed(2));
+        } else {
+          setFromTokenPrice(null);
+        }
+      } catch (error) {
+        console.error("Error fetching from chain price:", error.message);
+        setFromTokenPrice(null);
+      } finally {
+        setIsFromPriceLoading(false);
+      }
+    };
+
+    const fetchToChainPrice = async () => {
+      if (!toChainId) {
+        setToTokenPrice(null);
+        setToUsdValue("0.00");
+        return;
+      }
+
+      setIsToPriceLoading(true);
+
+      try {
+        const networkSymbol = CHAIN_SYMBOLS[toChainId];
+        const wrappedTokenAddress = WRAPPED_TOKENS[toChainId];
+
+        if (!networkSymbol || !wrappedTokenAddress) {
+          console.log(`Chain ${toChainId} not supported for price fetching`);
+          setToTokenPrice(null);
+          setIsToPriceLoading(false);
+          return;
+        }
+
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/${networkSymbol}/token_price/${wrappedTokenAddress.toLowerCase()}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tokenPrices = data?.data?.attributes?.token_prices;
+
+        if (tokenPrices && tokenPrices[wrappedTokenAddress.toLowerCase()]) {
+          const price = tokenPrices[wrappedTokenAddress.toLowerCase()];
+          setToTokenPrice(price);
+
+          // Calculate USD value for expected amount
+          const expectedAmountNum = parseFloat(formattedExpectedAmount) || 0;
+          const priceNum = parseFloat(price) || 0;
+          setToUsdValue((expectedAmountNum * priceNum).toFixed(2));
+        } else {
+          setToTokenPrice(null);
+        }
+      } catch (error) {
+        console.error("Error fetching to chain price:", error.message);
+        setToTokenPrice(null);
+      } finally {
+        setIsToPriceLoading(false);
+      }
+    };
+
+    fetchFromChainPrice();
+    fetchToChainPrice();
+  }, [fromChainId, toChainId, amount, formattedExpectedAmount]);
+
   return (
     <>
       <div className="w-full md:px-0 px-4">
@@ -261,12 +414,28 @@ const TransferPanel = () => {
                   <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
                     Max Amount
                   </p>
+                  {/* USD Value Display */}
+                  <div className="text-right text-white text-xs mt-2 font-orbitron">
+                    {isFromPriceLoading ? (
+                      <span className="animate-pulse">Fetching...</span>
+                    ) : fromTokenPrice ? (
+                      <span>${fromUsdValue}</span>
+                    ) : (
+                      <span>--</span>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
               <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                52.6489
+                {isFromPriceLoading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : fromTokenPrice ? (
+                  `$${parseFloat(fromTokenPrice).toFixed(6)}`
+                ) : (
+                  "--"
+                )}
                 <span className="font-bold">Market Price</span>
               </div>
               <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -348,18 +517,34 @@ const TransferPanel = () => {
                       </div>
 
                       {quoteError && (
-                        <p className="text-[#FF9900] text-xs mt-2 absolute right-4">
+                        <p className="text-[#FF9900] text-xs mt-2 absolute bottom-4 right-4">
                           Could not fetch quote. Please check inputs.
                         </p>
                       )}
                     </div>
                   );
                 })()}
+                {/* USD Value Display for expected amount */}
+                <div className="text-right text-white text-xs mt-2 font-orbitron">
+                  {isToPriceLoading ? (
+                    <span className="animate-pulse">Fetching...</span>
+                  ) : toTokenPrice ? (
+                    <span>${toUsdValue}</span>
+                  ) : (
+                    <span>--</span>
+                  )}
+                </div>
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
               <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                52.6489
+                {isToPriceLoading ? (
+                  <span className="animate-pulse">Loading...</span>
+                ) : toTokenPrice ? (
+                  `$${parseFloat(toTokenPrice).toFixed(6)}`
+                ) : (
+                  "--"
+                )}
                 <span className="font-bold">Market Price</span>
               </div>
               <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">

@@ -105,17 +105,17 @@ const DotsMenu = ({ onTabChange }) => {
             <h3 className="text-white md:text-4xl text-2xl font-bold mb-3">
               Help
             </h3>
-            {["Documentation", "Twitter", "Telegram", "Integration"].map(
+            {["Documentation", "Twitter/X", "Telegram", "Integration"].map(
               (item) => (
                 <p
                   key={item}
                   onClick={() => {
-                    if (item === "Documentation") navigate("/docs");
-                    else if (item === "Integration") navigate("/integration");
+                    if (item === "Documentation") window.open("https://docs.empx.io", "_blank");
+                    else if (item === "Integration") window.open("https://www.empx.io/dapp", "_blank");
                     else if (item === "Twitter")
-                      window.open("https://twitter.com", "_blank");
+                      window.open("https://x.com/EmpXio", "_blank");
                     else if (item === "Telegram")
-                      window.open("https://t.me", "_blank");
+                      window.open("https://t.me/EmpXEmpseal", "_blank");
 
                     setOpen(false);
                   }}

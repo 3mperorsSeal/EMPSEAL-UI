@@ -40,6 +40,9 @@ import CPatch from "../../assets/images/rec-token.svg";
 import { ERC20_ABI } from "../../utils/via-bridge-abis/index";
 import { useApprovalFlow } from "./hooks/useApprovalFlow";
 
+// PulseChain network symbol for GeckoTerminal API
+const PULSECHAIN_SYMBOL = "pulsechain";
+
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
   const { switchChain } = useSwitchChain();
@@ -59,6 +62,11 @@ const BridgeInterface = () => {
   const [isTokenModalOpen, setIsTokenModalOpen] = useState(false);
   const [amount, setAmount] = useState("1");
   const [recipient, setRecipient] = useState("");
+
+  // Token price states
+  const [tokenPrice, setTokenPrice] = useState(null);
+  const [usdValue, setUsdValue] = useState("0.00");
+  const [isPriceLoading, setIsPriceLoading] = useState(false);
 
   const sourceChain = fromChainId ? BRIDGE_CONFIG[fromChainId] : null;
   const destChain = toChainId ? BRIDGE_CONFIG[toChainId] : null;
@@ -124,6 +132,75 @@ const BridgeInterface = () => {
       setBridgeFees(null);
     }
   }, [selectedToken]);
+
+  // ----------------------------------------------------------------
+  // TOKEN PRICE FETCHING
+  // ----------------------------------------------------------------
+  useEffect(() => {
+    const fetchTokenPrice = async () => {
+      if (!selectedToken) {
+        setTokenPrice(null);
+        setUsdValue("0.00");
+        return;
+      }
+
+      setIsPriceLoading(true);
+
+      try {
+        // Get the collateral token address from PulseChain
+        // If current token is collateral (on PulseChain), use its address
+        // If current token is synthetic (on other chains), get the corresponding collateral token
+        let collateralTokenAddress;
+        
+        if (selectedToken.abiType === "collateral") {
+          // Token is on PulseChain, use its address directly
+          collateralTokenAddress = selectedToken.address.toLowerCase();
+        } else {
+          // Token is synthetic on another chain, find the collateral token on PulseChain
+          const pulseChainConfig = BRIDGE_CONFIG[369];
+          if (pulseChainConfig && pulseChainConfig.tokens[selectedToken.id]) {
+            collateralTokenAddress = pulseChainConfig.tokens[selectedToken.id].address.toLowerCase();
+          } else {
+            console.error("Could not find collateral token for:", selectedToken.id);
+            setTokenPrice(null);
+            setIsPriceLoading(false);
+            return;
+          }
+        }
+
+        // Fetch price from GeckoTerminal using PulseChain network
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/${PULSECHAIN_SYMBOL}/token_price/${collateralTokenAddress}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tokenPrices = data?.data?.attributes?.token_prices;
+        
+        if (tokenPrices && tokenPrices[collateralTokenAddress]) {
+          const price = tokenPrices[collateralTokenAddress];
+          setTokenPrice(price);
+          
+          // Calculate USD value
+          const amountNum = parseFloat(amount) || 0;
+          const priceNum = parseFloat(price) || 0;
+          setUsdValue((amountNum * priceNum).toFixed(2));
+        } else {
+          setTokenPrice(null);
+        }
+      } catch (error) {
+        console.error("Error fetching token price:", error.message);
+        setTokenPrice(null);
+      } finally {
+        setIsPriceLoading(false);
+      }
+    };
+
+    fetchTokenPrice();
+  }, [selectedToken, amount]);
 
   // --- USDC DATA ---
   // Allowance
@@ -827,6 +904,16 @@ const BridgeInterface = () => {
                         >
                           MAX AMOUNT
                         </button>
+                        {/* USD Value Display */}
+                        <div className="text-right text-white md:text-sm text-xs mt-2 font-orbitron">
+                          {isPriceLoading ? (
+                            <span className="animate-pulse">Fetching...</span>
+                          ) : tokenPrice ? (
+                            <span>${usdValue}</span>
+                          ) : (
+                            <span>--</span>
+                          )}
+                        </div>
                       </>
                     );
                   })()}
@@ -834,7 +921,13 @@ const BridgeInterface = () => {
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                 --
+                 {isPriceLoading ? (
+                   <span className="animate-pulse">Loading...</span>
+                 ) : tokenPrice ? (
+                   `$${parseFloat(tokenPrice).toFixed(6)}`
+                 ) : (
+                   "--"
+                 )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -950,6 +1043,16 @@ const BridgeInterface = () => {
                             fontSize: `${dynamicFontSize}px`,
                           }}
                         />
+                        {/* USD Value Display for expected amount (same price since it's the same token) */}
+                        <div className="text-right text-white md:text-sm text-xs mt-2 font-orbitron">
+                          {isPriceLoading ? (
+                            <span className="animate-pulse">Fetching...</span>
+                          ) : tokenPrice ? (
+                            <span>${usdValue}</span>
+                          ) : (
+                            <span>--</span>
+                          )}
+                        </div>
                       </>
                     );
                   })()}
@@ -957,7 +1060,13 @@ const BridgeInterface = () => {
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                  <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                  52.6489
+                  {isPriceLoading ? (
+                    <span className="animate-pulse">Loading...</span>
+                  ) : tokenPrice ? (
+                    `$${parseFloat(tokenPrice).toFixed(6)}`
+                  ) : (
+                    "--"
+                  )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
