@@ -7,7 +7,7 @@ import {
   useSwitchChain,
 } from "wagmi";
 import { parseEther, formatEther, formatUnits } from "viem";
-import { toast } from "react-toastify";
+import { toast } from "../../utils/toastHelper";
 import {
   ArrowDownUp,
   Loader2,
@@ -464,7 +464,7 @@ const BridgeInterface = () => {
       );
     if (isBridged)
       return (
-        <button disabled>
+        <button disabled className="flex gap-2 items-center justify-center">
           <CheckCircle2 className="w-5 h-5" /> Bridged
         </button>
       );
@@ -518,11 +518,12 @@ const BridgeInterface = () => {
         <button
           onClick={handleApproveToken}
           disabled={isAnyApproving || !amount || !bridgeFees}
-          className="w-full"
+          className="w-full flex justify-center items-center"
         >
           {isAnyApproving ? (
             <>
-              <Loader2 className="w-5 h-5 animate-spin" /> {buttonText}
+              <Loader2 className="w-5 h-5 animate-spin" />
+              {buttonText}
             </>
           ) : (
             buttonText
@@ -629,10 +630,10 @@ const BridgeInterface = () => {
                   From
                 </div>
                 <div className="md:text-xl text-[10px] font-orbitron">
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     BAL
                   </span>
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     {" "}
                     :{" "}
                   </span>
@@ -737,9 +738,10 @@ const BridgeInterface = () => {
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-                <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: 52.6489
-                </p>
+               <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                 --
+                  <span className="font-bold">Market Price</span>
+                </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -859,9 +861,10 @@ const BridgeInterface = () => {
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: 52.6489
-                </p>
+                 <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                  52.6489
+                  <span className="font-bold">Market Price</span>
+                </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -895,7 +898,7 @@ const BridgeInterface = () => {
               className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 pr-36 py-12 text-center bg-transparent text-white font-orbitron md:text-xl text-sm truncate outline-none"
             />
             <button
-              className={`!absolute !bg-transparent md:w-[130px] w-[100px] md:h-12 h-12 hover:opacity-70 bg-black !border !border-[#FF9900] top-3 right-3 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
+              className={`!absolute !bg-transparent md:w-[100px] w-20 md:h-12 h-12 hover:opacity-70 bg-black !border !border-[#FF9900] top-3 right-3 flex justify-center items-center rounded-xl px-2 roboto !text-[#FF9900] text-base font-bold`}
               // onClick={handleSelfButtonClick}
             >
               Self

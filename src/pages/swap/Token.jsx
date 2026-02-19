@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
+import { Star, StarIcon } from "lucide-react";
 import { ERC20_ABI } from "./tokenFetch";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import { useMulticallBalances } from "../../hooks/useMulticallBalances";
@@ -10,22 +11,32 @@ import Web3 from "web3";
 const INITIAL_RENDER_LIMIT = 30;
 const LOAD_MORE_COUNT = 20;
 
+// Local storage key for favorites
+const FAVORITES_STORAGE_KEY = "favoriteTokens";
+
 const TokenListItem = ({
   token,
   balance,
   isLoading,
   onClick,
+  isFavorite,
+  onToggleFavorite,
 }) => {
   const formattedBalance = balance
     ? parseFloat(balance.formatted).toFixed(4)
     : "0.0000";
 
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    onToggleFavorite(token);
+  };
+
   return (
     <div
-      className="flex justify-between items-center mt-2 cursor-pointer hoverclip md:p-2 p-1 rounded-xl"
+      className="flex justify-between items-center mt-2 cursor-pointer hoverclip md:p-2 p-1 rounded-xl group"
       onClick={() => onClick(token)}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-1">
         <div className="flex justify-center items-center rounded-full p-1">
           <img
             src={token.logoURI || token.image}
@@ -37,17 +48,41 @@ const TokenListItem = ({
           />
         </div>
         <div>
-          <div className="text-white font-orbitron font-black md:text-lg text-sm roboto leading-relaxed tracking-wide">
+          <div className="text-[#FFD484] font-orbitron font-bold md:text-lg text-sm font-orbitron leading-relaxed tracking-wide">
             {token.name}
           </div>
-          <div className="text-white text-xs roboto">
+          <div className="text-white text-xs font-orbitron">
             {token.symbol || token.ticker}
           </div>
         </div>
       </div>
-      <div className="text-right">
-        <div className="text-[#FF9900] md:text-lg text-sm font-bold roboto tracking-wide">
-          {isLoading ? "Loading..." : formattedBalance}
+
+      <div className="flex items-center gap-3">
+        {/* Star button - always visible for favorites, on hover for non-favorites */}
+        <button
+          onClick={handleFavoriteClick}
+          className={`transition-opacity duration-200 ${
+            isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorite ? (
+            <StarIcon
+              className="w-5 h-5 text-[#FF9900] fill-[#FF9900]"
+              strokeWidth={1.5}
+            />
+          ) : (
+            <Star
+              className="w-5 h-5 text-white hover:text-[#FF9900]"
+              strokeWidth={1.5}
+            />
+          )}
+        </button>
+
+        <div className="text-right min-w-[100px]">
+          <div className="text-[#FFD484] md:text-lg text-sm font-bold font-orbitron tracking-wide">
+            {isLoading ? "Loading..." : formattedBalance}
+          </div>
         </div>
       </div>
     </div>
@@ -62,11 +97,76 @@ const Token = ({ onClose, onSelect }) => {
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [displayLimit, setDisplayLimit] = useState(INITIAL_RENDER_LIMIT);
+  // const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const modalRef = useRef(null);
   const listContainerRef = useRef(null);
 
+  // Load favorites from localStorage on component mount
+  useEffect(() => {
+    const loadFavorites = () => {
+      try {
+        const savedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        if (savedFavorites) {
+          const parsedFavorites = JSON.parse(savedFavorites);
+          // Ensure it's an array
+          if (Array.isArray(parsedFavorites)) {
+            setFavorites(parsedFavorites);
+            console.log("Loaded favorites from localStorage:", parsedFavorites);
+          } else {
+            // If it's not an array, reset it
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+            setFavorites([]);
+          }
+        } else {
+          // Initialize empty array if nothing exists
+          localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+          setFavorites([]);
+        }
+      } catch (error) {
+        console.error("Error loading favorites from localStorage:", error);
+        // Reset on error
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+        setFavorites([]);
+      }
+    };
+
+    loadFavorites();
+  }, []);
+  // Toggle favorite status for a token
+  const toggleFavorite = (token) => {
+    const tokenAddress = token.address.toLowerCase();
+
+    setFavorites((prev) => {
+      let newFavorites;
+
+      if (prev.includes(tokenAddress)) {
+        newFavorites = prev.filter((addr) => addr !== tokenAddress);
+      } else {
+        newFavorites = [...prev, tokenAddress];
+      }
+
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
+
+      return newFavorites;
+    });
+  };
+
+  // Check if a token is favorited
+  const isTokenFavorite = (tokenAddress) => {
+    return favorites.includes(tokenAddress.toLowerCase());
+  };
+
   // Fetch all balances in a single batched multicall
-  const { balances, isLoading: balancesLoading } = useMulticallBalances(tokenList);
+  const { balances, isLoading: balancesLoading } =
+    useMulticallBalances(tokenList);
 
   const getRpcUrl = () => {
     switch (chainId) {
@@ -111,19 +211,26 @@ const Token = ({ onClose, onSelect }) => {
         (token.ticker &&
           token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
         (token.address &&
-          token.address.toLowerCase().includes(searchQuery.toLowerCase()))
+          token.address.toLowerCase().includes(searchQuery.toLowerCase())),
     );
   }, [tokenList, searchQuery]);
 
-  // Sort tokens by balance (tokens with balance first, then alphabetically)
+  // Sort tokens by favorites first, then by balance, then alphabetically
   const sortedTokens = useMemo(() => {
     return [...filteredTokens].sort((a, b) => {
-      const balanceA = parseFloat(
-        balances.get(a.address.toLowerCase())?.formatted || "0"
-      );
-      const balanceB = parseFloat(
-        balances.get(b.address.toLowerCase())?.formatted || "0"
-      );
+      const addressA = a.address.toLowerCase();
+      const addressB = b.address.toLowerCase();
+
+      const isFavoriteA = favorites.includes(addressA);
+      const isFavoriteB = favorites.includes(addressB);
+
+      // Favorites come first
+      if (isFavoriteA && !isFavoriteB) return -1;
+      if (!isFavoriteA && isFavoriteB) return 1;
+
+      // If both are favorites or both are not favorites, sort by balance
+      const balanceA = parseFloat(balances.get(addressA)?.formatted || "0");
+      const balanceB = parseFloat(balances.get(addressB)?.formatted || "0");
 
       // Both have balance - sort by balance descending
       if (balanceA > 0 && balanceB > 0) {
@@ -138,7 +245,7 @@ const Token = ({ onClose, onSelect }) => {
       // Neither has balance - sort alphabetically
       return a.name.localeCompare(b.name);
     });
-  }, [filteredTokens, balances]);
+  }, [filteredTokens, balances, favorites]);
 
   // Get tokens to display (virtualization)
   const displayedTokens = useMemo(() => {
@@ -151,7 +258,9 @@ const Token = ({ onClose, onSelect }) => {
     // Load more when user scrolls to bottom (with 100px buffer)
     if (scrollHeight - scrollTop - clientHeight < 100) {
       if (displayLimit < sortedTokens.length) {
-        setDisplayLimit((prev) => Math.min(prev + LOAD_MORE_COUNT, sortedTokens.length));
+        setDisplayLimit((prev) =>
+          Math.min(prev + LOAD_MORE_COUNT, sortedTokens.length),
+        );
       }
     }
   };
@@ -199,7 +308,7 @@ const Token = ({ onClose, onSelect }) => {
     try {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        (token) => token.address.toLowerCase() === address.toLowerCase()
+        (token) => token.address.toLowerCase() === address.toLowerCase(),
       );
 
       if (existingToken) {
@@ -228,7 +337,7 @@ const Token = ({ onClose, onSelect }) => {
     if (web3.utils.isAddress(searchQuery)) {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        (token) => token.address.toLowerCase() === searchQuery.toLowerCase()
+        (token) => token.address.toLowerCase() === searchQuery.toLowerCase(),
       );
 
       if (existingToken) {
@@ -270,6 +379,24 @@ const Token = ({ onClose, onSelect }) => {
     onClose();
   };
 
+  // Add a clear all favorites function (optional)
+  const clearAllFavorites = () => {
+    if (favorites.length > 0) {
+      if (window.confirm("Clear all favorite tokens?")) {
+        setFavorites([]);
+      }
+    }
+  };
+
+  // For debugging - check localStorage on mount
+  useEffect(() => {
+    const checkStorage = () => {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      console.log("Current localStorage value:", saved);
+    };
+    checkStorage();
+  }, []);
+
   if (!isSupported) {
     return (
       <div className="text-white text-center">
@@ -304,7 +431,7 @@ const Token = ({ onClose, onSelect }) => {
           </svg>
 
           <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Select a token
             </p>
           </div>
@@ -312,7 +439,7 @@ const Token = ({ onClose, onSelect }) => {
             {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer roboto md:rounded-2xl rounded-lg border border-[#FF9900] md:p-[14px] p-2"
+                className="flex flex-row items-center cursor-pointer font-orbitron md:rounded-2xl rounded-lg border border-[#FF9900] md:p-[14px] p-2"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
                 <span className="flex items-center">
@@ -333,16 +460,30 @@ const Token = ({ onClose, onSelect }) => {
               </div>
             ))}
           </div>
-          <div className="flex gap-4 items-center justify-center cursor-pointer mt-1 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white roboto text-center tracking-widest">
+          <div className="flex gap-4 items-center justify-between cursor-pointer mt-1 py-3">
+            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Search token
             </p>
+            {/* Show favorite count and clear button */}
+            {favorites.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[#FF9900] text-sm">
+                  {favorites.length} ⭐
+                </span>
+                <button
+                  onClick={clearAllFavorites}
+                  className="text-xs text-white hover:text-red-400 transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
           </div>
           <div className="mt-3 relative px-[10px] h-[54px] w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
             <input
               type="text"
               placeholder="Search token name or paste address"
-              className="bg-transparent rounded-[4.83px] h-[43px] text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+              className="bg-transparent rounded-[4.83px] h-[43px] text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal font-orbitron leading-tight tracking-wide"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
@@ -370,7 +511,7 @@ const Token = ({ onClose, onSelect }) => {
             {/* Virtualized token list with scroll handler */}
             <div
               ref={listContainerRef}
-              className="max-h-[400px] overflow-y-auto px-3"
+              className="max-h-[400px] overflow-y-auto px-1"
               onScroll={handleScroll}
             >
               {displayedTokens.map((token, index) => (
@@ -380,10 +521,12 @@ const Token = ({ onClose, onSelect }) => {
                   balance={balances.get(token.address.toLowerCase())}
                   isLoading={balancesLoading}
                   onClick={handleTokenSelect}
+                  isFavorite={isTokenFavorite(token.address)}
+                  onToggleFavorite={toggleFavorite}
                 />
               ))}
               {displayLimit < sortedTokens.length && (
-                <div className="text-center text-gray-400 py-2 text-sm">
+                <div className="text-center text-white py-2 text-sm">
                   Scroll for more tokens...
                 </div>
               )}
@@ -403,6 +546,8 @@ const Token = ({ onClose, onSelect }) => {
                 balance={balances.get(tokenDetails.address.toLowerCase())}
                 isLoading={balancesLoading}
                 onClick={handleTokenSelect}
+                isFavorite={isTokenFavorite(tokenDetails.address)}
+                onToggleFavorite={toggleFavorite}
               />
             )}
 

@@ -39,11 +39,13 @@ const BreadCrumb = () => {
           )}
             
         </li> */}
-        <img
-          src={Logo}
-          alt="Logo"
-          className="mx-aut 2xl:w-[145px] md:w-[130px] w-[110px] md:ml-0 ml-2"
-        />
+        <a href="https://www.empx.io/dapp">
+          <img
+            src={Logo}
+            alt="Logo"
+            className="mx-aut 2xl:w-[145px] md:w-[130px] w-[110px] md:ml-0 ml-2"
+          />
+        </a>
         {/* <div className="md:hidden flex lg:justify-end justify-end gap-4 items-center md:max-w-[1400px] w-full mx-auto px-4">
           <button className="flex justify-center items-center 2xl:w-16 2xl:h-16 w-9 h-9 rounded-[10px] border border-[#FF9900] bg-transparent hover:opacity-80 transition-all">
             <img src={X} alt="x" className="2xl:w-6 2xl:h-6 w-3 h-3" />

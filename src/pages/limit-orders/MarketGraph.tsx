@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { OrderStrategy } from "./schema";
 
 interface MarketTargetChartProps {
@@ -14,7 +14,6 @@ export default function MarketTargetChart({
   takeProfitPrice,
   marketPrice,
 }: MarketTargetChartProps) {
-  // Original points for SELL strategy (downward trend)
   const sellPoints = [
     [0, 80],
     [40, 70],
@@ -31,8 +30,6 @@ export default function MarketTargetChart({
     [480, 20],
     [520, 30],
   ];
-
-  // Flipped points for BUY strategy (upward trend)
   const buyPoints = [
     [0, 20],
     [40, 30],
@@ -49,8 +46,6 @@ export default function MarketTargetChart({
     [480, 78],
     [520, 85],
   ];
-
-  // Points for BRACKET strategy (shows both entry and exit levels)
   const bracketPoints = [
     [0, 100],
     [40, 90],
@@ -90,26 +85,68 @@ export default function MarketTargetChart({
     const x = ((e.clientX - rect.left) / rect.width) * width;
     setHoverX(x);
   };
+  const {
+    stopLossY,
+    takeProfitY,
+    entryY,
+    stopLossDisplay,
+    takeProfitDisplay,
+    entryDisplay,
+  } = useMemo(() => {
+    if (!marketPrice) {
+      return {
+        stopLossY: height * 0.7,
+        takeProfitY: height * 0.3,
+        entryY: height * 0.5,
+        stopLossDisplay: stopLossPrice
+          ? `$ ${parseFloat(stopLossPrice).toFixed(3)}`
+          : "$ 0.423",
+        takeProfitDisplay: takeProfitPrice
+          ? `$ ${parseFloat(takeProfitPrice).toFixed(3)}`
+          : "$ 0.623",
+        entryDisplay: "$ 0.523",
+      };
+    }
+    const market = parseFloat(marketPrice);
+    let stopLoss: number;
+    let takeProfit: number;
 
-  // Example prices - you can make these dynamic via props
-  let currentPrice = "$ 0.673";
-  let targetPrice = "$ 54";
-  let stopLossDisplay = "$ 0.423";
+    if (stopLossPrice) {
+      stopLoss = parseFloat(stopLossPrice);
+    } else {
+      stopLoss = market * 1.2;
+    }
 
-  if (isBuyStrategy) {
-    currentPrice = "$ 0.423";
-    targetPrice = "$ 28";
-  } else if (isBracketStrategy) {
-    currentPrice = marketPrice
-      ? `$ ${parseFloat(marketPrice).toFixed(3)}`
-      : "$ 0.523";
-    targetPrice = takeProfitPrice
-      ? `$ ${parseFloat(takeProfitPrice).toFixed(3)}`
-      : "$ 0.623";
-    stopLossDisplay = stopLossPrice
-      ? `$ ${parseFloat(stopLossPrice).toFixed(3)}`
-      : "$ 0.423";
-  }
+    if (takeProfitPrice) {
+      takeProfit = parseFloat(takeProfitPrice);
+    } else {
+      takeProfit = market * 0.8;
+    }
+    const prices = [market, stopLoss, takeProfit];
+    const minPrice = Math.min(...prices);
+    const maxPrice = Math.max(...prices);
+    const priceRange = maxPrice - minPrice || 1;
+
+    // Map price to Y coordinate (inverted: higher price = lower Y)
+    const mapPriceToY = (price: number) => {
+      // Add some padding (10%) at top and bottom for better visibility
+      const padding = height * 0.1;
+      return (
+        height -
+        padding -
+        ((price - minPrice) / priceRange) * (height - 2 * padding)
+      );
+    };
+
+    return {
+      stopLossY: mapPriceToY(stopLoss),
+      takeProfitY: mapPriceToY(takeProfit),
+      entryY: mapPriceToY(market),
+      stopLossDisplay: `$ ${stopLoss.toFixed(3)}`,
+      takeProfitDisplay: `$ ${takeProfit.toFixed(3)}`,
+      entryDisplay: `$ ${market.toFixed(3)}`,
+    };
+  }, [isBracketStrategy, marketPrice, stopLossPrice, takeProfitPrice, height]);
 
   return (
     <div className="w-full text-white font-orbitron">
@@ -139,9 +176,9 @@ export default function MarketTargetChart({
               <line
                 x1={0}
                 x2={width}
-                y1={height * 0.7} // Position for Stop Loss
-                y2={height * 0.7}
-                stroke="#FFE3BA"
+                y1={stopLossY}
+                y2={stopLossY}
+                stroke="#000" // Red for stop loss
                 strokeWidth="2"
                 strokeDasharray="6 4"
                 opacity="0.8"
@@ -150,9 +187,9 @@ export default function MarketTargetChart({
               <line
                 x1={0}
                 x2={width}
-                y1={height * 0.3} // Position for Take Profit
-                y2={height * 0.3}
-                stroke="#FF9900"
+                y1={takeProfitY}
+                y2={takeProfitY}
+                stroke="#FFE3BA" // Green for take profit
                 strokeWidth="2"
                 strokeDasharray="6 4"
                 opacity="0.8"
@@ -161,9 +198,9 @@ export default function MarketTargetChart({
               <line
                 x1={0}
                 x2={width}
-                y1={height * 0.5} // Position for Entry Price
-                y2={height * 0.5}
-                stroke="#FFE3BA"
+                y1={entryY}
+                y2={entryY}
+                stroke="#FF9900" // Orange for entry
                 strokeWidth="2"
                 strokeDasharray="4 4"
                 opacity="0.8"
@@ -217,13 +254,34 @@ export default function MarketTargetChart({
 
         {isBracketStrategy && (
           <>
-            <div className="absolute left-2 bottom-10 bg-[#FFE3BA] text-black text-xs px-2 py-1 rounded-md">
+            <div
+              className="absolute bg-[#000] text-white text-xs px-2 py-1 rounded-md z-10"
+              style={{
+                left: "0.5rem",
+                top: `${Math.min(Math.max((stopLossY / height) * 100, 5), 95)}%`,
+                transform: "translateY(-50%)",
+              }}
+            >
               Stop Loss
             </div>
-            <div className="absolute left-[40%] bottom-[50%] bg-[#FFE3BA] text-black text-xs px-2 py-1 rounded-md">
+            <div
+              className="absolute bg-[#FFE3BA] text-black text-xs px-2 py-1 rounded-md z-10"
+              style={{
+                left: "40%",
+                top: `${Math.min(Math.max((entryY / height) * 100, 5), 95)}%`,
+                transform: "translateY(-50%)",
+              }}
+            >
               Entry
             </div>
-            <div className="absolute right-2 top-6 bg-[#FFE3BA] text-black text-xs px-2 py-1 rounded-md">
+            <div
+              className="absolute bg-[#FF9900] text-black text-xs px-2 py-1 rounded-md z-10"
+              style={{
+                right: "0.5rem",
+                top: `${Math.min(Math.max((takeProfitY / height) * 100, 5), 95)}%`,
+                transform: "translateY(-50%)",
+              }}
+            >
               Take Profit
             </div>
           </>
@@ -242,15 +300,15 @@ export default function MarketTargetChart({
             </div>
             <div className="text-center">
               <div className="text-2xl font-semibold text-[#FFD484]">
-                {currentPrice}
+                {entryDisplay}
               </div>
               <div className="text-white text-sm">Entry Price</div>
             </div>
             <div className="text-right">
               <div className="text-2xl font-semibold text-[#FFD484]">
-                {targetPrice}
+                {takeProfitDisplay}
               </div>
-              <div className="text-white text-sm">Target Profit</div>
+              <div className="text-white text-sm">Take Profit</div>
             </div>
           </>
         ) : (
@@ -258,7 +316,9 @@ export default function MarketTargetChart({
           <>
             <div>
               <div className="text-2xl font-semibold text-[#FFD484]">
-                {currentPrice}
+                {marketPrice
+                  ? `$ ${parseFloat(marketPrice).toFixed(3)}`
+                  : "$ 0.673"}
               </div>
               <div className="text-white text-sm">
                 {isSellStrategy ? "Current Price" : "Target Price"}
@@ -266,7 +326,17 @@ export default function MarketTargetChart({
             </div>
             <div className="text-right">
               <div className="text-2xl font-semibold text-[#FFD484]">
-                {targetPrice}
+                {(() => {
+                  if (isSellStrategy) {
+                    return marketPrice
+                      ? `$ ${(parseFloat(marketPrice) * 1.2).toFixed(3)}`
+                      : "$ 54";
+                  } else {
+                    return marketPrice
+                      ? `$ ${(parseFloat(marketPrice) * 0.8).toFixed(3)}`
+                      : "$ 28";
+                  }
+                })()}
               </div>
               <div className="text-white text-sm">
                 {isSellStrategy ? "Target Price" : "Current Price"}

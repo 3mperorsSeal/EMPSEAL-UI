@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import Emp from "./Emp";
 import Wallet from "./Wallet";
 // import Graph from "./Graph";
@@ -6,6 +6,7 @@ import X from "../../assets/images/x.svg";
 import L from "../../assets/images/linked.svg";
 import Y from "../../assets/images/youtube.svg";
 import BG from "../../assets/images/empx-bg1.webp";
+// import Routing from "./Routing";
 import RoutingButton from "./RoutingButton";
 
 const Normal = () => {
@@ -43,17 +44,18 @@ const Normal = () => {
               onTokensChange={handleTokensChange}
               activeTab={activeTab}
             />
+            {/* <Routing /> */}
           </div>
           <div className="md:max-w-[474px] w-full">
             <div className="md:block hidden">
               <Wallet onTabChange={handleTabChange} />
             </div>
             <div className="mt-3 lg:fixed absolute md:left-0 lefts lefts01 2xl:bottom-[32%] lg:bottom-[33%] md:bottom-[27%] bottom-[312px]">
-              <RoutingButton
+              {/* <RoutingButton
                 bestRoute={bestRoute}
                 tokenA={tokenA}
                 tokenB={tokenB}
-              />
+              /> */}
             </div>
             {/* <div className="mt-3 hidden">
               <Graph padding={padding} />

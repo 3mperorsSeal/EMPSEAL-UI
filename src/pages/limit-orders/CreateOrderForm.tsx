@@ -212,7 +212,7 @@ export function CreateOrderForm({
     const calculateMinAmountOut = () => {
       const limitPriceValue = form.getValues("limitPrice");
       const amountInValue = form.getValues("amountIn");
-      
+
       if (
         amountInValue &&
         !isNaN(parseFloat(amountInValue)) &&
@@ -489,14 +489,20 @@ export function CreateOrderForm({
         const tp = parseFloat(takeProfitPrice);
 
         if (!stopLossPrice || !takeProfitPrice || isNaN(sl) || isNaN(tp)) {
-          onStatusMessage({ type: "error", message: "Please enter valid Stop Loss and Take Profit prices" });
+          onStatusMessage({
+            type: "error",
+            message: "Please enter valid Stop Loss and Take Profit prices",
+          });
           setIsCreating(false);
           return;
         }
 
         // Bracket orders are SELL only: enforce SL > TP
         if (sl <= tp) {
-          onStatusMessage({ type: "error", message: "Stop Loss Price must be GREATER than Take Profit Price" });
+          onStatusMessage({
+            type: "error",
+            message: "Stop Loss Price must be GREATER than Take Profit Price",
+          });
           setIsCreating(false);
           return;
         }
@@ -504,7 +510,10 @@ export function CreateOrderForm({
 
       if (orderMode === OrderMode.POSITION) {
         if (!data.tokenOut || data.tokenOut === zeroAddress) {
-          onStatusMessage({ type: "error", message: "Please select a Token to Protect Into (Exit Token)" });
+          onStatusMessage({
+            type: "error",
+            message: "Please select a Token to Protect Into (Exit Token)",
+          });
           setIsCreating(false);
           return;
         }
@@ -513,14 +522,21 @@ export function CreateOrderForm({
         const tp = parseFloat(takeProfitPrice);
 
         if (!stopLossPrice || !takeProfitPrice || isNaN(sl) || isNaN(tp)) {
-          onStatusMessage({ type: "error", message: "Please enter valid Stop Loss and Take Profit prices" });
+          onStatusMessage({
+            type: "error",
+            message: "Please enter valid Stop Loss and Take Profit prices",
+          });
           setIsCreating(false);
           return;
         }
 
         // Position orders are always SELL protection: enforce SL > TP
         if (sl <= tp) {
-          onStatusMessage({ type: "error", message: "For Position Protection, Stop Loss Price must be GREATER than Take Profit Price" });
+          onStatusMessage({
+            type: "error",
+            message:
+              "For Position Protection, Stop Loss Price must be GREATER than Take Profit Price",
+          });
           setIsCreating(false);
           return;
         }
@@ -555,7 +571,9 @@ export function CreateOrderForm({
         const tpMinOut = calcMinOut(amountIn, tpPrice);
 
         // Single expiry for both SL and TP
-        const bracketExpiry = BigInt(Math.floor(new Date(takeProfitDeadline).getTime() / 1000));
+        const bracketExpiry = BigInt(
+          Math.floor(new Date(takeProfitDeadline).getTime() / 1000),
+        );
 
         hash = await writeContract(config, {
           address: CONTRACT_ADDRESS,
@@ -566,16 +584,16 @@ export function CreateOrderForm({
             data.tokenOut as `0x${string}`,
             amountIn,
             minAmountOut, // Entry Min Out
-            limitPrice,   // Entry Limit Price
-            deadline,     // Entry Deadline
-            orderType,    // Entry Order Type
-            data.tokenIn as `0x${string}`,  // Exit Token
+            limitPrice, // Entry Limit Price
+            deadline, // Entry Deadline
+            orderType, // Entry Order Type
+            data.tokenIn as `0x${string}`, // Exit Token
             slPrice,
             slMinOut,
             bracketExpiry,
             tpPrice,
             tpMinOut,
-            bracketExpiry
+            bracketExpiry,
           ],
         });
       } else {
@@ -591,7 +609,9 @@ export function CreateOrderForm({
         const tpMinOut = calcMinOut(amountIn, tpPrice);
 
         // Single expiry for both SL and TP
-        const bracketExpiry = BigInt(Math.floor(new Date(takeProfitDeadline).getTime() / 1000));
+        const bracketExpiry = BigInt(
+          Math.floor(new Date(takeProfitDeadline).getTime() / 1000),
+        );
 
         hash = await writeContract(config, {
           address: CONTRACT_ADDRESS,
@@ -606,8 +626,8 @@ export function CreateOrderForm({
             bracketExpiry,
             tpPrice,
             tpMinOut,
-            bracketExpiry
-          ]
+            bracketExpiry,
+          ],
         });
       }
 
@@ -770,25 +790,29 @@ export function CreateOrderForm({
         >
           <div className="md:max-w-[700px] w-full">
             {/* Strategy Selection */}
-            <div className="mb-4 md:max-w-[850px] w-full mx-auto border-[2.43px] border-[#FFA600] rounded-lg px-4 py-2 bg-black">
+            <div className="mb-4 md:max-w-[850px] w-full mx-auto border-4 border-[#FFA600] rounded-lg px-4 py-2 bg-black">
+              <p className="text-center text-[#FF9900] md:text-xl font-bold text-sm font-orbitron">
+                Select Strategy
+              </p>
               <div className="flex justify-center gap-8 md:gap-16 items-start mt-2 md:flex-nowrap flex-wrap">
                 {/* Limit Orders Group */}
                 <div className="flex flex-col items-center">
                   <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
-                    Limit Orders
+                    Exit/Entry
                   </div>
                   <div className="flex gap-3">
                     {/* Sell Strategy Button */}
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center relative group cursor-pointer">
                       <button
                         type="button"
                         className={`
-                          w-24 h-10 p-3 md:text-2xl text-lg
+                          w-24 h-10 p-3 md:text-[30px] text-lg !cursor-pointer
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
-                            form.watch("strategy") === OrderStrategy.SELL && orderMode === OrderMode.STANDARD
-                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                            form.watch("strategy") === OrderStrategy.SELL &&
+                            orderMode === OrderMode.STANDARD
+                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
                               : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
@@ -801,21 +825,33 @@ export function CreateOrderForm({
                       >
                         Sell
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
-                        Sell High
+                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 left-0 right-0 mx-auto top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg">
+                        <span className="text-[#FF9900] font-black">
+                          Sell High
+                        </span>{" "}
+                        <br />
+                        Exit your position exactly at the price you want — above
+                        the current market. Lock in your profits from price
+                        appreciation and sell directly into stables or core
+                        assets of your choice. Secure gains. Zero emotion. One
+                        click.
+                      </div>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[11px] font-semibold font-orbitron">
+                        Sell High: Exit
                       </div>
                     </div>
                     {/* Buy Strategy Button */}
-                    <div className="flex flex-col items-center">
+                    <div className="flex flex-col items-center relative group cursor-pointer">
                       <button
                         type="button"
                         className={`
-                          w-24 h-10 p-3 md:text-2xl text-lg
+                          w-24 h-10 p-3 md:text-[30px] text-lg 
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
-                            form.watch("strategy") === OrderStrategy.BUY && orderMode === OrderMode.STANDARD
-                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                            form.watch("strategy") === OrderStrategy.BUY &&
+                            orderMode === OrderMode.STANDARD
+                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
                               : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
@@ -828,8 +864,18 @@ export function CreateOrderForm({
                       >
                         Buy
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
-                        Buy Low
+                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg">
+                        <span className="text-[#FF9900] font-black">
+                          Buy Low
+                        </span>{" "}
+                        <br />
+                        Enter your position exactly at the price you want —
+                        below the current market. Perfect for buying the dip and
+                        sniping optimal entries with precision and speed.
+                        One-click setup. Zero guesswork.
+                      </div>
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
+                        Buy Low: Entry
                       </div>
                     </div>
                   </div>
@@ -837,8 +883,9 @@ export function CreateOrderForm({
 
                 {/* Bracket/Protection Group */}
                 <div className="flex flex-col items-center">
+                  {/* <span className="text-xs text-white">Coming Soon</span> */}
                   <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
-                    Bracket & Protection
+                    Spot Protection
                   </div>
                   <div className="flex gap-3">
                     {/* Bracket Strategy Button */}
@@ -846,25 +893,26 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-28 h-10 p-3 md:text-2xl text-lg
+                          w-32 h-10 p-3 md:text-2xl text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
                             orderMode === OrderMode.BRACKET
-                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
                               : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
-                    onClick={() => {
-                      setOrderMode(OrderMode.BRACKET);
-                      setShowBracketSettings(true);
-                      form.setValue("strategy", OrderStrategy.SELL); // Bracket orders are SELL only
-                    }}
+                        onClick={() => {
+                          setOrderMode(OrderMode.BRACKET);
+                          setShowBracketSettings(true);
+                          form.setValue("strategy", OrderStrategy.BRACKET);
+                        }}
                         data-testid="button-bracket"
                       >
-                        Bracket
+                        {/* Bracket */}
+                        Full
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
                         Entry + SL/TP
                       </div>
                     </div>
@@ -873,25 +921,26 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-28 h-10 p-3 md:text-2xl text-lg
+                          w-32 h-10 p-3 md:text-[30px] text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
                             orderMode === OrderMode.POSITION
-                              ? "bg-black border border-[#FF9900] text-[#FF9900]"
+                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
                               : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
                         onClick={() => {
                           setOrderMode(OrderMode.POSITION);
                           setShowBracketSettings(true);
-                          form.setValue("strategy", OrderStrategy.SELL); // Position orders are always SELL
+                          form.setValue("strategy", OrderStrategy.BRACKET);
                         }}
                         data-testid="button-position"
                       >
-                        Position
+                        {/* Position */}
+                        Spot
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-normal font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
                         Protect Holdings
                       </div>
                     </div>
@@ -910,13 +959,15 @@ export function CreateOrderForm({
             <div className="relative bg_swap_box">
               <div className="flex justify-between gap-3 items-center">
                 <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
-                  {orderMode === OrderMode.POSITION ? "Protected Token" : "In Address"}
+                  {orderMode === OrderMode.POSITION
+                    ? "Protected Token"
+                    : "In Address"}
                 </div>
                 <div className="md:text-xl text-[10px] font-orbitron">
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     BAL
                   </span>
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     {" "}
                     :{" "}
                   </span>
@@ -965,7 +1016,7 @@ export function CreateOrderForm({
                                           symbol={token.symbol}
                                           className="md:h-7 md:w-7 w-6 h-6"
                                         />
-                                        <span className=" md:text-xl text-sm font-extrabold font-orbitron">
+                                        <span className=" md:text-xl text-sm font-extrabold font-orbitron text-white">
                                           {token.symbol}
                                         </span>
                                       </div>
@@ -973,7 +1024,7 @@ export function CreateOrderForm({
                                   ),
                                 )}
                                 <SelectItem value="custom">
-                                  <span className="font-medium text-primary font-orbitron cursor-pointer">
+                                  <span className="font-medium text-primary font-orbitron cursor-pointer text-white">
                                     Custom Address..
                                   </span>
                                 </SelectItem>
@@ -1016,7 +1067,7 @@ export function CreateOrderForm({
                                 />
                               </div>
                             )}
-                            <Button
+                            {/* <Button
                               type="button"
                               variant="ghost"
                               size="sm"
@@ -1027,7 +1078,7 @@ export function CreateOrderForm({
                               className="md:text-base text-xs border-none font-orbitron"
                             >
                               Back to token list
-                            </Button>
+                            </Button> */}
                           </div>
                         )}
                       </div>
@@ -1059,7 +1110,7 @@ export function CreateOrderForm({
                         {...form.register("amountIn")}
                         placeholder="0.0"
                         type="text"
-                        className="font-orbitron font-extrabold text-white  rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
+                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
                         data-testid="input-amount-in"
                         onChange={(e) =>
                           form.setValue("amountIn", e.target.value)
@@ -1070,7 +1121,7 @@ export function CreateOrderForm({
                       />
                     );
                   })()}
-                  <p className="mt-1 md:text-xs text-[10px] text-black text-right font-extrabold">
+                  <p className="mt-1 md:text-xs text-[10px] text-white text-right font-extrabold">
                     {tokenInInfo
                       ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                       : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
@@ -1078,9 +1129,10 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
-                </p>
+                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                  {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
+                  <span className="font-bold">Market Price</span>
+                </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -1099,44 +1151,42 @@ export function CreateOrderForm({
                     </button>
                   ))}
                 </div>
+              </div>
+              <div className="mt-1 text-right relative text-white md:text-base text-[10px] usd-spacing truncate rigamesh text-sh1 flex justify-end gap-1">
+                {tokenInUSDPrice &&
+                  amountIn &&
+                  !isNaN(parseFloat(amountIn)) && (
+                    <div className="flex items-center gap-1">
+                      <div className="relative inline-block">
+                        <InfoIcon
+                          size={18}
+                          className="md:mt-[0.1px] mt-[-1px] cursor-pointer"
+                          onMouseEnter={() => setDollarInfo(true)}
+                          onMouseLeave={() => setDollarInfo(false)}
+                          onClick={() => setDollarInfo((prev) => !prev)}
+                        />
 
-                <div className="text-right relative text-black md:text-base text-[10px] usd-spacing truncate rigamesh text-sh1 flex justify-end gap-1">
-                  {tokenInUSDPrice &&
-                    amountIn &&
-                    !isNaN(parseFloat(amountIn)) && (
-                      <div className="flex items-center gap-1">
-                        <div className="relative inline-block">
-                          <InfoIcon
-                            size={18}
-                            className="md:mt-[1.5px] mt-[-1px] cursor-pointer"
+                        {dollarinfo && (
+                          <div
+                            className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg"
                             onMouseEnter={() => setDollarInfo(true)}
                             onMouseLeave={() => setDollarInfo(false)}
-                            onClick={() => setDollarInfo((prev) => !prev)}
-                          />
-
-                          {dollarinfo && (
-                            <div
-                              className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg"
-                              onMouseEnter={() => setDollarInfo(true)}
-                              onMouseLeave={() => setDollarInfo(false)}
-                            >
-                              Dollar value display <br />
-                              The dollar value displayed is fetched from a
-                              3rd-party API. It may not be 100% accurate in some
-                              cases. For accuracy, please check the output
-                              units.
-                            </div>
-                          )}
-                        </div>
-                        <span>
-                          $
-                          {formatNumber(
-                            (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2),
-                          )}
-                        </span>
+                          >
+                            Dollar value display <br />
+                            The dollar value displayed is fetched from a
+                            3rd-party API. It may not be 100% accurate in some
+                            cases. For accuracy, please check the output units.
+                          </div>
+                        )}
                       </div>
-                    )}
-                </div>
+                      <span>
+                        $
+                        {formatNumber(
+                          (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2),
+                        )}
+                      </span>
+                    </div>
+                  )}
               </div>
               <div className="text-right text-white font-extrabold text-sm relative roboto truncate">
                 {form.formState.errors.amountIn && (
@@ -1163,13 +1213,15 @@ export function CreateOrderForm({
             <div className="relative pb-4 bg_swap_box_black">
               <div className="flex justify-between gap-3 items-center lg:px-2">
                 <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
-                  {orderMode === OrderMode.POSITION ? "Exit Token" : "Out Address"}
+                  {orderMode === OrderMode.POSITION
+                    ? "Exit Token"
+                    : "Out Address"}
                 </div>
                 <div className="md:text-xl text-[10px] font-orbitron">
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     BAL
                   </span>{" "}
-                  <span className="font-semibold leading-normal text-[#FF9900]">
+                  <span className="font-normal leading-normal text-[#FF9900]">
                     {" "}
                     :{" "}
                   </span>
@@ -1217,7 +1269,7 @@ export function CreateOrderForm({
                                           symbol={token.symbol}
                                           className="md:h-7 md:w-7 w-6 h-6"
                                         />
-                                        <span className="font-orbitron md:text-xl text-sm font-extrabold">
+                                        <span className="font-orbitron md:text-xl text-sm font-extrabold !text-white">
                                           {token.symbol}
                                         </span>
                                       </div>
@@ -1225,7 +1277,7 @@ export function CreateOrderForm({
                                   ),
                                 )}
                                 <SelectItem value="custom">
-                                  <span className="font-medium text-black font-orbitron cursor-pointer">
+                                  <span className="font-medium text-white font-orbitron cursor-pointer">
                                     Custom Address..
                                   </span>
                                 </SelectItem>
@@ -1245,7 +1297,7 @@ export function CreateOrderForm({
                                     />
                                   )}
                                   <div className="flex flex-col">
-                                    <span className="text-black md:text-xl text-xs font-bold">
+                                    <span className="text-white md:text-xl text-xs font-bold">
                                       {customTokenOut.symbol}
                                     </span>
                                   </div>
@@ -1253,7 +1305,7 @@ export function CreateOrderForm({
                                 <button
                                   type="button"
                                   onClick={() => form.setValue("tokenOut", "")}
-                                  className="text-black md:text-xl text-xs font-bold tilt"
+                                  className="text-white md:text-xl text-xs font-bold tilt"
                                 >
                                   <X size={16} />
                                 </button>
@@ -1263,12 +1315,12 @@ export function CreateOrderForm({
                                 <Input
                                   {...form.register("tokenOut")}
                                   placeholder="0x..."
-                                  className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-xl text-base !font-bold !font-orbitron !text-black"
+                                  className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-xl text-base !font-bold !font-orbitron !text-white"
                                   data-testid="input-token-out-custom"
                                 />
                               </div>
                             )}
-                            <Button
+                            {/* <Button
                               type="button"
                               variant="ghost"
                               size="sm"
@@ -1279,7 +1331,7 @@ export function CreateOrderForm({
                               className="md:text-base text-xs border-none text-black font-orbitron"
                             >
                               Back to token list
-                            </Button>
+                            </Button> */}
                           </div>
                         )}
                       </div>
@@ -1315,7 +1367,7 @@ export function CreateOrderForm({
                         {...form.register("minAmountOut")}
                         placeholder="0.0"
                         type="text"
-                        className="font-orbitron font-extrabold text-white  rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
+                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
                         data-testid="input-amount-in"
                         style={{
                           fontSize: `${dynamicFontSize}px`,
@@ -1331,9 +1383,10 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                  Market Price: {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
-                </p>
+                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                  {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
+                  <span className="font-bold">Market Price</span>
+                </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
                   {[25, 50, 75, 100].map((value) => (
@@ -1389,14 +1442,14 @@ export function CreateOrderForm({
             {/* For Bracket */}
             {showBracketSettings && (
               <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mt-5">
-                <div className="text-center text-[#FF9900] text-xl font-black font-orbitron">
+                <div className="text-center text-[#FF9900] text-base font-bold font-orbitron">
                   Advanced Settings
                 </div>
                 {/* Partial Fill */}
                 <div className={`flex flex-col rounded-lg font-orbitron`}>
                   <div className="text-white p-4">
                     <div className="flex gap-4 justify-center items-center">
-                      <p className="text-[#FF9900] font-orbitron md:text-3xl text-2xl font-extrabold ">
+                      <p className="text-[#FF9900] font-orbitron md:text-[26px] text-xl font-extrabold ">
                         Partial Fill
                       </p>
                       <label className="toggle-switch">
@@ -1464,8 +1517,8 @@ export function CreateOrderForm({
                 <div className="md:px-2 px-2">
                   <hr className="border-[#FF9900]/30 my-2" />
                   {/* Partial Fill */}
-                  <div className="flex gap-4 items-center mt-4 px-4 md:flex-nowrap flex-wrap">
-                    <div className="md:text-2xl text-base text-[#FF9900]">
+                  <div className="flex gap-4 items-center mt-4 px-4 md:flex-nowrap flex-wrap justify-center">
+                    <div className="md:text-xl font-bold text-base text-[#FF9900]">
                       Expiry{" "}
                     </div>
                     {/* Deadline */}
@@ -1535,9 +1588,11 @@ export function CreateOrderForm({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating...
                   </>
+                ) : orderMode === OrderMode.POSITION ? (
+                  "Create Position Protection"
+                ) : orderMode === OrderMode.BRACKET ? (
+                  "Create Bracket Order"
                 ) : (
-                  orderMode === OrderMode.POSITION ? "Create Position Protection" : 
-                  orderMode === OrderMode.BRACKET ? "Create Bracket Order" : 
                   "Create Order"
                 )}
               </button>
@@ -1554,30 +1609,30 @@ export function CreateOrderForm({
           <div className="lg:max-w-[550px] md:max-w-[700px] w-full !mt-0">
             {/* Entry Price - Hidden for Position orders */}
             {orderMode !== OrderMode.POSITION && (
-            <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
-              <div className="flex justify-between gap-2 items-center">
-                <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron">
-                  Entry Price
-                </h2>
-                <div className="flex justify-center gap-2 items-center mt-4 relative">
-                  <div className="flex gap-1 items-center">
-                    <input
-                      id="limitPrice"
-                      {...form.register("limitPrice")}
-                      placeholder="00.000"
-                      type="text"
-                      className="w-[160px] flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-center text-white placeholder:text-white md:text-4xl text-2xl font-extrabold font-orbitron"
-                      data-testid="input-limit-price"
-                    />
-                    <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
-                      {tokenOutInfo?.symbol || "USDT"}
-                    </span>
+              <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
+                <div className="flex justify-between gap-2 items-center mt-3">
+                  <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron whitespace-nowrap">
+                    Entry Price
+                  </h2>
+                  <div className="flex justify-center gap-2 items-center relative w-full">
+                    <div className="flex gap-1 items-center w-full">
+                      <input
+                        id="limitPrice"
+                        {...form.register("limitPrice")}
+                        placeholder="00.000"
+                        type="text"
+                        className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-lg text-base font-semibold font-orbitron"
+                        data-testid="input-limit-price"
+                      />
+                    </div>
                   </div>
+                </div>
+                <div className="text-right flex gap-2 items-center justify-end">
                   {marketPrice && tokenInInfo && tokenOutInfo && (
                     <button
                       type="button"
                       onClick={() => setQuoteReversed((prev) => !prev)}
-                      className="absolute right-0 top-[-25px] w-[25px] md:h-[25px] h-6 shrink-0 flex items-center justify-center rounded-lg !border !border-[#FF9900]"
+                      className="w-[24px] md:h-[24px] h-5 shrink-0 flex items-center justify-center rounded !border !border-[#FF9900] bg-[#F59216]"
                     >
                       <svg
                         width={18}
@@ -1590,147 +1645,287 @@ export function CreateOrderForm({
                           fillRule="evenodd"
                           clipRule="evenodd"
                           d="M18.0574 30.8637C17.6264 31.3581 16.8763 31.4094 16.3819 30.9785L7.13591 22.9179C6.76272 22.5925 6.63068 22.0697 6.80437 21.6061C6.97806 21.1425 7.42123 20.8353 7.91634 20.8353L30.083 20.8353C30.7388 20.8353 31.2705 21.367 31.2705 22.0228C31.2705 22.6786 30.7388 23.2103 30.083 23.2103L11.0855 23.2103L17.9426 29.1883C18.437 29.6192 18.4884 30.3694 18.0574 30.8637Z"
-                          fill="#FF9900"
+                          fill="#000000"
                         />
                         <path
                           fillRule="evenodd"
                           clipRule="evenodd"
                           d="M19.9419 7.13644C20.3728 6.64196 21.123 6.59066 21.6173 7.02165L30.8633 15.0822C31.2365 15.4076 31.3687 15.9304 31.195 16.394C31.0212 16.8576 30.5781 17.1648 30.083 17.1648L7.91628 17.1648C7.26047 17.1648 6.72878 16.6331 6.72878 15.9773C6.72878 15.3215 7.26047 14.7898 7.91628 14.7898L26.9137 14.7898L20.0567 8.81176C19.5623 8.38078 19.5109 7.63076 19.9419 7.13644Z"
-                          fill="#FF9900"
+                          fill="#000000"
                         />
                       </svg>
                     </button>
                   )}
-                </div>
-              </div>
-              <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
-                Link Limit Price
-              </div>
-              <div className="mt-3 font-orbitron">
-                <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
-                  <span>Market</span>
-                  <span>{percent}%</span>
-                </div>
-                <div className="relative h-2 bg-[#352E25] rounded-full">
-                  <div
-                    className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
-                    style={{ width: `${percent}%` }}
-                  />
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
-                    style={{ left: `calc(${percent}% - 10px)` }}
-                  />
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    step="1"
-                    value={percent}
-                    onChange={(e) => setPercent(Number(e.target.value))}
-                    className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
-                  />
-                </div>
-                <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                  <span>0</span>
-                  <span>25</span>
-                  <span>50</span>
-                  <span>75</span>
-                  <span>100</span>
-                </div>
-              </div>
-              <div className="mt-4 flex justify-between gap-3 items-center">
-                <div className="flex flex-col justify-center gap-2 items-center">
-                  <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
-                    18%
-                  </div>
-                  <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
-                    Market Price
-                  </div>
-                </div>
-                <div className="flex flex-col justify-center gap-2 items-center">
-                  <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
-                    18%
-                  </div>
-                  <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
-                    Target Price
-                  </div>
-                </div>
-              </div>
-              <div className="flex justify-between gap-4 items-center flex-wrap">
-                <div className="mt-1 md:text-sm text-xs text-muted-foreground flex items-center justify-left">
-                  <span className="text-[#FFE3BA] font-orbitron">
-                    {marketPrice && tokenInInfo && tokenOutInfo ? (
-                      quoteReversed ? (
-                        <>
-                          Market: <span className="rigamesh">1</span>{" "}
-                          {tokenOutInfo.symbol} ≈{" "}
-                          <span className="rigamesh">
-                            {(1 / parseFloat(marketPrice)).toFixed(8)}
-                          </span>{" "}
-                          {tokenInInfo.symbol}
-                        </>
-                      ) : (
-                        <>
-                          Market: <span className="rigamesh">1</span>{" "}
-                          {tokenInInfo.symbol} ≈{" "}
-                          <span className="rigamesh">{marketPrice}</span>{" "}
-                          {tokenOutInfo.symbol}
-                        </>
-                      )
-                    ) : (
-                      "Price per token (decimal value)"
-                    )}
+                  <span className="text-[#FF9900] md:text-xl text-base font-orbitron font-bold">
+                    {quoteReversed && tokenInInfo && tokenOutInfo
+                      ? `1 ${tokenOutInfo.symbol} per ${tokenInInfo.symbol}`
+                      : `1 ${tokenInInfo?.symbol || "Token"} per ${tokenOutInfo?.symbol || "USDT"}`}
                   </span>
                 </div>
-                {form.formState.errors.limitPrice && (
-                  <p className="mt-1 text-[#FFE3BA] text-sm text-destructive">
-                    {form.formState.errors.limitPrice.message}
-                  </p>
-                )}
-                {limitPriceError && (
-                  <p className="mt-1 text-[#FFE3BA] text-sm text-destructive">
-                    {limitPriceError}
-                  </p>
-                )}
+
+                {/* Calculate percentage difference between limit price and market price */}
+                {(() => {
+                  const market = marketPrice ? parseFloat(marketPrice) : 0;
+                  const limit = currentLimitPrice
+                    ? parseFloat(currentLimitPrice)
+                    : 0;
+
+                  let targetPosition = 0;
+                  let priceDiffPercent = 0;
+
+                  if (market > 0 && limit > 0) {
+                    if (currentStrategy === OrderStrategy.SELL) {
+                      // For SELL: limit higher than market
+                      priceDiffPercent = ((limit - market) / market) * 100;
+                      targetPosition = Math.min(
+                        100,
+                        Math.max(0, priceDiffPercent),
+                      );
+                    } else if (currentStrategy === OrderStrategy.BUY) {
+                      // For BUY: limit lower than market
+                      // Calculate percentage below market
+                      priceDiffPercent = ((market - limit) / market) * 100;
+                      // Map to position from left (market at 0, lower prices move right)
+                      targetPosition = Math.min(
+                        100,
+                        Math.max(0, priceDiffPercent),
+                      );
+                    } else if (currentStrategy === OrderStrategy.BRACKET) {
+                      // For BRACKET: can be either direction
+                      priceDiffPercent =
+                        Math.abs((limit - market) / market) * 100;
+                      targetPosition = Math.min(100, priceDiffPercent);
+                    }
+                  }
+
+                  return (
+                    <div className="mt-3 font-orbitron">
+                      <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
+                        <span>Market</span>
+                        <span>
+                          {currentStrategy === OrderStrategy.BUY
+                            ? `-${priceDiffPercent.toFixed(1)}%`
+                            : `${priceDiffPercent.toFixed(1)}%`}
+                        </span>
+                      </div>
+                      <div className="relative h-2 bg-[#352E25] rounded-full">
+                        {/* Progress fill from market to target */}
+                        <div
+                          className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
+                          style={{
+                            width: `${targetPosition}%`,
+                            left: "0", // Always start from left for all strategies
+                          }}
+                        />
+
+                        {/* Market Price Marker (always at left) */}
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-2 h-8 bg-[#FFE4BA] rounded z-20"
+                          style={{ left: "0px" }}
+                          title="Market Price"
+                        />
+
+                        {/* Target Price Marker (moves right for all strategies) */}
+                        <div
+                          className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200 cursor-pointer z-30"
+                          style={{
+                            left: `calc(${targetPosition}% - 16px)`,
+                          }}
+                          title="Target Price"
+                        />
+
+                        <input
+                          type="range"
+                          min="0"
+                          max="100"
+                          step="1"
+                          value={targetPosition}
+                          onChange={(e) => {
+                            const newTargetPosition = Number(e.target.value);
+                            if (marketPrice) {
+                              const market = parseFloat(marketPrice);
+                              let newLimitPrice;
+
+                              if (currentStrategy === OrderStrategy.SELL) {
+                                // For SELL: moving right increases price (above market)
+                                newLimitPrice =
+                                  market * (1 + newTargetPosition / 100);
+                              } else if (
+                                currentStrategy === OrderStrategy.BUY
+                              ) {
+                                // For BUY: moving right decreases price (below market)
+                                // Since targetPosition represents % below market
+                                newLimitPrice =
+                                  market * (1 - newTargetPosition / 100);
+                              } else {
+                                // For BRACKET: can go either direction
+                                newLimitPrice =
+                                  market * (1 + newTargetPosition / 100);
+                              }
+
+                              form.setValue(
+                                "limitPrice",
+                                newLimitPrice.toFixed(8),
+                                {
+                                  shouldValidate: true,
+                                  shouldDirty: true,
+                                },
+                              );
+                            }
+                          }}
+                          className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer z-40"
+                        />
+                      </div>
+                      <div className="flex justify-between text-[10px] mt-3 text-gray-400">
+                        <span className="text-[#FF9900] font-bold">Market</span>
+                        <span>
+                          {currentStrategy === OrderStrategy.BUY
+                            ? "Lower"
+                            : "Higher"}
+                        </span>
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                <div className="mt-4 flex justify-between gap-3 items-center">
+                  <div className="flex flex-col justify-center gap-2 items-center">
+                    <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
+                      {marketPrice ? (
+                        <>
+                          <span className="font-bold">1</span>{" "}
+                          {tokenInInfo?.symbol} ≈{" "}
+                          <span className="font-bold">
+                            {parseFloat(marketPrice).toFixed(4)}
+                          </span>{" "}
+                          {tokenOutInfo?.symbol}
+                        </>
+                      ) : (
+                        "-"
+                      )}
+                    </div>
+                    <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
+                      Market Price
+                    </div>
+                  </div>
+                  <div className="flex flex-col justify-center gap-2 items-center">
+                    <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
+                      {(() => {
+                        const market = marketPrice
+                          ? parseFloat(marketPrice)
+                          : 0;
+                        const limit = currentLimitPrice
+                          ? parseFloat(currentLimitPrice)
+                          : 0;
+
+                        if (market > 0 && limit > 0) {
+                          if (currentStrategy === OrderStrategy.SELL) {
+                            const priceDiffPercent =
+                              ((limit - market) / market) * 100;
+                            return `${Math.min(100, Math.max(0, priceDiffPercent)).toFixed(1)}%`;
+                          } else if (currentStrategy === OrderStrategy.BUY) {
+                            const priceDiffPercent =
+                              ((market - limit) / market) * 100;
+                            return `-${Math.min(100, Math.max(0, priceDiffPercent)).toFixed(1)}%`;
+                          } else if (
+                            currentStrategy === OrderStrategy.BRACKET
+                          ) {
+                            const priceDiffPercent =
+                              Math.abs((limit - market) / market) * 100;
+                            return `${Math.min(100, priceDiffPercent).toFixed(1)}%`;
+                          }
+                        }
+                        return "0%";
+                      })()}
+                    </div>
+                    <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
+                      Target Price
+                    </div>
+                  </div>
+                </div>
+                <div className="flex justify-between gap-4 items-center flex-wrap">
+                  <div className="mt-1 md:text-sm text-xs text-muted-foreground flex items-center justify-left">
+                    <span className="text-[#FFE3BA] font-orbitron">
+                      {marketPrice && tokenInInfo && tokenOutInfo ? (
+                        quoteReversed ? (
+                          <>
+                            Market:{" "}
+                            <span className="font-orbitron font-bold">1</span>{" "}
+                            {tokenOutInfo.symbol} ≈{" "}
+                            <span className="font-orbitron font-bold">
+                              {(1 / parseFloat(marketPrice)).toFixed(8)}
+                            </span>{" "}
+                            {tokenInInfo.symbol}
+                          </>
+                        ) : (
+                          <>
+                            Market:{" "}
+                            <span className="font-orbitron font-bold">1</span>{" "}
+                            {tokenInInfo.symbol} ≈{" "}
+                            <span className="font-orbitron font-bold">
+                              {marketPrice}
+                            </span>{" "}
+                            {tokenOutInfo.symbol}
+                          </>
+                        )
+                      ) : (
+                        "Price per token (decimal value)"
+                      )}
+                    </span>
+                  </div>
+                  {form.formState.errors.limitPrice && (
+                    <p className="mt-1 text-[#FFE3BA] text-sm text-destructive">
+                      {form.formState.errors.limitPrice.message}
+                    </p>
+                  )}
+                  {limitPriceError && (
+                    <p className="mt-1 text-[#FFE3BA] text-sm text-destructive">
+                      {limitPriceError}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
             )}
             {/* Bracket Settings */}
             {showBracketSettings && (
               <>
                 {/* Bracket Direction Helper */}
-                {orderMode === OrderMode.BRACKET && (
-                  <div className="mb-4 p-3 bg-black/50 border border-[#FF9900]/30 rounded-lg">
-                    <p className="text-[#FFE3BA] text-sm text-center font-orbitron">
-                      Bracket Order: Set Stop Loss ABOVE and Take Profit BELOW entry price
+                {/* {orderMode === OrderMode.BRACKET && (
+                  <div className="mb-4 p-3 bg-black border-4 border-[#FF9900] rounded-lg">
+                    <p className="text-white text-sm text-center font-orbitron">
+                      Bracket Order: Set Stop Loss ABOVE and Take Profit BELOW
+                      entry price
                     </p>
                   </div>
-                )}
-                
-                <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5 mt-5">
+                )} */}
+
+                <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
                   {/* Stop Loss Section */}
                   <div className="w-full">
-                    <div className="flex justify-between gap-2 items-center">
-                      <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron">
+                    <div className="flex justify-between gap-2 items-center mt-1">
+                      <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron whitespace-nowrap">
                         Stop Loss
                       </h2>
-                      <div className="flex justify-center gap-2 items-center mt-4 relative">
-                        <div className="flex gap-1 items-center">
+                      <div className="flex justify-center gap-2 items-center relative w-full">
+                        <div className="flex gap-1 items-center w-full">
                           <input
                             type="text"
                             placeholder="00.000"
                             value={stopLossPrice}
                             onChange={(e) => setStopLossPrice(e.target.value)}
-                            className="w-[160px] flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-center text-white placeholder:text-white md:text-4xl text-2xl font-extrabold font-orbitron"
+                            className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
-                          <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
+                          {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
                             {tokenOutInfo?.symbol || "USDT"}
-                          </span>
+                          </span> */}
                         </div>
                       </div>
                     </div>
                     <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
-                      Link Limit Price
+                      <span className="text-[#FF9900] md:text-xl text-base font-orbitron font-bold">
+                        ${tokenOutInfo?.symbol || "USDT"}{" "}
+                        <span className="font-normal">per</span> $LINK
+                      </span>
                     </div>
 
                     {/* Stop Loss Slider */}
@@ -1762,7 +1957,8 @@ export function CreateOrderForm({
                             if (marketPrice) {
                               const market = Number(marketPrice);
                               // Bracket orders are SELL only: SL above market (1 + percent)
-                              const stopLossValue = market * (1 + percent / 100);
+                              const stopLossValue =
+                                market * (1 + percent / 100);
                               setStopLossPrice(stopLossValue.toFixed(4));
                             }
                           }}
@@ -1788,7 +1984,7 @@ export function CreateOrderForm({
                           Stop Loss
                         </div>
                       </div>
-                      <div className="flex flex-col justify-center gap-2 items-center">
+                      {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
                           {marketPrice && tokenInInfo && tokenOutInfo ? (
                             <>
@@ -1802,35 +1998,36 @@ export function CreateOrderForm({
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Market
                         </div>
-                      </div>
+                      </div> */}
                     </div>
                   </div>
                 </div>
                 <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5 mt-5">
                   {/* Take Profit Section */}
                   <div className="mb-4">
-                    <div className="flex justify-between gap-2 items-center">
+                    <div className="flex justify-between gap-2 items-center mt-1">
                       <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron">
                         Take Profit
                       </h2>
-                      <div className="flex justify-center gap-2 items-center mt-4 relative">
+                      <div className="flex justify-center gap-2 items-center relative">
                         <div className="flex gap-1 items-center">
                           <input
                             type="text"
                             placeholder="00.000"
                             value={takeProfitPrice}
                             onChange={(e) => setTakeProfitPrice(e.target.value)}
-                            className="w-[160px] flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-center text-white placeholder:text-white md:text-4xl text-2xl font-extrabold font-orbitron"
+                            className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
-                          <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
+                          {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
                             {tokenOutInfo?.symbol || "USDT"}
-                          </span>
+                          </span> */}
                         </div>
                       </div>
                     </div>
-                    <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
-                      Link Limit Price
-                    </div>
+                    <p className="text-[#FF9900] text-right md:text-xl text-base font-orbitron font-bold">
+                      ${tokenOutInfo?.symbol || "USDT"}{" "}
+                      <span className="font-normal">per</span> $LINK
+                    </p>
 
                     {/* Take Profit Slider */}
                     <div className="mt-3 font-orbitron">
@@ -1861,7 +2058,8 @@ export function CreateOrderForm({
                             if (marketPrice) {
                               const market = Number(marketPrice);
                               // Bracket orders are SELL only: TP below market (1 - percent)
-                              const takeProfitValue = market * (1 - percent / 100);
+                              const takeProfitValue =
+                                market * (1 - percent / 100);
                               setTakeProfitPrice(takeProfitValue.toFixed(4));
                             }
                           }}
@@ -1887,7 +2085,7 @@ export function CreateOrderForm({
                           Entry Price
                         </div>
                       </div>
-                      <div className="flex flex-col justify-center gap-2 items-center">
+                      {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
                           {marketPrice && tokenInInfo && tokenOutInfo ? (
                             <>
@@ -1903,20 +2101,22 @@ export function CreateOrderForm({
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Target Price
                         </div>
-                      </div>
+                      </div> */}
                     </div>
-                    
+
                     {/* SL/TP Expiry */}
                     <div className="mt-4">
                       <div className="flex gap-4 items-center px-4 md:flex-nowrap flex-wrap">
-                        <div className="md:text-lg text-base text-[#FF9900]">
+                        <div className="md:text-lg text-base font-bold text-[#FF9900]">
                           SL/TP Expiry{" "}
                         </div>
                         <div>
                           <input
                             type="datetime-local"
                             value={takeProfitDeadline}
-                            onChange={(e) => setTakeProfitDeadline(e.target.value)}
+                            onChange={(e) =>
+                              setTakeProfitDeadline(e.target.value)
+                            }
                             className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
                             min={minDeadline}
                             max={maxDeadline}
@@ -2007,7 +2207,7 @@ export function CreateOrderForm({
                   <hr className="border-[#FF9900]/30 my-2" />
                   {/* Partial Fill */}
                   <div className="flex gap-4 items-center mt-4 px-4 md:flex-nowrap flex-wrap">
-                    <div className="md:text-2xl text-base text-[#FF9900]">
+                    <div className="md:text-xl font-bold text-base text-[#FF9900]">
                       Expiry{" "}
                     </div>
                     {/* Deadline */}
@@ -2055,7 +2255,7 @@ export function CreateOrderForm({
                           ? "Buy Low"
                           : "Bracket Order"}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       Strategy
                     </div>
                   </div>
@@ -2067,7 +2267,7 @@ export function CreateOrderForm({
                           ? "TP/SL"
                           : "Token Purchased"}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       {form.watch("strategy") === OrderStrategy.SELL
                         ? "Token Sold"
                         : form.watch("strategy") === OrderStrategy.BRACKET
@@ -2084,7 +2284,7 @@ export function CreateOrderForm({
                         ? new Date(form.watch("deadline")).toLocaleDateString()
                         : "Not set"}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       Expiry
                     </div>
                   </div>
@@ -2100,7 +2300,7 @@ export function CreateOrderForm({
                               : "None"
                         : "None"}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       Order Split
                     </div>
                   </div>
@@ -2111,19 +2311,38 @@ export function CreateOrderForm({
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
                       {form.watch("minAmountOut") || "0"}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       Output estimated
                     </div>
                   </div>
                   <div className="md:max-w-[155px] w-full">
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
-                      {currentStrategy === OrderStrategy.BRACKET &&
+                      {/* {currentStrategy === OrderStrategy.BRACKET &&
                       takeProfitPrice &&
                       marketPrice
                         ? `${(((parseFloat(takeProfitPrice) - parseFloat(marketPrice)) / parseFloat(marketPrice)) * 100).toFixed(2)}%`
-                        : "80%"}
+                        : "80%"} */}
+                      {(() => {
+                        const market = marketPrice
+                          ? parseFloat(marketPrice)
+                          : 0;
+                        const limit = currentLimitPrice
+                          ? parseFloat(currentLimitPrice)
+                          : 0;
+
+                        if (
+                          market > 0 &&
+                          limit > 0 &&
+                          currentStrategy === OrderStrategy.SELL
+                        ) {
+                          const priceDiffPercent =
+                            ((limit - market) / market) * 100;
+                          return `${Math.min(100, Math.max(0, priceDiffPercent)).toFixed(1)}%`;
+                        }
+                        return "0%";
+                      })()}
                     </div>
-                    <div className="text-white md:text-[11px] text-[9px] font-normal">
+                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
                       {currentStrategy === OrderStrategy.BRACKET
                         ? "Potential Profit"
                         : "Profit"}
@@ -2175,9 +2394,11 @@ export function CreateOrderForm({
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Creating...
                   </>
+                ) : orderMode === OrderMode.POSITION ? (
+                  "Create Position Protection"
+                ) : orderMode === OrderMode.BRACKET ? (
+                  "Create Bracket Order"
                 ) : (
-                  orderMode === OrderMode.POSITION ? "Create Position Protection" : 
-                  orderMode === OrderMode.BRACKET ? "Create Bracket Order" : 
                   "Create Order"
                 )}
               </button>

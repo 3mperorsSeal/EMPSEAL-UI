@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useAccount } from "wagmi";
 import { useGetUserHistory } from "../../hooks/useGasBridgeAPI";
-import { ExternalLink, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { ExternalLink, Trash2 } from "lucide-react";
 
 const TransactionHistory = () => {
   const { address } = useAccount();
@@ -51,7 +51,7 @@ const TransactionHistory = () => {
               ) : (
                 <div className="max-h-96 overflow-y-auto font-orbitron">
                   <div className="min-w-full space-y-2">
-                    <div className="md:grid hidden grid-cols-6 text-sm font-semibold text-white px-6 py-3 text-center">
+                    <div className="md:grid hidden grid-cols-6 text-sm font-semibold text-[#FF9900] px-6 py-3 text-center">
                       <div>Deposit Hash</div>
                       <div>Date</div>
                       <div>Status</div>
@@ -63,7 +63,7 @@ const TransactionHistory = () => {
                     {history.map((tx) => (
                       <div
                         key={tx.deposit.hash}
-                        className="grid md:grid-cols-6 md:gap-4 gap-2 md:items-center md:text-center border border-[#FF9900] rounded-xl px-6 py-5 md:text-base text-sm text-white hover:bg-[#FF9900]/10 transition"
+                        className="grid md:grid-cols-6 md:gap-4 gap-2 md:items-center md:text-center border border-[#FF9900] rounded-xl px-6 py-5 md:text-sm text-xs text-white hover:bg-[#FF9900]/10 transition"
                       >
                         <div className="font-medium text-white">
                           <a
@@ -87,14 +87,20 @@ const TransactionHistory = () => {
                             : "N/A"}
                         </div>
                         <div>{tx.deposit.status}</div>
-                        <div>{tx.deposit.value}</div>
+                        <div
+                          className="max-w-[110px] md:mx-auto truncate cursor-help"
+                          title={tx.deposit.value}
+                        >
+                          {tx.deposit.value}
+                        </div>
+
                         <div>{tx.txs?.[0]?.chain || "N/A"}</div>
                         <div className="text-right">
                           <button
                             onClick={() => handleRemoveTx(tx.deposit.hash)}
-                            className="text-white hover:text-red-500"
+                            className="text-[#FF9900] hover:text-red-500"
                           >
-                            <Trash2 size={16} />
+                            <Trash2 size={20} />
                           </button>
                         </div>
                       </div>

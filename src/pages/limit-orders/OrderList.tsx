@@ -1,12 +1,5 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { Button } from "../../components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
 import { RefreshCw, ListOrdered } from "lucide-react";
 import { OrderListItem } from "./OrderListItem";
 import type { Order, StatusMessage } from "./schema";
@@ -79,6 +72,20 @@ export function OrderList({
   const { data: writeContractHash, writeContract } = useWriteContract();
   const lastHandledTxHash = useRef<string | null>(null);
 
+  //
+  const [sortBy, setSortBy] = useState<"id" | "status" | null>(null);
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const handleSort = (column: "id" | "status") => {
+    if (sortBy === column) {
+      setSortDirection((prev) => (prev === "asc" ? "desc" : "asc"));
+    } else {
+      setSortBy(column);
+      setSortDirection("asc");
+    }
+  };
+
+  //
+
   useEffect(() => {
     setAllOrders(loadOrdersFromLocalStorage(userAddress));
   }, [userAddress]);
@@ -136,7 +143,9 @@ export function OrderList({
           deadline: order.deadline.toString(),
           allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
           filledAmount: order.filledAmount.toString(),
-          status: ["active", "fulfilled", "cancelled", "expired"][order.status] || "unknown",
+          status:
+            ["active", "fulfilled", "cancelled", "expired"][order.status] ||
+            "unknown",
           tokenOutDecimals: tokenOutInfo?.decimals || 18,
           groupId: order.groupId?.toString(),
           groupRole: order.groupRole,
@@ -379,15 +388,40 @@ export function OrderList({
     }
   }, [error, onStatusMessage, isPulseChain]);
 
-  const filteredOrders = allOrders.filter((order) => {
-    if (filterStatus === "All") return true;
-    if (filterStatus === "Active") return order.status === "active";
-    if (filterStatus === "Fulfilled") return order.status === "fulfilled";
-    if (filterStatus === "Expired") return order.status === "expired";
-    if (filterStatus === "Cancelled") return order.status === "cancelled";
-    if (filterStatus === "Inactive") return order.status === "inactive";
-    return false;
-  });
+  const filteredOrders = allOrders
+    .filter((order) => {
+      if (filterStatus === "All") return true;
+      if (filterStatus === "Active") return order.status === "active";
+      if (filterStatus === "Fulfilled") return order.status === "fulfilled";
+      if (filterStatus === "Expired") return order.status === "expired";
+      if (filterStatus === "Cancelled") return order.status === "cancelled";
+      if (filterStatus === "Inactive") return order.status === "inactive";
+      return false;
+    })
+    .sort((a, b) => {
+      if (!sortBy) return 0;
+
+      let valueA: any = a[sortBy];
+      let valueB: any = b[sortBy];
+
+      if (sortBy === "id") {
+        valueA = Number(valueA);
+        valueB = Number(valueB);
+      }
+
+      if (valueA < valueB) return sortDirection === "asc" ? -1 : 1;
+      if (valueA > valueB) return sortDirection === "asc" ? 1 : -1;
+      return 0;
+    });
+
+  const SortArrow = ({ column }: { column: "id" | "status" }) => {
+    if (sortBy !== column) return <span className="ml-1 opacity-70">↕</span>;
+    return (
+      <span className="ml-1 text-[#FF9900]">
+        {sortDirection === "asc" ? "▲" : "▼"}
+      </span>
+    );
+  };
 
   return (
     // sctable
@@ -456,6 +490,38 @@ export function OrderList({
           </div>
         ) : (
           <div className="space-y-3" data-testid="list-orders">
+            <div className="md:grid hidden lg:grid-cols-8 grid-cols-8 gap-8 items-center w-full">
+              <div
+                onClick={() => handleSort("id")}
+                className="font-semibold text-base text-[#FF9900] cursor-pointer"
+              >
+                Order ID <SortArrow column="id" />
+              </div>
+              <div
+                onClick={() => handleSort("status")}
+                className="font-semibold text-base text-[#FF9900] cursor-pointer"
+              >
+                Status <SortArrow column="status" />
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Limit Price
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Token In/Amount
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Token Out/Amount
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Progress
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Date/Time
+              </div>
+              <div className="font-semibold text-base text-[#FF9900]">
+                Action
+              </div>
+            </div>
             {filteredOrders.map((order) => (
               <OrderListItem
                 key={order.id}
@@ -471,6 +537,6 @@ export function OrderList({
           </div>
         )}
       </div>
-    </div>  
+    </div>
   );
 }
