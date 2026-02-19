@@ -6,7 +6,7 @@ import {
   useWaitForTransactionReceipt,
   useSwitchChain,
 } from "wagmi";
-import { parseEther, formatEther, formatUnits } from "viem";
+import { parseUnits, formatEther, formatUnits } from "viem";
 import { toast } from "../../utils/toastHelper";
 import {
   ArrowDownUp,
@@ -38,6 +38,10 @@ import CPatch from "../../assets/images/rec-token.svg";
 
 // Import ABIs
 import { ERC20_ABI } from "../../utils/via-bridge-abis/index";
+import { useApprovalFlow } from "./hooks/useApprovalFlow";
+
+// PulseChain network symbol for GeckoTerminal API
+const PULSECHAIN_SYMBOL = "pulsechain";
 
 const BridgeInterface = () => {
   const { address, chain } = useAccount();
@@ -59,6 +63,11 @@ const BridgeInterface = () => {
   const [amount, setAmount] = useState("1");
   const [recipient, setRecipient] = useState("");
 
+  // Token price states
+  const [tokenPrice, setTokenPrice] = useState(null);
+  const [usdValue, setUsdValue] = useState("0.00");
+  const [isPriceLoading, setIsPriceLoading] = useState(false);
+
   const sourceChain = fromChainId ? BRIDGE_CONFIG[fromChainId] : null;
   const destChain = toChainId ? BRIDGE_CONFIG[toChainId] : null;
   const isCorrectChain = chain?.id === fromChainId;
@@ -66,6 +75,7 @@ const BridgeInterface = () => {
   // Add copy functionality states
   const [copySuccess, setCopySuccess] = useState(false);
   const [activeTokenAddress, setActiveTokenAddress] = useState(null);
+
   // ----------------------------------------------------------------
   // COPY ADDRESS HANDLER
   // ----------------------------------------------------------------
@@ -122,6 +132,75 @@ const BridgeInterface = () => {
       setBridgeFees(null);
     }
   }, [selectedToken]);
+
+  // ----------------------------------------------------------------
+  // TOKEN PRICE FETCHING
+  // ----------------------------------------------------------------
+  useEffect(() => {
+    const fetchTokenPrice = async () => {
+      if (!selectedToken) {
+        setTokenPrice(null);
+        setUsdValue("0.00");
+        return;
+      }
+
+      setIsPriceLoading(true);
+
+      try {
+        // Get the collateral token address from PulseChain
+        // If current token is collateral (on PulseChain), use its address
+        // If current token is synthetic (on other chains), get the corresponding collateral token
+        let collateralTokenAddress;
+        
+        if (selectedToken.abiType === "collateral") {
+          // Token is on PulseChain, use its address directly
+          collateralTokenAddress = selectedToken.address.toLowerCase();
+        } else {
+          // Token is synthetic on another chain, find the collateral token on PulseChain
+          const pulseChainConfig = BRIDGE_CONFIG[369];
+          if (pulseChainConfig && pulseChainConfig.tokens[selectedToken.id]) {
+            collateralTokenAddress = pulseChainConfig.tokens[selectedToken.id].address.toLowerCase();
+          } else {
+            console.error("Could not find collateral token for:", selectedToken.id);
+            setTokenPrice(null);
+            setIsPriceLoading(false);
+            return;
+          }
+        }
+
+        // Fetch price from GeckoTerminal using PulseChain network
+        const response = await fetch(
+          `https://api.geckoterminal.com/api/v2/simple/networks/${PULSECHAIN_SYMBOL}/token_price/${collateralTokenAddress}`
+        );
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+
+        const data = await response.json();
+        const tokenPrices = data?.data?.attributes?.token_prices;
+        
+        if (tokenPrices && tokenPrices[collateralTokenAddress]) {
+          const price = tokenPrices[collateralTokenAddress];
+          setTokenPrice(price);
+          
+          // Calculate USD value
+          const amountNum = parseFloat(amount) || 0;
+          const priceNum = parseFloat(price) || 0;
+          setUsdValue((amountNum * priceNum).toFixed(2));
+        } else {
+          setTokenPrice(null);
+        }
+      } catch (error) {
+        console.error("Error fetching token price:", error.message);
+        setTokenPrice(null);
+      } finally {
+        setIsPriceLoading(false);
+      }
+    };
+
+    fetchTokenPrice();
+  }, [selectedToken, amount]);
 
   // --- USDC DATA ---
   // Allowance
@@ -194,6 +273,13 @@ const BridgeInterface = () => {
     chainId: fromChainId,
     query: { enabled: !!address && !!selectedToken?.address && !!fromChainId },
   });
+  const { data: tokenDecimals } = useReadContract({
+    address: selectedToken?.address,
+    abi: ERC20_ABI,
+    functionName: "decimals",
+    chainId: fromChainId,
+    query: { enabled: !!selectedToken?.address && !!fromChainId },
+  });
   // Allowance
   const { data: tokenAllowance, refetch: refetchTokenAllowance } =
     useReadContract({
@@ -215,7 +301,20 @@ const BridgeInterface = () => {
   // 3. DERIVED STATE & VALIDATION
   // ----------------------------------------------------------------
 
-  const amountBigInt = amount ? parseEther(amount) : 0n;
+  const selectedTokenDecimals = Number(tokenDecimals ?? 18);
+  const parseTokenAmount = useCallback(
+    (value) => {
+      if (!value) return 0n;
+      try {
+        return parseUnits(value, selectedTokenDecimals);
+      } catch {
+        return 0n;
+      }
+    },
+    [selectedTokenDecimals],
+  );
+
+  const amountBigInt = parseTokenAmount(amount);
 
   // Allowances (Default to 0n)
   const currentTokenAllowance = tokenAllowance ?? 0n;
@@ -232,17 +331,37 @@ const BridgeInterface = () => {
   const requiredGasToken = bridgeFees ? bridgeFees[2] : 0n;
 
   // --- Validation Flags ---
-  // 1. Check Insufficient Balances
-  const hasInsufficientTokenBalance = currentTokenBalance < amountBigInt;
-  const hasInsufficientUsdcBalance = currentUsdcBalance < requiredUsdc;
-  const hasInsufficientGasTokenBalance =
-    currentWrappedGasBalance < requiredGasToken;
+  // Check if selected token IS the wrapped gas token (WPLS case)
+  const isWrappingGasToken = selectedToken?.address?.toLowerCase() ===
+    sourceChain?.wrappedGasTokenAddress?.toLowerCase();
 
-  // 2. Check Approval Needs
-  const needsTokenApproval = currentTokenAllowance < amountBigInt;
+  // When token IS wrapped gas token, combine balance and allowance checks
+  let needsTokenApproval, needsWrappedGasTokenApproval, totalTokenAmount;
+
+  if (isWrappingGasToken) {
+    // Combined: need (bridge amount + gas fees) in WPLS
+    totalTokenAmount = amountBigInt + requiredGasToken;
+    needsTokenApproval = currentTokenAllowance < totalTokenAmount;
+    needsWrappedGasTokenApproval = false; // Same token, handled above
+  } else {
+    // Normal: separate checks
+    totalTokenAmount = amountBigInt;
+    needsTokenApproval = currentTokenAllowance < amountBigInt;
+    needsWrappedGasTokenApproval = currentWrappedGasAllowance < requiredGasToken;
+  }
+
+  // 1. Check Insufficient Balances
+  const hasInsufficientTokenBalance = isWrappingGasToken
+    ? currentTokenBalance < totalTokenAmount  // Need combined balance
+    : currentTokenBalance < amountBigInt;     // Just bridge amount
+
+  const hasInsufficientUsdcBalance = currentUsdcBalance < requiredUsdc;
+  const hasInsufficientGasTokenBalance = isWrappingGasToken
+    ? false // Already checked in token balance
+    : currentWrappedGasBalance < requiredGasToken;
+
+  // 2. Check Approval Needs (already set above)
   const needsUsdcApproval = currentUsdcAllowance < requiredUsdc;
-  const needsWrappedGasTokenApproval =
-    currentWrappedGasAllowance < requiredGasToken;
 
   // --- Determine Current Step ---
   // Step 1: Input / Connect
@@ -273,25 +392,30 @@ const BridgeInterface = () => {
   // 4. CONTRACT WRITES
   // ----------------------------------------------------------------
 
-  const { writeContract: approveToken, data: tokenHash } = useWriteContract();
-  const { writeContract: approveUsdc, data: usdcApprovalHash } =
-    useWriteContract();
-  const {
-    writeContract: approveWrappedGasToken,
-    data: wrappedGasTokenApprovalHash,
-  } = useWriteContract();
-  const { writeContract: executeBridge, data: bridgeHash } = useWriteContract();
+  const { writeContractAsync: executeBridge } = useWriteContract();
+  const [bridgeHash, setBridgeHash] = useState(null);
+  const [displayBridgeHash, setDisplayBridgeHash] = useState(null);
+  const [bridgeUiStatus, setBridgeUiStatus] = useState("idle");
+  const [lastHandledBridgeHash, setLastHandledBridgeHash] = useState(null);
 
-  const { isLoading: isTokenApproving, isSuccess: isTokenApproved } =
-    useWaitForTransactionReceipt({ hash: tokenHash });
-  const { isLoading: isUsdcApproving, isSuccess: isUsdcApproved } =
-    useWaitForTransactionReceipt({ hash: usdcApprovalHash });
   const {
-    isLoading: isWrappedGasTokenApproving,
-    isSuccess: isWrappedGasTokenApproved,
-  } = useWaitForTransactionReceipt({ hash: wrappedGasTokenApprovalHash });
+    startApprovals,
+    clearFlow,
+    status: approvalFlowStatus,
+    flowError,
+    isApproving,
+    remainingCount,
+    currentApproval,
+    isDone,
+    isCancelled,
+    isFailed,
+  } = useApprovalFlow();
+
   const { isLoading: isBridging, isSuccess: isBridged } =
-    useWaitForTransactionReceipt({ hash: bridgeHash });
+    useWaitForTransactionReceipt({
+      hash: bridgeHash,
+      query: { enabled: !!bridgeHash },
+    });
 
   useEffect(() => {
     if (address) setRecipient(address);
@@ -307,29 +431,81 @@ const BridgeInterface = () => {
     refetchWrappedGasTokenBalance();
   };
 
-  useEffect(() => {
-    if (isTokenApproved) {
-      toast.success("Tokens approved!");
-      refetchAll();
+  // ----------------------------------------------------------------
+  // 6. ACTION HANDLERS
+  // ----------------------------------------------------------------
+
+  // Helper function to get pending approvals queue (must be before useEffects that use it)
+  const getApprovalQueue = useCallback(() => {
+    const approvals = [];
+
+    // 1. Main token approval
+    if (needsTokenApproval) {
+      const amount = isWrappingGasToken
+        ? amountBigInt + requiredGasToken  // Combined for WPLS
+        : amountBigInt;
+
+      approvals.push({
+        type: 'token',
+        tokenAddress: selectedToken.address,
+        spender: selectedToken.bridge,
+        amount,
+        symbol: selectedToken.symbol,
+        chainId: fromChainId,
+      });
     }
-  }, [isTokenApproved]);
+
+    // 2. USDC approval
+    if (needsUsdcApproval) {
+      approvals.push({
+        type: 'usdc',
+        tokenAddress: sourceChain.usdcAddress,
+        spender: selectedToken.bridge,
+        amount: requiredUsdc,
+        symbol: 'USDC',
+        chainId: fromChainId,
+      });
+    }
+
+    // 3. Gas token approval (only if NOT wrapping gas token)
+    if (needsWrappedGasTokenApproval && !isWrappingGasToken) {
+      approvals.push({
+        type: 'gasToken',
+        tokenAddress: sourceChain.wrappedGasTokenAddress,
+        spender: selectedToken.bridge,
+        amount: requiredGasToken,
+        symbol: fromChainId === 369 ? 'WPLS' : 'WETH',
+        chainId: fromChainId,
+      });
+    }
+
+    return approvals;
+  }, [needsTokenApproval, isWrappingGasToken, amountBigInt, requiredGasToken, selectedToken, needsUsdcApproval, sourceChain, needsWrappedGasTokenApproval, fromChainId]);
+
+  const handleApprove = useCallback(async () => {
+    if (!bridgeFees) {
+      toast.error("Bridge fees not loaded yet.");
+      return;
+    }
+
+    const queue = getApprovalQueue();
+
+    if (queue.length === 0) {
+      toast.info("All tokens already approved!");
+      return;
+    }
+
+    await startApprovals(queue, fromChainId);
+  }, [bridgeFees, getApprovalQueue, startApprovals, fromChainId]);
+
+  // ----------------------------------------------------------------
+  // 5. EFFECT HANDLERS (must be after action handlers)
+  // ----------------------------------------------------------------
 
   useEffect(() => {
-    if (isUsdcApproved) {
-      toast.success("USDC approved!");
-      refetchAll();
-    }
-  }, [isUsdcApproved]);
-
-  useEffect(() => {
-    if (isWrappedGasTokenApproved) {
-      toast.success("Wrapped Gas Token approved!");
-      refetchAll();
-    }
-  }, [isWrappedGasTokenApproved]);
-
-  useEffect(() => {
-    if (isBridged) {
+    if (isBridged && bridgeHash && bridgeHash !== lastHandledBridgeHash) {
+      setLastHandledBridgeHash(bridgeHash);
+      setBridgeUiStatus("success");
       toast.success("Bridge transaction submitted!");
       addTransaction({
         hash: bridgeHash,
@@ -341,68 +517,56 @@ const BridgeInterface = () => {
       setAmount("");
       refetchAll();
     }
-  }, [isBridged, bridgeHash]);
+  }, [isBridged, bridgeHash, lastHandledBridgeHash]);
 
-  // ----------------------------------------------------------------
-  // 6. ACTION HANDLERS
-  // ----------------------------------------------------------------
+  useEffect(() => {
+    if (bridgeUiStatus !== "success") return;
 
-  const handleApproveToken = async () => {
-    if (!bridgeFees) {
-      toast.error("Bridge fees not loaded yet.");
-      return;
+    const resetTimer = setTimeout(() => {
+      setBridgeUiStatus("idle");
+      setBridgeHash(null);
+    }, 2500);
+
+    return () => clearTimeout(resetTimer);
+  }, [bridgeUiStatus]);
+
+  // Approval flow status handlers
+  useEffect(() => {
+    if (approvalFlowStatus === "submitting" && currentApproval) {
+      toast.info(`Approving ${currentApproval.symbol}...`);
     }
+  }, [approvalFlowStatus, currentApproval]);
 
-    try {
-      const amountBigInt = parseEther(amount);
-
-      // 1. Approve Main Token
-      if (needsTokenApproval) {
-        approveToken({
-          address: selectedToken.address,
-          abi: ERC20_ABI,
-          functionName: "approve",
-          args: [selectedToken.bridge, amountBigInt],
-          chainId: fromChainId,
-        });
-        toast.info(`Approving ${selectedToken.symbol}...`);
-        return;
-      }
-
-      // 2. Approve USDC
-      if (needsUsdcApproval) {
-        approveUsdc({
-          address: sourceChain.usdcAddress,
-          abi: ERC20_ABI,
-          functionName: "approve",
-          args: [selectedToken.bridge, bridgeFees[3]],
-          chainId: fromChainId,
-        });
-        toast.info("Approving USDC...");
-        return;
-      }
-
-      // 3. Approve Wrapped Gas Token
-      if (needsWrappedGasTokenApproval) {
-        approveWrappedGasToken({
-          address: sourceChain.wrappedGasTokenAddress,
-          abi: ERC20_ABI,
-          functionName: "approve",
-          args: [selectedToken.bridge, bridgeFees[2]],
-          chainId: fromChainId,
-        });
-        toast.info("Approving Wrapped Gas Token...");
-        return;
-      }
-    } catch (error) {
-      toast.error("Approval failed");
-      console.error(error);
+  useEffect(() => {
+    if (isDone) {
+      toast.success("All required approvals completed!");
+      refetchAll();
+      clearFlow();
     }
-  };
+  }, [isDone, clearFlow]);
+
+  useEffect(() => {
+    if (isCancelled) {
+      toast.warning("Transaction cancelled");
+      clearFlow();
+    }
+  }, [isCancelled, clearFlow]);
+
+  useEffect(() => {
+    if (isFailed) {
+      if (flowError?.cancelled) {
+        toast.warning("Transaction cancelled");
+      } else {
+        toast.error("Approval failed. Please try again.");
+        console.error("Approval flow error:", flowError);
+      }
+      clearFlow();
+    }
+  }, [isFailed, flowError, clearFlow]);
 
   const handleBridge = useCallback(async () => {
     try {
-      const amountBigInt = parseEther(amount);
+      const amountBigInt = parseTokenAmount(amount);
       const abiToUse = selectedToken?.abi;
 
       if (!abiToUse) {
@@ -410,7 +574,12 @@ const BridgeInterface = () => {
         return;
       }
 
-      executeBridge({
+      if (amountBigInt <= 0n) {
+        toast.error("Enter a valid amount");
+        return;
+      }
+
+      const hash = await executeBridge({
         address: selectedToken.bridge,
         abi: abiToUse,
         functionName: "bridge",
@@ -418,12 +587,16 @@ const BridgeInterface = () => {
         chainId: fromChainId,
       });
 
+      setBridgeHash(hash);
+      setDisplayBridgeHash(hash);
+      setBridgeUiStatus("pending");
       toast.info("Initiating bridge...");
     } catch (error) {
+      setBridgeUiStatus("idle");
       toast.error("Bridge failed");
       console.error(error);
     }
-  }, [amount, selectedToken, toChainId, recipient, fromChainId, executeBridge]);
+  }, [amount, selectedToken, toChainId, recipient, fromChainId, executeBridge, parseTokenAmount]);
 
   const handleSwapDirection = () => {
     const newFromChainId = toChainId;
@@ -442,7 +615,7 @@ const BridgeInterface = () => {
     // Note: tokenBalance from useReadContract is BigInt
     if (tokenBalance === undefined) return;
     setSelectedPercentage(value);
-    const bal = Number(formatEther(tokenBalance));
+    const bal = Number(formatUnits(tokenBalance, selectedTokenDecimals));
     const calculatedAmount = (bal * value) / 100;
     setAmount(calculatedAmount.toString());
   };
@@ -462,7 +635,7 @@ const BridgeInterface = () => {
           Switch to {sourceChain?.name}
         </button>
       );
-    if (isBridged)
+    if (bridgeUiStatus === "success")
       return (
         <button disabled className="flex gap-2 items-center justify-center">
           <CheckCircle2 className="w-5 h-5" /> Bridged
@@ -480,14 +653,14 @@ const BridgeInterface = () => {
 
     // Step 2: Approvals (with Balance Checks)
     if (currentStep === 2) {
-      const isAnyApproving =
-        isTokenApproving || isUsdcApproving || isWrappedGasTokenApproving;
+      const queue = getApprovalQueue();
+      const queueCount = isApproving ? remainingCount : queue.length;
 
       // PRIORITY: Check Balances First
       if (hasInsufficientTokenBalance)
         return (
           <button disabled className="w-full cursor-not-allowed opacity-50">
-            Insufficient {selectedToken.symbol}
+            Insufficient {isWrappingGasToken ? `${selectedToken.symbol} (incl. gas)` : selectedToken.symbol}
           </button>
         );
       if (hasInsufficientUsdcBalance)
@@ -503,31 +676,24 @@ const BridgeInterface = () => {
           </button>
         );
 
-      // If balances are OK, show Approval Buttons
-      let buttonText = "Approve Tokens";
-      if (isTokenApproving) buttonText = `Approving ${selectedToken.symbol}...`;
-      else if (isUsdcApproving) buttonText = "Approving USDC...";
-      else if (isWrappedGasTokenApproving)
-        buttonText = "Approving Gas Token...";
-      else if (needsTokenApproval)
-        buttonText = `Approve ${selectedToken.symbol}`;
-      else if (needsUsdcApproval) buttonText = "Approve USDC";
-      else if (needsWrappedGasTokenApproval) buttonText = "Approve Gas Token";
+      // Show approval button
+      if (isApproving) {
+        return (
+          <button disabled className="w-full flex justify-center items-center">
+            <Loader2 className="w-5 h-5 animate-spin" />
+            {`Approving ${currentApproval?.symbol ?? queue[0]?.symbol ?? "token"}...`}
+          </button>
+        );
+      }
 
+      // Single "Approve" button
       return (
         <button
-          onClick={handleApproveToken}
-          disabled={isAnyApproving || !amount || !bridgeFees}
+          onClick={handleApprove}
+          disabled={!amount || !bridgeFees}
           className="w-full flex justify-center items-center"
         >
-          {isAnyApproving ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              {buttonText}
-            </>
-          ) : (
-            buttonText
-          )}
+          Approve{queueCount > 1 ? ` (${queueCount} tokens)` : ""}
         </button>
       );
     }
@@ -540,7 +706,7 @@ const BridgeInterface = () => {
           disabled={isBridging || !amount || !recipient}
           className="w-full"
         >
-          {isBridging ? (
+          {isBridging || bridgeUiStatus === "pending" ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" /> Bridging...
             </>
@@ -557,11 +723,9 @@ const BridgeInterface = () => {
     amount,
     address,
     isCorrectChain,
-    isBridged,
+    bridgeUiStatus,
     currentStep,
-    isTokenApproving,
-    isUsdcApproving,
-    isWrappedGasTokenApproving,
+    isApproving,
     isBridging,
     bridgeFees,
     needsTokenApproval,
@@ -570,12 +734,17 @@ const BridgeInterface = () => {
     hasInsufficientTokenBalance,
     hasInsufficientUsdcBalance,
     hasInsufficientGasTokenBalance,
+    isWrappingGasToken,
     selectedToken,
     recipient,
-    handleApproveToken,
+    handleApprove,
     handleBridge,
+    getApprovalQueue,
+    remainingCount,
+    currentApproval,
   ]);
 
+  const maxInputDecimals = Math.min(6, selectedTokenDecimals);
   // Function to format the number with commas
   const formatNumber = (value) => {
     if (!value) return ""; // Handle empty input
@@ -586,9 +755,8 @@ const BridgeInterface = () => {
       .replace(/\B(?=(\d{3})+(?!\d))/g, ""); // Add commas to integer part
 
     // If there's a decimal part, return formatted integer + decimal
-    return decimalPart !== undefined
-      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "").slice(0, 6)}` // Remove non-numeric from decimal
-      : formattedInteger;
+    if (decimalPart === undefined || maxInputDecimals === 0) return formattedInteger;
+    return `${formattedInteger}.${decimalPart.replace(/\D/g, "").slice(0, maxInputDecimals)}`;
   };
   const getDynamicFontSize = (value, desktop = 48, mobile = 32) => {
     const length = value?.replace(/\D/g, "").length || 0;
@@ -639,7 +807,9 @@ const BridgeInterface = () => {
                   </span>
                   <span className="text-white leading-normal">
                     {tokenBalance
-                      ? parseFloat(formatEther(tokenBalance)).toFixed(6)
+                      ? parseFloat(
+                          formatUnits(tokenBalance, selectedTokenDecimals),
+                        ).toFixed(6)
                       : "0.00"}{" "}
                   </span>
                 </div>
@@ -724,7 +894,9 @@ const BridgeInterface = () => {
                         <button
                           onClick={() => {
                             if (tokenBalance !== undefined) {
-                              setAmount(formatEther(tokenBalance));
+                              setAmount(
+                                formatUnits(tokenBalance, selectedTokenDecimals),
+                              );
                               setSelectedPercentage(100);
                             }
                           }}
@@ -732,6 +904,16 @@ const BridgeInterface = () => {
                         >
                           MAX AMOUNT
                         </button>
+                        {/* USD Value Display */}
+                        <div className="text-right text-white md:text-sm text-xs mt-2 font-orbitron">
+                          {isPriceLoading ? (
+                            <span className="animate-pulse">Fetching...</span>
+                          ) : tokenPrice ? (
+                            <span>${usdValue}</span>
+                          ) : (
+                            <span>--</span>
+                          )}
+                        </div>
                       </>
                     );
                   })()}
@@ -739,7 +921,13 @@ const BridgeInterface = () => {
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                 --
+                 {isPriceLoading ? (
+                   <span className="animate-pulse">Loading...</span>
+                 ) : tokenPrice ? (
+                   `$${parseFloat(tokenPrice).toFixed(6)}`
+                 ) : (
+                   "--"
+                 )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -855,6 +1043,16 @@ const BridgeInterface = () => {
                             fontSize: `${dynamicFontSize}px`,
                           }}
                         />
+                        {/* USD Value Display for expected amount (same price since it's the same token) */}
+                        <div className="text-right text-white md:text-sm text-xs mt-2 font-orbitron">
+                          {isPriceLoading ? (
+                            <span className="animate-pulse">Fetching...</span>
+                          ) : tokenPrice ? (
+                            <span>${usdValue}</span>
+                          ) : (
+                            <span>--</span>
+                          )}
+                        </div>
                       </>
                     );
                   })()}
@@ -862,7 +1060,13 @@ const BridgeInterface = () => {
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                  <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                  52.6489
+                  {isPriceLoading ? (
+                    <span className="animate-pulse">Loading...</span>
+                  ) : tokenPrice ? (
+                    `$${parseFloat(tokenPrice).toFixed(6)}`
+                  ) : (
+                    "--"
+                  )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -985,7 +1189,7 @@ const BridgeInterface = () => {
       />
       {/* Info / Logs */}
       <div className="lg:max-w-[800px] md:max-w-[800px] mx-auto w-full px-4 scales-b scales-top">
-        {bridgeHash && (
+        {displayBridgeHash && (
           <div className="bg_swap_box_chain p-4 w-full font-orbitron">
             <p className="text-lg text-[#FBB025] font-bold  mb-2 v">
               Bridge transaction submitted!
@@ -994,7 +1198,7 @@ const BridgeInterface = () => {
               Your tokens will arrive in 2-10 minutes
             </p>
             <a
-              href={`https://scan.vialabs.io/transaction/${bridgeHash}`}
+              href={`https://scan.vialabs.io/transaction/${displayBridgeHash}`}
               target="_blank"
               rel="noopener noreferrer"
               className="text-xs font-bold text-white hover:underline"
