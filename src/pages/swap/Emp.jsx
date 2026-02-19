@@ -1,5 +1,8 @@
 import { useEffect, useState, useMemo, useRef } from "react";
+import Routing from "./Routing";
+
 import { useSearchParams } from "react-router-dom";
+import LoadingIcon from "../../assets/icons/loading.svg";
 import Logo from "../../assets/images/swap-emp.png";
 import Sett from "../../assets/images/setting.svg";
 import Ar from "../../assets/images/reverse.svg";
@@ -37,14 +40,14 @@ import {
   EMPTY_ADDRESS,
 } from "../../utils/contractCalls";
 import { swapTokens } from "../../utils/contractCalls";
-import { 
-  PLS_ROUTER_ABI, 
-  ETHW_ROUTER_ABI, 
+import {
+  PLS_ROUTER_ABI,
+  ETHW_ROUTER_ABI,
   SONIC_ROUTER_ABI,
   BASECHAIN_ROUTER_ABI,
   SEI_ROUTER_ABI,
   BERA_ROUTER_ABI,
-  ROOTSTOCK_ROUTER_ABI
+  ROOTSTOCK_ROUTER_ABI,
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
@@ -159,7 +162,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const [needsApproval, setNeedsApproval] = useState(false);
   const [tradeInfo, setTradeInfo] = useState(undefined);
 
-
   // Debounce and request tracking for quote fetching
   const [debouncedAmountIn, setDebouncedAmountIn] = useState("0");
   // const quoteRequestIdRef = useRef(0);
@@ -220,8 +222,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   // Check if it's a direct route (native to wrapped or wrapped to native)
   const isDirectRoute = useMemo(() => {
     return (
-      (selectedTokenA?.address === EMPTY_ADDRESS && selectedTokenB?.address === wethAddress) ||
-      (selectedTokenA?.address === wethAddress && selectedTokenB?.address === EMPTY_ADDRESS)
+      (selectedTokenA?.address === EMPTY_ADDRESS &&
+        selectedTokenB?.address === wethAddress) ||
+      (selectedTokenA?.address === wethAddress &&
+        selectedTokenB?.address === EMPTY_ADDRESS)
     );
   }, [selectedTokenA?.address, selectedTokenB?.address, wethAddress]);
 
@@ -242,7 +246,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
         ? convertToBigInt(
             parseFloat(amountIn),
-            parseInt(selectedTokenA.decimal) || 18
+            parseInt(selectedTokenA.decimal) || 18,
           )
         : BigInt(0),
       selectedTokenA?.address === EMPTY_ADDRESS
@@ -253,7 +257,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
         : selectedTokenB?.address || EMPTY_ADDRESS,
       BigInt(maxHops?.toString() || "3"),
     ],
-    enabled: !isDirectRoute && !!selectedTokenA && !!selectedTokenB && !!amountIn && parseFloat(amountIn) > 0,
+    enabled:
+      !isDirectRoute &&
+      !!selectedTokenA &&
+      !!selectedTokenB &&
+      !!amountIn &&
+      parseFloat(amountIn) > 0,
   });
 
   // Get single token price for rate display
@@ -327,7 +336,13 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       singleTokenRefresh();
     }
     setPath([selectedTokenA?.address, selectedTokenB?.address]);
-  }, [amountIn, selectedTokenA, selectedTokenB, quoteRefresh, singleTokenRefresh]);
+  }, [
+    amountIn,
+    selectedTokenA,
+    selectedTokenB,
+    quoteRefresh,
+    singleTokenRefresh,
+  ]);
 
   // Reset selected tokens when chain changes
   useEffect(() => {
@@ -381,13 +396,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       return;
     }
 
-    const tokenAAddress = selectedTokenA?.address === EMPTY_ADDRESS
-      ? wethAddress
-      : selectedTokenA?.address || EMPTY_ADDRESS;
+    const tokenAAddress =
+      selectedTokenA?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenA?.address || EMPTY_ADDRESS;
 
-    const tokenBAddress = selectedTokenB?.address === EMPTY_ADDRESS
-      ? wethAddress
-      : selectedTokenB?.address || EMPTY_ADDRESS;
+    const tokenBAddress =
+      selectedTokenB?.address === EMPTY_ADDRESS
+        ? wethAddress
+        : selectedTokenB?.address || EMPTY_ADDRESS;
 
     // Set route with replaced native token address
     setRoute([tokenAAddress, tokenBAddress]);
@@ -397,9 +414,13 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     setAmountOut(amountIn);
 
     // Create trade object directly without using findBestPath data
-    const amountInBigInt = amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
-      ? convertToBigInt(parseFloat(amountIn), parseInt(selectedTokenA.decimal) || 18)
-      : BigInt(0);
+    const amountInBigInt =
+      amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+        ? convertToBigInt(
+            parseFloat(amountIn),
+            parseInt(selectedTokenA.decimal) || 18,
+          )
+        : BigInt(0);
 
     const trade = {
       amountIn: amountInBigInt,
@@ -409,7 +430,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       pathTokens: [selectedTokenA, selectedTokenB],
       adapters: [], // No adapters for direct routes
     };
-    
+
     setTradeInfo(trade);
     setIsSlippageApplied(false);
   };
@@ -424,19 +445,20 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
 
     const amountOutValue = formatUnits(
       data.amounts[data.amounts.length - 1],
-      parseInt(selectedTokenB.decimal)
+      parseInt(selectedTokenB.decimal),
     );
     setAmountOut(amountOutValue);
 
     const trade = {
       amountIn: data.amounts[0],
-      amountOut: 
+      amountOut:
         (data.amounts[data.amounts.length - 1] * BigInt(98)) / BigInt(100),
       amounts: data.amounts,
       path: data.path,
       pathTokens: data.path.map(
         (pathAddress) =>
-          tokenList.find((token) => token.address === pathAddress) || tokenList[0]
+          tokenList.find((token) => token.address === pathAddress) ||
+          tokenList[0],
       ),
       adapters: data.adapters,
     };
@@ -498,10 +520,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
         setNeedsApproval(false);
         setSwapStatus("APPROVED");
         toast.success("Token approved!");
-        
+
         // Show waiting for confirmation before proceeding to swap
         setSwapStatus("WAITING_FOR_CONFIRMATION");
-        
+
         // Automatically proceed to swap after successful approval
         await confirmSwap();
       }
@@ -748,7 +770,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       address,
       tradeInfo,
       chainId,
-      protocolFee
+      protocolFee,
     )
       .then(() => {
         setSwapSuccess(true); // Set success on transaction completion
@@ -764,7 +786,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     // Check if we have valid single token data with at least 2 amounts (input and output)
     if (!singleToken?.amounts || singleToken.amounts.length < 2) {
       // Fallback: calculate rate from current amountIn/amountOut if available
-      if (amountIn && amountOut && parseFloat(amountIn) > 0 && parseFloat(amountOut) > 0) {
+      if (
+        amountIn &&
+        amountOut &&
+        parseFloat(amountIn) > 0 &&
+        parseFloat(amountOut) > 0
+      ) {
         const rate = parseFloat(amountOut) / parseFloat(amountIn);
         return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
       }
@@ -774,8 +801,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     const rate = parseFloat(
       formatUnits(
         singleToken.amounts[singleToken.amounts.length - 1],
-        parseInt(selectedTokenB.decimal)
-      )
+        parseInt(selectedTokenB.decimal),
+      ),
     );
 
     return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
@@ -967,6 +994,22 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     setAmountOut("0");
   }, [selectedTokenB]);
 
+  // In your Emp component, add loading state
+  const [isRoutingLoading, setIsRoutingLoading] = useState(false);
+
+  // Update this when you're fetching quotes
+  useEffect(() => {
+    if (isQuoting) {
+      setIsRoutingLoading(true);
+    } else {
+      // Add a small delay to show loading state smoothly
+      const timer = setTimeout(() => {
+        setIsRoutingLoading(false);
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [isQuoting]);
+
   return (
     <>
       <div
@@ -1014,10 +1057,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                       You Sell
                     </div>
                     <div className="md:text-xl text-[10px] font-orbitron">
-                      <span className="font-semibold leading-normal text-[#FF9900]">
+                      <span className="font-normal leading-normal text-[#FF9900]">
                         BAL
                       </span>
-                      <span className="font-semibold leading-normal text-[#FF9900]">
+                      <span className="font-normal leading-normal text-[#FF9900]">
                         {" "}
                         :{" "}
                       </span>
@@ -1138,9 +1181,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                     </div>
                   </div>
                   <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                    <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                      Market Price: {selectedTokenA && selectedTokenB && getRateDisplay() !== "0" ? getRateDisplay() : "--"}
-                    </p>
+                    <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                      {selectedTokenA &&
+                      selectedTokenB &&
+                      getRateDisplay() !== "0"
+                        ? getRateDisplay()
+                        : "--"}
+                      <span className="font-bold">Market Price</span>
+                    </div>
                     <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                       <span></span>
                       {[25, 50, 75, 100].map((value) => (
@@ -1185,9 +1233,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                         </div>
                       )}
                     </div>
-                    {selectedTokenA ? (
-                      conversionRate ? `$${formatNumber(usdValue)}` : "Fetching Rate..."
-                    ) : "$0.00"}
+                    {selectedTokenA
+                      ? conversionRate
+                        ? `$${formatNumber(usdValue)}`
+                        : "Fetching Rate..."
+                      : "$0.00"}
                   </div>
                 </div>
                 <div
@@ -1214,10 +1264,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                       You Buy
                     </div>
                     <div className="md:text-xl text-[10px] font-orbitron">
-                      <span className="font-semibold leading-normal text-[#FF9900]">
+                      <span className="font-normal leading-normal text-[#FF9900]">
                         BAL
                       </span>{" "}
-                      <span className="font-semibold leading-normal text-[#FF9900]">
+                      <span className="font-normal leading-normal text-[#FF9900]">
                         {" "}
                         :{" "}
                       </span>
@@ -1349,9 +1399,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                     </div>
                   </div>
                   <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                    <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                      Market Price: {selectedTokenA && selectedTokenB && getRateDisplay() !== "0" ? getRateDisplay() : "--"}
-                    </p>
+                    <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                      {" "}
+                      {selectedTokenA &&
+                      selectedTokenB &&
+                      getRateDisplay() !== "0"
+                        ? getRateDisplay()
+                        : "--"}
+                      <span className="font-bold">Market Price</span>
+                    </div>
                     <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                       <span></span>
                       {[25, 50, 75, 100].map((value) => (
@@ -1432,68 +1488,57 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                     <span>{getButtonText()}</span>
                   </button>
                 </div>
-                <div className="bg_swap_box mt-6 md:px-10 px-4 py-6">
-                  <div className="flex justify-between gap-2 items-start">
-                    <p className="text-[#FFE3BA] text-lg font-bold font-orbitron">
-                      DETAILS
-                    </p>
-                    <div className="text-right text-[#FF9900] text-2xl font-extrabold font-orbitron">
-                      SPLIT
-                      <br />
-                      <span className="text-right text-[#FF9900] text-sm font-normal font-orbitron">
-                        Routing
-                      </span>
-                    </div>
+                {selectedTokenA && selectedTokenB && (
+                  <div className="bg_swap_box mt-6 md:px-10 px-4 !py-6">
+                    <Routing isLoading={isRoutingLoading} />
+                    {selectedTokenA && selectedTokenB && (
+                      <div className="flex justify-between gap-2 items-center">
+                        <div>
+                          <div className="text-[#FF9900] text-base font-orbitron">
+                            Min Received :
+                            <span className="text-[#FF9900] text-base font-bold mr-1">
+                              {" "}
+                              {formatNumber(
+                                parseFloat(minToReceiveAfterFee).toFixed(6),
+                              )}
+                            </span>
+                            {selectedTokenB.ticker}
+                          </div>
+                          <div className="text-[#FF9900] text-base font-orbitron">
+                            Rate :
+                            <span className="text-[#FF9900] text-base font-bold">
+                              {" "}
+                              1
+                            </span>
+                            {isRateReversed
+                              ? selectedTokenB.ticker
+                              : selectedTokenA.ticker}{" "}
+                            =
+                            <span className="text-[#FF9900] text-base font-bold mr-1">
+                              {" "}
+                              {getRateDisplay()}
+                            </span>
+                            {isRateReversed
+                              ? selectedTokenA.ticker
+                              : selectedTokenB.ticker}
+                          </div>
+                        </div>
+                        <div className="flex gap-4 items-center">
+                          <div
+                            className={`font-orbitron truncate ${getPriceImpactColor(
+                              priceImpact,
+                            )}`}
+                          >
+                            Price Impact
+                          </div>
+                          <div className="text-center text-black text-base font-normal font-orbitron px-3 py-1 bg-[#FFE3BA] rounded-lg">
+                            {priceImpact} %
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
-                  <img src={Bar} alt="bar" className="w-full my-4" />
-                  {/*  */}
-                  {selectedTokenA && selectedTokenB && (
-                    <div className="flex justify-between gap-2 items-center">
-                      <div>
-                        <div className="text-[#FF9900] text-base font-bold font-orbitron">
-                          Min Received :
-                          <span className="text-[#FF9900] text-base font-normal rigamesh">
-                            {" "}
-                            {formatNumber(
-                              parseFloat(minToReceiveAfterFee).toFixed(6),
-                            )}
-                          </span>
-                          {selectedTokenB.ticker}
-                        </div>
-                        <div className="text-[#FF9900] text-base font-bold font-orbitron">
-                          Rate :
-                          <span className="text-[#FF9900] text-base font-normal rigamesh">
-                            {" "}
-                            1
-                          </span>
-                          {isRateReversed
-                            ? selectedTokenB.ticker
-                            : selectedTokenA.ticker}{" "}
-                          =
-                          <span className="text-[#FF9900] text-base font-normal rigamesh">
-                            {" "}
-                            {getRateDisplay()}
-                          </span>
-                          {isRateReversed
-                            ? selectedTokenA.ticker
-                            : selectedTokenB.ticker}
-                        </div>
-                      </div>
-                      <div className="flex gap-4 items-center">
-                        <div
-                          className={`font-orbitron truncate ${getPriceImpactColor(
-                            priceImpact,
-                          )}`}
-                        >
-                          Price Impact
-                        </div>
-                        <div className="text-center text-black text-base font-normal font-orbitron px-3 py-1 bg-[#FFE3BA] rounded-lg">
-                          {priceImpact} %
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                )}
               </div>
             </>
           ) : (

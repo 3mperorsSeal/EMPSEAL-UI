@@ -182,10 +182,10 @@ const TransferPanel = () => {
                 Gas Out
               </h2>
               <div className="md:text-xl text-[10px] font-orbitron">
-                <span className="font-semibold leading-normal text-[#FF9900]">
+                <span className="font-normal leading-normal text-[#FF9900]">
                   BAL
                 </span>
-                <span className="font-semibold leading-normal text-[#FF9900]">
+                <span className="font-normal leading-normal text-[#FF9900]">
                   {" "}
                   :{" "}
                 </span>
@@ -258,16 +258,17 @@ const TransferPanel = () => {
                   }}
                   className="relative flex-flex-col justify-end items-end w-full cursor-pointer mt-2"
                 >
-                  <p className="ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
+                  <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
                     Max Amount
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-              <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                Market Price: 52.6489
-              </p>
+              <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                52.6489
+                <span className="font-bold">Market Price</span>
+              </div>
               <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                 {[25, 50, 75, 100].map((value) => (
                   <button
@@ -357,9 +358,10 @@ const TransferPanel = () => {
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-              <p className="text-[#FF9900] font-orbitron md:text-xl text-sm">
-                Market Price: 52.6489
-              </p>
+              <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                52.6489
+                <span className="font-bold">Market Price</span>
+              </div>
               <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                 {[25, 50, 75, 100].map((value) => (
                   <button

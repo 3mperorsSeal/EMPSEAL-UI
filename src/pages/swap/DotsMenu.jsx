@@ -56,7 +56,7 @@ const DotsMenu = ({ onTabChange }) => {
         onClick={() => setOpen(false)}
       />
       <div
-        className={`fixed inset-x-0 top-0 md:h-[370px] h-[310px] bg-black border-4 border-[#FFA600]
+        className={`fixed inset-x-0 top-0 md:h-[370px] h-[340px] bg-black border-4 border-[#FFA600]
   md:rounded-2xl rounded-lg md:px-10 px-4 py-10 z-50 shadow-xl w-full
   transform transition-all duration-500 ease-in-out
   ${
@@ -95,7 +95,7 @@ const DotsMenu = ({ onTabChange }) => {
 
                   setOpen(false);
                 }}
-                className="cursor-pointer hover:translate-x-1 transition md:text-4xl text-lg my-2 font-extrabold"
+                className="cursor-pointer hover:translate-x-1 transition md:text-[30px] text-lg my-4 font-extrabold"
               >
                 {item}
               </p>
@@ -119,19 +119,24 @@ const DotsMenu = ({ onTabChange }) => {
 
                     setOpen(false);
                   }}
-                  className="cursor-pointer hover:translate-x-1 transition md:text-4xl text-lg my-2 font-extrabold"
+                  className="cursor-pointer hover:translate-x-1 transition md:text-[30px] text-lg my-4 font-extrabold"
                 >
                   {item}
                 </p>
               ),
             )}
           </div>
-          <div className="absolute md:bottom-1 bottom-[-50px] right-3">
-            <img
-              src={Logo}
-              alt="Logo"
-              className="2xl:w-[145px] md:w-[130px] w-[100px]"
-            />
+          <div className="absolute md:bottom-1 bottom-[-70px] right-3 text-white flex gap-3 flex-col md:text-[30px] text-lg my-4 font-extrabold text-right">
+             <a href="https://www.empx.io/dapp">
+             HOME
+            </a>
+            <a href="https://www.empx.io/dapp">
+              <img
+                src={Logo}
+                alt="Logo"
+                className="2xl:w-[145px] md:w-[130px] w-[100px]"
+              />
+            </a>
           </div>
         </div>
       </div>
