@@ -1492,7 +1492,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   <div className="bg_swap_box mt-6 md:px-10 px-4 !py-6">
                     <Routing isLoading={isRoutingLoading} />
                     {selectedTokenA && selectedTokenB && (
-                      <div className="flex justify-between gap-2 items-center">
+                      <div className="flex justify-between gap-2 items-center md:flex-nowrap flex-wrap">
                         <div>
                           <div className="text-[#FF9900] text-base font-orbitron">
                             Min Received :
