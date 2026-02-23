@@ -1269,7 +1269,15 @@ export function CreateOrderForm({
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                 <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                  {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
+                  {selectedTokenIn ? (
+                    tokenInUSDPrice ? (
+                      `$${tokenInUSDPrice.toFixed(6)}`
+                    ) : (
+                      <span className="animate-pulse">Loading...</span>
+                    )
+                  ) : (
+                    "--"
+                  )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -1531,7 +1539,15 @@ export function CreateOrderForm({
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
                 <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
-                  {marketPrice ? parseFloat(marketPrice).toFixed(8) : "-"}
+                  {selectedTokenOut ? (
+                    tokenOutUSDPrice ? (
+                      `$${tokenOutUSDPrice.toFixed(6)}`
+                    ) : (
+                      <span className="animate-pulse">Loading...</span>
+                    )
+                  ) : (
+                    "--"
+                  )}
                   <span className="font-bold">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
@@ -1714,7 +1730,9 @@ export function CreateOrderForm({
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
                 className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${
-                  isApproved ? 'bg-[#F59216] hover:bg-[#e08a15 hover:text-white' : 'bg-[#F59216] hover:bg-[#e08a15]'
+                  isApproved
+                    ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
+                    : "bg-[#F59216] hover:bg-[#e08a15]"
                 }`}
                 data-testid="button-main-action"
               >
@@ -2517,7 +2535,9 @@ export function CreateOrderForm({
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
                 className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${
-                  isApproved ? 'bg-[#F59216] hover:bg-[#e08a15 hover:text-white' : 'bg-[#F59216] hover:bg-[#e08a15] hover:text-white'
+                  isApproved
+                    ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
+                    : "bg-[#F59216] hover:bg-[#e08a15] hover:text-white"
                 }`}
                 data-testid="button-main-action-mobile"
               >

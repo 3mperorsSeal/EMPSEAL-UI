@@ -1235,15 +1235,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   <div className="flex justify-between gap-2 items-center 2xl:mt-6 mt-5 md:flex-nowrap flex-wrap mt6">
                     <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
                       <span>
-                        {selectedTokenA && selectedTokenB ? (
-                          <>
-                            1 {selectedTokenA.ticker || selectedTokenA.symbol} ={" "}
-                            {getRateDisplay() !== "0" ? getRateDisplay() : "--"}{" "}
-                            {selectedTokenB.ticker || selectedTokenB.symbol}
-                          </>
+                        {selectedTokenA ? (
+                        conversionRate ? (
+                          `$${parseFloat(conversionRate).toFixed(6)}`
                         ) : (
-                          "--"
-                        )}
+                          <span className="animate-pulse">Loading...</span>
+                        )
+                      ) : (
+                        "--"
+                      )}
                       </span>
                       <span className="font-bold">Market Price</span>
                     </div>
@@ -1464,15 +1464,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   <div className="flex justify-between gap-2 items-center 2xl:mt-6 mt-5 md:flex-nowrap flex-wrap mt6">
                     <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
                       <span>
-                        {selectedTokenA && selectedTokenB ? (
-                          <>
-                            1 {selectedTokenA.ticker || selectedTokenA.symbol} ={" "}
-                            {getRateDisplay() !== "0" ? getRateDisplay() : "--"}{" "}
-                            {selectedTokenB.ticker || selectedTokenB.symbol}
-                          </>
+                        {selectedTokenB ? (
+                        conversionRateTokenB ? (
+                          `$${parseFloat(conversionRateTokenB).toFixed(6)}`
                         ) : (
-                          "--"
-                        )}
+                          <span className="animate-pulse">Loading...</span>
+                        )
+                      ) : (
+                        "--"
+                      )}
                       </span>
                       <span className="font-bold">Market Price</span>
                     </div>

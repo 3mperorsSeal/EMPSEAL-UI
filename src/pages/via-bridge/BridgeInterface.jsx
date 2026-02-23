@@ -274,14 +274,11 @@ const BridgeInterface = () => {
           case 369: // PulseChain
             networkSymbol = "pulsechain";
             break;
-          case 1: // Ethereum
-            networkSymbol = "eth";
-            break;
           case 56: // BSC
             networkSymbol = "bsc";
             break;
           case 137: // Polygon
-            networkSymbol = "polygon_pos";
+            networkSymbol = "polygon";
             break;
           case 42161: // Arbitrum
             networkSymbol = "arbitrum";
@@ -291,9 +288,6 @@ const BridgeInterface = () => {
             break;
           case 43114: // Avalanche
             networkSymbol = "avalanche";
-            break;
-          case 250: // Fantom
-            networkSymbol = "fantom";
             break;
           default:
             networkSymbol = null;
