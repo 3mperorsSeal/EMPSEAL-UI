@@ -116,7 +116,7 @@ const ChainPopup = ({
               strokeLinejoin="round"
             />
           </svg>
-          <h2 className="mt-4 md:text-2xl capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+          <h2 className="mt-4 md:text-lg capitalize text-base font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
             <img src={EL} alt="EL" className="w-10 object-contain" />
             Select Chain
           </h2>
@@ -172,7 +172,7 @@ const ChainPopup = ({
                     // sc1
                   }`}
                 >
-                  <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                  <div className="w-[23px] h-[23px] flex justify-center items-center shrink-0">
                     <img
                       src={chainIcon}
                       alt={c.name}
@@ -181,7 +181,7 @@ const ChainPopup = ({
                     />
                   </div>
                   <span
-                    className={`font-orbitron text-xl font-semibold text-center px-3 ${
+                    className={`font-orbitron text-base font-semibold text-center px-2 ${
                       isActive ? "" : ""
                     }`}
                   >

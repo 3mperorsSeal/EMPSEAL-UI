@@ -48,7 +48,7 @@ const TokenListItem = ({
           />
         </div>
         <div>
-          <div className="text-[#FFD484] font-orbitron font-bold md:text-lg text-sm font-orbitron leading-relaxed tracking-wide">
+          <div className="text-[#FFD484] font-orbitron font-bold md:text-base text-sm font-orbitron leading-relaxed tracking-wide">
             {token.name}
           </div>
           <div className="text-white text-xs font-orbitron">
@@ -80,7 +80,7 @@ const TokenListItem = ({
         </button>
 
         <div className="text-right min-w-[100px]">
-          <div className="text-[#FFD484] md:text-lg text-sm font-bold font-orbitron tracking-wide">
+          <div className="text-[#FFD484] md:text-base text-sm font-bold font-orbitron tracking-wide">
             {isLoading ? "Loading..." : formattedBalance}
           </div>
         </div>
@@ -410,7 +410,7 @@ const Token = ({ onClose, onSelect }) => {
       <div className="w-full flex justify-center my-auto items-center">
         <div
           ref={modalRef}
-          className="md:max-w-[618px] w-full rounded-3xl relative py-4 md:px-10 px-4 mx-auto clip-bg"
+          className="md:max-w-[618px] w-full rounded-3xl relative py-4 md:px-8 px-4 mx-auto clip-bg"
         >
           <svg
             onClick={onClose}
@@ -431,7 +431,7 @@ const Token = ({ onClose, onSelect }) => {
           </svg>
 
           <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
+            <p className="md:text-lg capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Select a token
             </p>
           </div>
@@ -439,7 +439,7 @@ const Token = ({ onClose, onSelect }) => {
             {featureTokens.map((token, index) => (
               <div
                 key={index}
-                className="flex flex-row items-center cursor-pointer font-orbitron md:rounded-2xl rounded-lg border border-[#FF9900] md:p-[14px] p-2"
+                className="flex flex-row items-center cursor-pointer font-orbitron md:rounded-xl rounded-lg border border-[#FF9900] md:p-[12px] p-2"
                 onClick={() => handleFeaturedTokenClick(token)}
               >
                 <span className="flex items-center">
@@ -461,7 +461,7 @@ const Token = ({ onClose, onSelect }) => {
             ))}
           </div>
           <div className="flex gap-4 items-center justify-between cursor-pointer mt-1 py-3">
-            <p className="md:text-2xl capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
+            <p className="md:text-lg capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
               Search token
             </p>
             {/* Show favorite count and clear button */}

@@ -52,7 +52,7 @@ const SelectionModal = ({
                 className="p-3.5 flex items-center gap-3 hoverclip rounded-lg cursor-pointer my-3.5"
               >
                 {isToken ? (
-                  <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                  <div className="w-[23px] h-[23px] flex justify-center items-center shrink-0">
                     <TokenLogo
                       chainId={chainId}
                       tokenAddress={item.address}
@@ -63,7 +63,7 @@ const SelectionModal = ({
                   </div>
                 ) : (
                   logo && (
-                    <div className="w-[33px] h-[33px] flex justify-center items-center shrink-0">
+                    <div className="w-[23px] h-[23px] flex justify-center items-center shrink-0">
                       <img
                         src={logo}
                         alt={item.name}

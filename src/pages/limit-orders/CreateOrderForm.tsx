@@ -922,13 +922,13 @@ export function CreateOrderForm({
           <div className="md:max-w-[700px] w-full">
             {/* Strategy Selection */}
             <div className="mb-4 md:max-w-[850px] w-full mx-auto border-4 border-[#FFA600] rounded-lg px-4 py-2 bg-black">
-              <p className="text-center text-[#FF9900] md:text-xl font-bold text-sm font-orbitron">
+              <p className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron">
                 Select Strategy
               </p>
               <div className="flex justify-center gap-8 md:gap-16 items-start mt-2 md:flex-nowrap flex-wrap">
                 {/* Limit Orders Group */}
                 <div className="flex flex-col items-center">
-                  <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
+                  <div className="text-center text-[#FF9900] md:text-sm font-bold text-sm font-orbitron mb-2">
                     Exit/Entry
                   </div>
                   <div className="flex gap-3">
@@ -937,7 +937,7 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-24 h-10 p-3 md:text-[30px] text-lg !cursor-pointer
+                          w-24 h-10 p-3 md:text-xl text-lg !cursor-pointer
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
@@ -956,7 +956,7 @@ export function CreateOrderForm({
                       >
                         Sell
                       </button>
-                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 left-0 right-0 mx-auto top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg">
+                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 left-0 right-0 mx-auto top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg">
                         <span className="text-[#FF9900] font-black">
                           Sell High
                         </span>{" "}
@@ -967,7 +967,7 @@ export function CreateOrderForm({
                         assets of your choice. Secure gains. Zero emotion. One
                         click.
                       </div>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[11px] font-semibold font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-[8px] text-[8px] font-semibold font-orbitron">
                         Sell High: Exit
                       </div>
                     </div>
@@ -976,7 +976,7 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-24 h-10 p-3 md:text-[30px] text-lg 
+                          w-24 h-10 p-3 md:text-xl text-lg 
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
@@ -995,7 +995,7 @@ export function CreateOrderForm({
                       >
                         Buy
                       </button>
-                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg">
+                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg">
                         <span className="text-[#FF9900] font-black">
                           Buy Low
                         </span>{" "}
@@ -1005,7 +1005,7 @@ export function CreateOrderForm({
                         sniping optimal entries with precision and speed.
                         One-click setup. Zero guesswork.
                       </div>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-[8px] text-[8px] font-semibold font-orbitron">
                         Buy Low: Entry
                       </div>
                     </div>
@@ -1015,7 +1015,7 @@ export function CreateOrderForm({
                 {/* Bracket/Protection Group */}
                 <div className="flex flex-col items-center">
                   {/* <span className="text-xs text-white">Coming Soon</span> */}
-                  <div className="text-center text-[#FF9900] md:text-lg font-bold text-sm font-orbitron mb-2">
+                  <div className="text-center text-[#FF9900] md:text-sm font-bold text-sm font-orbitron mb-2">
                     Spot Protection
                   </div>
                   <div className="flex gap-3">
@@ -1024,7 +1024,7 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-32 h-10 p-3 md:text-2xl text-lg
+                          w-32 h-10 p-3 md:text-xl text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
@@ -1043,7 +1043,7 @@ export function CreateOrderForm({
                         {/* Bracket */}
                         Full
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-[8px] text-[8px] font-semibold font-orbitron">
                         Entry + SL/TP
                       </div>
                     </div>
@@ -1052,7 +1052,7 @@ export function CreateOrderForm({
                       <button
                         type="button"
                         className={`
-                          w-32 h-10 p-3 md:text-[30px] text-lg
+                          w-32 h-10 p-3 md:text-xl text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
                           ${
@@ -1071,7 +1071,7 @@ export function CreateOrderForm({
                         {/* Position */}
                         Spot
                       </button>
-                      <div className="mt-1 text-center text-[#FFE3BA] md:text-xs text-[10px] font-semibold font-orbitron">
+                      <div className="mt-1 text-center text-[#FFE3BA] md:text-[8px] text-[8px] font-semibold font-orbitron">
                         Protect Holdings
                       </div>
                     </div>
@@ -1089,12 +1089,12 @@ export function CreateOrderForm({
             {/*  */}
             <div className="relative bg_swap_box">
               <div className="flex justify-between gap-3 items-center">
-                <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
+                <div className="font-orbitron md:text-[15px] text-xs font-extrabold leading-normal text-[#FF9900]">
                   {orderMode === OrderMode.POSITION
                     ? "Protected Token"
                     : "In Address"}
                 </div>
-                <div className="md:text-xl text-[10px] font-orbitron">
+                <div className="md:text-xs text-[10px] font-orbitron">
                   <span className="font-normal leading-normal text-[#FF9900]">
                     BAL
                   </span>
@@ -1117,12 +1117,12 @@ export function CreateOrderForm({
                   </span>
                 </div>
               </div>
-              <div className="flex w-full mt-6 md:gap-10 gap-2">
+              <div className="flex w-full mt-3 md:gap-10 gap-2">
                 <div className="lg:md:max-w-[200px] w-full">
                   <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
                     <div className="flex gap-2 items-center w-full">
                       {/* md:w-[220px] w-[160px] */}
-                      <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[10px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
+                      <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
                         {tokenInMode === "select" ? (
                           <div className="space-y-2 w-full">
                             <Select
@@ -1130,7 +1130,7 @@ export function CreateOrderForm({
                               value={selectedTokenIn || undefined}
                             >
                               <SelectTrigger
-                                className="md:h-12 border-none text-center bg-black focus:none px-0 !w-full outline-none text-white font-extrabold font-orbitron md:text-xl text-xs capitalize"
+                                className="md:h-8 border-none text-center bg-black focus:none px-0 !w-full outline-none text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
                                 data-testid="select-token-in"
                               >
                                 <SelectValue placeholder="Select token" />
@@ -1145,9 +1145,9 @@ export function CreateOrderForm({
                                           chainId={369}
                                           tokenAddress={address}
                                           symbol={token.symbol}
-                                          className="md:h-7 md:w-7 w-6 h-6"
+                                          className="md:h-5 md:w-5 w-4 h-4"
                                         />
-                                        <span className=" md:text-xl text-sm font-extrabold font-orbitron text-white">
+                                        <span className="md:text-sm text-sm font-extrabold font-orbitron text-white">
                                           {token.symbol}
                                         </span>
                                       </div>
@@ -1230,9 +1230,9 @@ export function CreateOrderForm({
                       formatNumber(amountIn)?.replace(/\D/g, "").length || 0;
                     const defaultFontSize =
                       window.innerWidth >= 1024
-                        ? 40
+                        ? 28
                         : window.innerWidth >= 768
-                          ? 30
+                          ? 24
                           : 20;
                     const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 5;
                     const SHRINK_RATE = 3;
@@ -1268,7 +1268,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
                   {selectedTokenIn ? (
                     tokenInUSDPrice ? (
                       `$${tokenInUSDPrice.toFixed(6)}`
@@ -1286,7 +1286,7 @@ export function CreateOrderForm({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[7px] font-medium font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[7px] text-[7px] font-medium font-orbitron md:w-12 w-11 px-2
       ${
         selectedPercentage === value
           ? "!text-black !bg-[#FF9900] border-[#FF9900]"
@@ -1315,7 +1315,7 @@ export function CreateOrderForm({
 
                         {dollarinfo && (
                           <div
-                            className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-sm text-[10px] font-bold text-white shadow-lg"
+                            className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg"
                             onMouseEnter={() => setDollarInfo(true)}
                             onMouseLeave={() => setDollarInfo(false)}
                           >
@@ -1346,7 +1346,7 @@ export function CreateOrderForm({
 
             {/*  */}
             <div
-              className="cursor-pointer relative md:pb-2 mx-auto !mt-7 mb-4 md:w-[70px] w-12"
+              className="cursor-pointer relative mx-auto !mt-4 mb-4 md:w-[50px] w-12"
               onClick={handleSwapTokens}
               data-testid="button-swap-tokens"
             >
@@ -1359,12 +1359,12 @@ export function CreateOrderForm({
             {/*  */}
             <div className="relative pb-4 bg_swap_box_black">
               <div className="flex justify-between gap-3 items-center lg:px-2">
-                <div className="font-orbitron md:text-2xl text-xs font-extrabold leading-normal text-[#FF9900]">
+                <div className="font-orbitron md:text-[15px] text-xs font-extrabold leading-normal text-[#FF9900]">
                   {orderMode === OrderMode.POSITION
                     ? "Exit Token"
                     : "Out Address"}
                 </div>
-                <div className="md:text-xl text-[10px] font-orbitron">
+                <div className="md:text-xs text-[10px] font-orbitron">
                   <span className="font-normal leading-normal text-[#FF9900]">
                     BAL
                   </span>{" "}
@@ -1387,12 +1387,12 @@ export function CreateOrderForm({
                   </span>
                 </div>
               </div>
-              <div className="flex w-full mt-6 md:gap-10 gap-2">
+              <div className="flex w-full mt-3 md:gap-10 gap-2">
                 <div className="lg:md:max-w-[200px] w-full">
                   <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
                     <div className="flex gap-2 items-center w-full">
                       {/* md:w-[220px] w-[160px] */}
-                      <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[10px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
+                      <div className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
                         {tokenOutMode === "select" ? (
                           <div className="space-y-2 w-full">
                             <Select
@@ -1400,7 +1400,7 @@ export function CreateOrderForm({
                               value={selectedTokenOut || undefined}
                             >
                               <SelectTrigger
-                                className="md:h-12 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xl text-xs capitalize"
+                                className="md:h-8 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
                                 data-testid="select-token-out"
                               >
                                 <SelectValue placeholder="Select token" />
@@ -1414,9 +1414,9 @@ export function CreateOrderForm({
                                           chainId={369}
                                           tokenAddress={address}
                                           symbol={token.symbol}
-                                          className="md:h-7 md:w-7 w-6 h-6"
+                                          className="md:h-5 md:w-5 w-4 h-4"
                                         />
-                                        <span className="font-orbitron md:text-xl text-sm font-extrabold !text-white">
+                                        <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
                                           {token.symbol}
                                         </span>
                                       </div>
@@ -1502,9 +1502,9 @@ export function CreateOrderForm({
 
                     const defaultFontSize =
                       window.innerWidth >= 1024
-                        ? 40
+                        ? 28
                         : window.innerWidth >= 768
-                          ? 30
+                          ? 24
                           : 20;
 
                     const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
@@ -1538,7 +1538,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-xl text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
                   {selectedTokenOut ? (
                     tokenOutUSDPrice ? (
                       `$${tokenOutUSDPrice.toFixed(6)}`
@@ -1556,7 +1556,7 @@ export function CreateOrderForm({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[7px] font-medium font-orbitron md:w-[70px] w-11 px-2
+                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[7px] text-[7px] font-medium font-orbitron md:w-12 w-11 px-2
             ${
               selectedPercentage === value
                 ? "!text-black !bg-[#FF9900] border-[#FF9900]"
@@ -1716,7 +1716,7 @@ export function CreateOrderForm({
             )}
             {/*  */}
             {/* For Desktop - Single Button */}
-            <div className="lg:flex hidden flex-col gap-8 pb-1 mt-5">
+            <div className="lg:flex hidden flex-col gap-8 pb-1 mt-4">
               <button
                 type="button"
                 onClick={handleMainAction}
@@ -1729,7 +1729,7 @@ export function CreateOrderForm({
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
-                className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${
+                className={`gtw cursor-pointer relative w-full md:h-12 h-11 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-base text-base font-extrabold ${
                   isApproved
                     ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
                     : "bg-[#F59216] hover:bg-[#e08a15]"
@@ -1752,9 +1752,9 @@ export function CreateOrderForm({
             {/* Entry Price - Hidden for Position orders */}
 
             {orderMode !== OrderMode.POSITION && (
-              <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
-                <div className="flex justify-between gap-2 items-center mt-3">
-                  <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron whitespace-nowrap">
+              <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-5">
+                <div className="flex justify-between gap-2 items-center mt-1">
+                  <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron whitespace-nowrap">
                     {currentStrategy === OrderStrategy.SELL
                       ? "Exit Price"
                       : "Entry Price"}
@@ -1802,7 +1802,7 @@ export function CreateOrderForm({
                       </svg>
                     </button>
                   )}
-                  <span className="text-[#FF9900] md:text-xl text-base font-orbitron font-bold">
+                  <span className="text-[#FF9900] md:text-lg text-base font-orbitron font-bold">
                     {quoteReversed && tokenInInfo && tokenOutInfo
                       ? `${tokenOutInfo.symbol} per ${tokenInInfo.symbol}`
                       : `${tokenInInfo?.symbol || "Token"} per ${tokenOutInfo?.symbol || "USDT"}`}
@@ -1840,7 +1840,7 @@ export function CreateOrderForm({
                     }
                   }
                   return (
-                    <div className="mt-3 font-orbitron">
+                    <div className="mt-2 font-orbitron">
                       <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
                         <span>
                           {currentStrategy === OrderStrategy.SELL
@@ -1962,7 +1962,7 @@ export function CreateOrderForm({
                   );
                 })()}
 
-                <div className="mt-4 flex justify-between gap-3 items-center">
+                <div className="mt-2 flex justify-between gap-3 items-center">
                   <div className="flex flex-col justify-center gap-2 items-center">
                     {/* <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
                       {marketPrice ? (
@@ -2061,11 +2061,11 @@ export function CreateOrderForm({
                   </div>
                 )} */}
 
-                <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
+                <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4">
                   {/* Stop Loss Section */}
                   <div className="w-full">
                     <div className="flex justify-between gap-2 items-center mt-1">
-                      <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron whitespace-nowrap">
+                      <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron whitespace-nowrap">
                         Stop Loss
                       </h2>
                       <div className="flex justify-center gap-2 items-center relative w-full">
@@ -2084,14 +2084,14 @@ export function CreateOrderForm({
                       </div>
                     </div>
                     <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
-                      <span className="text-[#FF9900] md:text-xl text-base font-orbitron font-bold">
+                      <span className="text-[#FF9900] md:text-lg text-base font-orbitron font-bold">
                         ${tokenOutInfo?.symbol || "USDT"}{" "}
                         <span className="font-normal">per</span> $LINK
                       </span>
                     </div>
 
                     {/* Stop Loss Slider */}
-                    <div className="mt-3 font-orbitron">
+                    <div className="mt-2 font-orbitron">
                       <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
                         <span>Market</span>
                         <span>{stopLossPercent || 0}%</span>
@@ -2137,7 +2137,7 @@ export function CreateOrderForm({
                     </div>
 
                     {/* Stop Loss Market Info */}
-                    <div className="mt-4 flex justify-between gap-3 items-center">
+                    <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
                           {stopLossPercent || 0}%
@@ -2164,11 +2164,11 @@ export function CreateOrderForm({
                     </div>
                   </div>
                 </div>
-                <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5 mt-5">
+                <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4 mt-5">
                   {/* Take Profit Section */}
                   <div className="mb-4">
                     <div className="flex justify-between gap-2 items-center mt-1">
-                      <h2 className="text-[#FF9900] md:text-xl text-sm font-bold font-orbitron">
+                      <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron">
                         Take Profit
                       </h2>
                       <div className="flex justify-center gap-2 items-center relative">
@@ -2192,7 +2192,7 @@ export function CreateOrderForm({
                     </p>
 
                     {/* Take Profit Slider */}
-                    <div className="mt-3 font-orbitron">
+                    <div className="mt-2 font-orbitron">
                       <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
                         <span>Market</span>
                         <span>{takeProfitPercent || 0}%</span>
@@ -2238,7 +2238,7 @@ export function CreateOrderForm({
                     </div>
 
                     {/* Take Profit Market Info */}
-                    <div className="mt-4 flex justify-between gap-3 items-center">
+                    <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
                           {takeProfitPercent || 0}%
@@ -2292,15 +2292,15 @@ export function CreateOrderForm({
             )}
             {/* For Buy Sell */}
             {!showBracketSettings && (
-              <div className="relative bg_swap_box_black md:!py-5 md:!px-5 mb-5">
-                <div className="text-center text-[#FF9900] text-xl font-black font-orbitron">
+              <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4">
+                <div className="text-center text-[#FF9900] md:text-lg text-base font-black font-orbitron">
                   Advanced Settings
                 </div>
                 {/* Partial Fill */}
                 <div className={`flex flex-col rounded-lg font-orbitron`}>
                   <div className="text-white p-4">
                     <div className="flex gap-4 justify-center items-center">
-                      <p className="text-[#FF9900] font-orbitron md:text-3xl text-2xl font-extrabold ">
+                      <p className="text-[#FF9900] font-orbitron md:text-xl text-lg font-extrabold ">
                         Partial Fill
                       </p>
                       <label className="toggle-switch">
@@ -2404,11 +2404,11 @@ export function CreateOrderForm({
             )}
             {/*  */}
             <div className="relative bg_swap_box_black md:!py-4">
-              <div className="text-center text-[#F59216] font-orbitron md:text-3xl text-2xl font-extrabold">
+              <div className="text-center text-[#F59216] font-orbitron md:text-lg text-base font-extrabold">
                 Order Details
               </div>
               <div className="md:px-5 px-2">
-                <div className="flex justify-between gap-3 items-center mt-4 font-orbitron">
+                <div className="flex justify-between gap-3 items-center mt-2 font-orbitron">
                   <div className="md:max-w-[155px] w-full">
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
                       {form.watch("strategy") === OrderStrategy.SELL
@@ -2438,8 +2438,8 @@ export function CreateOrderForm({
                     </div>
                   </div>
                 </div>
-                <hr className="border border-[#7B653C] my-4" />
-                <div className="flex justify-between gap-3 items-center mt-4 font-orbitron">
+                <hr className="border border-[#7B653C] my-2" />
+                <div className="flex justify-between gap-3 items-center mt-2 font-orbitron">
                   <div className="md:max-w-[155px] w-full">
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
                       {form.watch("deadline")
@@ -2467,8 +2467,8 @@ export function CreateOrderForm({
                     </div>
                   </div>
                 </div>
-                <hr className="border border-[#7B653C] my-4" />
-                <div className="flex justify-between gap-3 items-center mt-4 font-orbitron">
+                <hr className="border border-[#7B653C] my-2" />
+                <div className="flex justify-between gap-3 items-center mt-2 font-orbitron">
                   <div className="md:max-w-[155px] w-full">
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
                       {form.watch("minAmountOut") || "0"}
