@@ -685,6 +685,7 @@ const BridgeInterface = () => {
       addTransaction({
         hash: bridgeHash,
         timestamp: Date.now(),
+        fromAddress: address,
         fromChainName: sourceChain?.name || "Unknown",
         toChainName: destChain?.name || "Unknown",
         explorerUrl: sourceChain?.explorer,
