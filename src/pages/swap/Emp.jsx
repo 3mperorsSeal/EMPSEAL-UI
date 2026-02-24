@@ -1080,7 +1080,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   onClick={() => setSlippageVisible(true)}
                   className="ml-auto shrink-0 bg-black md:px-6 px-3 md:py-2 py-2 border-2 border-[#FF9900] rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
                 >
-                  <p className="text-[#FF9900] md:text-[10px] text-xs font-extrabold font-orbitron">
+                  <p className="text-[#FF9900] md:text-[10px] text-[10px] font-extrabold font-orbitron">
                     SETTINGS
                   </p>
                 </div>
@@ -1221,17 +1221,17 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                     </div>
                   </div>
                   <div className="flex justify-between gap-2 items-center 2xl:mt-3 mt-3 md:flex-nowrap flex-wrap mt6">
-                    <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                    <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                       <span>
                         {selectedTokenA ? (
-                        conversionRate ? (
-                          `$${parseFloat(conversionRate).toFixed(6)}`
+                          conversionRate ? (
+                            `$${parseFloat(conversionRate).toFixed(6)}`
+                          ) : (
+                            <span className="animate-pulse">Loading...</span>
+                          )
                         ) : (
-                          <span className="animate-pulse">Loading...</span>
-                        )
-                      ) : (
-                        "--"
-                      )}
+                          "--"
+                        )}
                       </span>
                       <span className="font-bold">Market Price</span>
                     </div>
@@ -1267,8 +1267,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
 
                       {dollarinfo && (
                         <div
-                          className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg
-          "
+                          className="font-orbitron fixed rt0 z-50 mt-2 md:w-[450px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[9px] font-bold text-white shadow-lg"
                           onMouseEnter={() => setDollarInfo(true)}
                           onMouseLeave={() => setDollarInfo(false)}
                         >
@@ -1450,17 +1449,17 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                     </div>
                   </div>
                   <div className="flex justify-between gap-2 items-center 2xl:mt-3 mt-3 md:flex-nowrap flex-wrap mt6">
-                    <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                    <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                       <span>
                         {selectedTokenB ? (
-                        conversionRateTokenB ? (
-                          `$${parseFloat(conversionRateTokenB).toFixed(6)}`
+                          conversionRateTokenB ? (
+                            `$${parseFloat(conversionRateTokenB).toFixed(6)}`
+                          ) : (
+                            <span className="animate-pulse">Loading...</span>
+                          )
                         ) : (
-                          <span className="animate-pulse">Loading...</span>
-                        )
-                      ) : (
-                        "--"
-                      )}
+                          "--"
+                        )}
                       </span>
                       <span className="font-bold">Market Price</span>
                     </div>
@@ -1495,8 +1494,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                       />
                       {dollarinfo1 && (
                         <div
-                          className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg
-          "
+                          className="font-orbitron fixed rt0 z-50 mt-2 md:w-[450px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[9px] font-bold text-white shadow-lg"
                           onMouseEnter={() => setDollarInfo1(true)}
                           onMouseLeave={() => setDollarInfo1(false)}
                         >

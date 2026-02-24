@@ -109,7 +109,7 @@ const ChainModal = ({
     <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
       <div
         ref={modalRef}
-        className="relative w-full max-w-[650px] rounded-3xl bg-black py-6 md:px-10 md:py-12 px-6 clip-bg"
+        className="relative w-full max-w-[650px] rounded-3xl bg-black py-6 md:px-8 md:py-8 px-6 clip-bg"
       >
         {/* Close */}
         <button
@@ -170,7 +170,7 @@ const ChainModal = ({
 /* ---------------------------------
    Main Selector Component
 ---------------------------------- */
-const ChainSelector = ({ onSwitch }) => {
+const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
   const { data: chains, isLoading, error } = useGetChains();
   const { fromChainId, toChainId, setFromChain, setToChain } =
     useGasBridgeStore();
@@ -230,10 +230,13 @@ const ChainSelector = ({ onSwitch }) => {
 
   return (
     <>
-      <div className="space-y-4 lg:h-[355px] h_cs md:h-[350px] h-[300px] flex flex-col justify-between">
+      <div className="space-y-4 lg:h-[340px] h_cs md:h-[340px] h-[285px] flex flex-col justify-between">
         {/* FROM */}
         <button
-          onClick={() => setActiveModal("from")}
+          onClick={() => {
+            setActiveModal("from");
+            setIsChainModalOpen(true);
+          }}
           className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
         >
           {fromChain ? (
@@ -259,7 +262,10 @@ const ChainSelector = ({ onSwitch }) => {
         </button>
         {/* TO */}
         <button
-          onClick={() => setActiveModal("to")}
+          onClick={() => {
+            setActiveModal("to");
+            setIsChainModalOpen(true);
+          }}
           className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
         >
           {toChain ? (
@@ -287,7 +293,10 @@ const ChainSelector = ({ onSwitch }) => {
       {/* FROM MODAL */}
       <ChainModal
         isOpen={activeModal === "from"}
-        onClose={() => setActiveModal(null)}
+        onClose={() => {
+          setActiveModal(null);
+          setIsChainModalOpen(false);
+        }}
         chains={formattedChains}
         selectedChainId={fromChainId}
         onSelectChain={setFromChain}

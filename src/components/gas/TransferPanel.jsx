@@ -60,7 +60,7 @@ const useDebounce = (value, delay) => {
   return debouncedValue;
 };
 
-const TransferPanel = () => {
+const TransferPanel = ({ setIsChainModalOpen }) => {
   const { address: connectedAddress } = useAccount();
   const {
     fromChainId,
@@ -359,6 +359,7 @@ const TransferPanel = () => {
                 <div className="relative">
                   <div className="absolute left-0 top45 z-[9]">
                     <ChainSelector
+                      setIsChainModalOpen={setIsChainModalOpen}
                       onSwitch={(fn) => {
                         switchRef.current = fn;
                       }}
@@ -411,14 +412,14 @@ const TransferPanel = () => {
                   }}
                   className="relative flex-flex-col justify-end items-end w-full cursor-pointer mt-2"
                 >
-                  <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
+                  <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[80px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
                     Max Amount
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                 {isFromPriceLoading ? (
                   <span className="animate-pulse">Loading...</span>
                 ) : fromTokenPrice ? (
@@ -529,7 +530,7 @@ const TransferPanel = () => {
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-3 mt-2">
-              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                 {isToPriceLoading ? (
                   <span className="animate-pulse">Loading...</span>
                 ) : toTokenPrice ? (
@@ -580,17 +581,17 @@ const TransferPanel = () => {
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 placeholder="Recipient Address"
-                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 pr-32 py-10 bg-transparent text-white font-orbitron md:text-sm text-sm truncate outline-none"
+                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 md:pr-36 pr-20 py-10 bg-transparent text-white font-orbitron md:text-sm text-[9px] truncate outline-none"
               />
               <button
-                className={`!absolute !bg-transparent md:w-[90px] w-20 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] text-base font-bold`}
+                className={`!absolute !bg-transparent md:w-[90px] w-16 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] md:text-base text-xs font-bold`}
                 // onClick={handleSelfButtonClick}
               >
                 Self
               </button>
             </div>
           </div>
-          <div className="md:px-1 px-4 md:pt-2 pt-2">
+          <div className="md:px-1 px-1 md:pt-2">
             <button
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}

@@ -34,7 +34,7 @@ const DotsMenu = ({ onTabChange }) => {
 
   return (
     <>
-      <div className="relative md:w-[70px] w-10 md:h-[51px] h-8">
+      <div className="relative">
         <button
           ref={buttonRef}
           onClick={() => setOpen((prev) => !prev)}
@@ -43,7 +43,7 @@ const DotsMenu = ({ onTabChange }) => {
           <img
             src={DotSquare}
             alt="menu"
-            className="md:min-w-9 md:h-9 min-w-5 shrink-0 tilt"
+            className="md:min-w-6 md:h-6 min-w-5 shrink-0 tilt"
           />
         </button>
       </div>

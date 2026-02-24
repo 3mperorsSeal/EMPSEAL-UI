@@ -6,6 +6,7 @@ import { useChainConfig } from "../../hooks/useChainConfig";
 import { useMulticallBalances } from "../../hooks/useMulticallBalances";
 import { useAccount } from "wagmi";
 import Web3 from "web3";
+import EL from "../../assets/images/emp-logo.png";
 
 // Maximum number of tokens to render initially (virtualization)
 const INITIAL_RENDER_LIMIT = 30;
@@ -429,13 +430,13 @@ const Token = ({ onClose, onSelect }) => {
               strokeLinejoin="round"
             />
           </svg>
-
           <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 py-3">
-            <p className="md:text-lg capitalize text-lg font-bold text-white font-orbitron text-center tracking-widest">
+            <h2 className="md:text-lg capitalize text-lg font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+              <img src={EL} alt="EL" className="w-10 object-contain" />
               Select a token
-            </p>
+            </h2>
           </div>
-          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-[24px] px-1">
+          <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-2 px-1">
             {featureTokens.map((token, index) => (
               <div
                 key={index}
@@ -447,13 +448,13 @@ const Token = ({ onClose, onSelect }) => {
                     <img
                       src={token.logoURI || token.image}
                       alt={token.name}
-                      className="w-4 h-4 rounded-full relative z-10 p-[1px] object-contain"
+                      className="w-4 h-4 rounded-full relative z-10 p-[1px] object-contain flex shrink-0"
                       onError={(e) =>
                         (e.target.src = "path/to/fallback/image.png")
                       }
                     />
                   </div>
-                  <p className="text-white font-black text-xs mt-0 ms-2 font-orbitron">
+                  <p className="text-white font-black text-[10px] mt-0 ms-2 font-orbitron truncate w-14">
                     {token.symbol || token.ticker}
                   </p>
                 </span>

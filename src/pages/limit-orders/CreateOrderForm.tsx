@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import Ar from "../../assets/images/reverse.svg";
+// import Ar from "../../assets/images/reverse.svg";
 import MarketTargetChart from "./MarketGraph";
 import {
   createOrderSchema,
@@ -25,7 +25,11 @@ import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Loader2, X, InfoIcon, CheckCircle2 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import { useAccount, useBalance } from "wagmi";
-import { writeContract, waitForTransactionReceipt, readContract } from "@wagmi/core";
+import {
+  writeContract,
+  waitForTransactionReceipt,
+  readContract,
+} from "@wagmi/core";
 import { config } from "../../Wagmi/config";
 import {
   isAddress,
@@ -99,7 +103,6 @@ export function CreateOrderForm({
   const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0);
   const [stopLossPercent, setStopLossPercent] = useState<number>(0);
   // bracket
-  
 
   const form = useForm<CreateOrderInput>({
     resolver: zodResolver(createOrderSchema) as any,
@@ -157,7 +160,7 @@ export function CreateOrderForm({
       setCheckingApproval(true);
       try {
         const amount = parseUnits(amountIn, tokenInInfo.decimals || 18);
-        
+
         const allowance = await readContract(config, {
           address: selectedTokenIn as `0x${string}`,
           abi: erc20Abi,
@@ -485,7 +488,7 @@ export function CreateOrderForm({
 
       // Set approved state to true after successful approval
       setIsApproved(true);
-      
+
       onStatusMessage({
         type: "success",
         message: "Tokens approved successfully!",
@@ -838,7 +841,7 @@ export function CreateOrderForm({
     // Limit to max 100%
     let percentValue = parseFloat(value);
     if (!isNaN(percentValue)) {
-      percentValue = Math.min(100, Math.max(0, percentValue));
+      percentValue = Math.min(10000, Math.max(0, percentValue));
       setCustomPercentage(percentValue.toString());
     } else {
       setCustomPercentage(value);
@@ -866,7 +869,7 @@ export function CreateOrderForm({
       });
     }
   };
-  
+
   // Determine button text and state
   const getButtonContent = () => {
     if (isApproving) {
@@ -877,7 +880,7 @@ export function CreateOrderForm({
         </>
       );
     }
-    
+
     if (isCreating) {
       return (
         <>
@@ -900,10 +903,10 @@ export function CreateOrderForm({
       return (
         <>
           <CheckCircle2 className="mr-2 h-4 w-4" />
-          {orderMode === OrderMode.POSITION 
-            ? "Create Position Protection" 
-            : orderMode === OrderMode.BRACKET 
-              ? "Create Bracket Order" 
+          {orderMode === OrderMode.POSITION
+            ? "Create Position Protection"
+            : orderMode === OrderMode.BRACKET
+              ? "Create Bracket Order"
               : "Create Order"}
         </>
       );
@@ -995,7 +998,7 @@ export function CreateOrderForm({
                       >
                         Buy
                       </button>
-                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg">
+                      <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 md:w-[500px] w-[250px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[9px] font-bold text-white shadow-lg">
                         <span className="text-[#FF9900] font-black">
                           Buy Low
                         </span>{" "}
@@ -1130,7 +1133,7 @@ export function CreateOrderForm({
                               value={selectedTokenIn || undefined}
                             >
                               <SelectTrigger
-                                className="md:h-8 border-none text-center bg-black focus:none px-0 !w-full outline-none text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
+                                className="md:h-8 h-7 border-none text-center bg-black focus:none px-0 !w-full outline-none text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
                                 data-testid="select-token-in"
                               >
                                 <SelectValue placeholder="Select token" />
@@ -1155,7 +1158,7 @@ export function CreateOrderForm({
                                   ),
                                 )}
                                 <SelectItem value="custom">
-                                  <span className="font-medium text-primary font-orbitron cursor-pointer text-white">
+                                  <span className="font-medium !text-sm font-orbitron cursor-pointer text-white">
                                     Custom Address..
                                   </span>
                                 </SelectItem>
@@ -1193,7 +1196,7 @@ export function CreateOrderForm({
                                 <Input
                                   {...form.register("tokenIn")}
                                   placeholder="0x..."
-                                  className="h-12 bg-transparent !focus:none !outline-0  !border-none md:text-xl text-base !font-bold !font-orbitron" // Added padding for logo
+                                  className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron" // Added padding for logo
                                   data-testid="input-token-in-custom"
                                 />
                                 <X
@@ -1260,7 +1263,7 @@ export function CreateOrderForm({
                       />
                     );
                   })()}
-                  <p className="mt-1 md:text-xs text-[10px] text-white text-right font-extrabold">
+                  <p className="mt-1 md:text-xs text-[7px] text-white text-right">
                     {tokenInInfo
                       ? `In ${tokenInInfo.symbol} (${tokenInInfo.decimals} decimals)`
                       : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
@@ -1268,7 +1271,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                   {selectedTokenIn ? (
                     tokenInUSDPrice ? (
                       `$${tokenInUSDPrice.toFixed(6)}`
@@ -1315,7 +1318,7 @@ export function CreateOrderForm({
 
                         {dollarinfo && (
                           <div
-                            className="roboto fixed rt0 z-50 mt-2 md:w-[500px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg"
+                            className="font-orbitron fixed rt0 z-50 mt-2 md:w-[450px] w-[300px] whitespace-pre-wrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[10px] font-bold text-white shadow-lg"
                             onMouseEnter={() => setDollarInfo(true)}
                             onMouseLeave={() => setDollarInfo(false)}
                           >
@@ -1326,7 +1329,7 @@ export function CreateOrderForm({
                           </div>
                         )}
                       </div>
-                      <span>
+                      <span className="font-orbitron font-bold">
                         $
                         {formatNumber(
                           (parseFloat(amountIn) * tokenInUSDPrice).toFixed(2),
@@ -1335,7 +1338,7 @@ export function CreateOrderForm({
                     </div>
                   )}
               </div>
-              <div className="text-right text-white font-extrabold text-sm relative roboto truncate">
+              <div className="text-right text-white font-extrabold text-sm relative font-orbitron truncate">
                 {form.formState.errors.amountIn && (
                   <p className="mt-1 text-sm text-destructive">
                     {form.formState.errors.amountIn.message}
@@ -1350,11 +1353,28 @@ export function CreateOrderForm({
               onClick={handleSwapTokens}
               data-testid="button-swap-tokens"
             >
-              <img
-                src={Ar}
-                alt="Ar"
-                className="hoverswap transition-all rounded-xl"
-              />
+              <svg
+                className="hoverswap transition-all rounded-xl md:w-[50px] w-12"
+                width={50}
+                height={50}
+                viewBox="0 0 70 70"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <rect width={70} height={70} rx={12} fill="#F59216" />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M48.7375 36.0911C49.3099 36.5901 49.3694 37.4588 48.8704 38.0311L39.5371 48.7371C39.1603 49.1692 38.5549 49.3221 38.0181 49.121C37.4813 48.9198 37.1257 48.4067 37.1257 47.8334L37.1257 22.1667C37.1257 21.4074 37.7413 20.7917 38.5007 20.7917C39.26 20.7917 39.8756 21.4074 39.8756 22.1667L39.8756 44.1638L46.7975 36.224C47.2965 35.6516 48.1651 35.5921 48.7375 36.0911Z"
+                  fill="black"
+                />
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M21.2632 33.9089C20.6907 33.4099 20.6313 32.5412 21.1303 31.9689L30.4636 21.263C30.8404 20.8309 31.4457 20.6778 31.9825 20.879C32.5193 21.0802 32.875 21.5933 32.875 22.1666L32.875 47.8332C32.875 48.5926 32.2594 49.2082 31.5 49.2082C30.7406 49.2082 30.125 48.5926 30.125 47.8332L30.125 25.8362L23.2031 33.776C22.704 34.3483 21.8356 34.4079 21.2632 33.9089Z"
+                  fill="black"
+                />
+              </svg>
             </div>
             {/*  */}
             <div className="relative pb-4 bg_swap_box_black">
@@ -1400,7 +1420,7 @@ export function CreateOrderForm({
                               value={selectedTokenOut || undefined}
                             >
                               <SelectTrigger
-                                className="md:h-8 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
+                                className="md:h-8 h-7 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
                                 data-testid="select-token-out"
                               >
                                 <SelectValue placeholder="Select token" />
@@ -1424,7 +1444,7 @@ export function CreateOrderForm({
                                   ),
                                 )}
                                 <SelectItem value="custom">
-                                  <span className="font-medium text-white font-orbitron cursor-pointer">
+                                  <span className="font-medium text-white font-orbitron cursor-pointer !text-sm">
                                     Custom Address..
                                   </span>
                                 </SelectItem>
@@ -1462,7 +1482,7 @@ export function CreateOrderForm({
                                 <Input
                                   {...form.register("tokenOut")}
                                   placeholder="0x..."
-                                  className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-xl text-base !font-bold !font-orbitron !text-white"
+                                  className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron !text-white"
                                   data-testid="input-token-out-custom"
                                 />
                                 <X
@@ -1530,7 +1550,7 @@ export function CreateOrderForm({
                       />
                     );
                   })()}
-                  <p className="mt-1 md:text-xs text-[10px] text-white text-right font-extrabold">
+                  <p className="mt-1 md:text-xs text-[7px] text-white text-right">
                     {tokenOutInfo
                       ? `In ${tokenOutInfo.symbol} (${tokenOutInfo.decimals} decimals)`
                       : "Decimal value (e.g., 1.5 for 1.5 tokens)"}
@@ -1538,7 +1558,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                   {selectedTokenOut ? (
                     tokenOutUSDPrice ? (
                       `$${tokenOutUSDPrice.toFixed(6)}`
@@ -1571,7 +1591,7 @@ export function CreateOrderForm({
               </div>
 
               {/* Partial Fill */}
-              <div className="text-right text-white font-bold text-sm relative roboto truncate">
+              <div className="text-right text-white font-bold text-sm relative font-orbitron truncate">
                 {form.formState.errors.minAmountOut && (
                   <p className="mt-1 text-sm text-destructive">
                     {form.formState.errors.minAmountOut.message}
@@ -1903,7 +1923,7 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="100"
+                          max="10000"
                           step="1"
                           value={targetPosition}
                           onChange={(e) => {
@@ -1924,7 +1944,7 @@ export function CreateOrderForm({
                                 // For BUY and BRACKET: moving left decreases price (below market)
                                 // Convert slider position to percentage below market
                                 const percentBelowMarket =
-                                  100 - newTargetPosition;
+                                  10000 - newTargetPosition;
                                 newLimitPrice =
                                   market * (1 - percentBelowMarket / 100);
                                 // Update custom percentage
@@ -1994,7 +2014,7 @@ export function CreateOrderForm({
                         placeholder="0"
                         className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
                         min="0"
-                        max="100"
+                        max="10000"
                         step="0.1"
                       />
                       <span className="text-black font-bold">%</span>
@@ -2110,7 +2130,7 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="100"
+                          max="10000"
                           step="1"
                           value={stopLossPercent || 0}
                           onChange={(e) => {
@@ -2129,10 +2149,10 @@ export function CreateOrderForm({
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
                         <span>0</span>
-                        <span>25</span>
-                        <span>50</span>
-                        <span>75</span>
-                        <span>100</span>
+                        <span>2500</span>
+                        <span>5000</span>
+                        <span>7500</span>
+                        <span>10000</span>
                       </div>
                     </div>
 
@@ -2211,7 +2231,7 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="100"
+                          max="10000"
                           step="1"
                           value={takeProfitPercent || 0}
                           onChange={(e) => {
@@ -2230,10 +2250,10 @@ export function CreateOrderForm({
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
                         <span>0</span>
-                        <span>25</span>
-                        <span>50</span>
-                        <span>75</span>
-                        <span>100</span>
+                        <span>2500</span>
+                        <span>5000</span>
+                        <span>7500</span>
+                        <span>10000</span>
                       </div>
                     </div>
 
@@ -2329,7 +2349,7 @@ export function CreateOrderForm({
                           onClick={() => setFillMode(1)}
                           className={`${
                             fillMode === 1 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 3
                         </button>
@@ -2338,7 +2358,7 @@ export function CreateOrderForm({
                           onClick={() => setFillMode(2)}
                           className={`${
                             fillMode === 2 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 5
                         </button>
@@ -2347,7 +2367,7 @@ export function CreateOrderForm({
                           onClick={() => setFillMode(3)}
                           className={`${
                             fillMode === 3 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 10
                         </button>
@@ -2368,7 +2388,7 @@ export function CreateOrderForm({
                 <div className="md:px-2 px-2">
                   <hr className="border-[#FF9900]/30 my-2" />
                   {/* Partial Fill */}
-                  <div className="flex gap-4 items-center mt-4 px-4 md:flex-nowrap flex-wrap">
+                  <div className="flex gap-4 items-center mt-4 md:px-4 md:flex-nowrap flex-wrap">
                     <div className="md:text-xl font-bold text-base text-[#FF9900]">
                       Expiry{" "}
                     </div>
@@ -2387,10 +2407,10 @@ export function CreateOrderForm({
                       />
                     </div>
                     {/* Slip */}
-                    <div className="flex">
+                    <div className="flex w-full">
                       <div
                         onClick={onOpenSlippage}
-                        className="shrink-0 bg-black px-6 py-3 border border-white rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
+                        className="w-full shrink-0 bg-black px-6 py-2 border border-white rounded-lg flex justify-center items-center hoverswap transition-all cursor-pointer group"
                       >
                         <p className="text-[#FF9900] text-sm font-extrabold font-orbitron">
                           SLIPPAGE

@@ -1117,7 +1117,7 @@ const BridgeInterface = () => {
                               setSelectedPercentage(100);
                             }
                           }}
-                          className="mt-2 ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[100px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
+                          className="mt-2 ml-auto py-1 border border-[#FF9900] flex justify-center items-center rounded-xl md:text-[10px] text-[7px] font-medium font-orbitron md:w-[100px] w-[80px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black"
                         >
                           MAX AMOUNT
                         </button>
@@ -1127,7 +1127,7 @@ const BridgeInterface = () => {
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                   {isPriceLoading ? (
                     <span className="animate-pulse">Loading...</span>
                   ) : tokenPrice ? (
@@ -1276,7 +1276,7 @@ const BridgeInterface = () => {
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-sm flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
                   {isDestPriceLoading ? (
                     <span className="animate-pulse">Loading...</span>
                   ) : destTokenPrice ? (
@@ -1316,10 +1316,10 @@ const BridgeInterface = () => {
               value={recipient}
               onChange={(e) => setRecipient(e.target.value)}
               placeholder="0x..."
-              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 pr-36 py-10 bg-transparent text-white font-orbitron md:text-sm text-sm truncate outline-none"
+              className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 md:pr-36 pr-20 py-10 bg-transparent text-white font-orbitron md:text-sm text-[9px] truncate outline-none"
             />
             <button
-              className={`!absolute !bg-transparent md:w-[90px] w-20 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] text-base font-bold`}
+              className={`!absolute !bg-transparent md:w-[90px] w-16 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] md:text-base text-xs font-bold`}
               // onClick={handleSelfButtonClick}
             >
               Self
@@ -1437,7 +1437,7 @@ const BridgeInterface = () => {
         />
         <hr className="mt-4" />
         {/* Instructions */}
-        <div className="w-full md:px-0 px-4 md:pb-10 pb-6">
+        <div className="w-full md:px-0 px-1 md:pb-10 pb-6">
           <div className="mt-5 md:max-w-[1300px] w-full mx-auto bg-[#100C06] border border-[#100C06] rounded-xl lg:px-12 px-6 lg:py-10 py-10">
             <h2 className="md:text-[40px] text-[32px] font-extrabold text-white mb-10 font-orbitron">
               How It Works

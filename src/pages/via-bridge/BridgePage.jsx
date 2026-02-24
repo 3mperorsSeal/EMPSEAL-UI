@@ -37,7 +37,7 @@ const BridgePage = () => {
               EMPX <span className="text-white">X</span> VIA <br />
               <span className="text-white">BRIDGE</span>
             </h1>
-            <div className="flex justify-center gap-4 mt-7 md:flex-nowrap flex-wrap md:max-w-[600px] w-full mx-auto md:px-0 px-20">
+            <div className="flex justify-center gap-4 md:mt-7 mt-2 md:flex-nowrap md:max-w-[600px] w-full mx-auto md:px-0 px-1">
               {/* Cross Chain Swap */}
               {/* <Link to="/" className="w-full">
                 <div
@@ -60,7 +60,7 @@ const BridgePage = () => {
                     activeTab === "native" ? "border-[#FF9900]" : "border-black bg-black"
                   } 
       px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
-      rounded-md border text-white text-[15px] font-bold roboto`}
+      rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
                   Native Bridge
                 </div>
@@ -75,7 +75,7 @@ const BridgePage = () => {
                       : "border-white"
                   } 
       px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
-      rounded-md border text-white text-[15px] font-bold roboto`}
+      rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
                   Via Bridge
                 </div>
