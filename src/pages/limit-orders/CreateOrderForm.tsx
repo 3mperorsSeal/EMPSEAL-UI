@@ -920,7 +920,7 @@ export function CreateOrderForm({
       <div className="lg:max-w-[1300px] md:max-w-[1200px] mx-auto w-full md:mt-10 mt-2">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6 flex 2xl:gap-12 lg:gap-8 gap-5 justify-center lg:flex-now flex-wrap"
+          className="space-y-6 flex 2xl:gap-12 lg:gap-8 gap-5 justify-center lg:flex-nowrap flex-wrap"
         >
           <div className="md:max-w-[700px] w-full">
             {/* Strategy Selection */}
@@ -1779,7 +1779,6 @@ export function CreateOrderForm({
                       ? "Exit Price"
                       : "Entry Price"}
                   </h2>
-
                   <div className="flex gap-1 items-center w-full">
                     <input
                       id="limitPrice"
@@ -1791,7 +1790,6 @@ export function CreateOrderForm({
                     />
                   </div>
                 </div>
-
                 {/* Quote reversal button and display */}
                 <div className="text-right flex gap-2 items-center justify-end mt-2">
                   {marketPrice && tokenInInfo && tokenOutInfo && (
@@ -1923,8 +1921,8 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="10000"
-                          step="1"
+                          max="100"
+                          step="0.1"
                           value={targetPosition}
                           onChange={(e) => {
                             const newTargetPosition = Number(e.target.value);
@@ -1944,7 +1942,7 @@ export function CreateOrderForm({
                                 // For BUY and BRACKET: moving left decreases price (below market)
                                 // Convert slider position to percentage below market
                                 const percentBelowMarket =
-                                  10000 - newTargetPosition;
+                                  100 - newTargetPosition;
                                 newLimitPrice =
                                   market * (1 - percentBelowMarket / 100);
                                 // Update custom percentage
@@ -2130,8 +2128,8 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="10000"
-                          step="1"
+                          max="100"
+                          step="0.1"
                           value={stopLossPercent || 0}
                           onChange={(e) => {
                             const percent = Number(e.target.value);
@@ -2231,8 +2229,8 @@ export function CreateOrderForm({
                         <input
                           type="range"
                           min="0"
-                          max="10000"
-                          step="1"
+                          max="100"
+                          step="0.1"
                           value={takeProfitPercent || 0}
                           onChange={(e) => {
                             const percent = Number(e.target.value);

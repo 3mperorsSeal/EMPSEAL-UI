@@ -1059,7 +1059,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
             }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-1 px-3 pb-2">
-            <h1 className="2xl:text-[43px] 2xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
+            <h1 className="2xl:text-[43px] xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
               {!order ? (
                 <>
                   Optimized <br />{" "}
