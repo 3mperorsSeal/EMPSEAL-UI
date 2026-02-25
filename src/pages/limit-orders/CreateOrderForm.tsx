@@ -76,6 +76,7 @@ export function CreateOrderForm({
   const [stopLossPrice, setStopLossPrice] = useState<string>("");
   const [stopLossDeadline, setStopLossDeadline] = useState<string>("");
   const [takeProfitDeadline, setTakeProfitDeadline] = useState<string>("");
+  const [exitTokenAddress, setExitTokenAddress] = useState<string>("");
   const [orderMode, setOrderMode] = useState<OrderMode>(OrderMode.STANDARD);
 
   const { address: userAddress } = useAccount();
@@ -122,6 +123,25 @@ export function CreateOrderForm({
   const selectedTokenOut = form.watch("tokenOut");
   const currentLimitPrice = form.watch("limitPrice");
   const currentStrategy = form.watch("strategy");
+  const normalizedExitToken = exitTokenAddress.trim();
+  const hasExitTokenInput = normalizedExitToken.length > 0;
+  const exitTokenValidationError = hasExitTokenInput
+    ? !isAddress(normalizedExitToken)
+      ? "Exit token must be a valid EVM address"
+      : normalizedExitToken.toLowerCase() === zeroAddress
+        ? "Exit token cannot be the zero address when explicitly provided"
+        : null
+    : null;
+  const positionExitTokenError =
+    orderMode === OrderMode.POSITION
+      ? !hasExitTokenInput
+        ? "Exit token is required for position protection"
+        : !exitTokenValidationError &&
+            selectedTokenIn &&
+            normalizedExitToken.toLowerCase() === selectedTokenIn.toLowerCase()
+          ? "Exit token must be different from the protected token"
+          : null
+      : null;
   const tokenInInfo =
     customTokenIn && customTokenIn.address === selectedTokenIn
       ? customTokenIn
@@ -407,8 +427,10 @@ export function CreateOrderForm({
       setShowBracketSettings(false);
       setTakeProfitPrice("");
       setStopLossPrice("");
+      setTakeProfitDeadline("");
       setTakeProfitPercent(0);
       setStopLossPercent(0);
+      setExitTokenAddress("");
     }
   }, [currentStrategy]);
 
@@ -531,8 +553,26 @@ export function CreateOrderForm({
       );
       const mode = partialFillEnabled ? fillMode : 0;
       const orderType = data.strategy === OrderStrategy.SELL ? 0 : 1; // 0 for SELL, 1 for BUY
+      const bracketOrderType = 0; // Bracket is hard-forced to SELL in this architecture
+      const hasValidCustomExitToken =
+        hasExitTokenInput && !exitTokenValidationError;
+      const bracketExitToken = hasValidCustomExitToken
+        ? (normalizedExitToken as `0x${string}`)
+        : zeroAddress;
+      const positionExitToken = hasValidCustomExitToken
+        ? (normalizedExitToken as `0x${string}`)
+        : null;
 
       let hash: `0x${string}`;
+
+      if (exitTokenValidationError) {
+        onStatusMessage({
+          type: "error",
+          message: exitTokenValidationError,
+        });
+        setIsCreating(false);
+        return;
+      }
 
       // Validation for bracket orders (SELL only)
       if (orderMode === OrderMode.BRACKET) {
@@ -543,6 +583,25 @@ export function CreateOrderForm({
           onStatusMessage({
             type: "error",
             message: "Please enter valid Stop Loss and Take Profit prices",
+          });
+          setIsCreating(false);
+          return;
+        }
+
+        if (!takeProfitDeadline) {
+          onStatusMessage({
+            type: "error",
+            message: "Please set SL/TP expiry",
+          });
+          setIsCreating(false);
+          return;
+        }
+
+        const slTpExpiry = new Date(takeProfitDeadline).getTime();
+        if (!Number.isFinite(slTpExpiry) || slTpExpiry <= Date.now()) {
+          onStatusMessage({
+            type: "error",
+            message: "SL/TP expiry must be a future date and time",
           });
           setIsCreating(false);
           return;
@@ -560,10 +619,10 @@ export function CreateOrderForm({
       }
 
       if (orderMode === OrderMode.POSITION) {
-        if (!data.tokenOut || data.tokenOut === zeroAddress) {
+        if (positionExitTokenError) {
           onStatusMessage({
             type: "error",
-            message: "Please select a Token to Protect Into (Exit Token)",
+            message: positionExitTokenError,
           });
           setIsCreating(false);
           return;
@@ -576,6 +635,25 @@ export function CreateOrderForm({
           onStatusMessage({
             type: "error",
             message: "Please enter valid Stop Loss and Take Profit prices",
+          });
+          setIsCreating(false);
+          return;
+        }
+
+        if (!takeProfitDeadline) {
+          onStatusMessage({
+            type: "error",
+            message: "Please set SL/TP expiry",
+          });
+          setIsCreating(false);
+          return;
+        }
+
+        const slTpExpiry = new Date(takeProfitDeadline).getTime();
+        if (!Number.isFinite(slTpExpiry) || slTpExpiry <= Date.now()) {
+          onStatusMessage({
+            type: "error",
+            message: "SL/TP expiry must be a future date and time",
           });
           setIsCreating(false);
           return;
@@ -637,8 +715,8 @@ export function CreateOrderForm({
             minAmountOut, // Entry Min Out
             limitPrice, // Entry Limit Price
             deadline, // Entry Deadline
-            orderType, // Entry Order Type
-            data.tokenIn as `0x${string}`, // Exit Token
+            bracketOrderType, // Entry Order Type
+            bracketExitToken, // Exit Token (zero address defaults to tokenIn in contract)
             slPrice,
             slMinOut,
             bracketExpiry,
@@ -670,7 +748,7 @@ export function CreateOrderForm({
           functionName: "createPositionBracket",
           args: [
             data.tokenIn as `0x${string}`,
-            data.tokenOut as `0x${string}`, // Exit Token
+            positionExitToken as `0x${string}`, // Exit Token
             amountIn,
             slPrice,
             slMinOut,
@@ -718,6 +796,7 @@ export function CreateOrderForm({
       setStopLossPrice("");
       setTakeProfitDeadline("");
       setOrderMode(OrderMode.STANDARD);
+      setExitTokenAddress("");
       setIsApproved(false); // Reset approval state after order creation
 
       // Only trigger the client update if we actually found a valid ID
@@ -954,6 +1033,7 @@ export function CreateOrderForm({
                           form.setValue("strategy", OrderStrategy.SELL);
                           setOrderMode(OrderMode.STANDARD);
                           setShowBracketSettings(false);
+                          setExitTokenAddress("");
                         }}
                         data-testid="button-strategy-sell"
                       >
@@ -993,6 +1073,7 @@ export function CreateOrderForm({
                           form.setValue("strategy", OrderStrategy.BUY);
                           setOrderMode(OrderMode.STANDARD);
                           setShowBracketSettings(false);
+                          setExitTokenAddress("");
                         }}
                         data-testid="button-strategy-buy"
                       >
@@ -1039,6 +1120,7 @@ export function CreateOrderForm({
                         onClick={() => {
                           setOrderMode(OrderMode.BRACKET);
                           setShowBracketSettings(true);
+                          setExitTokenAddress("");
                           form.setValue("strategy", OrderStrategy.BRACKET);
                         }}
                         data-testid="button-bracket"
@@ -1067,6 +1149,7 @@ export function CreateOrderForm({
                         onClick={() => {
                           setOrderMode(OrderMode.POSITION);
                           setShowBracketSettings(true);
+                          setExitTokenAddress(form.getValues("tokenOut") || "");
                           form.setValue("strategy", OrderStrategy.BRACKET);
                         }}
                         data-testid="button-position"
@@ -1746,6 +1829,8 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
+                  !!exitTokenValidationError ||
+                  !!positionExitTokenError ||
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
@@ -2069,6 +2154,43 @@ export function CreateOrderForm({
             {/* Bracket Settings */}
             {showBracketSettings && (
               <>
+                <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4">
+                  <div className="flex justify-between items-center gap-3">
+                    <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron">
+                      Exit Token {orderMode === OrderMode.POSITION ? "" : "(Optional)"}
+                    </h2>
+                    <button
+                      type="button"
+                      onClick={() => setExitTokenAddress(selectedTokenIn || "")}
+                      className="px-3 py-1 text-[10px] md:text-xs bg-[#FFE3BA] text-black rounded-full font-bold font-orbitron"
+                    >
+                      Use entry token
+                    </button>
+                  </div>
+                  <Input
+                    value={exitTokenAddress}
+                    onChange={(e) => setExitTokenAddress(e.target.value)}
+                    placeholder="0x..."
+                    className="mt-3 bg-black border border-[#FF9900] text-white font-orbitron"
+                    data-testid="input-exit-token"
+                  />
+                  <p className="mt-2 text-[10px] md:text-xs text-[#FFE3BA] font-orbitron">
+                    {orderMode === OrderMode.POSITION
+                      ? "Required for position protection. Must be a valid non-zero token address."
+                      : "If empty, exits back to your entry token."}
+                  </p>
+                  {exitTokenValidationError && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {exitTokenValidationError}
+                    </p>
+                  )}
+                  {positionExitTokenError && (
+                    <p className="mt-1 text-sm text-destructive">
+                      {positionExitTokenError}
+                    </p>
+                  )}
+                </div>
+
                 {/* Bracket Direction Helper */}
                 {/* {orderMode === OrderMode.BRACKET && (
                   <div className="mb-4 p-3 bg-black border-4 border-[#FF9900] rounded-lg">
@@ -2549,6 +2671,8 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
+                  !!exitTokenValidationError ||
+                  !!positionExitTokenError ||
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }

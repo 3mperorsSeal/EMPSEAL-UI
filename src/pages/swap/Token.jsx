@@ -437,7 +437,7 @@ const Token = ({ onClose, onSelect }) => {
             </h2>
           </div>
           <div className="grid md:grid-cols-5 grid-cols-3 gap-2 mt-4 md:px-2 px-1">
-            {featureTokens.slice(0, 8).map((token, index) => (
+            {featureTokens.slice(0, 10).map((token, index) => (
               <div
                 key={index}
                 className="flex flex-row items-center cursor-pointer font-orbitron md:rounded-xl rounded-lg border border-[#FF9900] md:p-[12px] p-2"

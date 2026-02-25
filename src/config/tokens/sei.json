@@ -18,12 +18,11 @@
     },
     {
       "address": "0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1",
-      "name": "USDC",
-      "ticker": "USDC",
+      "name": "USDC.n",
+      "ticker": "USDC.n",
       "blockchainNetwork": "SEI",
       "network": "SEI",
       "whitelisted": true,
-      "featured": true,
       "decimal": 6,
       "image": "http://api-assets.rubic.exchange/assets/coingecko/sei/0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1/logo.png",
       "rank": 8,
@@ -33,6 +32,17 @@
       "token_security": null,
       "usdPriceChangePercentage24h": 0.40844053113161,
       "usdPriceChangePercentage7d": 0.20954299265317
+    },
+    {
+      "address": "0xe15fc38f6d8c56af07bbcbe3baf5708a2bf42392",
+      "name": "USDC",
+      "ticker": "USDC",
+      "blockchainNetwork": "SEI",
+      "network": "SEI",
+      "whitelisted": true,
+      "featured": true,
+      "decimal": 6,
+      "image": "http://api-assets.rubic.exchange/assets/coingecko/sei/0xe15fc38f6d8c56af07bbcbe3baf5708a2bf42392/logo.png"
     },
     {
       "address": "0xe30fedd158a2e3b13e9badaeabafc5516e95e8c7",
@@ -51,6 +61,50 @@
       "token_security": null,
       "usdPriceChangePercentage24h": -3.95173123906763,
       "usdPriceChangePercentage7d": 2.35739861183821
+    },
+    {
+      "address": "0x9151434b16b9763660705744891fa906f660ecc5",
+      "name": "USD0",
+      "ticker": "USD0",
+      "blockchainNetwork": "SEI",
+      "network": "SEI",
+      "whitelisted": true,
+      "featured": true,
+      "decimal": 6,
+      "image": "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F53705%2Flarge%2Fusdt0.jpg%3F1737086183&w=96&q=75"
+    },
+    {
+      "address": "0xc257361320f4514d91c05f461006ce6a0300e2d2",
+      "name": "spSEI",
+      "ticker": "spSEI",
+      "blockchainNetwork": "SEI",
+      "network": "SEI",
+      "whitelisted": true,
+      "featured": true,
+      "decimal": 18,
+      "image": "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F68734%2Flarge%2Flogo_spSEI.png%3F1756409469&w=96&q=75"
+    },
+    {
+      "address": "0x54cd901491aef397084453f4372b93c33260e2a6",
+      "name": "USDY",
+      "ticker": "USDY",
+      "blockchainNetwork": "SEI",
+      "network": "SEI",
+      "whitelisted": true,
+      "featured": true,
+      "decimal": 18,
+      "image": "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F31700%2Flarge%2Fusdy_%25281%2529.png%3F1696530524&w=96&q=75"
+    },
+    {
+      "address": "0x5cf6826140c1c56ff49c808a1a75407cd1df9423",
+      "name": "iSEI",
+      "ticker": "iSEI",
+      "blockchainNetwork": "SEI",
+      "network": "SEI",
+      "whitelisted": true,
+      "featured": true,
+      "decimal": 6,
+      "image": "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F38591%2Flarge%2FiSEI_logo_200_200.png%3F1718091709&w=96&q=75"
     },
     {
       "address": "0xb75d0b03c06a926e488e2659df1a861f860bd3d1",
