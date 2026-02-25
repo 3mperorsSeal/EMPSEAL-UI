@@ -88,6 +88,9 @@ export function CreateOrderForm({
   const [tokenOutMode, setTokenOutMode] = useState<"select" | "custom">(
     "select",
   );
+  const [exitTokenMode, setExitTokenMode] = useState<"select" | "custom">(
+    "select",
+  );
   const [customTokenIn, setCustomTokenIn] = useState<any>(null);
   const [customTokenOut, setCustomTokenOut] = useState<any>(null);
   const [partialFillEnabled, setPartialFillEnabled] = useState(false);
@@ -132,16 +135,6 @@ export function CreateOrderForm({
         ? "Exit token cannot be the zero address when explicitly provided"
         : null
     : null;
-  const positionExitTokenError =
-    orderMode === OrderMode.POSITION
-      ? !hasExitTokenInput
-        ? "Exit token is required for position protection"
-        : !exitTokenValidationError &&
-            selectedTokenIn &&
-            normalizedExitToken.toLowerCase() === selectedTokenIn.toLowerCase()
-          ? "Exit token must be different from the protected token"
-          : null
-      : null;
   const tokenInInfo =
     customTokenIn && customTokenIn.address === selectedTokenIn
       ? customTokenIn
@@ -430,6 +423,7 @@ export function CreateOrderForm({
       setTakeProfitDeadline("");
       setTakeProfitPercent(0);
       setStopLossPercent(0);
+      setExitTokenMode("select");
       setExitTokenAddress("");
     }
   }, [currentStrategy]);
@@ -451,6 +445,16 @@ export function CreateOrderForm({
     } else {
       setTokenOutMode("select");
       form.setValue("tokenOut", value);
+    }
+  };
+
+  const handleExitTokenSelect = (value: string) => {
+    if (value === "custom") {
+      setExitTokenMode("custom");
+      setExitTokenAddress("");
+    } else {
+      setExitTokenMode("select");
+      setExitTokenAddress(value);
     }
   };
 
@@ -556,16 +560,17 @@ export function CreateOrderForm({
       const bracketOrderType = 0; // Bracket is hard-forced to SELL in this architecture
       const hasValidCustomExitToken =
         hasExitTokenInput && !exitTokenValidationError;
+      const defaultBracketExitToken =
+        data.tokenOut && isAddress(data.tokenOut)
+          ? (data.tokenOut as `0x${string}`)
+          : zeroAddress;
       const bracketExitToken = hasValidCustomExitToken
         ? (normalizedExitToken as `0x${string}`)
-        : zeroAddress;
-      const positionExitToken = hasValidCustomExitToken
-        ? (normalizedExitToken as `0x${string}`)
-        : null;
+        : defaultBracketExitToken;
 
       let hash: `0x${string}`;
 
-      if (exitTokenValidationError) {
+      if (orderMode === OrderMode.BRACKET && exitTokenValidationError) {
         onStatusMessage({
           type: "error",
           message: exitTokenValidationError,
@@ -619,10 +624,10 @@ export function CreateOrderForm({
       }
 
       if (orderMode === OrderMode.POSITION) {
-        if (positionExitTokenError) {
+        if (!data.tokenOut || data.tokenOut === zeroAddress) {
           onStatusMessage({
             type: "error",
-            message: positionExitTokenError,
+            message: "Please select a Token to Protect Into (Exit Token)",
           });
           setIsCreating(false);
           return;
@@ -716,7 +721,7 @@ export function CreateOrderForm({
             limitPrice, // Entry Limit Price
             deadline, // Entry Deadline
             bracketOrderType, // Entry Order Type
-            bracketExitToken, // Exit Token (zero address defaults to tokenIn in contract)
+            bracketExitToken, // Exit Token (defaults to entry tokenOut when empty)
             slPrice,
             slMinOut,
             bracketExpiry,
@@ -748,7 +753,7 @@ export function CreateOrderForm({
           functionName: "createPositionBracket",
           args: [
             data.tokenIn as `0x${string}`,
-            positionExitToken as `0x${string}`, // Exit Token
+            data.tokenOut as `0x${string}`, // Exit Token
             amountIn,
             slPrice,
             slMinOut,
@@ -796,6 +801,7 @@ export function CreateOrderForm({
       setStopLossPrice("");
       setTakeProfitDeadline("");
       setOrderMode(OrderMode.STANDARD);
+      setExitTokenMode("select");
       setExitTokenAddress("");
       setIsApproved(false); // Reset approval state after order creation
 
@@ -847,12 +853,13 @@ export function CreateOrderForm({
     let newPrice = market;
 
     if (percent !== "market") {
-      const multiplier =
-        currentStrategy === OrderStrategy.SELL
-          ? 1 + percent / 100
-          : 1 - percent / 100;
-
-      newPrice = market * multiplier;
+      if (currentStrategy === OrderStrategy.SELL) {
+        newPrice = market * (1 + percent / 100);
+      } else if (currentStrategy === OrderStrategy.BUY) {
+        newPrice = market / (1 + percent / 100);
+      } else {
+        newPrice = market * (1 + percent / 100);
+      }
     }
 
     form.setValue("limitPrice", newPrice.toFixed(8), {
@@ -917,7 +924,7 @@ export function CreateOrderForm({
 
   // Add this function to handle custom percentage changes
   const handleCustomPercentageChange = (value: string) => {
-    // Limit to max 100%
+    // Limit to max 10000%
     let percentValue = parseFloat(value);
     if (!isNaN(percentValue)) {
       percentValue = Math.min(10000, Math.max(0, percentValue));
@@ -935,8 +942,8 @@ export function CreateOrderForm({
         // For SELL: price above market by X%
         newLimitPrice = market * (1 + percentValue / 100);
       } else if (currentStrategy === OrderStrategy.BUY) {
-        // For BUY: price below market by X%
-        newLimitPrice = market * (1 - percentValue / 100);
+        // For BUY: inverse of SELL movement to keep values positive across 0-10000%
+        newLimitPrice = market / (1 + percentValue / 100);
       } else {
         // For BRACKET or other strategies
         newLimitPrice = market * (1 + percentValue / 100);
@@ -946,6 +953,26 @@ export function CreateOrderForm({
         shouldValidate: true,
         shouldDirty: true,
       });
+    }
+  };
+
+  const applyStopLossPercent = (percent: number) => {
+    const safePercent = Math.min(10000, Math.max(0, percent));
+    setStopLossPercent(safePercent);
+    if (marketPrice) {
+      const market = Number(marketPrice);
+      const stopLossValue = market * (1 + safePercent / 100);
+      setStopLossPrice(stopLossValue.toFixed(4));
+    }
+  };
+
+  const applyTakeProfitPercent = (percent: number) => {
+    const safePercent = Math.min(10000, Math.max(0, percent));
+    setTakeProfitPercent(safePercent);
+    if (marketPrice) {
+      const market = Number(marketPrice);
+      const takeProfitValue = market / (1 + safePercent / 100);
+      setTakeProfitPrice(takeProfitValue.toFixed(4));
     }
   };
 
@@ -1033,6 +1060,7 @@ export function CreateOrderForm({
                           form.setValue("strategy", OrderStrategy.SELL);
                           setOrderMode(OrderMode.STANDARD);
                           setShowBracketSettings(false);
+                          setExitTokenMode("select");
                           setExitTokenAddress("");
                         }}
                         data-testid="button-strategy-sell"
@@ -1073,6 +1101,7 @@ export function CreateOrderForm({
                           form.setValue("strategy", OrderStrategy.BUY);
                           setOrderMode(OrderMode.STANDARD);
                           setShowBracketSettings(false);
+                          setExitTokenMode("select");
                           setExitTokenAddress("");
                         }}
                         data-testid="button-strategy-buy"
@@ -1120,6 +1149,7 @@ export function CreateOrderForm({
                         onClick={() => {
                           setOrderMode(OrderMode.BRACKET);
                           setShowBracketSettings(true);
+                          setExitTokenMode("select");
                           setExitTokenAddress("");
                           form.setValue("strategy", OrderStrategy.BRACKET);
                         }}
@@ -1149,7 +1179,8 @@ export function CreateOrderForm({
                         onClick={() => {
                           setOrderMode(OrderMode.POSITION);
                           setShowBracketSettings(true);
-                          setExitTokenAddress(form.getValues("tokenOut") || "");
+                          setExitTokenMode("select");
+                          setExitTokenAddress("");
                           form.setValue("strategy", OrderStrategy.BRACKET);
                         }}
                         data-testid="button-position"
@@ -1829,8 +1860,8 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  !!exitTokenValidationError ||
-                  !!positionExitTokenError ||
+                  (orderMode === OrderMode.BRACKET &&
+                    !!exitTokenValidationError) ||
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
@@ -1921,59 +1952,43 @@ export function CreateOrderForm({
 
                   let targetPosition = 0;
                   let priceDiffPercent = 0;
+                  const isSellLikeStrategy =
+                    currentStrategy === OrderStrategy.SELL ||
+                    currentStrategy === OrderStrategy.BRACKET;
 
                   if (market > 0 && limit > 0) {
-                    if (currentStrategy === OrderStrategy.SELL) {
-                      // For SELL: limit higher than market
+                    if (isSellLikeStrategy) {
+                      // For SELL and BRACKET: limit higher than market
                       priceDiffPercent = ((limit - market) / market) * 100;
-                      targetPosition = Math.min(
-                        100,
+                      const clampedPercent = Math.min(
+                        10000,
                         Math.max(0, priceDiffPercent),
                       );
-                    } else if (
-                      currentStrategy === OrderStrategy.BUY ||
-                      currentStrategy === OrderStrategy.BRACKET
-                    ) {
-                      // For BUY and BRACKET: limit lower than market
-                      // Calculate percentage below market
-                      priceDiffPercent = ((market - limit) / market) * 100;
+                      targetPosition = clampedPercent / 100;
+                    } else if (currentStrategy === OrderStrategy.BUY) {
+                      // For BUY: inverse of SELL so values remain positive for large percentages
+                      priceDiffPercent = ((market / limit) - 1) * 100;
+                      const clampedPercent = Math.min(
+                        10000,
+                        Math.max(0, priceDiffPercent),
+                      );
                       // Map to position from right (market at right, lower prices move left)
-                      targetPosition =
-                        100 - Math.min(100, Math.max(0, priceDiffPercent));
+                      targetPosition = 100 - clampedPercent / 100;
                     }
                   }
                   return (
                     <div className="mt-2 font-orbitron">
-                      <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
-                        <span>
-                          {currentStrategy === OrderStrategy.SELL
-                            ? "Market"
-                            : currentStrategy === OrderStrategy.BUY ||
-                                currentStrategy === OrderStrategy.BRACKET
-                              ? "Target"
-                              : "Market"}
-                        </span>
-                        {/* <span>
-                          {currentStrategy === OrderStrategy.SELL &&
-                          priceDiffPercent > 0
-                            ? `+${priceDiffPercent.toFixed(1)}%`
-                            : currentStrategy === OrderStrategy.BUY &&
-                                priceDiffPercent > 0
-                              ? `-${priceDiffPercent.toFixed(1)}%`
-                              : `${priceDiffPercent.toFixed(1)}%`}
-                        </span> */}
-                      </div>
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {/* Progress fill - depends on strategy */}
                         <div
                           className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
                           style={{
                             width:
-                              currentStrategy === OrderStrategy.SELL
+                              isSellLikeStrategy
                                 ? `${targetPosition}%`
                                 : `${100 - targetPosition}%`,
                             left:
-                              currentStrategy === OrderStrategy.SELL
+                              isSellLikeStrategy
                                 ? "0"
                                 : `${targetPosition}%`,
                           }}
@@ -1984,7 +1999,7 @@ export function CreateOrderForm({
                           className="absolute top-1/2 -translate-y-1/2 w-2 h-8 bg-[#FFE4BA] rounded z-20"
                           style={{
                             left:
-                              currentStrategy === OrderStrategy.SELL
+                              isSellLikeStrategy
                                 ? "0px"
                                 : "calc(100% - 4px)",
                           }}
@@ -2007,7 +2022,7 @@ export function CreateOrderForm({
                           type="range"
                           min="0"
                           max="100"
-                          step="0.1"
+                          step="0.01"
                           value={targetPosition}
                           onChange={(e) => {
                             const newTargetPosition = Number(e.target.value);
@@ -2015,22 +2030,32 @@ export function CreateOrderForm({
                               const market = parseFloat(marketPrice);
                               let newLimitPrice: number;
 
-                              if (currentStrategy === OrderStrategy.SELL) {
-                                // For SELL: moving right increases price (above market)
+                              if (isSellLikeStrategy) {
+                                // For SELL and BRACKET: moving right increases price (above market)
+                                const percentAboveMarket =
+                                  newTargetPosition * 100;
                                 newLimitPrice =
-                                  market * (1 + newTargetPosition / 100);
+                                  market * (1 + percentAboveMarket / 100);
                                 // Update custom percentage
                                 setCustomPercentage(
-                                  newTargetPosition.toString(),
+                                  percentAboveMarket.toFixed(2),
+                                );
+                              } else if (currentStrategy === OrderStrategy.BUY) {
+                                // For BUY: moving left decreases price (below market)
+                                // Convert slider position to percentage below market
+                                const percentBelowMarket =
+                                  (100 - newTargetPosition) * 100;
+                                newLimitPrice =
+                                  market / (1 + percentBelowMarket / 100);
+                                // Update custom percentage
+                                setCustomPercentage(
+                                  percentBelowMarket.toFixed(2),
                                 );
                               } else {
-                                // For BUY and BRACKET: moving left decreases price (below market)
-                                // Convert slider position to percentage below market
                                 const percentBelowMarket =
                                   100 - newTargetPosition;
                                 newLimitPrice =
                                   market * (1 - percentBelowMarket / 100);
-                                // Update custom percentage
                                 setCustomPercentage(
                                   percentBelowMarket.toString(),
                                 );
@@ -2051,14 +2076,10 @@ export function CreateOrderForm({
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
                         <span className="text-[#FF9900] font-bold">
-                          {currentStrategy === OrderStrategy.SELL
-                            ? "Market"
-                            : "Target"}
+                          {isSellLikeStrategy ? "Market" : "Target"}
                         </span>
                         <span className="text-[#FF9900] font-bold">
-                          {currentStrategy === OrderStrategy.SELL
-                            ? "Higher"
-                            : "Market"}
+                          {isSellLikeStrategy ? "Target" : "Market"}
                         </span>
                       </div>
                     </div>
@@ -2081,9 +2102,25 @@ export function CreateOrderForm({
                         "-"
                       )}
                     </div> */}
-                    <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
+                    <button
+                      type="button"
+                      disabled={!marketPrice}
+                      onClick={() => {
+                        if (!marketPrice) return;
+                        form.setValue(
+                          "limitPrice",
+                          parseFloat(marketPrice).toFixed(8),
+                          {
+                            shouldValidate: true,
+                            shouldDirty: true,
+                          },
+                        );
+                        setCustomPercentage("0");
+                      }}
+                      className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
                       Market Price
-                    </div>
+                    </button>
                   </div>
 
                   <div className="flex flex-col justify-center gap-2 items-center">
@@ -2154,42 +2191,100 @@ export function CreateOrderForm({
             {/* Bracket Settings */}
             {showBracketSettings && (
               <>
-                <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4">
-                  <div className="flex justify-between items-center gap-3">
-                    <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron">
-                      Exit Token {orderMode === OrderMode.POSITION ? "" : "(Optional)"}
-                    </h2>
-                    <button
-                      type="button"
-                      onClick={() => setExitTokenAddress(selectedTokenIn || "")}
-                      className="px-3 py-1 text-[10px] md:text-xs bg-[#FFE3BA] text-black rounded-full font-bold font-orbitron"
-                    >
-                      Use entry token
-                    </button>
+                {orderMode === OrderMode.BRACKET && (
+                  <div className="relative bg_swap_box_black md:!py-4 md:!px-5 mb-4">
+                    <div className="flex justify-between items-center gap-3">
+                      <h2 className="text-[#FF9900] md:text-lg text-sm font-bold font-orbitron">
+                        Exit Token (Optional)
+                      </h2>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (
+                            selectedTokenOut &&
+                            getTokenInfo(selectedTokenOut)
+                          ) {
+                            setExitTokenMode("select");
+                            setExitTokenAddress(selectedTokenOut);
+                          } else {
+                            setExitTokenMode("custom");
+                            setExitTokenAddress(selectedTokenOut || "");
+                          }
+                        }}
+                        className="px-3 py-1 text-[10px] md:text-xs bg-[#FFE3BA] text-black rounded-full font-bold font-orbitron"
+                      >
+                        Use out token
+                      </button>
+                    </div>
+                    <div className="mt-3 flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
+                      {exitTokenMode === "select" ? (
+                        <div className="space-y-2 w-full">
+                          <Select
+                            onValueChange={handleExitTokenSelect}
+                            value={exitTokenAddress || undefined}
+                          >
+                            <SelectTrigger
+                              className="md:h-8 h-7 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
+                              data-testid="select-exit-token"
+                            >
+                              <SelectValue placeholder="Select token" />
+                            </SelectTrigger>
+                            <SelectContent className="!bg-black text-white">
+                              {Object.entries(TOKENS).map(([address, token]) => (
+                                <SelectItem key={address} value={address}>
+                                  <div className="flex items-center gap-2 text-white">
+                                    <TokenLogo
+                                      chainId={369}
+                                      tokenAddress={address}
+                                      symbol={token.symbol}
+                                      className="md:h-5 md:w-5 w-4 h-4"
+                                    />
+                                    <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
+                                      {token.symbol}
+                                    </span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                              <SelectItem value="custom">
+                                <span className="font-medium text-white font-orbitron cursor-pointer !text-sm">
+                                  Custom Address..
+                                </span>
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      ) : (
+                        <div className="space-y-2 w-full">
+                          <div className="relative">
+                            <Input
+                              value={exitTokenAddress}
+                              onChange={(e) => setExitTokenAddress(e.target.value)}
+                              placeholder="0x..."
+                              className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron !text-white"
+                              data-testid="input-exit-token-custom"
+                            />
+                            <X
+                              onClick={() => {
+                                setExitTokenMode("select");
+                                setExitTokenAddress("");
+                              }}
+                              size={20}
+                              className="!text-white absolute md:-right-4 -right-3 top-3"
+                            />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <p className="mt-2 text-[10px] md:text-xs text-[#FFE3BA] font-orbitron">
+                      If empty, exits back to your token out.
+                    </p>
+                    {exitTokenValidationError && (
+                      <p className="mt-1 text-sm text-destructive">
+                        {exitTokenValidationError}
+                      </p>
+                    )}
                   </div>
-                  <Input
-                    value={exitTokenAddress}
-                    onChange={(e) => setExitTokenAddress(e.target.value)}
-                    placeholder="0x..."
-                    className="mt-3 bg-black border border-[#FF9900] text-white font-orbitron"
-                    data-testid="input-exit-token"
-                  />
-                  <p className="mt-2 text-[10px] md:text-xs text-[#FFE3BA] font-orbitron">
-                    {orderMode === OrderMode.POSITION
-                      ? "Required for position protection. Must be a valid non-zero token address."
-                      : "If empty, exits back to your entry token."}
-                  </p>
-                  {exitTokenValidationError && (
-                    <p className="mt-1 text-sm text-destructive">
-                      {exitTokenValidationError}
-                    </p>
-                  )}
-                  {positionExitTokenError && (
-                    <p className="mt-1 text-sm text-destructive">
-                      {positionExitTokenError}
-                    </p>
-                  )}
-                </div>
+                )}
 
                 {/* Bracket Direction Helper */}
                 {/* {orderMode === OrderMode.BRACKET && (
@@ -2234,38 +2329,63 @@ export function CreateOrderForm({
                     <div className="mt-2 font-orbitron">
                       <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
                         <span>Market</span>
-                        <span>{stopLossPercent || 0}%</span>
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="10000"
+                            step="0.01"
+                            value={stopLossPercent || 0}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                applyStopLossPercent(0);
+                                return;
+                              }
+                              const percent = Number(value);
+                              if (!Number.isNaN(percent)) {
+                                applyStopLossPercent(percent);
+                              }
+                            }}
+                            className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
+                          />
+                          <span className="text-black font-bold">%</span>
+                        </div>
                       </div>
                       <div className="relative h-2 bg-[#352E25] rounded-full">
-                        <div
-                          className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
-                          style={{ width: `${stopLossPercent || 0}%` }}
-                        />
-                        <div
-                          className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
-                          style={{
-                            left: `calc(${stopLossPercent || 0}% - 10px)`,
-                          }}
-                        />
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={stopLossPercent || 0}
-                          onChange={(e) => {
-                            const percent = Number(e.target.value);
-                            setStopLossPercent(percent);
-                            if (marketPrice) {
-                              const market = Number(marketPrice);
-                              // Bracket orders are SELL only: SL above market (1 + percent)
-                              const stopLossValue =
-                                market * (1 + percent / 100);
-                              setStopLossPrice(stopLossValue.toFixed(4));
-                            }
-                          }}
-                          className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
-                        />
+                        {(() => {
+                          const stopLossSliderPosition = Math.min(
+                            100,
+                            Math.max(0, (stopLossPercent || 0) / 100),
+                          );
+                          return (
+                            <>
+                              <div
+                                className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
+                                style={{ width: `${stopLossSliderPosition}%` }}
+                              />
+                              <div
+                                className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
+                                style={{
+                                  left: `calc(${stopLossSliderPosition}% - 10px)`,
+                                }}
+                              />
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                value={stopLossSliderPosition}
+                                onChange={(e) => {
+                                  const sliderPosition = Number(e.target.value);
+                                  const percent = sliderPosition * 100;
+                                  applyStopLossPercent(percent);
+                                }}
+                                className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
+                              />
+                            </>
+                          );
+                        })()}
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
                         <span>0</span>
@@ -2280,7 +2400,7 @@ export function CreateOrderForm({
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
-                          {stopLossPercent || 0}%
+                          {stopLossPercent.toFixed(2) || 0}%
                         </div>
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Stop Loss
@@ -2335,38 +2455,63 @@ export function CreateOrderForm({
                     <div className="mt-2 font-orbitron">
                       <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
                         <span>Market</span>
-                        <span>{takeProfitPercent || 0}%</span>
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="10000"
+                            step="0.01"
+                            value={takeProfitPercent || 0}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                applyTakeProfitPercent(0);
+                                return;
+                              }
+                              const percent = Number(value);
+                              if (!Number.isNaN(percent)) {
+                                applyTakeProfitPercent(percent);
+                              }
+                            }}
+                            className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
+                          />
+                          <span className="text-black font-bold">%</span>
+                        </div>
                       </div>
                       <div className="relative h-2 bg-[#352E25] rounded-full">
-                        <div
-                          className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
-                          style={{ width: `${takeProfitPercent || 0}%` }}
-                        />
-                        <div
-                          className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
-                          style={{
-                            left: `calc(${takeProfitPercent || 0}% - 10px)`,
-                          }}
-                        />
-                        <input
-                          type="range"
-                          min="0"
-                          max="100"
-                          step="0.1"
-                          value={takeProfitPercent || 0}
-                          onChange={(e) => {
-                            const percent = Number(e.target.value);
-                            setTakeProfitPercent(percent);
-                            if (marketPrice) {
-                              const market = Number(marketPrice);
-                              // Bracket orders are SELL only: TP below market (1 - percent)
-                              const takeProfitValue =
-                                market * (1 - percent / 100);
-                              setTakeProfitPrice(takeProfitValue.toFixed(4));
-                            }
-                          }}
-                          className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
-                        />
+                        {(() => {
+                          const takeProfitSliderPosition = Math.min(
+                            100,
+                            Math.max(0, (takeProfitPercent || 0) / 100),
+                          );
+                          return (
+                            <>
+                              <div
+                                className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
+                                style={{ width: `${takeProfitSliderPosition}%` }}
+                              />
+                              <div
+                                className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
+                                style={{
+                                  left: `calc(${takeProfitSliderPosition}% - 10px)`,
+                                }}
+                              />
+                              <input
+                                type="range"
+                                min="0"
+                                max="100"
+                                step="0.01"
+                                value={takeProfitSliderPosition}
+                                onChange={(e) => {
+                                  const sliderPosition = Number(e.target.value);
+                                  const percent = sliderPosition * 100;
+                                  applyTakeProfitPercent(percent);
+                                }}
+                                className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
+                              />
+                            </>
+                          );
+                        })()}
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
                         <span>0</span>
@@ -2381,7 +2526,7 @@ export function CreateOrderForm({
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
-                          {takeProfitPercent || 0}%
+                          {takeProfitPercent.toFixed(2) || 0}%
                         </div>
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Entry Price
@@ -2671,8 +2816,8 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  !!exitTokenValidationError ||
-                  !!positionExitTokenError ||
+                  (orderMode === OrderMode.BRACKET &&
+                    !!exitTokenValidationError) ||
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
