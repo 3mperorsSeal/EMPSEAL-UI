@@ -1023,7 +1023,7 @@ export function CreateOrderForm({
 
   return (
     <>
-      <div className="lg:max-w-[1300px] md:max-w-[1200px] mx-auto w-full md:mt-10 mt-2">
+      <div className="lg:max-w-[1200px] md:max-w-[1200px] mx-auto w-full md:mt-10 mt-2">
         <form
           onSubmit={form.handleSubmit(onSubmit)}
           className="space-y-6 flex 2xl:gap-12 lg:gap-8 gap-5 justify-center lg:flex-nowrap flex-wrap"
@@ -1234,7 +1234,7 @@ export function CreateOrderForm({
                   </span>
                 </div>
               </div>
-              <div className="flex w-full mt-3 md:gap-10 gap-2">
+              <div className="flex w-full mt-3 md:gap-5 gap-2 items-center">
                 <div className="lg:md:max-w-[200px] w-full">
                   <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
                     <div className="flex gap-2 items-center w-full">
@@ -1351,7 +1351,7 @@ export function CreateOrderForm({
                         : window.innerWidth >= 768
                           ? 24
                           : 20;
-                    const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 5;
+                    const FREE_DIGITS = window.innerWidth >= 768 ? 12 : 5;
                     const SHRINK_RATE = 3;
 
                     const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -1366,7 +1366,7 @@ export function CreateOrderForm({
                         {...form.register("amountIn")}
                         placeholder="0.0"
                         type="text"
-                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
+                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
                         data-testid="input-amount-in"
                         onChange={(e) =>
                           form.setValue("amountIn", e.target.value)
@@ -1385,7 +1385,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col relative top-2">
                   {selectedTokenIn ? (
                     tokenInUSDPrice ? (
                       `$${tokenInUSDPrice.toFixed(6)}`
@@ -1395,7 +1395,7 @@ export function CreateOrderForm({
                   ) : (
                     "--"
                   )}
-                  <span className="font-bold">Market Price</span>
+                  <span className="font-bold mt-1">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
@@ -1403,7 +1403,7 @@ export function CreateOrderForm({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[7px] text-[7px] font-medium font-orbitron md:w-12 w-11 px-2
+                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
       ${
         selectedPercentage === value
           ? "!text-black !bg-[#FF9900] border-[#FF9900]"
@@ -1521,7 +1521,7 @@ export function CreateOrderForm({
                   </span>
                 </div>
               </div>
-              <div className="flex w-full mt-3 md:gap-10 gap-2">
+              <div className="flex w-full mt-3 md:gap-5 gap-2 items-center">
                 <div className="lg:md:max-w-[200px] w-full">
                   <div className="flex justify-between items-center cursor-pointer gap-4 w-full">
                     <div className="flex gap-2 items-center w-full">
@@ -1641,7 +1641,7 @@ export function CreateOrderForm({
                           ? 24
                           : 20;
 
-                    const FREE_DIGITS = window.innerWidth >= 768 ? 10 : 6;
+                    const FREE_DIGITS = window.innerWidth >= 768 ? 12 : 6;
                     const SHRINK_RATE = 2;
 
                     const excessDigits = Math.max(0, inputLength - FREE_DIGITS);
@@ -1656,7 +1656,7 @@ export function CreateOrderForm({
                         {...form.register("minAmountOut")}
                         placeholder="0.0"
                         type="text"
-                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black"
+                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
                         data-testid="input-amount-in"
                         style={{
                           fontSize: `${dynamicFontSize}px`,
@@ -1672,7 +1672,7 @@ export function CreateOrderForm({
                 </div>
               </div>
               <div className="flex justify-between gap-2 items-center md:mt-8 mt-5">
-                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col">
+                <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col relative top-2">
                   {selectedTokenOut ? (
                     tokenOutUSDPrice ? (
                       `$${tokenOutUSDPrice.toFixed(6)}`
@@ -1682,7 +1682,7 @@ export function CreateOrderForm({
                   ) : (
                     "--"
                   )}
-                  <span className="font-bold">Market Price</span>
+                  <span className="font-bold mt-1">Market Price</span>
                 </div>
                 <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
                   <span></span>
@@ -1690,7 +1690,7 @@ export function CreateOrderForm({
                     <button
                       key={value}
                       type="button"
-                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[7px] text-[7px] font-medium font-orbitron md:w-12 w-11 px-2
+                      className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
             ${
               selectedPercentage === value
                 ? "!text-black !bg-[#FF9900] border-[#FF9900]"
@@ -1967,7 +1967,7 @@ export function CreateOrderForm({
                       targetPosition = clampedPercent / 100;
                     } else if (currentStrategy === OrderStrategy.BUY) {
                       // For BUY: inverse of SELL so values remain positive for large percentages
-                      priceDiffPercent = ((market / limit) - 1) * 100;
+                      priceDiffPercent = (market / limit - 1) * 100;
                       const clampedPercent = Math.min(
                         10000,
                         Math.max(0, priceDiffPercent),
@@ -1983,14 +1983,12 @@ export function CreateOrderForm({
                         <div
                           className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
                           style={{
-                            width:
-                              isSellLikeStrategy
-                                ? `${targetPosition}%`
-                                : `${100 - targetPosition}%`,
-                            left:
-                              isSellLikeStrategy
-                                ? "0"
-                                : `${targetPosition}%`,
+                            width: isSellLikeStrategy
+                              ? `${targetPosition}%`
+                              : `${100 - targetPosition}%`,
+                            left: isSellLikeStrategy
+                              ? "0"
+                              : `${targetPosition}%`,
                           }}
                         />
 
@@ -1998,10 +1996,9 @@ export function CreateOrderForm({
                         <div
                           className="absolute top-1/2 -translate-y-1/2 w-2 h-8 bg-[#FFE4BA] rounded z-20"
                           style={{
-                            left:
-                              isSellLikeStrategy
-                                ? "0px"
-                                : "calc(100% - 4px)",
+                            left: isSellLikeStrategy
+                              ? "0px"
+                              : "calc(100% - 4px)",
                           }}
                           title="Market Price"
                         />
@@ -2040,7 +2037,9 @@ export function CreateOrderForm({
                                 setCustomPercentage(
                                   percentAboveMarket.toFixed(2),
                                 );
-                              } else if (currentStrategy === OrderStrategy.BUY) {
+                              } else if (
+                                currentStrategy === OrderStrategy.BUY
+                              ) {
                                 // For BUY: moving left decreases price (below market)
                                 // Convert slider position to percentage below market
                                 const percentBelowMarket =
@@ -2117,14 +2116,13 @@ export function CreateOrderForm({
                         );
                         setCustomPercentage("0");
                       }}
-                      className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       Market Price
                     </button>
                   </div>
-
-                  <div className="flex flex-col justify-center gap-2 items-center">
-                    <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron flex items-center gap-1">
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
                       <input
                         type="number"
                         value={customPercentage}
@@ -2132,14 +2130,14 @@ export function CreateOrderForm({
                           handleCustomPercentageChange(e.target.value)
                         }
                         placeholder="0"
-                        className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
+                        className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
                         min="0"
                         max="10000"
                         step="0.1"
                       />
                       <span className="text-black font-bold">%</span>
                     </div>
-                    <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
+                    <div className="text-[#FFE3BA] text-xs font-normal font-orbitron text-center">
                       Target Price
                     </div>
                   </div>
@@ -2230,21 +2228,23 @@ export function CreateOrderForm({
                               <SelectValue placeholder="Select token" />
                             </SelectTrigger>
                             <SelectContent className="!bg-black text-white">
-                              {Object.entries(TOKENS).map(([address, token]) => (
-                                <SelectItem key={address} value={address}>
-                                  <div className="flex items-center gap-2 text-white">
-                                    <TokenLogo
-                                      chainId={369}
-                                      tokenAddress={address}
-                                      symbol={token.symbol}
-                                      className="md:h-5 md:w-5 w-4 h-4"
-                                    />
-                                    <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
-                                      {token.symbol}
-                                    </span>
-                                  </div>
-                                </SelectItem>
-                              ))}
+                              {Object.entries(TOKENS).map(
+                                ([address, token]) => (
+                                  <SelectItem key={address} value={address}>
+                                    <div className="flex items-center gap-2 text-white">
+                                      <TokenLogo
+                                        chainId={369}
+                                        tokenAddress={address}
+                                        symbol={token.symbol}
+                                        className="md:h-5 md:w-5 w-4 h-4"
+                                      />
+                                      <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
+                                        {token.symbol}
+                                      </span>
+                                    </div>
+                                  </SelectItem>
+                                ),
+                              )}
                               <SelectItem value="custom">
                                 <span className="font-medium text-white font-orbitron cursor-pointer !text-sm">
                                   Custom Address..
@@ -2258,7 +2258,9 @@ export function CreateOrderForm({
                           <div className="relative">
                             <Input
                               value={exitTokenAddress}
-                              onChange={(e) => setExitTokenAddress(e.target.value)}
+                              onChange={(e) =>
+                                setExitTokenAddress(e.target.value)
+                              }
                               placeholder="0x..."
                               className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron !text-white"
                               data-testid="input-exit-token-custom"
@@ -2326,32 +2328,7 @@ export function CreateOrderForm({
                     </div>
 
                     {/* Stop Loss Slider */}
-                    <div className="mt-2 font-orbitron">
-                      <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
-                        <span>Market</span>
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron flex items-center gap-1">
-                          <input
-                            type="number"
-                            min="0"
-                            max="10000"
-                            step="0.01"
-                            value={stopLossPercent || 0}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === "") {
-                                applyStopLossPercent(0);
-                                return;
-                              }
-                              const percent = Number(value);
-                              if (!Number.isNaN(percent)) {
-                                applyStopLossPercent(percent);
-                              }
-                            }}
-                            className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
-                          />
-                          <span className="text-black font-bold">%</span>
-                        </div>
-                      </div>
+                    <div className="mt-3 font-orbitron">
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {(() => {
                           const stopLossSliderPosition = Math.min(
@@ -2399,12 +2376,37 @@ export function CreateOrderForm({
                     {/* Stop Loss Market Info */}
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron">
                           {stopLossPercent.toFixed(2) || 0}%
                         </div>
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Stop Loss
                         </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 text-xs text-[#FFE6C0]">
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="10000"
+                            step="0.01"
+                            value={stopLossPercent || 0}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                applyStopLossPercent(0);
+                                return;
+                              }
+                              const percent = Number(value);
+                              if (!Number.isNaN(percent)) {
+                                applyStopLossPercent(percent);
+                              }
+                            }}
+                            className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
+                          />
+                          <span className="text-black font-bold">%</span>
+                        </div>
+                        <span>Market</span>
                       </div>
                       {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
@@ -2452,32 +2454,7 @@ export function CreateOrderForm({
                     </p>
 
                     {/* Take Profit Slider */}
-                    <div className="mt-2 font-orbitron">
-                      <div className="flex justify-between text-xs mb-4 text-[#FFE6C0]">
-                        <span>Market</span>
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron flex items-center gap-1">
-                          <input
-                            type="number"
-                            min="0"
-                            max="10000"
-                            step="0.01"
-                            value={takeProfitPercent || 0}
-                            onChange={(e) => {
-                              const value = e.target.value;
-                              if (value === "") {
-                                applyTakeProfitPercent(0);
-                                return;
-                              }
-                              const percent = Number(value);
-                              if (!Number.isNaN(percent)) {
-                                applyTakeProfitPercent(percent);
-                              }
-                            }}
-                            className="w-16 text-center bg-transparent text-black outline-none font-orbitron"
-                          />
-                          <span className="text-black font-bold">%</span>
-                        </div>
-                      </div>
+                    <div className="mt-3 font-orbitron">
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {(() => {
                           const takeProfitSliderPosition = Math.min(
@@ -2488,7 +2465,9 @@ export function CreateOrderForm({
                             <>
                               <div
                                 className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
-                                style={{ width: `${takeProfitSliderPosition}%` }}
+                                style={{
+                                  width: `${takeProfitSliderPosition}%`,
+                                }}
                               />
                               <div
                                 className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
@@ -2525,12 +2504,37 @@ export function CreateOrderForm({
                     {/* Take Profit Market Info */}
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron">
                           {takeProfitPercent.toFixed(2) || 0}%
                         </div>
                         <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
                           Entry Price
                         </div>
+                      </div>
+                      <div className="flex flex-col items-center gap-2 text-xs mb-2 mt-4 text-[#FFE6C0]">
+                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="0"
+                            max="10000"
+                            step="0.01"
+                            value={takeProfitPercent || 0}
+                            onChange={(e) => {
+                              const value = e.target.value;
+                              if (value === "") {
+                                applyTakeProfitPercent(0);
+                                return;
+                              }
+                              const percent = Number(value);
+                              if (!Number.isNaN(percent)) {
+                                applyTakeProfitPercent(percent);
+                              }
+                            }}
+                            className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
+                          />
+                          <span className="text-black font-bold">%</span>
+                        </div>
+                        <span>Market</span>
                       </div>
                       {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
@@ -2702,7 +2706,7 @@ export function CreateOrderForm({
                           ? "Buy Low"
                           : "Bracket Order"}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       Strategy
                     </div>
                   </div>
@@ -2714,11 +2718,18 @@ export function CreateOrderForm({
                           ? "TP/SL"
                           : "Token Purchased"}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    {/* <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       {form.watch("strategy") === OrderStrategy.SELL
                         ? "Token Sold"
                         : form.watch("strategy") === OrderStrategy.BRACKET
                           ? `${takeProfitPrice || "0"}/${stopLossPrice || "0"}`
+                          : "Token Bought"}
+                    </div> */}
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
+                      {form.watch("strategy") === OrderStrategy.SELL
+                        ? "Token Sold"
+                        : form.watch("strategy") === OrderStrategy.BRACKET
+                          ? `${Number(takeProfitPrice || 0).toFixed(2)}/${Number(stopLossPrice || 0).toFixed(2)}`
                           : "Token Bought"}
                     </div>
                   </div>
@@ -2731,7 +2742,7 @@ export function CreateOrderForm({
                         ? new Date(form.watch("deadline")).toLocaleDateString()
                         : "Not set"}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       Expiry
                     </div>
                   </div>
@@ -2747,7 +2758,7 @@ export function CreateOrderForm({
                               : "None"
                         : "None"}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       Order Split
                     </div>
                   </div>
@@ -2756,9 +2767,10 @@ export function CreateOrderForm({
                 <div className="flex justify-between gap-3 items-center mt-2 font-orbitron">
                   <div className="md:max-w-[155px] w-full">
                     <div className="text-[#FFD484] md:text-[15px] text-xs font-bold">
-                      {form.watch("minAmountOut") || "0"}
+                      {/* {form.watch("minAmountOut") || "0"} */}
+                      {Number(form.watch("minAmountOut") || 0).toFixed(2)}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       Output estimated
                     </div>
                   </div>
@@ -2789,7 +2801,7 @@ export function CreateOrderForm({
                         return "0%";
                       })()}
                     </div>
-                    <div className="text-white md:text-[10px] mt-1 text-[9px] font-semibold">
+                    <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       {currentStrategy === OrderStrategy.BRACKET
                         ? "Potential Profit"
                         : "Profit"}
