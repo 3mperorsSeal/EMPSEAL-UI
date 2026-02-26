@@ -1436,9 +1436,9 @@ const BridgeInterface = () => {
           transactions={transactions}
           clearTransactions={clearTransactions}
         />
-        <hr className="mt-4 scales-top_via_2" />
+        <hr className="mt-4 scales-top_via_2-none" />
         {/* Instructions */}
-        <div className="w-full md:px-0 px-1 md:pb-10 pb-6 scales-top_via_2">
+        <div className="w-full md:px-0 px-1 md:pb-10 pb-6 scales-top_via_2-none">
           <div className="mt-5 md:max-w-[1300px] w-full mx-auto bg-[#100C06] border border-[#100C06] rounded-xl lg:px-12 px-6 lg:py-10 py-10">
             <h2 className="md:text-[40px] text-[32px] font-extrabold text-white mb-10 font-orbitron">
               How It Works
