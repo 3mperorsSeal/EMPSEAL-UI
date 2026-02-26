@@ -117,7 +117,7 @@ const Token = ({ onClose, onSelect }) => {
           // Ensure it's an array
           if (Array.isArray(parsedFavorites)) {
             setFavorites(parsedFavorites);
-            console.log("Loaded favorites from localStorage:", parsedFavorites);
+            // console.log("Loaded favorites from localStorage:", parsedFavorites);
           } else {
             // If it's not an array, reset it
             localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
@@ -390,7 +390,7 @@ const Token = ({ onClose, onSelect }) => {
   useEffect(() => {
     const checkStorage = () => {
       const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      console.log("Current localStorage value:", saved);
+      // console.log("Current localStorage value:", saved);
     };
     checkStorage();
   }, []);
