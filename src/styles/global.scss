@@ -676,13 +676,14 @@ body.bg-pattern {
     position: relative;
   }
   .scales-top_via_1 {
-    top: -80px !important;
+    margin-top: -130px!important;
+    // top: -130px !important;
     position: relative;
   }
-  .scales-top_via_2 {
-    top: -120px !important;
-    position: relative;
-  }
+  // .scales-top_via_2 {
+  //   top: -120px !important;
+  //   position: relative;
+  // }
 }
 @media (min-width: 1200px) and (max-width: 1600px) {
   .scales-top_via {
@@ -690,13 +691,14 @@ body.bg-pattern {
     position: relative;
   }
   .scales-top_via_1 {
-    top: -180px !important;
+        margin-top: -280px!important;
+    // top: -280px !important;
     position: relative;
   }
-  .scales-top_via_2 {
-    top: -250px !important;
-    position: relative;
-  }
+  // .scales-top_via_2 {
+  //   top: -250px !important;
+  //   position: relative;
+  // }
 }
 @media (min-width: 1900px) {
   .scales-top_limit {
