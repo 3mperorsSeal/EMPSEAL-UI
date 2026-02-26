@@ -40,6 +40,8 @@ import {
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
+import TokenLogo from "../../components/TokenLogo.jsx";
+import { fetchTokenPrice } from "../../utils/priceFetcher";
 
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
@@ -237,9 +239,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     args: [
       amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
         ? convertToBigInt(
-            parseFloat(amountIn),
-            parseInt(selectedTokenA.decimal) || 18,
-          )
+          parseFloat(amountIn),
+          parseInt(selectedTokenA.decimal) || 18,
+        )
         : BigInt(0),
       selectedTokenA?.address === EMPTY_ADDRESS
         ? wethAddress
@@ -415,9 +417,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     const amountInBigInt =
       amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
         ? convertToBigInt(
-            parseFloat(amountIn),
-            parseInt(selectedTokenA.decimal) || 18,
-          )
+          parseFloat(amountIn),
+          parseInt(selectedTokenA.decimal) || 18,
+        )
         : BigInt(0);
 
     const trade = {
@@ -637,41 +639,24 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   useEffect(() => {
     const fetchConversionRateTokenA = async () => {
       try {
-        // Check if required values are available
         if (!currentChain?.name || !selectedTokenA?.address) {
           console.error("Missing required data for token A price fetch");
           return;
         }
 
-        // Determine which address to use for the API call
         const addressToFetch =
           selectedTokenA?.address === EMPTY_ADDRESS && wethAddress
             ? wethAddress?.toLowerCase()
             : selectedTokenA?.address?.toLowerCase();
 
-        const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`,
-        );
+        const tokenPrice = await fetchTokenPrice(symbol, addressToFetch);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (tokenPrice) {
+          setConversionRate(tokenPrice);
+        } else {
+          setConversionRate(null);
+          console.error("Token A price could not be established.");
         }
-
-        const data = await response.json();
-
-        // Validate and extract token prices
-        const tokenPrices = data?.data?.attributes?.token_prices;
-        if (!tokenPrices) {
-          throw new Error("Token prices not found");
-        }
-
-        // Use the correct address to look up the price
-        const tokenPrice =
-          selectedTokenA?.address === EMPTY_ADDRESS
-            ? tokenPrices[wethAddress?.toLowerCase()]
-            : tokenPrices[addressToFetch];
-
-        setConversionRate(tokenPrice);
       } catch (error) {
         console.error("Error fetching token price:", error.message);
       }
@@ -683,41 +668,24 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   useEffect(() => {
     const fetchConversionRateTokenB = async () => {
       try {
-        // Check if required values are available
         if (!currentChain?.name || !selectedTokenB?.address) {
           console.error("Missing required data for token B price fetch");
           return;
         }
 
-        // Determine which address to use for the API call
         const addressToFetch =
           selectedTokenB?.address === EMPTY_ADDRESS && wethAddress
             ? wethAddress?.toLowerCase()
             : selectedTokenB?.address?.toLowerCase();
 
-        const response = await fetch(
-          `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${addressToFetch}`,
-        );
+        const tokenPrice = await fetchTokenPrice(symbol, addressToFetch);
 
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+        if (tokenPrice) {
+          setConversionRateTokenB(tokenPrice);
+        } else {
+          setConversionRateTokenB(null);
+          console.error("Token B price could not be established.");
         }
-
-        const data = await response.json();
-
-        // Validate and extract token prices
-        const tokenPrices = data?.data?.attributes?.token_prices;
-        if (!tokenPrices) {
-          throw new Error("Token prices not found");
-        }
-
-        // Use the correct address to look up the price
-        const tokenPrice =
-          selectedTokenB?.address === EMPTY_ADDRESS
-            ? tokenPrices[wethAddress?.toLowerCase()]
-            : tokenPrices[addressToFetch];
-
-        setConversionRateTokenB(tokenPrice);
       } catch (error) {
         console.error("Error fetching token price:", error.message);
       }
@@ -985,10 +953,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const priceImpact =
     usdValueTokenA > 0
       ? (
-          ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
-            parseFloat(usdValueTokenA)) *
-          100
-        ).toFixed(2)
+        ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
+          parseFloat(usdValueTokenA)) *
+        100
+      ).toFixed(2)
       : 0;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
@@ -1059,14 +1027,12 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   return (
     <>
       <div
-        className={`w-full rounded-xl xl:pb-2 lg:pt-1 pt-1 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-1 relative ${
-          order ? "pb-[0px]" : "2xl:pb-20 xl:pb-2 lg:pb-0 pb-5"
-        }`}
+        className={`w-full rounded-xl xl:pb-2 lg:pt-1 pt-1 2xl:px-8 lg:px-8 md:px-6 px-1 md:mt-0 mt-1 relative ${order ? "pb-[0px]" : "2xl:pb-20 xl:pb-2 lg:pb-0 pb-5"
+          }`}
       >
         <div
-          className={`scales8 ${
-            order ? `scales-top ${address ? "scales-top_limit" : ""}` : "top70"
-          }`}
+          className={`scales8 ${order ? `scales-top ${address ? "scales-top_limit" : ""}` : "top70"
+            }`}
         >
           <div className="md:max-w-[1100px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap lg:mt-1 mt-1 px-3 pb-2">
             <h1 className="2xl:text-[43px] xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold md:mb-2">
@@ -1117,15 +1083,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             ? "Loading.."
                             : selectedTokenA.address === EMPTY_ADDRESS
                               ? `${formatNumber(formattedBalance)}`
-                              : `${
-                                  tokenBalance
-                                    ? formatNumber(
-                                        parseFloat(
-                                          tokenBalance.formatted,
-                                        ).toFixed(6),
-                                      )
-                                    : "0.00"
-                                }`}
+                              : `${tokenBalance
+                                ? formatNumber(
+                                  parseFloat(
+                                    tokenBalance.formatted,
+                                  ).toFixed(6),
+                                )
+                                : "0.00"
+                              }`}
                       </span>
                     </div>
                   </div>
@@ -1145,18 +1110,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             >
                               {selectedTokenA ? (
                                 <>
-                                  <img
+                                  <TokenLogo
+                                    token={selectedTokenA}
                                     className="md:w-5 md:h-5 w-4 h-4"
-                                    src={
-                                      selectedTokenA.image ||
-                                      selectedTokenA.logoURI
-                                    }
-                                    alt={selectedTokenA.name}
                                   />
                                   <div
                                     className={`${getFontSizeClass(
                                       selectedTokenA.ticker ||
-                                        selectedTokenA.symbol,
+                                      selectedTokenA.symbol,
                                     )} text-white font-bold font-orbitron leading-normal bg-black appearance-none outline-none`}
                                   >
                                     {selectedTokenA.ticker ||
@@ -1177,7 +1138,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                                 className="rounded-md transition-colorss"
                               >
                                 {copySuccess &&
-                                activeTokenAddress ===
+                                  activeTokenAddress ===
                                   selectedTokenA.address ? (
                                   <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                                 ) : (
@@ -1253,11 +1214,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                           key={value}
                           type="button"
                           className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-            ${
-              selectedPercentage === value
-                ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                              ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                              : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => handlePercentageChange(value)}
                           disabled={isLoading}
                         >
@@ -1334,15 +1294,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             ? "Loading.."
                             : selectedTokenB.address === EMPTY_ADDRESS
                               ? `${formatNumber(formattedChainBalanceTokenB)}`
-                              : `${
-                                  tokenBBalance
-                                    ? formatNumber(
-                                        parseFloat(
-                                          tokenBBalance.formatted,
-                                        ).toFixed(6),
-                                      )
-                                    : "0.00"
-                                }`}
+                              : `${tokenBBalance
+                                ? formatNumber(
+                                  parseFloat(
+                                    tokenBBalance.formatted,
+                                  ).toFixed(6),
+                                )
+                                : "0.00"
+                              }`}
                       </span>
                     </div>
                   </div>
@@ -1361,18 +1320,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             >
                               {selectedTokenB ? (
                                 <>
-                                  <img
+                                  <TokenLogo
+                                    token={selectedTokenB}
                                     className="md:w-5 md:h-5 w-4 h-4"
-                                    src={
-                                      selectedTokenB.image ||
-                                      selectedTokenB.logoURI
-                                    }
-                                    alt={selectedTokenB.name}
                                   />
                                   <div
                                     className={`${getFontSizeClass(
                                       selectedTokenB.ticker ||
-                                        selectedTokenB.symbol,
+                                      selectedTokenB.symbol,
                                     )} text-white font-bold font-orbitron leading-normal bg-black appearance-none outline-none`}
                                   >
                                     {selectedTokenB.ticker ||
@@ -1393,7 +1348,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                                 className="rounded-md transition-colors"
                               >
                                 {copySuccess &&
-                                activeTokenAddress ===
+                                  activeTokenAddress ===
                                   selectedTokenB.address ? (
                                   <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                                 ) : (
@@ -1481,11 +1436,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                           key={value}
                           type="button"
                           className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-            ${
-              selectedPercentageBuy === value
-                ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentageBuy === value
+                              ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                              : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                            }`}
                           onClick={() => setSelectedPercentageBuy(value)}
                           disabled={isLoading}
                         >
@@ -1530,11 +1484,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                   </div>
                 </div>
                 <div
-                  className={`relative flex justify-center flex-row md:mt-5 mt-4 xl:pt-0 ${
-                    order
-                      ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
-                      : "pt-0 top-0"
-                  }`}
+                  className={`relative flex justify-center flex-row md:mt-5 mt-4 xl:pt-0 ${order
+                    ? "xl:pt-[0px] lg:pt-[20px] pt-[350px] ttt xl:top-0 lg:top-[-140px] top-[-315px]"
+                    : "pt-0 top-0"
+                    }`}
                 >
                   <button
                     onClick={() => {
@@ -1548,11 +1501,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                       }
                     }}
                     disabled={address ? isInsufficientBalance() : false}
-                    className={`gtw relative z-50 w-full uppercase md:h-12 h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${
-                      address && isInsufficientBalance()
-                        ? "opacity-50 cursor-not-allowed"
-                        : " "
-                    } font-orbitron lg:text-base text-base font-extrabold`}
+                    className={`gtw relative z-50 w-full uppercase md:h-12 h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${address && isInsufficientBalance()
+                      ? "opacity-50 cursor-not-allowed"
+                      : " "
+                      } font-orbitron lg:text-base text-base font-extrabold`}
                   >
                     <span>{getButtonText()}</span>
                   </button>
@@ -1668,7 +1620,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
             amountOut={parseFloat(amountOut).toFixed(6)}
             tokenA={selectedTokenA}
             tokenB={selectedTokenB}
-            refresh={() => {}}
+            refresh={() => { }}
             confirm={confirmSwap}
             handleApprove={handleApprove}
             needsApproval={needsApproval}

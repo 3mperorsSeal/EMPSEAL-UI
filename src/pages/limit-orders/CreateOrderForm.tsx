@@ -41,7 +41,7 @@ import {
   erc20Abi,
 } from "viem";
 import { formatErrorMessage } from "../../utils/utils";
-import { TokenLogo } from "../../components/TokenLogo";
+import { TokenLogo } from "../../components/TokenLogo.tsx";
 import { LogoService } from "../../services/LogoService";
 
 const ROUTER_ADDRESS = "0x0Cf6D948Cf09ac83a6bf40C7AD7b44657A9F2A52";
@@ -68,7 +68,7 @@ export function CreateOrderForm({
   onStatusMessage,
   onOrderCreated,
   slippage,
-  onOpenSlippage = () => {},
+  onOpenSlippage = () => { },
 }: CreateOrderFormProps) {
   const [percent, setPercent] = useState<number>(0);
   const [showBracketSettings, setShowBracketSettings] = useState(false);
@@ -93,6 +93,7 @@ export function CreateOrderForm({
   );
   const [customTokenIn, setCustomTokenIn] = useState<any>(null);
   const [customTokenOut, setCustomTokenOut] = useState<any>(null);
+  const [customExitToken, setCustomExitToken] = useState<any>(null);
   const [partialFillEnabled, setPartialFillEnabled] = useState(false);
   const [fillMode, setFillMode] = useState(1); // 1: Split3, 2: Split5, 3: Split10, 4: Flexible
   const [marketPrice, setMarketPrice] = useState<string | null>(null);
@@ -104,8 +105,8 @@ export function CreateOrderForm({
   const [tokenOutUSDPrice, setTokenOutUSDPrice] = useState<number | null>(null);
 
   // bracket
-  const [takeProfitPercent, setTakeProfitPercent] = useState<number>(0);
-  const [stopLossPercent, setStopLossPercent] = useState<number>(0);
+  const [takeProfitPercent, setTakeProfitPercent] = useState<number | string>(0);
+  const [stopLossPercent, setStopLossPercent] = useState<number | string>(0);
   // bracket
 
   const form = useForm<CreateOrderInput>({
@@ -255,7 +256,13 @@ export function CreateOrderForm({
     } else {
       setCustomTokenOut(null);
     }
-  }, [selectedTokenIn, selectedTokenOut, tokenInMode, tokenOutMode]);
+
+    if (exitTokenMode === "custom" && isAddress(exitTokenAddress)) {
+      fetchTokenData(exitTokenAddress, setCustomExitToken);
+    } else {
+      setCustomExitToken(null);
+    }
+  }, [selectedTokenIn, selectedTokenOut, tokenInMode, tokenOutMode, exitTokenMode, exitTokenAddress]);
 
   // Calculate minAmountOut when amountIn, limitPrice, or slippage changes
   useEffect(() => {
@@ -922,16 +929,34 @@ export function CreateOrderForm({
   // Add this state near your other useState declarations
   const [customPercentage, setCustomPercentage] = useState<string>("");
 
+  // Helper: limit decimal places for percentage inputs
+  const limitDecimalPlaces = (value: string, maxDecimals: number = 8): string => {
+    const parts = value.split(".");
+    if (parts.length === 2 && parts[1].length > maxDecimals) {
+      return parts[0] + "." + parts[1].slice(0, maxDecimals);
+    }
+    return value;
+  };
+
+  // Helper: sanitize numeric input – only allow digits and a single decimal point
+  const sanitizeNumericInput = (value: string, maxDecimals: number = 18): string => {
+    // Remove all non-numeric characters except dots
+    let sanitized = value.replace(/[^0-9.]/g, "");
+    // Only allow one decimal point
+    const parts = sanitized.split(".");
+    if (parts.length > 2) {
+      sanitized = parts[0] + "." + parts.slice(1).join("");
+    }
+    return limitDecimalPlaces(sanitized, maxDecimals);
+  };
+
   // Add this function to handle custom percentage changes
   const handleCustomPercentageChange = (value: string) => {
-    // Limit to max 10000%
-    let percentValue = parseFloat(value);
-    if (!isNaN(percentValue)) {
-      percentValue = Math.min(10000, Math.max(0, percentValue));
-      setCustomPercentage(percentValue.toString());
-    } else {
-      setCustomPercentage(value);
-    }
+    // Sanitize and limit decimal places to 8
+    const sanitized = limitDecimalPlaces(value.replace(/[^0-9.]/g, ""), 8);
+    // Always preserve the raw string to allow typing decimals like "0."
+    setCustomPercentage(sanitized);
+    const percentValue = parseFloat(sanitized);
 
     // Only calculate if it's a valid number and market price exists
     if (!isNaN(percentValue) && marketPrice) {
@@ -956,23 +981,27 @@ export function CreateOrderForm({
     }
   };
 
-  const applyStopLossPercent = (percent: number) => {
+  const applyStopLossPercent = (percent: number, updateState: boolean = true) => {
     const safePercent = Math.min(10000, Math.max(0, percent));
-    setStopLossPercent(safePercent);
+    if (updateState) {
+      setStopLossPercent(safePercent);
+    }
     if (marketPrice) {
       const market = Number(marketPrice);
       const stopLossValue = market * (1 + safePercent / 100);
-      setStopLossPrice(stopLossValue.toFixed(4));
+      setStopLossPrice(stopLossValue.toFixed(8));
     }
   };
 
-  const applyTakeProfitPercent = (percent: number) => {
+  const applyTakeProfitPercent = (percent: number, updateState: boolean = true) => {
     const safePercent = Math.min(10000, Math.max(0, percent));
-    setTakeProfitPercent(safePercent);
+    if (updateState) {
+      setTakeProfitPercent(safePercent);
+    }
     if (marketPrice) {
       const market = Number(marketPrice);
       const takeProfitValue = market / (1 + safePercent / 100);
-      setTakeProfitPrice(takeProfitValue.toFixed(4));
+      setTakeProfitPrice(takeProfitValue.toFixed(8));
     }
   };
 
@@ -1049,11 +1078,10 @@ export function CreateOrderForm({
                           w-24 h-10 p-3 md:text-xl text-lg !cursor-pointer
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
-                          ${
-                            form.watch("strategy") === OrderStrategy.SELL &&
+                          ${form.watch("strategy") === OrderStrategy.SELL &&
                             orderMode === OrderMode.STANDARD
-                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
-                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                            ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
+                            : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
                         onClick={() => {
@@ -1090,11 +1118,10 @@ export function CreateOrderForm({
                           w-24 h-10 p-3 md:text-xl text-lg 
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
-                          ${
-                            form.watch("strategy") === OrderStrategy.BUY &&
+                          ${form.watch("strategy") === OrderStrategy.BUY &&
                             orderMode === OrderMode.STANDARD
-                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
-                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                            ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
+                            : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
                         onClick={() => {
@@ -1140,10 +1167,9 @@ export function CreateOrderForm({
                           w-32 h-10 p-3 md:text-xl text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
-                          ${
-                            orderMode === OrderMode.BRACKET
-                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
-                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          ${orderMode === OrderMode.BRACKET
+                            ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
+                            : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
                         onClick={() => {
@@ -1170,10 +1196,9 @@ export function CreateOrderForm({
                           w-32 h-10 p-3 md:text-xl text-lg
                           rounded-2xl flex justify-center items-center
                           transition-all duration-200
-                          ${
-                            orderMode === OrderMode.POSITION
-                              ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
-                              : "bg-black text-white hover:bg-[#1a1a1a]"
+                          ${orderMode === OrderMode.POSITION
+                            ? "bg-black border border-[#FF9900] text-[#FF9900] font-bold"
+                            : "bg-black text-white hover:bg-[#1a1a1a]"
                           }
                         `}
                         onClick={() => {
@@ -1222,15 +1247,15 @@ export function CreateOrderForm({
                   <span className="leading-normal">
                     {tokenInMode === "select"
                       ? tokenInBalance && (
-                          <span className="leading-normal">
-                            {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          </span>
-                        )
+                        <span className="leading-normal">
+                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        </span>
+                      )
                       : tokenInBalance && (
-                          <span className="leading-normal">
-                            {parseFloat(tokenInBalance).toFixed(4)}{" "}
-                          </span>
-                        )}
+                        <span className="leading-normal">
+                          {parseFloat(tokenInBalance).toFixed(4)}{" "}
+                        </span>
+                      )}
                   </span>
                 </div>
               </div>
@@ -1282,27 +1307,25 @@ export function CreateOrderForm({
                         ) : (
                           <div className="space-y-2">
                             {customTokenIn ? (
-                              <div className="flex items-center justify-between h-12 px-3">
-                                <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-center relative w-full md:h-8 h-7">
+                                <div className="flex items-center gap-2 text-white">
                                   {customTokenIn.logoURI && (
                                     <img
                                       src={customTokenIn.logoURI}
                                       alt="token logo"
-                                      className="h-6 w-6 rounded-full"
+                                      className="md:h-5 md:w-5 w-4 h-4 rounded-full"
                                     />
                                   )}
-                                  <div className="flex flex-col">
-                                    <span className="text-white md:text-xl font-bold text-xs">
-                                      {customTokenIn.symbol}
-                                    </span>
-                                  </div>
+                                  <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
+                                    {customTokenIn.symbol}
+                                  </span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => form.setValue("tokenIn", "")}
-                                  className="text-white md:text-xl font-bold text-xs tilt"
+                                  className="absolute md:-right-10 -right-10  !text-white tilt z-10"
                                 >
-                                  <X size={16} />
+                                  <X size={16} className="!text-white" />
                                 </button>
                               </div>
                             ) : (
@@ -1368,9 +1391,12 @@ export function CreateOrderForm({
                         type="text"
                         className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
                         data-testid="input-amount-in"
-                        onChange={(e) =>
-                          form.setValue("amountIn", e.target.value)
-                        }
+                        onChange={(e) => {
+                          const sanitized = sanitizeNumericInput(
+                            e.target.value,
+                          );
+                          form.setValue("amountIn", sanitized);
+                        }}
                         style={{
                           fontSize: `${dynamicFontSize}px`,
                         }}
@@ -1404,11 +1430,10 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-      ${
-        selectedPercentage === value
-          ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-          : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-      }`}
+      ${selectedPercentage === value
+                          ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                          : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                     >
                       {value}%
@@ -1509,15 +1534,15 @@ export function CreateOrderForm({
                   <span className="text-white leading-normal">
                     {tokenOutBalance === "select"
                       ? tokenOutBalance && (
-                          <span className="leading-normal">
-                            {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                          </span>
-                        )
+                        <span className="leading-normal">
+                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                        </span>
+                      )
                       : tokenOutBalance && (
-                          <span className="leading-normal">
-                            {parseFloat(tokenOutBalance).toFixed(4)}{" "}
-                          </span>
-                        )}
+                        <span className="leading-normal">
+                          {parseFloat(tokenOutBalance).toFixed(4)}{" "}
+                        </span>
+                      )}
                   </span>
                 </div>
               </div>
@@ -1568,25 +1593,23 @@ export function CreateOrderForm({
                         ) : (
                           <div className="space-y-2">
                             {customTokenOut ? (
-                              <div className="flex items-center justify-between h-12 px-3">
-                                <div className="flex items-center gap-2">
+                              <div className="flex items-center justify-center relative w-full md:h-8 h-7">
+                                <div className="flex items-center gap-2 text-white">
                                   {customTokenOut.logoURI && (
                                     <img
                                       src={customTokenOut.logoURI}
                                       alt="token logo"
-                                      className="h-6 w-6 rounded-full"
+                                      className="md:h-5 md:w-5 w-4 h-4 rounded-full"
                                     />
                                   )}
-                                  <div className="flex flex-col">
-                                    <span className="text-white md:text-xl text-xs font-bold">
-                                      {customTokenOut.symbol}
-                                    </span>
-                                  </div>
+                                  <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
+                                    {customTokenOut.symbol}
+                                  </span>
                                 </div>
                                 <button
                                   type="button"
                                   onClick={() => form.setValue("tokenOut", "")}
-                                  className="!text-white md:text-xl text-xs font-bold tilt"
+                                  className="absolute md:-right-10 -right-10  !text-white tilt z-10"
                                 >
                                   <X size={16} className="!text-white" />
                                 </button>
@@ -1658,6 +1681,12 @@ export function CreateOrderForm({
                         type="text"
                         className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
                         data-testid="input-amount-in"
+                        onChange={(e) => {
+                          const sanitized = sanitizeNumericInput(
+                            e.target.value,
+                          );
+                          form.setValue("minAmountOut", sanitized);
+                        }}
                         style={{
                           fontSize: `${dynamicFontSize}px`,
                         }}
@@ -1691,11 +1720,10 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-            ${
-              selectedPercentage === value
-                ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-            }`}
+            ${selectedPercentage === value
+                          ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                          : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        }`}
                       onClick={() => handlePercentageChange(value)}
                     >
                       {value}%
@@ -1727,12 +1755,15 @@ export function CreateOrderForm({
             )}
             {tradeError && (
               <div
-                className="my-4 rounded-md border border-destructive/50 bg-destructive/10 p-3 text-center"
+                className="my-3 rounded-xl border border-red-500/50 bg-black p-3 text-center shadow-[0_0_10px_rgba(239,68,68,0.2)]"
                 data-testid="trade-error-message"
               >
-                <p className="text-sm font-medium text-destructive">
-                  {tradeError}
-                </p>
+                <div className="flex items-center justify-center gap-2">
+                  <InfoIcon size={16} className="text-red-500" />
+                  <p className="text-sm font-semibold text-red-400 font-orbitron">
+                    {tradeError}
+                  </p>
+                </div>
               </div>
             )}
             {/*  */}
@@ -1773,27 +1804,24 @@ export function CreateOrderForm({
                         <button
                           type="button"
                           onClick={() => setFillMode(1)}
-                          className={`${
-                            fillMode === 1 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 1 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 3
                         </button>
                         <button
                           type="button"
                           onClick={() => setFillMode(2)}
-                          className={`${
-                            fillMode === 2 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 2 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 5
                         </button>
                         <button
                           type="button"
                           onClick={() => setFillMode(3)}
-                          className={`${
-                            fillMode === 3 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 3 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black text-sm font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 10
                         </button>
@@ -1865,11 +1893,10 @@ export function CreateOrderForm({
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
-                className={`gtw cursor-pointer relative w-full md:h-12 h-11 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-base text-base font-extrabold ${
-                  isApproved
-                    ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
-                    : "bg-[#F59216] hover:bg-[#e08a15]"
-                }`}
+                className={`gtw cursor-pointer relative w-full md:h-12 h-11 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-base text-base font-extrabold ${isApproved
+                  ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
+                  : "bg-[#F59216] hover:bg-[#e08a15]"
+                  }`}
                 data-testid="button-main-action"
               >
                 {getButtonContent()}
@@ -1903,6 +1930,13 @@ export function CreateOrderForm({
                       type="text"
                       className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-lg text-base font-semibold font-orbitron"
                       data-testid="input-limit-price"
+                      onChange={(e) => {
+                        const sanitized = sanitizeNumericInput(e.target.value);
+                        form.setValue("limitPrice", sanitized, {
+                          shouldValidate: true,
+                          shouldDirty: true,
+                        });
+                      }}
                     />
                   </div>
                 </div>
@@ -1978,6 +2012,14 @@ export function CreateOrderForm({
                   }
                   return (
                     <div className="mt-2 font-orbitron">
+                      <div className="flex justify-between text-[10px] mb-3 text-gray-400">
+                        <span className="text-[#FF9900] font-bold">
+                          {isSellLikeStrategy ? "Market" : "Target"}
+                        </span>
+                        <span className="text-[#FF9900] font-bold">
+                          {isSellLikeStrategy ? "Target" : "Market"}
+                        </span>
+                      </div>
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {/* Progress fill - depends on strategy */}
                         <div
@@ -1991,7 +2033,6 @@ export function CreateOrderForm({
                               : `${targetPosition}%`,
                           }}
                         />
-
                         {/* Market Price Marker - position depends on strategy */}
                         <div
                           className="absolute top-1/2 -translate-y-1/2 w-2 h-8 bg-[#FFE4BA] rounded z-20"
@@ -2074,12 +2115,11 @@ export function CreateOrderForm({
                         />
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                        <span className="text-[#FF9900] font-bold">
-                          {isSellLikeStrategy ? "Market" : "Target"}
-                        </span>
-                        <span className="text-[#FF9900] font-bold">
-                          {isSellLikeStrategy ? "Target" : "Market"}
-                        </span>
+                        <span>0</span>
+                        <span>2500</span>
+                        <span>5000</span>
+                        <span>7500</span>
+                        <span>10000</span>
                       </div>
                     </div>
                   );
@@ -2124,16 +2164,13 @@ export function CreateOrderForm({
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
                       <input
-                        type="number"
+                        type="text"
                         value={customPercentage}
                         onChange={(e) =>
                           handleCustomPercentageChange(e.target.value)
                         }
                         placeholder="0"
                         className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
-                        min="0"
-                        max="10000"
-                        step="0.1"
                       />
                       <span className="text-black font-bold">%</span>
                     </div>
@@ -2199,19 +2236,19 @@ export function CreateOrderForm({
                         type="button"
                         onClick={() => {
                           if (
-                            selectedTokenOut &&
-                            getTokenInfo(selectedTokenOut)
+                            selectedTokenIn &&
+                            getTokenInfo(selectedTokenIn)
                           ) {
                             setExitTokenMode("select");
-                            setExitTokenAddress(selectedTokenOut);
+                            setExitTokenAddress(selectedTokenIn);
                           } else {
                             setExitTokenMode("custom");
-                            setExitTokenAddress(selectedTokenOut || "");
+                            setExitTokenAddress(selectedTokenIn || "");
                           }
                         }}
                         className="px-3 py-1 text-[10px] md:text-xs bg-[#FFE3BA] text-black rounded-full font-bold font-orbitron"
                       >
-                        Use out token
+                        Use in token
                       </button>
                     </div>
                     <div className="mt-3 flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 py-[1px] justify-center w-full">
@@ -2221,12 +2258,17 @@ export function CreateOrderForm({
                             onValueChange={handleExitTokenSelect}
                             value={exitTokenAddress || undefined}
                           >
-                            <SelectTrigger
-                              className="md:h-8 h-7 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
-                              data-testid="select-exit-token"
-                            >
-                              <SelectValue placeholder="Select token" />
-                            </SelectTrigger>
+                            <div className="relative group">
+                              <SelectTrigger
+                                className="md:h-8 h-7 border-none text-center focus:none px-0 !w-full outline-none !text-white font-extrabold font-orbitron md:text-xs text-xs capitalize"
+                                data-testid="select-exit-token"
+                              >
+                                <SelectValue placeholder="Select token" />
+                              </SelectTrigger>
+                              <div className="hidden group-hover:block font-orbitron absolute z-50 mt-2 top-10 w-max whitespace-nowrap rounded-lg bg-black px-4 py-3 text-center md:text-xs text-[9px] font-bold text-white shadow-lg">
+                                If empty, exits back to your token in.
+                              </div>
+                            </div>
                             <SelectContent className="!bg-black text-white">
                               {Object.entries(TOKENS).map(
                                 ([address, token]) => (
@@ -2255,31 +2297,57 @@ export function CreateOrderForm({
                         </div>
                       ) : (
                         <div className="space-y-2 w-full">
-                          <div className="relative">
-                            <Input
-                              value={exitTokenAddress}
-                              onChange={(e) =>
-                                setExitTokenAddress(e.target.value)
-                              }
-                              placeholder="0x..."
-                              className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron !text-white"
-                              data-testid="input-exit-token-custom"
-                            />
-                            <X
-                              onClick={() => {
-                                setExitTokenMode("select");
-                                setExitTokenAddress("");
-                              }}
-                              size={20}
-                              className="!text-white absolute md:-right-4 -right-3 top-3"
-                            />
-                          </div>
+                          {customExitToken ? (
+                            <div className="flex items-center justify-center relative w-full md:h-8 h-7">
+                              <div className="flex items-center gap-2 text-white">
+                                {customExitToken.logoURI && (
+                                  <img
+                                    src={customExitToken.logoURI}
+                                    alt="token logo"
+                                    className="md:h-5 md:w-5 w-4 h-4 rounded-full"
+                                  />
+                                )}
+                                <span className="font-orbitron md:text-sm text-sm font-extrabold !text-white">
+                                  {customExitToken.symbol}
+                                </span>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setExitTokenMode("select");
+                                  setExitTokenAddress("");
+                                  setCustomExitToken(null);
+                                }}
+                                className="absolute right-0 md:right-2 !text-white tilt"
+                              >
+                                <X size={16} className="!text-white" />
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="relative">
+                              <Input
+                                value={exitTokenAddress}
+                                onChange={(e) =>
+                                  setExitTokenAddress(e.target.value)
+                                }
+                                placeholder="0x..."
+                                className="h-12 bg-transparent !focus:none !outline-0 !border-none md:text-sm text-sm !font-bold !font-orbitron !text-white"
+                                data-testid="input-exit-token-custom"
+                              />
+                              <X
+                                onClick={() => {
+                                  setExitTokenMode("select");
+                                  setExitTokenAddress("");
+                                }}
+                                size={20}
+                                className="!text-white absolute md:-right-4 -right-3 top-3"
+                              />
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
-                    <p className="mt-2 text-[10px] md:text-xs text-[#FFE3BA] font-orbitron">
-                      If empty, exits back to your token out.
-                    </p>
+
                     {exitTokenValidationError && (
                       <p className="mt-1 text-sm text-destructive">
                         {exitTokenValidationError}
@@ -2311,7 +2379,11 @@ export function CreateOrderForm({
                             type="text"
                             placeholder="00.000"
                             value={stopLossPrice}
-                            onChange={(e) => setStopLossPrice(e.target.value)}
+                            onChange={(e) =>
+                              setStopLossPrice(
+                                sanitizeNumericInput(e.target.value),
+                              )
+                            }
                             className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
                           {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
@@ -2326,6 +2398,10 @@ export function CreateOrderForm({
                         <span className="font-normal">per</span> $LINK
                       </span>
                     </div>
+                    <div className="flex justify-between text-[10px] mb-3 text-gray-400">
+                      <span className="text-[#FF9900] font-bold">Market</span>
+                      <span className="text-[#FF9900] font-bold">Target</span>
+                    </div>
 
                     {/* Stop Loss Slider */}
                     <div className="mt-3 font-orbitron">
@@ -2333,7 +2409,7 @@ export function CreateOrderForm({
                         {(() => {
                           const stopLossSliderPosition = Math.min(
                             100,
-                            Math.max(0, (stopLossPercent || 0) / 100),
+                            Math.max(0, (Number(stopLossPercent) || 0) / 100),
                           );
                           return (
                             <>
@@ -2376,37 +2452,47 @@ export function CreateOrderForm({
                     {/* Stop Loss Market Info */}
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron">
-                          {stopLossPercent.toFixed(2) || 0}%
-                        </div>
-                        <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
-                          Stop Loss
-                        </div>
+                        <button
+                          type="button"
+                          disabled={!marketPrice}
+                          onClick={() => {
+                            if (!marketPrice) return;
+                            setStopLossPrice(
+                              parseFloat(marketPrice).toFixed(4),
+                            );
+                            setStopLossPercent(0);
+                          }}
+                          className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Market Price
+                        </button>
                       </div>
                       <div className="flex flex-col items-center gap-2 text-xs text-[#FFE6C0]">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
                           <input
-                            type="number"
-                            min="0"
-                            max="10000"
-                            step="0.01"
-                            value={stopLossPercent || 0}
+                            type="text"
+                            value={stopLossPercent}
+                            placeholder="0"
                             onChange={(e) => {
-                              const value = e.target.value;
+                              const value = limitDecimalPlaces(
+                                e.target.value.replace(/[^0-9.]/g, ""),
+                                8,
+                              );
+                              setStopLossPercent(value);
                               if (value === "") {
-                                applyStopLossPercent(0);
+                                applyStopLossPercent(0, false);
                                 return;
                               }
                               const percent = Number(value);
                               if (!Number.isNaN(percent)) {
-                                applyStopLossPercent(percent);
+                                applyStopLossPercent(percent, false);
                               }
                             }}
                             className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
                           />
                           <span className="text-black font-bold">%</span>
                         </div>
-                        <span>Market</span>
+                        <span>Stop Loss</span>
                       </div>
                       {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
@@ -2439,7 +2525,11 @@ export function CreateOrderForm({
                             type="text"
                             placeholder="00.000"
                             value={takeProfitPrice}
-                            onChange={(e) => setTakeProfitPrice(e.target.value)}
+                            onChange={(e) =>
+                              setTakeProfitPrice(
+                                sanitizeNumericInput(e.target.value),
+                              )
+                            }
                             className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
                           {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
@@ -2452,6 +2542,14 @@ export function CreateOrderForm({
                       ${tokenOutInfo?.symbol || "USDT"}{" "}
                       <span className="font-normal">per</span> $LINK
                     </p>
+                    <div className="flex justify-between text-[10px] mb-3 text-gray-400">
+                      <span className="text-[#FF9900] font-bold">
+                        Market
+                      </span>
+                      <span className="text-[#FF9900] font-bold">
+                        Target
+                      </span>
+                    </div>
 
                     {/* Take Profit Slider */}
                     <div className="mt-3 font-orbitron">
@@ -2459,7 +2557,7 @@ export function CreateOrderForm({
                         {(() => {
                           const takeProfitSliderPosition = Math.min(
                             100,
-                            Math.max(0, (takeProfitPercent || 0) / 100),
+                            Math.max(0, (Number(takeProfitPercent) || 0) / 100),
                           );
                           return (
                             <>
@@ -2504,37 +2602,47 @@ export function CreateOrderForm({
                     {/* Take Profit Market Info */}
                     <div className="mt-2 flex justify-between gap-3 items-center">
                       <div className="flex flex-col justify-center gap-2 items-center">
-                        <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron">
-                          {takeProfitPercent.toFixed(2) || 0}%
-                        </div>
-                        <div className="text-[#FFE3BA] text-xs font-normal font-orbitron">
-                          Entry Price
-                        </div>
+                        <button
+                          type="button"
+                          disabled={!marketPrice}
+                          onClick={() => {
+                            if (!marketPrice) return;
+                            setTakeProfitPrice(
+                              parseFloat(marketPrice).toFixed(4),
+                            );
+                            setTakeProfitPercent(0);
+                          }}
+                          className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          Market Price
+                        </button>
                       </div>
                       <div className="flex flex-col items-center gap-2 text-xs mb-2 mt-4 text-[#FFE6C0]">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
                           <input
-                            type="number"
-                            min="0"
-                            max="10000"
-                            step="0.01"
-                            value={takeProfitPercent || 0}
+                            type="text"
+                            value={takeProfitPercent}
+                            placeholder="0"
                             onChange={(e) => {
-                              const value = e.target.value;
+                              const value = limitDecimalPlaces(
+                                e.target.value.replace(/[^0-9.]/g, ""),
+                                8,
+                              );
+                              setTakeProfitPercent(value);
                               if (value === "") {
-                                applyTakeProfitPercent(0);
+                                applyTakeProfitPercent(0, false);
                                 return;
                               }
                               const percent = Number(value);
                               if (!Number.isNaN(percent)) {
-                                applyTakeProfitPercent(percent);
+                                applyTakeProfitPercent(percent, false);
                               }
                             }}
                             className="md:w-24 w-20 text-center bg-transparent text-black outline-none font-orbitron"
                           />
                           <span className="text-black font-bold">%</span>
                         </div>
-                        <span>Market</span>
+                        <span>Entry Price</span>
                       </div>
                       {/* <div className="flex flex-col justify-center gap-2 items-center">
                         <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black text-base font-normal font-orbitron">
@@ -2616,27 +2724,24 @@ export function CreateOrderForm({
                         <button
                           type="button"
                           onClick={() => setFillMode(1)}
-                          className={`${
-                            fillMode === 1 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 1 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 3
                         </button>
                         <button
                           type="button"
                           onClick={() => setFillMode(2)}
-                          className={`${
-                            fillMode === 2 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 2 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 5
                         </button>
                         <button
                           type="button"
                           onClick={() => setFillMode(3)}
-                          className={`${
-                            fillMode === 3 ? "bg-[#FF9900]" : "bg-[#EEC485]"
-                          } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
+                          className={`${fillMode === 3 ? "bg-[#FF9900]" : "bg-[#EEC485]"
+                            } text-black md:text-sm text-xs font-medium px-4 py-1 rounded-full hover:opacity-90 transition`}
                         >
                           Split 10
                         </button>
@@ -2833,11 +2938,10 @@ export function CreateOrderForm({
                   (showBracketSettings &&
                     (!takeProfitPrice || !stopLossPrice || !takeProfitDeadline))
                 }
-                className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${
-                  isApproved
-                    ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
-                    : "bg-[#F59216] hover:bg-[#e08a15] hover:text-white"
-                }`}
+                className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${isApproved
+                  ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
+                  : "bg-[#F59216] hover:bg-[#e08a15] hover:text-white"
+                  }`}
                 data-testid="button-main-action-mobile"
               >
                 {getButtonContent()}

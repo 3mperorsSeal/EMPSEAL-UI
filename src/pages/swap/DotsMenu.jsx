@@ -111,11 +111,9 @@ const DotsMenu = ({ onTabChange }) => {
                 <p
                   key={item}
                   onClick={() => {
-                    if (item === "Documentation")
-                      window.open("https://docs.empx.io", "_blank");
-                    else if (item === "Integration")
-                      window.open("https://www.empx.io/dapp", "_blank");
-                    else if (item === "Twitter")
+                    if (item === "Documentation") window.open("https://docs.empx.io", "_blank");
+                    else if (item === "Integration") window.open("https://docs.empx.io/docs/developers/widget-integration", "_blank");
+                    else if (item === "Twitter/X")
                       window.open("https://x.com/EmpXio", "_blank");
                     else if (item === "Telegram")
                       window.open("https://t.me/EmpXEmpseal", "_blank");

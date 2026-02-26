@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
 import { Star, StarIcon } from "lucide-react";
 import { ERC20_ABI } from "./tokenFetch";
+import TokenLogo from "../../components/TokenLogo.jsx";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import { useMulticallBalances } from "../../hooks/useMulticallBalances";
 import { useAccount } from "wagmi";
@@ -39,13 +40,10 @@ const TokenListItem = ({
     >
       <div className="flex items-center gap-2 flex-1">
         <div className="flex justify-center items-center rounded-full p-1">
-          <img
-            src={token.logoURI || token.image}
+          <TokenLogo
+            token={token}
             className="md:w-6 md:h-6 w-4 h-4 object-contain"
-            alt={token.name}
-            onError={(e) => {
-              e.target.src = "path/to/fallback/image.png";
-            }}
+            fallbackImg={EL}
           />
         </div>
         <div>
@@ -62,9 +60,8 @@ const TokenListItem = ({
         {/* Star button - always visible for favorites, on hover for non-favorites */}
         <button
           onClick={handleFavoriteClick}
-          className={`transition-opacity duration-200 ${
-            isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
-          }`}
+          className={`transition-opacity duration-200 ${isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
           title={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
           {isFavorite ? (
@@ -180,7 +177,7 @@ const Token = ({ onClose, onSelect }) => {
       case 8453:
         return "https://mainnet.base.org";
       case 1329:
-        return "https://sei.drpc.org";
+        return "https://sei.api.pocket.network";
       case 80094:
         return "https://berachain.drpc.org";
       case 30:
@@ -445,13 +442,10 @@ const Token = ({ onClose, onSelect }) => {
               >
                 <span className="flex items-center">
                   <div className="relative flex justify-center items-center">
-                    <img
-                      src={token.logoURI || token.image}
-                      alt={token.name}
+                    <TokenLogo
+                      token={token}
                       className="md:w-5 md:h-5 w-3 h-3 rounded-full relative z-10 p-[1px] object-contain flex shrink-0"
-                      onError={(e) =>
-                        (e.target.src = "path/to/fallback/image.png")
-                      }
+                      fallbackImg={EL}
                     />
                   </div>
                   <p className="text-white font-black md:text-[12px] text-[9px] mt-0 ms-2 font-orbitron truncate md:w-14 w-10">
