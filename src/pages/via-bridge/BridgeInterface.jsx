@@ -294,7 +294,7 @@ const BridgeInterface = () => {
         }
 
         if (!networkSymbol) {
-          console.log("No network symbol mapping for chain:", toChainId);
+          // console.log("No network symbol mapping for chain:", toChainId);
           setDestTokenPrice(null);
           setDestUsdValue("0.00");
           setIsDestPriceLoading(false);

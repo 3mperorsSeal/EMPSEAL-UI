@@ -235,7 +235,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
         const wrappedTokenAddress = WRAPPED_TOKENS[fromChainId];
 
         if (!networkSymbol || !wrappedTokenAddress) {
-          console.log(`Chain ${fromChainId} not supported for price fetching`);
+          // console.log(`Chain ${fromChainId} not supported for price fetching`);
           setFromTokenPrice(null);
           setIsFromPriceLoading(false);
           return;
@@ -285,7 +285,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
         const wrappedTokenAddress = WRAPPED_TOKENS[toChainId];
 
         if (!networkSymbol || !wrappedTokenAddress) {
-          console.log(`Chain ${toChainId} not supported for price fetching`);
+          // console.log(`Chain ${toChainId} not supported for price fetching`);
           setToTokenPrice(null);
           setIsToPriceLoading(false);
           return;

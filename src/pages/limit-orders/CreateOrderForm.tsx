@@ -74,6 +74,7 @@ export function CreateOrderForm({
   const [showBracketSettings, setShowBracketSettings] = useState(false);
   const [takeProfitPrice, setTakeProfitPrice] = useState<string>("");
   const [stopLossPrice, setStopLossPrice] = useState<string>("");
+  const [calculatedMarketPrice, setCalculatedMarketPrice] = useState<string | null>(null);
   const [stopLossDeadline, setStopLossDeadline] = useState<string>("");
   const [takeProfitDeadline, setTakeProfitDeadline] = useState<string>("");
   const [exitTokenAddress, setExitTokenAddress] = useState<string>("");
@@ -954,6 +955,7 @@ export function CreateOrderForm({
   const handleCustomPercentageChange = (value: string) => {
     // Sanitize and limit decimal places to 8
     const sanitized = limitDecimalPlaces(value.replace(/[^0-9.]/g, ""), 8);
+    // console.log("Sanitized percentage input:", sanitized);
     // Always preserve the raw string to allow typing decimals like "0."
     setCustomPercentage(sanitized);
     const percentValue = parseFloat(sanitized);
@@ -973,6 +975,8 @@ export function CreateOrderForm({
         // For BRACKET or other strategies
         newLimitPrice = market * (1 + percentValue / 100);
       }
+
+      setCalculatedMarketPrice(newLimitPrice.toFixed(8));
 
       form.setValue("limitPrice", newLimitPrice.toFixed(8), {
         shouldValidate: true,
@@ -1932,6 +1936,7 @@ export function CreateOrderForm({
                       data-testid="input-limit-price"
                       onChange={(e) => {
                         const sanitized = sanitizeNumericInput(e.target.value);
+                        // console.log("Setting limitPrice to:", sanitized);
                         form.setValue("limitPrice", sanitized, {
                           shouldValidate: true,
                           shouldDirty: true,
@@ -2917,7 +2922,7 @@ export function CreateOrderForm({
                   strategy={form.watch("strategy")}
                   stopLossPrice={stopLossPrice}
                   takeProfitPrice={takeProfitPrice}
-                  marketPrice={marketPrice || undefined}
+                  marketPrice={calculatedMarketPrice || undefined}
                 />
               </div>
             </div>
