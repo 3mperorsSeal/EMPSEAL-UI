@@ -34,6 +34,19 @@ import { useLocation } from "react-router-dom";
 // PulseChain network symbol for GeckoTerminal API
 const PULSECHAIN_SYMBOL = "pulsechain";
 
+const getGasTokenSymbol = (chainId) => {
+  switch (chainId) {
+    case 369: return "WPLS";
+    case 8453: return "WETH"; // Base
+    case 10: return "WETH"; // Optimism
+    case 42161: return "WETH"; // Arbitrum
+    case 56: return "WBNB"; // BNB
+    case 137: return "WMATIC"; // Polygon
+    case 43114: return "WAVAX"; // Avalanche
+    default: return "ETH";
+  }
+};
+
 // Dummy transactions for testing
 // const dummyTransactions = [
 //   {
@@ -876,7 +889,7 @@ const BridgeInterface = () => {
       if (hasInsufficientGasTokenBalance)
         return (
           <button disabled className="w-full cursor-not-allowed opacity-50">
-            Insufficient {fromChainId === 369 ? "WPLS" : "WETH"}
+            Insufficient {getGasTokenSymbol(fromChainId)}
           </button>
         );
 
@@ -1006,11 +1019,10 @@ const BridgeInterface = () => {
             <div className="flex justify-center gap-4 md:mt-7 mt-2 md:flex-nowrap md:max-w-[600px] w-full mx-auto md:px-0 px-1">
               <Link to="/native-bridge" className="w-full">
                 <div
-                  className={`border-2 ${
-                    activeTab === "native"
+                  className={`border-2 ${activeTab === "native"
                       ? "border-[#FF9900]"
                       : "border-black bg-black"
-                  } 
+                    } 
               px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
               rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
@@ -1019,11 +1031,10 @@ const BridgeInterface = () => {
               </Link>
               <Link to="/via-bridge" className="w-full">
                 <div
-                  className={`border-2 ${
-                    activeTab === "viabridge"
+                  className={`border-2 ${activeTab === "viabridge"
                       ? "border-[#FF9900] bg-black"
                       : "border-white"
-                  } 
+                    } 
               px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
               rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
@@ -1074,8 +1085,8 @@ const BridgeInterface = () => {
                     <span className="text-white leading-normal">
                       {tokenBalance
                         ? parseFloat(
-                            formatUnits(tokenBalance, selectedTokenDecimals),
-                          ).toFixed(6)
+                          formatUnits(tokenBalance, selectedTokenDecimals),
+                        ).toFixed(6)
                         : "0.00"}{" "}
                     </span>
                   </div>
@@ -1101,7 +1112,7 @@ const BridgeInterface = () => {
                         title="Copy token address"
                       >
                         {copySuccess &&
-                        activeTokenAddress === selectedToken.address ? (
+                          activeTokenAddress === selectedToken.address ? (
                           <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                         ) : (
                           <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-[#FF9900]" />
@@ -1196,11 +1207,10 @@ const BridgeInterface = () => {
                         key={value}
                         type="button"
                         className={`py-1 border border-[#EEC485] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                    : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-                }`}
+                ${selectedPercentage === value
+                            ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                            : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                          }`}
                         onClick={() => handlePercentageChange(value)}
                         disabled={isLoading}
                       >
@@ -1260,7 +1270,7 @@ const BridgeInterface = () => {
                         title="Copy token address"
                       >
                         {copySuccess &&
-                        activeTokenAddress === selectedToken.address ? (
+                          activeTokenAddress === selectedToken.address ? (
                           <Check className="md:w-4 md:h-4 w-3 h-3 text-green-500" />
                         ) : (
                           <Copy className="md:w-4 md:h-4 w-3 h-3 text-white hover:text-[#FF9900]" />
@@ -1348,11 +1358,10 @@ const BridgeInterface = () => {
                         key={value}
                         type="button"
                         className={`py-1 border border-[#EEC485] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-                ${
-                  selectedPercentage === value
-                    ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                    : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
-                }`}
+                ${selectedPercentage === value
+                            ? "!text-black !bg-[#FF9900] border-[#FF9900]"
+                            : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                          }`}
                         onClick={() => handlePercentageChange(value)}
                         disabled={isLoading}
                       >
@@ -1375,7 +1384,7 @@ const BridgeInterface = () => {
               />
               <button
                 className={`!absolute !bg-transparent md:w-[90px] w-16 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] md:text-base text-xs font-bold`}
-                // onClick={handleSelfButtonClick}
+              // onClick={handleSelfButtonClick}
               >
                 Self
               </button>
@@ -1393,7 +1402,7 @@ const BridgeInterface = () => {
                   <span className="font-bold">
                     {formatEther(bridgeFees[2] ?? 0n)}{" "}
                   </span>
-                  {fromChainId === 369 ? "WPLS" : "ETH"}
+                  {getGasTokenSymbol(fromChainId)}
                 </div>
 
                 <div className="font-normal">Messaging Fees:</div>
