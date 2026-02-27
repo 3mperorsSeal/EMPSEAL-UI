@@ -327,7 +327,7 @@ export default function MarketTargetChart({
             <div>
               <div className="text-lg font-semibold text-[#FFD484]">
                 {currentMarketPrice
-                  ? `$ ${parseFloat(currentMarketPrice).toFixed(3)}`
+                  ? ` ${parseFloat(currentMarketPrice).toFixed(3)}`
                   : "$ 0.673"}
               </div>
               <div className="text-white text-xs">
@@ -338,15 +338,15 @@ export default function MarketTargetChart({
               <div className="text-lg font-semibold text-[#FFD484]">
                 {(() => {
                   if (limitPrice) {
-                    return `$ ${parseFloat(limitPrice).toFixed(3)}`;
+                    return ` ${parseFloat(limitPrice).toFixed(3)}`;
                   }
                   if (isSellStrategy) {
                     return marketPrice
-                      ? `$ ${(parseFloat(marketPrice) * 1.2).toFixed(3)}`
+                      ? ` ${(parseFloat(marketPrice) * 1.2).toFixed(3)}`
                       : "$ 54";
                   } else {
                     return marketPrice
-                      ? `$ ${(parseFloat(marketPrice) * 0.8).toFixed(3)}`
+                      ? ` ${(parseFloat(marketPrice) * 0.8).toFixed(3)}`
                       : "$ 28";
                   }
                 })()}

@@ -1057,14 +1057,65 @@ export function CreateOrderForm({
     }
   };
 
-  const applyStopLossPercent = (percent: number, updateState: boolean = true) => {
-    const safePercent = Math.min(10000, Math.max(0, percent));
+  const STOP_LOSS_MAX_ABOVE_PERCENT = 10000;
+  const STOP_LOSS_MAX_BELOW_PERCENT = 1000;
+  const STOP_LOSS_MARKET_POSITION =
+    (STOP_LOSS_MAX_ABOVE_PERCENT /
+      (STOP_LOSS_MAX_ABOVE_PERCENT + STOP_LOSS_MAX_BELOW_PERCENT)) *
+    100;
+
+  const getStopLossSliderPosition = (percent: number) => {
+    const safePercent = Math.min(
+      STOP_LOSS_MAX_ABOVE_PERCENT,
+      Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, percent),
+    );
+
+    if (safePercent >= 0) {
+      return (
+        STOP_LOSS_MARKET_POSITION -
+        (safePercent / STOP_LOSS_MAX_ABOVE_PERCENT) * STOP_LOSS_MARKET_POSITION
+      );
+    }
+
+    return (
+      STOP_LOSS_MARKET_POSITION +
+      (Math.abs(safePercent) / STOP_LOSS_MAX_BELOW_PERCENT) *
+        (100 - STOP_LOSS_MARKET_POSITION)
+    );
+  };
+
+  const getStopLossPercentFromSlider = (sliderPosition: number) => {
+    const safePosition = Math.min(100, Math.max(0, sliderPosition));
+
+    if (safePosition <= STOP_LOSS_MARKET_POSITION) {
+      const aboveRatio =
+        (STOP_LOSS_MARKET_POSITION - safePosition) / STOP_LOSS_MARKET_POSITION;
+      return aboveRatio * STOP_LOSS_MAX_ABOVE_PERCENT;
+    }
+
+    const belowRatio =
+      (safePosition - STOP_LOSS_MARKET_POSITION) /
+      (100 - STOP_LOSS_MARKET_POSITION);
+    return -belowRatio * STOP_LOSS_MAX_BELOW_PERCENT;
+  };
+
+  const applyStopLossPercent = (
+    percent: number,
+    updateState: boolean = true,
+  ) => {
+    const safePercent = Math.min(
+      STOP_LOSS_MAX_ABOVE_PERCENT,
+      Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, percent),
+    );
     if (updateState) {
       setStopLossPercent(safePercent);
     }
     if (marketPrice) {
       const market = Number(marketPrice);
-      const stopLossValue = market * (1 + safePercent / 100);
+      const stopLossValue =
+        safePercent >= 0
+          ? market * (1 + safePercent / 100)
+          : market / (1 + Math.abs(safePercent) / 100);
       setStopLossPrice(stopLossValue.toFixed(8));
     }
   };
@@ -2194,11 +2245,11 @@ export function CreateOrderForm({
                         />
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                        <span>0</span>
-                        <span>2500</span>
-                        <span>5000</span>
-                        <span>7500</span>
-                        <span>10000</span>
+                        <span>0%</span>
+                        <span>2500%</span>
+                        <span>5000%</span>
+                        <span>7500%</span>
+                        <span>10000%</span>
                       </div>
                     </div>
                   );
@@ -2479,23 +2530,25 @@ export function CreateOrderForm({
                       </span>
                     </div>
                     <div className="flex justify-between text-[10px] mb-3 text-gray-400">
-                      <span className="text-[#FF9900] font-bold">Market</span>
                       <span className="text-[#FF9900] font-bold">Target</span>
+                      <span className="text-[#FF9900] font-bold">Market</span>
                     </div>
 
                     {/* Stop Loss Slider */}
                     <div className="mt-3 font-orbitron">
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {(() => {
-                          const stopLossSliderPosition = Math.min(
-                            100,
-                            Math.max(0, (Number(stopLossPercent) || 0) / 100),
+                          const stopLossSliderPosition = getStopLossSliderPosition(
+                            Number(stopLossPercent) || 0,
                           );
                           return (
                             <>
                               <div
                                 className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
-                                style={{ width: `${stopLossSliderPosition}%` }}
+                                style={{
+                                  width: `${100 - stopLossSliderPosition}%`,
+                                  left: `${stopLossSliderPosition}%`,
+                                }}
                               />
                               <div
                                 className="absolute top-1/2 -translate-y-1/2 w-8 h-8 bg-[#F59216] rounded-full shadow-lg transition-all duration-200"
@@ -2511,7 +2564,8 @@ export function CreateOrderForm({
                                 value={stopLossSliderPosition}
                                 onChange={(e) => {
                                   const sliderPosition = Number(e.target.value);
-                                  const percent = sliderPosition * 100;
+                                  const percent =
+                                    getStopLossPercentFromSlider(sliderPosition);
                                   applyStopLossPercent(percent);
                                 }}
                                 className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
@@ -2521,11 +2575,11 @@ export function CreateOrderForm({
                         })()}
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                        <span>0</span>
-                        <span>2500</span>
-                        <span>5000</span>
-                        <span>7500</span>
-                        <span>10000</span>
+                        <span>10000%</span>
+                        <span>7500%</span>
+                        <span>5000%</span>
+                        <span>2500%</span>
+                        <span>-1000%</span>
                       </div>
                     </div>
 
@@ -2555,14 +2609,32 @@ export function CreateOrderForm({
                             placeholder="0"
                             onChange={(e) => {
                               let value = limitDecimalPlaces(
-                                e.target.value.replace(/[^0-9.]/g, ""),
+                                e.target.value.replace(/[^0-9.-]/g, ""),
                                 8,
                               );
-                              if (value !== "" && Number(value) > 10000) {
-                                value = "10000";
+                              // Allow only a single leading "-" sign
+                              value = value.replace(/(?!^)-/g, "");
+                              const parts = value.split(".");
+                              if (parts.length > 2) {
+                                value = parts[0] + "." + parts.slice(1).join("");
+                              }
+
+                              if (
+                                value !== "" &&
+                                value !== "-" &&
+                                Number(value) > STOP_LOSS_MAX_ABOVE_PERCENT
+                              ) {
+                                value = `${STOP_LOSS_MAX_ABOVE_PERCENT}`;
+                              }
+                              if (
+                                value !== "" &&
+                                value !== "-" &&
+                                Number(value) < -STOP_LOSS_MAX_BELOW_PERCENT
+                              ) {
+                                value = `${-STOP_LOSS_MAX_BELOW_PERCENT}`;
                               }
                               setStopLossPercent(value);
-                              if (value === "") {
+                              if (value === "" || value === "-") {
                                 applyStopLossPercent(0, false);
                                 return;
                               }
@@ -2621,7 +2693,7 @@ export function CreateOrderForm({
                         </div>
                       </div>
                     </div>
-                    <p className="text-[#FF9900] text-right md:text-xl text-base font-orbitron font-bold">
+                    <p className="text-[#FF9900] text-right md:text-lg text-base font-orbitron font-bold">
                       ${tokenOutInfo?.symbol || "USDT"}{" "}
                       <span className="font-normal">per</span> $LINK
                     </p>
@@ -2674,11 +2746,11 @@ export function CreateOrderForm({
                         })()}
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                        <span>0</span>
-                        <span>2500</span>
-                        <span>5000</span>
-                        <span>7500</span>
-                        <span>10000</span>
+                        <span>0%</span>
+                        <span>2500%</span>
+                        <span>5000%</span>
+                        <span>7500%</span>
+                        <span>10000%</span>
                       </div>
                     </div>
 
