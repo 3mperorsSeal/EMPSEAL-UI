@@ -28,6 +28,9 @@ import UpDownAr from "../../assets/images/reverse.svg";
 import { ERC20_ABI } from "../../utils/via-bridge-abis/index";
 import { useApprovalFlow } from "./hooks/useApprovalFlow";
 
+import { Link } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+
 // PulseChain network symbol for GeckoTerminal API
 const PULSECHAIN_SYMBOL = "pulsechain";
 
@@ -979,10 +982,57 @@ const BridgeInterface = () => {
     return Math.max(12, baseSize - length * 1.5);
   };
 
+  const [activeTab, setActiveTab] = useState("via-bridge");
+
+  const location = useLocation();
+  const path = location.pathname;
+
+  useEffect(() => {
+    if (path === "/") setActiveTab("cross");
+    if (path === "/native-bridge") setActiveTab("native");
+    if (path === "/via-bridge") setActiveTab("viabridge");
+  }, [path]);
+
   return (
     <>
       {/* scales-b scales-top scales-top_via */}
       <div className="scales-b scales-top_via_1">
+        <div className="w-full">
+          <div className="md:max-w-[800px] mx-auto w-full flex flex-col justify-center items-center md:flex-nowrap flex-wrap px-3 pb-4 lg:mt-0 mt-1">
+            <h1 className="2xl:text-[43px] xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold mb-1">
+              EMPX <span className="text-white">X</span> VIA <br />
+              <span className="text-white">BRIDGE</span>
+            </h1>
+            <div className="flex justify-center gap-4 md:mt-7 mt-2 md:flex-nowrap md:max-w-[600px] w-full mx-auto md:px-0 px-1">
+              <Link to="/native-bridge" className="w-full">
+                <div
+                  className={`border-2 ${
+                    activeTab === "native"
+                      ? "border-[#FF9900]"
+                      : "border-black bg-black"
+                  } 
+              px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
+              rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
+                >
+                  Native Bridge
+                </div>
+              </Link>
+              <Link to="/via-bridge" className="w-full">
+                <div
+                  className={`border-2 ${
+                    activeTab === "viabridge"
+                      ? "border-[#FF9900] bg-black"
+                      : "border-white"
+                  } 
+              px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
+              rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
+                >
+                  Via Bridge
+                </div>
+              </Link>
+            </div>
+          </div>
+        </div>
         <div className="md:max-w-[750px] mx-auto w-full md:px-1 px-4 justify-center xl:gap-4 gap-4 items-start 2xl:pt-2 py-2 md:mt-4 mt-1">
           {!isCorrectChain && address && sourceChain && (
             <div
@@ -1389,9 +1439,9 @@ const BridgeInterface = () => {
           /> */}
           {/*  Ends */}
           <RecentTransactions
-          transactions={transactions}
-          clearTransactions={clearTransactions}
-        />
+            transactions={transactions}
+            clearTransactions={clearTransactions}
+          />
           <hr className="mt-4" />
           {/* Instructions */}
           <div className="w-full md:px-0 px-1 md:pb-10 pb-6">
