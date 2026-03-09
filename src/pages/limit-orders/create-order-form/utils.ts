@@ -60,16 +60,17 @@ export const getStopLossSliderPosition = (percent: number) => {
     Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, percent),
   );
 
-  if (safePercent >= 0) {
+  if (safePercent <= 0) {
     return (
       STOP_LOSS_MARKET_POSITION -
-      (safePercent / STOP_LOSS_MAX_ABOVE_PERCENT) * STOP_LOSS_MARKET_POSITION
+      (Math.abs(safePercent) / STOP_LOSS_MAX_BELOW_PERCENT) *
+        STOP_LOSS_MARKET_POSITION
     );
   }
 
   return (
     STOP_LOSS_MARKET_POSITION +
-    (Math.abs(safePercent) / STOP_LOSS_MAX_BELOW_PERCENT) *
+    (safePercent / STOP_LOSS_MAX_ABOVE_PERCENT) *
       (100 - STOP_LOSS_MARKET_POSITION)
   );
 };
@@ -78,13 +79,13 @@ export const getStopLossPercentFromSlider = (sliderPosition: number) => {
   const safePosition = Math.min(100, Math.max(0, sliderPosition));
 
   if (safePosition <= STOP_LOSS_MARKET_POSITION) {
-    const aboveRatio =
+    const belowRatio =
       (STOP_LOSS_MARKET_POSITION - safePosition) / STOP_LOSS_MARKET_POSITION;
-    return aboveRatio * STOP_LOSS_MAX_ABOVE_PERCENT;
+    return -belowRatio * STOP_LOSS_MAX_BELOW_PERCENT;
   }
 
-  const belowRatio =
+  const aboveRatio =
     (safePosition - STOP_LOSS_MARKET_POSITION) /
     (100 - STOP_LOSS_MARKET_POSITION);
-  return -belowRatio * STOP_LOSS_MAX_BELOW_PERCENT;
+  return aboveRatio * STOP_LOSS_MAX_ABOVE_PERCENT;
 };

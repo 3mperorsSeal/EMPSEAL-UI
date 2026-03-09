@@ -1026,24 +1026,19 @@ export function CreateOrderForm({
     percent: number,
     updateState: boolean = true,
   ) => {
-    const safePercent =
-      orderMode === OrderMode.BRACKET
-        ? Math.min(STOP_LOSS_MAX_ABOVE_PERCENT, Math.max(0, percent))
-        : Math.min(
-          STOP_LOSS_MAX_ABOVE_PERCENT,
-          Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, percent),
-        );
+    const safePercent = Math.min(
+      STOP_LOSS_MAX_ABOVE_PERCENT,
+      Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, percent),
+    );
     if (updateState) {
       setStopLossPercent(safePercent);
     }
     if (marketPrice) {
       const market = Number(marketPrice);
       const stopLossValue =
-        orderMode === OrderMode.BRACKET
-          ? market / (1 + safePercent / 100)
-          : safePercent >= 0
-            ? market * (1 + safePercent / 100)
-            : market / (1 + Math.abs(safePercent) / 100);
+        safePercent >= 0
+          ? market * (1 + safePercent / 100)
+          : market / (1 + Math.abs(safePercent) / 100);
       setStopLossPrice(stopLossValue.toFixed(8));
     }
   };
@@ -1061,6 +1056,29 @@ export function CreateOrderForm({
           : market / (1 + safePercent / 100);
       setTakeProfitPrice(takeProfitValue.toFixed(8));
     }
+  };
+
+  const deriveLimitPercentFromPrice = (limitPriceValue: number, market: number) => {
+    if (currentStrategy === OrderStrategy.SELL) {
+      return Math.min(10000, Math.max(0, ((limitPriceValue - market) / market) * 100));
+    }
+
+    const percentBelow = (market / limitPriceValue - 1) * 100;
+    return Math.min(10000, Math.max(0, percentBelow));
+  };
+
+  const deriveStopLossPercentFromPrice = (stopLossPriceValue: number, market: number) => {
+    if (stopLossPriceValue >= market) {
+      return ((stopLossPriceValue / market) - 1) * 100;
+    }
+    return -((market / stopLossPriceValue) - 1) * 100;
+  };
+
+  const deriveTakeProfitPercentFromPrice = (takeProfitPriceValue: number, market: number) => {
+    if (orderMode === OrderMode.BRACKET) {
+      return ((takeProfitPriceValue / market) - 1) * 100;
+    }
+    return ((market / takeProfitPriceValue) - 1) * 100;
   };
 
   return (
@@ -1824,6 +1842,24 @@ export function CreateOrderForm({
                           shouldValidate: true,
                           shouldDirty: true,
                         });
+
+                        const limitPriceValue = Number(sanitized);
+                        const market = marketPrice ? Number(marketPrice) : 0;
+                        if (
+                          sanitized !== "" &&
+                          Number.isFinite(limitPriceValue) &&
+                          limitPriceValue > 0 &&
+                          Number.isFinite(market) &&
+                          market > 0
+                        ) {
+                          const derivedPercent = deriveLimitPercentFromPrice(
+                            limitPriceValue,
+                            market,
+                          );
+                          setCustomPercentage(derivedPercent.toFixed(2));
+                        } else if (sanitized === "") {
+                          setCustomPercentage("");
+                        }
                       }}
                     />
                   </div>
@@ -2268,11 +2304,32 @@ export function CreateOrderForm({
                             type="text"
                             placeholder="00.000"
                             value={stopLossPrice}
-                            onChange={(e) =>
-                              setStopLossPrice(
-                                sanitizeNumericInput(e.target.value),
-                              )
-                            }
+                            onChange={(e) => {
+                              const sanitized = sanitizeNumericInput(e.target.value);
+                              setStopLossPrice(sanitized);
+
+                              const stopLossPriceValue = Number(sanitized);
+                              const market = marketPrice ? Number(marketPrice) : 0;
+                              if (
+                                sanitized !== "" &&
+                                Number.isFinite(stopLossPriceValue) &&
+                                stopLossPriceValue > 0 &&
+                                Number.isFinite(market) &&
+                                market > 0
+                              ) {
+                                const derivedPercent = deriveStopLossPercentFromPrice(
+                                  stopLossPriceValue,
+                                  market,
+                                );
+                                const clamped = Math.min(
+                                  STOP_LOSS_MAX_ABOVE_PERCENT,
+                                  Math.max(-STOP_LOSS_MAX_BELOW_PERCENT, derivedPercent),
+                                );
+                                setStopLossPercent(clamped.toFixed(2));
+                              } else if (sanitized === "") {
+                                setStopLossPercent("");
+                              }
+                            }}
                             className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
                           {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
@@ -2283,16 +2340,18 @@ export function CreateOrderForm({
                     </div>
                     <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
                       <span className="text-[#FF9900] md:text-lg text-base font-orbitron font-bold">
-                        ${tokenOutInfo?.symbol || "USDT"}{" "}
-                        <span className="font-normal">per</span> $LINK
+                        {tokenOutInfo?.symbol || "USDT"}{" "}
+                        <span className="font-normal">per</span> {" "}
+                        {/* $LINK */}
+                        {tokenInInfo?.symbol || "USDT"}
                       </span>
                     </div>
                     <div className="flex justify-between text-[10px] mb-3 text-gray-400">
                       <span className="text-[#FF9900] font-bold">
-                        {orderMode === OrderMode.BRACKET ? "Market" : "Target"}
+                        Target
                       </span>
                       <span className="text-[#FF9900] font-bold">
-                        {orderMode === OrderMode.BRACKET ? "Target" : "Market"}
+                        Market
                       </span>
                     </div>
 
@@ -2300,31 +2359,16 @@ export function CreateOrderForm({
                     <div className="mt-3 font-orbitron">
                       <div className="relative h-2 bg-[#352E25] rounded-full">
                         {(() => {
-                          const stopLossSliderPosition =
-                            orderMode === OrderMode.BRACKET
-                              ? Math.min(
-                                100,
-                                Math.max(
-                                  0,
-                                  (Number(stopLossPercent) || 0) / 100,
-                                ),
-                              )
-                              : getStopLossSliderPosition(
-                                Number(stopLossPercent) || 0,
-                              );
+                          const stopLossSliderPosition = getStopLossSliderPosition(
+                            Number(stopLossPercent) || 0,
+                          );
                           return (
                             <>
                               <div
                                 className="absolute h-2 bg-[#F59216] rounded-full transition-all duration-200"
                                 style={{
-                                  width:
-                                    orderMode === OrderMode.BRACKET
-                                      ? `${stopLossSliderPosition}%`
-                                      : `${100 - stopLossSliderPosition}%`,
-                                  left:
-                                    orderMode === OrderMode.BRACKET
-                                      ? "0"
-                                      : `${stopLossSliderPosition}%`,
+                                  width: `${100 - stopLossSliderPosition}%`,
+                                  left: `${stopLossSliderPosition}%`,
                                 }}
                               />
                               <div
@@ -2342,11 +2386,7 @@ export function CreateOrderForm({
                                 onChange={(e) => {
                                   const sliderPosition = Number(e.target.value);
                                   const percent =
-                                    orderMode === OrderMode.BRACKET
-                                      ? sliderPosition * 100
-                                      : getStopLossPercentFromSlider(
-                                        sliderPosition,
-                                      );
+                                    getStopLossPercentFromSlider(sliderPosition);
                                   applyStopLossPercent(percent);
                                 }}
                                 className="absolute top-0 left-0 w-full h-2 opacity-0 cursor-pointer"
@@ -2356,23 +2396,11 @@ export function CreateOrderForm({
                         })()}
                     </div>
                     <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                      {orderMode === OrderMode.BRACKET ? (
-                        <>
-                          <span>0%</span>
-                          <span>2500%</span>
-                          <span>5000%</span>
-                          <span>7500%</span>
-                          <span>10000%</span>
-                        </>
-                      ) : (
-                        <>
-                          <span>10000%</span>
-                          <span>7500%</span>
-                          <span>5000%</span>
-                          <span>2500%</span>
-                          <span>-1000%</span>
-                        </>
-                      )}
+                      <span>-10000%</span>
+                      <span>-7500%</span>
+                      <span>-5000%</span>
+                      <span>-2500%</span>
+                      <span>+1000%</span>
                     </div>
                   </div>
 
@@ -2405,12 +2433,8 @@ export function CreateOrderForm({
                                 e.target.value.replace(/[^0-9.-]/g, ""),
                                 8,
                               );
-                              if (orderMode === OrderMode.BRACKET) {
-                                value = value.replace(/-/g, "");
-                              } else {
-                                // Allow only a single leading "-" sign
-                                value = value.replace(/(?!^)-/g, "");
-                              }
+                              // Allow only a single leading "-" sign
+                              value = value.replace(/(?!^)-/g, "");
                               const parts = value.split(".");
                               if (parts.length > 2) {
                                 value = parts[0] + "." + parts.slice(1).join("");
@@ -2424,7 +2448,6 @@ export function CreateOrderForm({
                                 value = `${STOP_LOSS_MAX_ABOVE_PERCENT}`;
                               }
                               if (
-                                orderMode !== OrderMode.BRACKET &&
                                 value !== "" &&
                                 value !== "-" &&
                                 Number(value) < -STOP_LOSS_MAX_BELOW_PERCENT
@@ -2478,11 +2501,29 @@ export function CreateOrderForm({
                             type="text"
                             placeholder="00.000"
                             value={takeProfitPrice}
-                            onChange={(e) =>
-                              setTakeProfitPrice(
-                                sanitizeNumericInput(e.target.value),
-                              )
-                            }
+                            onChange={(e) => {
+                              const sanitized = sanitizeNumericInput(e.target.value);
+                              setTakeProfitPrice(sanitized);
+
+                              const takeProfitPriceValue = Number(sanitized);
+                              const market = marketPrice ? Number(marketPrice) : 0;
+                              if (
+                                sanitized !== "" &&
+                                Number.isFinite(takeProfitPriceValue) &&
+                                takeProfitPriceValue > 0 &&
+                                Number.isFinite(market) &&
+                                market > 0
+                              ) {
+                                const derivedPercent = deriveTakeProfitPercentFromPrice(
+                                  takeProfitPriceValue,
+                                  market,
+                                );
+                                const clamped = Math.min(10000, Math.max(0, derivedPercent));
+                                setTakeProfitPercent(clamped.toFixed(2));
+                              } else if (sanitized === "") {
+                                setTakeProfitPercent("");
+                              }
+                            }}
                             className="w-full flex justify-center items-center mx-auto bg-transparent focus:none !outline-0 !border-0 text-right text-white placeholder:text-white md:text-xl text-base font-semibold font-orbitron"
                           />
                           {/* <span className="text-[#FF9900] md:text-4xl text-2xl font-extrabold font-orbitron">
@@ -2492,8 +2533,10 @@ export function CreateOrderForm({
                       </div>
                     </div>
                     <p className="text-[#FF9900] text-right md:text-lg text-base font-orbitron font-bold">
-                      ${tokenOutInfo?.symbol || "USDT"}{" "}
-                      <span className="font-normal">per</span> $LINK
+                      {tokenOutInfo?.symbol || "USDT"}{" "}
+                      <span className="font-normal">per</span> {" "}
+                      {/* $LINK */}
+                      {tokenInInfo?.symbol || "USDT"}
                     </p>
                     <div className="flex justify-between text-[10px] mb-3 text-gray-400">
                       <span className="text-[#FF9900] font-bold">
