@@ -2039,11 +2039,23 @@ export function CreateOrderForm({
                         />
                       </div>
                       <div className="flex justify-between text-[10px] mt-3 text-gray-400">
-                        <span>0%</span>
-                        <span>2500%</span>
-                        <span>5000%</span>
-                        <span>7500%</span>
-                        <span>10000%</span>
+                        {isSellLikeStrategy ? (
+                          <>
+                            <span>0%</span>
+                            <span>2500%</span>
+                            <span>5000%</span>
+                            <span>7500%</span>
+                            <span>10000%</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>10000%</span>
+                            <span>7500%</span>
+                            <span>5000%</span>
+                            <span>2500%</span>
+                            <span>0%</span>
+                          </>
+                        )}
                       </div>
                     </div>
                   );
