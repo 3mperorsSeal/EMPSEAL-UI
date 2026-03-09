@@ -2340,10 +2340,9 @@ export function CreateOrderForm({
                     </div>
                     <div className="text-right text-[#FF9900] text-xl font-normal font-orbitron">
                       <span className="text-[#FF9900] md:text-lg text-base font-orbitron font-bold">
-                        {tokenOutInfo?.symbol || "USDT"}{" "}
-                        <span className="font-normal">per</span> {" "}
-                        {/* $LINK */}
-                        {tokenInInfo?.symbol || "USDT"}
+                        ${tokenInInfo?.symbol || "USDT"}{" "}
+                        <span className="font-normal">per</span> $LINK
+                        {/* {tokenInInfo?.symbol || "USDT"} */}
                       </span>
                     </div>
                     <div className="flex justify-between text-[10px] mb-3 text-gray-400">
@@ -2533,10 +2532,9 @@ export function CreateOrderForm({
                       </div>
                     </div>
                     <p className="text-[#FF9900] text-right md:text-lg text-base font-orbitron font-bold">
-                      {tokenOutInfo?.symbol || "USDT"}{" "}
-                      <span className="font-normal">per</span> {" "}
-                      {/* $LINK */}
-                      {tokenInInfo?.symbol || "USDT"}
+                      ${tokenInInfo?.symbol || "USDT"}{" "}
+                      <span className="font-normal">per</span> $LINK
+                      {/* {tokenInInfo?.symbol || "USDT"} */}
                     </p>
                     <div className="flex justify-between text-[10px] mb-3 text-gray-400">
                       <span className="text-[#FF9900] font-bold">
