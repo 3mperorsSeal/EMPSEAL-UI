@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 // import Arrow from "../../assets/images/arrow-2.svg";
 import LoadingIcon from "../../assets/icons/loading.svg";
+import FallbackTokenIcon from "../../assets/images/emp-icon.svg";
 import { useChainConfig } from "../../hooks/useChainConfig";
 import { useStore } from "../../redux/store/routeStore";
 import { ArrowRight, Check, ChevronRight } from "lucide-react";
@@ -50,6 +51,12 @@ const Routing = ({ routing, isLoading }) => {
       }));
       return githubImage;
     }
+  };
+
+  const handleTokenImageError = (event) => {
+    const imageElement = event.currentTarget;
+    imageElement.onerror = null;
+    imageElement.src = FallbackTokenIcon;
   };
 
   useEffect(() => {
@@ -183,11 +190,9 @@ const Routing = ({ routing, isLoading }) => {
               <div className="flex items-center group relative">
                 <img
                   className="w-8 h-8 object-contain rounded-full p-1 bg-white"
-                  src={tokenImages[address] || "/path/to/fallback.png"}
+                  src={tokenImages[address] || FallbackTokenIcon}
                   alt={getTokenSymbol(address)}
-                  onError={(e) => {
-                    e.target.src = "/path/to/fallback/image.png";
-                  }}
+                  onError={handleTokenImageError}
                 />
                 {/* <span className="text-white text-xs mt-1 font-orbitron">
                   {getTokenSymbol(address)}
@@ -229,8 +234,9 @@ const Routing = ({ routing, isLoading }) => {
                   <div className="flex items-center gap-2">
                     <img
                       className="w-6 h-6 object-contain rounded-full"
-                      src={tokenImages[address]}
+                      src={tokenImages[address] || FallbackTokenIcon}
                       alt={getTokenSymbol(address)}
+                      onError={handleTokenImageError}
                     />
                     <span className="text-white text-xs">
                       {getTokenSymbol(address)}
