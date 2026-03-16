@@ -4,12 +4,24 @@ import TransactionHistory from "../components/gas/TransactionHistory";
 import Wallet from "./swap/Wallet";
 import BG from "../assets/images/empx-bg1.webp";
 import { useState } from "react";
+import { Helmet } from "react-helmet";
 
 export default function GasBridgePage() {
   const [isChainModalOpen, setIsChainModalOpen] = useState(false);
 
   return (
     <>
+      <Helmet>
+        <title>EMPX | Gas Bridge - Gasless Cross-Chain Transfers</title>
+        <meta
+          name="description"
+          content="Send gas tokens across chains with EMPX Gas Bridge. Seamless gas token bridging with optimal routing, low fees, and fast confirmations."
+        />
+        <meta
+          name="keywords"
+          content="EMPX, DeFi, decentralized finance, crypto trading, multi-chain bridge, DEX aggregator, limit orders, Web3, blockchain, cryptocurrency, on-chain trading"
+        />
+      </Helmet>
       <div className="w-full">
         <img
           src={BG}
