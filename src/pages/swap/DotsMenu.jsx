@@ -57,7 +57,7 @@ const DotsMenu = ({ onTabChange }) => {
         onClick={() => setOpen(false)}
       />
       <div
-        className={`fixed inset-x-0 top-0 2xl:h-[280px] h280 md:h-[280px] h-[340px] bg-black border-4 border-[#FFA600]
+        className={`fixed inset-x-0 top-0 2xl:h-[280px] h280 md:h-[280px] bg-black border-4 border-[#FFA600]
   md:rounded-2xl rounded-lg 2xl:px-10 md:px-7 px-4 py-10 z-50 shadow-xl w-full
   transform transition-all duration-500 ease-in-out
   ${
@@ -68,7 +68,7 @@ const DotsMenu = ({ onTabChange }) => {
       >
         <div
           ref={menuRef}
-          className="grid md:grid-cols-6 grid-cols-2 md:gap-10 gap-5 items-start text-[#FFA600] font-orbitron relative 2xl:pt-2 pt10"
+          className="grid md:grid-cols-6 grid-cols-1 md:gap-10 gap-5 items-start text-[#FFA600] font-orbitron relative 2xl:pt-2 pt10"
         >
           <div
             onClick={() => setOpen(false)}
@@ -76,7 +76,7 @@ const DotsMenu = ({ onTabChange }) => {
           >
             ✕
           </div>
-        <div className="relative">
+        <div className="col-span-1 md:col-span-1 relative">
           <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
             Products
           </h3>
@@ -129,7 +129,7 @@ const DotsMenu = ({ onTabChange }) => {
               </p>
             ))}
           </div>
-        <div className="text-[#FFA600] relative">
+        <div className="col-span-1 md:col-span-1 relative">
           <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
             Integration
           </h3>
@@ -146,8 +146,8 @@ const DotsMenu = ({ onTabChange }) => {
               APIs (coming soon)
             </p>
           </div>
-          {/* <div className="hidden"></div> */}
-          <div className="col-span-2 md:col-span-3 relative self-end 2xl:bottom-0 md:bottom-[-20px] bottom-0 md:right-3 text-white flex gap-3 flex-col 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold text-right">
+        {/* <div className="hidden"></div> */}
+        <div className="col-span-1 md:col-span-3 relative 2xl:bottom-0 md:bottom-[-20px] bottom-0 md:right-3 text-white flex gap-3 flex-col 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold md:text-right md:self-end">
             <a href="https://www.empx.io/dapp" className="relative z-10">
               HOME
             </a>
