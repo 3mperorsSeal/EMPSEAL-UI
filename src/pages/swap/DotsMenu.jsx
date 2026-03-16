@@ -68,7 +68,7 @@ const DotsMenu = ({ onTabChange }) => {
       >
         <div
           ref={menuRef}
-          className="grid md:grid-cols-5 grid-cols-2 md:gap-10 gap-5 items-end text-[#FFA600] font-orbitron relative 2xl:pt-2 pt10"
+          className="grid md:grid-cols-6 grid-cols-2 md:gap-10 gap-5 items-start text-[#FFA600] font-orbitron relative 2xl:pt-2 pt10"
         >
           <div
             onClick={() => setOpen(false)}
@@ -76,10 +76,10 @@ const DotsMenu = ({ onTabChange }) => {
           >
             ✕
           </div>
-          <div>
-            <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3">
-              Products
-            </h3>
+        <div className="relative">
+          <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
+            Products
+          </h3>
             {["Swap", "Limit Orders", "Bridge", "Gas"].map((item) => (
               <p
                 key={item}
@@ -102,37 +102,59 @@ const DotsMenu = ({ onTabChange }) => {
               </p>
             ))}
           </div>
-          <div className="col-span-1 md:col-span-2">
-            <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3">
-              Help
-            </h3>
-            {["Documentation", "Twitter/X", "Telegram", "Integration"].map(
-              (item) => (
-                <p
-                  key={item}
-                  onClick={() => {
-                    if (item === "Documentation") window.open("https://docs.empx.io", "_blank");
-                    else if (item === "Integration") window.open("https://docs.empx.io/docs/developers/widget-integration", "_blank");
-                    else if (item === "Twitter/X")
-                      window.open("https://x.com/EmpXio", "_blank");
-                    else if (item === "Telegram")
-                      window.open("https://t.me/EmpXEmpseal", "_blank");
-
-                    setOpen(false);
-                  }}
-                  className="cursor-pointer hover:translate-x-1 transition 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold"
-                >
-                  {item}
-                </p>
-              ),
-            )}
+        <div className="md:col-span-1 relative">
+          <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
+            Help
+          </h3>
+            {["Documentation", "Twitter/X", "Telegram"].map((item) => (
+              <p
+                key={item}
+                onClick={() => {
+                  if (item === "Documentation")
+                    window.open("https://docs.empx.io", "_blank");
+                  // else if (item === "Integration")
+                  //   window.open(
+                  //     "https://docs.empx.io/docs/developers/widget-integration",
+                  //     "_blank",
+                  //   );
+                  else if (item === "Twitter/X")
+                    window.open("https://x.com/EmpXio", "_blank");
+                  else if (item === "Telegram")
+                    window.open("https://t.me/EmpXEmpseal", "_blank");
+                  setOpen(false);
+                }}
+                className="cursor-pointer hover:translate-x-1 transition 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold"
+              >
+                {item}
+              </p>
+            ))}
+          </div>
+        <div className="text-[#FFA600] relative">
+          <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
+            Integration
+          </h3>
+            <p
+              onClick={() => {
+                window.open("https://widget.empx.io/builder", "_blank");
+                setOpen(false);
+              }}
+              className="cursor-pointer hover:translate-x-1 transition 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold"
+            >
+              Widget
+            </p>
+            <p className="2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold opacity-50 cursor-not-allowed">
+              APIs (coming soon)
+            </p>
           </div>
           {/* <div className="hidden"></div> */}
-          <div className="col-span-2 md:col-span-2 relative 2xl:bottom-0 md:bottom-[-20px] bottom-0 md:right-3 text-white flex gap-3 flex-col 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold text-right">
+          <div className="col-span-2 md:col-span-3 relative self-end 2xl:bottom-0 md:bottom-[-20px] bottom-0 md:right-3 text-white flex gap-3 flex-col 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold text-right">
             <a href="https://www.empx.io/dapp" className="relative z-10">
               HOME
             </a>
-            <a href="https://www.empx.io/dapp" className="relative w-full z-10 flex items-center justify-end h-[46px] px-2">
+            <a
+              href="https://www.empx.io/dapp"
+              className="relative w-full z-10 flex items-center justify-end h-[46px] px-2"
+            >
               <img
                 src={Bg}
                 alt="Bg"
