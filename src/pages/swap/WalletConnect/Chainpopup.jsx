@@ -5,7 +5,7 @@ import Pulse from "../../../assets/icons/pls.svg";
 import Sonic from "../../../assets/icons/sonic.png";
 import Arbitrum from "../../../assets/icons/arbitrum.svg";
 import Ethereum from "../../../assets/icons/eth.svg";
-import BNB from "../../../assets/icons/binance.svg";
+import BSC from "../../../assets/icons/binance.svg";
 import Avalanche from "../../../assets/icons/avalanche.svg";
 import Polygon from "../../../assets/icons/polygon.svg";
 import OP from "../../../assets/icons/op.svg";
@@ -32,7 +32,7 @@ const ChainPopup = ({
     pulse: Pulse,
     pulsechain: Pulse,
     sonic: Sonic,
-    "bnb smart chain": BNB, // local import
+    bsc: BSC, // local import
     "arbitrum one": Arbitrum, // local import
     avalanche: Avalanche, // local import
     polygon: Polygon, // local import

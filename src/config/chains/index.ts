@@ -157,4 +157,26 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0x74c9f2b00581F1B11AA7ff05aa9F608B7389De67", // usdc.e
     ]
   },
+  56: {
+    chainId: 56,
+    name: "BSC",
+    symbol: "bsc",
+    routerAddress: "0x7b9637C7c8Aa45B679eEdBb4b680642410322df1",
+    wethAddress: "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c",
+    priceApi: {
+      baseUrl: "https://api.geckoterminal.com/api/v2",
+      tokenPriceEndpoint: "simple/networks/bsc/token_price",
+      graphEndpoint: "networks/bsc/pools",
+    },
+    blockExplorer: "https://bscscan.com/tx/",
+    blockExplorerName: "BscScan",
+    rpcUrl: "https://bsc-rpc.publicnode.com",
+    maxHops: 3,
+    blockTime: 3,
+    stableTokens: [
+      "0x55d398326f99059ff775485246999027b3197955", // USDT
+      "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC
+      "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
+    ],
+  }
 };

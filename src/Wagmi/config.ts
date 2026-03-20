@@ -57,6 +57,32 @@ export const base = defineChain({
   },
 } as const);
 
+export const bsc = defineChain({
+  id: 56,
+  name: "BSC",
+  nativeCurrency: {
+    name: "BNB",
+    symbol: "BNB",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://bsc-rpc.publicnode.com"],
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "BscScan",
+      url: "https://bscscan.com",
+    },
+  },
+} as const);
+
 export const sei = defineChain({
   id: 1329,
   name: "Sei Network",
@@ -146,7 +172,7 @@ export const config = getDefaultConfig({
   projectId: 'YOUR_PROJECT_ID',
   // Note: ethw and sonic are temporarily disabled (not up to date)
   // To re-enable, change to: chains: [pulsechain, ethw, sonic],
-  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw],
+  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc],
   transports: {
     [pulsechain.id]: http(),
     [sonic.id]: http(),
@@ -163,6 +189,7 @@ export const config = getDefaultConfig({
     [berachain.id]: http(),
     [rootstock.id]: http(),
     [ethw.id]: http(),
+    [bsc.id]: http(),
   },
   ssr: true,
   connectors: swapConnectors,

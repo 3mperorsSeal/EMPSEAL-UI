@@ -4,10 +4,12 @@ const NETWORK_SLUGS: Record<number, string> = {
     369: "pulsechain",
     8453: "base",
     42161: "arbitrum",
-    56: "bnb",
     137: "polygon",
     43114: "avalanche",
     10: "optimism",
+    56: "binance-smart-chain",
+    10001: "ethw",
+    146: "sonic",
 };
 
 const CACHE_PREFIX = "logo_cache_";
@@ -33,9 +35,10 @@ export const LogoService = {
             137: "https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/polygon.svg",
             43114: "https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/avalanche.svg",
             10: "https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/optimism.svg",
+            10001: "https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/ethw.svg",
+            146: "https://raw.githubusercontent.com/Cryptorubic/rubic-app/refs/heads/master/src/assets/images/icons/coins/sonic.svg",
             // ... add others from chainsList.json
         };
-
         return CHAIN_LOGOS[chainId] || null;
     },
 

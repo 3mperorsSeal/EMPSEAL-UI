@@ -14,6 +14,8 @@ const getFallbackUrl = (chainId, address) => {
       return `https://api-assets.rubic.exchange/assets/coingecko/base/${lowerAddress}/logo.png`;
     case 30: // Rootstock
       return `https://api-assets.rubic.exchange/assets/coingecko/rootstock/${lowerAddress}/logo.png`;
+    case 56: // BSC
+      return `https://api-assets.rubic.exchange/assets/coingecko/binance-smart-chain/${lowerAddress}/logo.png`;
     case 1329: // Sei
       return `https://raw.githubusercontent.com/Symphony-Exchange/Symphony-Exchange-Assetlist/refs/heads/main/logos/${lowerAddress}.png`;
     case 146: // Sonic

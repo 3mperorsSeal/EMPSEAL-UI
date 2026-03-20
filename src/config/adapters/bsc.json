@@ -1,0 +1,70 @@
+[
+  {
+    "name": "PancakeSwapV1",
+    "address": "0x6cbdA053431a11A6771D74bF272d66904207dfD1"
+  },
+  {
+    "name": "PancakeSwapV2",
+    "address": "0x86EB63780e1b59146148CD58699B7Bb6dc2f8805"
+  },
+  {
+    "name": "PancakeSwapV3",
+    "address": "0x7307FEE834DdC88A716904830C0cb356A4878be1"
+  },
+  {
+    "name": "PancakeStableswapUSDC/BUSD",
+    "address": "0xF1c5241FaEFC0dB9B9333D9E2196e992a20dFD3d"
+  },
+  {
+    "name": "PancakeStableswapHAY/USDT",
+    "address": "0xcbe7b1C7Ad642a5FbEc9d86929C8e13fe04aAaCa"
+  },
+  {
+    "name": "PancakeStableswapUSDT/USDC",
+    "address": "0x1f5C42FCd0940692d4be52d17CD6bbFDFac9b0ac"
+  },
+  {
+    "name": "PancakeStableswapasUSDF/USDT",
+    "address": "0xb46dF4687B7F5d30B982fA6854D8FbB8A4D89132"
+  },
+  {
+    "name": "PancakeStableswapUSDF/USDT",
+    "address": "0x1D135C2711f89e6eb70665BF55942E498835b336"
+  },
+  {
+    "name": "PancakeStableswapUSDO/USDC",
+    "address": "0xCd23897513A5b7925761e8c63Da9203848C7e975"
+  },
+  {
+    "name": "PancakeStableswapUSDF/asUSDF",
+    "address": "0x626c6B8fb441c891F17D972fF1246B10e5634615"
+  },
+  {
+    "name": "PancakeStableSwapUSDC/BUSD",
+    "address": "0x8bea9826456AB283a17C6244141691670ae86A34"
+  },
+  {
+    "name": "UniswapV3Adapter",
+    "address": "0x1aAe94A372f20271B6b2919d3890Dc5583e091aC"
+  },
+  {
+    "name": "SquadSwapV3Adapter",
+    "address": "0x83BE9b7b17b9600Cb369ED7062F4980D5a2f6cDB"
+  },
+  {
+    "name": "SquadSwapV2Adapter",
+    "address": "0xA285098184932DA9AAa8F8B4895B93FdeeeC07a2"
+  },
+  {
+    "name": "ThenaV3AlgebraAdapter",
+    "address": "0x1D64595c11a4727551Cc11d12D2f7239A64e15F0"
+  },
+  {
+    "name": "FstswapV2Adapter",
+    "address": "0xb0e99628d884b3f45a312BCFD7A2505Cd711b657"
+  },
+  {
+    "name": "RingexchangeV2Adapter",
+    "address": "0xb018d450eCE36a9B4cb6ea620C8C361F25749874"
+  }
+]
