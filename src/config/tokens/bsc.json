@@ -52,6 +52,15 @@
     "image": "http://api-assets.rubic.exchange/assets/coingecko/bsc/0x7130d2a12b9bcbfae4f2634d864a1ee1ce3ead9c/logo.png"
   },
   {
+    "address": "0xcae117ca6bc8a341d2e7207f30e180f0e5618b9d",
+    "name": "ARK",
+    "ticker": "ARK",
+    "featured": true,
+    "blockchainNetwork": "BSC",
+    "decimal": 18,
+    "image": "http://api-assets.rubic.exchange/assets/coingecko/bsc/0xcae117ca6bc8a341d2e7207f30e180f0e5618b9d/logo.png"
+  },
+  {
     "address": "0x917af46b3c3c6e1bb7286b9f59637fb7c65851fb",
     "name": "Astherus asUSDF",
     "ticker": "asUSDF",
