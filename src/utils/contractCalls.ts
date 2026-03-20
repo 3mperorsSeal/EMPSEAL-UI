@@ -13,6 +13,7 @@ import { WETH } from "./abis/wethBaseABI";
 import { WSEI } from "./abis/wseiABI";
 import { WBERA } from "./abis/wberaABI";
 import { WRBTC } from "./abis/wrbtcABI";
+import { WBNB } from "./abis/wbnbABI";
 import { config } from "../Wagmi/config";
 import { 
   ETHW_ROUTER_ABI, 
@@ -21,7 +22,8 @@ import {
   BASECHAIN_ROUTER_ABI,
   SEI_ROUTER_ABI,
   BERA_ROUTER_ABI,
-  ROOTSTOCK_ROUTER_ABI
+  ROOTSTOCK_ROUTER_ABI,
+  BSC_ROUTER_ABI,
 } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
@@ -71,7 +73,13 @@ const ROUTER_FUNCTION_NAMES = {
     swapFromNative: "swapNoSplitFromETH",
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
-  }
+  },
+  // BSC
+  56: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
 } as const;
 
 // Create a union type of all possible function names
@@ -97,6 +105,8 @@ const getWrappedTokenABI = (chainId: number) => {
       return WBERA;
     case 30: // Rootstock
       return WRBTC;
+    case 56: // BSC
+      return WBNB;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -121,6 +131,8 @@ const getRouterABI = (chainId: number) => {
       return BERA_ROUTER_ABI;
     case 30: // Rootstock
       return ROOTSTOCK_ROUTER_ABI;
+    case 56: // BSC
+      return BSC_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;

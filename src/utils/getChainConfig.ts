@@ -49,6 +49,13 @@ export const getChainConfig = (chainId: number) => {
         wethAddress:
           "0x542fda317318ebf1d3deaf76e0b632741a7e677d" as `0x${string}`,
       };
+    case 56:
+      return {
+        routerAddress:
+          "0x7b9637C7c8Aa45B679eEdBb4b680642410322df1" as `0x${string}`,
+        wethAddress:
+          "0xbb4cdb9cbd36b01bd1cbaebf2de08d9173bc095c" as `0x${string}`,
+      };
     default:
       throw new Error(`Chain ${chainId} not supported`);
   }
