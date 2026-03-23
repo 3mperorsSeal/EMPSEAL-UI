@@ -97,7 +97,7 @@ export function CreateOrderForm({
   const [quoteReversed, setQuoteReversed] = useState(false);
   const [tradeError, setTradeError] = useState<string | null>(null);
   const [limitPriceError, setLimitPriceError] = useState<string | null>(null);
-  const [minValueError, setMinValueError] = useState<string | null>(null); // state for minimum value error for amount in with USD check $30
+  // const [minValueError, setMinValueError] = useState<string | null>(null); // state for minimum value error for amount in with USD check $30
   const [tokenInUSDPrice, setTokenInUSDPrice] = useState<number | null>(null);
   const [tokenOutUSDPrice, setTokenOutUSDPrice] = useState<number | null>(null);
 
@@ -500,18 +500,18 @@ export function CreateOrderForm({
   }, [currentLimitPrice, marketPrice, currentStrategy, orderMode]);
 
   // Validate that the order value is at least $30
-  useEffect(() => {
-    if (tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))) {
-      const usdValue = parseFloat(amountIn) * tokenInUSDPrice;
-      if (usdValue < 30) {
-        setMinValueError(`Minimum order value is $30`);
-      } else {
-        setMinValueError(null);
-      }
-    } else {
-      setMinValueError(null);
-    }
-  }, [amountIn, tokenInUSDPrice]);
+  // useEffect(() => {
+  //   if (tokenInUSDPrice && amountIn && !isNaN(parseFloat(amountIn))) {
+  //     const usdValue = parseFloat(amountIn) * tokenInUSDPrice;
+  //     if (usdValue < 30) {
+  //       setMinValueError(`Minimum order value is $30`);
+  //     } else {
+  //       setMinValueError(null);
+  //     }
+  //   } else {
+  //     setMinValueError(null);
+  //   }
+  // }, [amountIn, tokenInUSDPrice]);
 
   // Reset bracket settings when strategy changes from BRACKET
   useEffect(() => {
@@ -632,11 +632,11 @@ export function CreateOrderForm({
   // Combined function that handles both approval and order creation
   const handleMainAction = async () => {
     // If not approved, handle approval first
-    // Block action if order value is below $30
-    if (minValueError) {
-      onStatusMessage({ type: "error", message: minValueError });
-      return;
-    }
+    // // Block action if order value is below $30
+    // if (minValueError) {
+    //   onStatusMessage({ type: "error", message: minValueError });
+    //   return;
+    // }
 
     if (!isApproved) {
       await handleApproveTokens();
@@ -1819,7 +1819,7 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  !!minValueError ||
+                  // !!minValueError ||
                   hasInsufficientBalance ||
                   (orderMode === OrderMode.BRACKET &&
                     !!exitTokenValidationError) ||
@@ -1829,14 +1829,14 @@ export function CreateOrderForm({
                 className={`gtw cursor-pointer relative w-full md:h-12 h-11 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-base text-base font-extrabold ${isApproved
                   ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
                   : "bg-[#F59216] hover:bg-[#e08a15]"
-                  } ${!!minValueError || hasInsufficientBalance ? "opacity-50 cursor-not-allowed" : ""}`}
+                  } ${hasInsufficientBalance ? "opacity-50 cursor-not-allowed" : ""}`}
                 testId="button-main-action"
                 isApproving={isApproving}
                 isCreating={isCreating}
                 checkingApproval={checkingApproval}
                 isApproved={isApproved}
                 orderMode={orderMode}
-                minValueError={minValueError}
+                // minValueError={minValueError}
                 hasInsufficientBalance={hasInsufficientBalance}
               />
             </div>
@@ -2986,7 +2986,7 @@ export function CreateOrderForm({
                   checkingApproval ||
                   !!tradeError ||
                   !!limitPriceError ||
-                  !!minValueError ||
+                  // !!minValueError ||
                   hasInsufficientBalance ||
                   (orderMode === OrderMode.BRACKET &&
                     !!exitTokenValidationError) ||
@@ -2996,14 +2996,14 @@ export function CreateOrderForm({
                 className={`gtw cursor-pointer relative w-full md:h-[68px] h-12 md:rounded-[10px] rounded-md mx-auto button-trans flex justify-center text-center items-center transition-all lg:text-[28px] text-xl font-extrabold ${isApproved
                   ? "bg-[#F59216] hover:bg-[#e08a15 hover:text-white"
                   : "bg-[#F59216] hover:bg-[#e08a15] hover:text-white"
-                  } ${!!minValueError || hasInsufficientBalance ? "opacity-50 cursor-not-allowed" : ""}`}
+                  }${ hasInsufficientBalance ? "opacity-50 cursor-not-allowed" : ""}`}
                 testId="button-main-action-mobile"
                 isApproving={isApproving}
                 isCreating={isCreating}
                 checkingApproval={checkingApproval}
                 isApproved={isApproved}
                 orderMode={orderMode}
-                minValueError={minValueError}
+                // minValueError={minValueError}
                 hasInsufficientBalance={hasInsufficientBalance}
               />
             </div>
