@@ -41,7 +41,7 @@ export default function LimitOrder({ slippage, onOpenSlippage = () => {} }) {
 
   const handleOrderCreated = (details) => {
     window.dispatchEvent(
-      new CustomEvent("gemini:orderCreated", { detail: details })
+      new CustomEvent("orderCreated", { detail: details })
     );
     setNewOrderCounter((c) => c + 1);
     setLastCreatedOrderId(details.orderId);

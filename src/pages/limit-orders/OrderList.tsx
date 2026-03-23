@@ -156,9 +156,18 @@ export function OrderList({
 
   useEffect(() => {
     if (newOrderCounter > 0 && isPulseChain) {
-      refetchActiveOrderIds();
+      const syncNewOrder = async () => {
+        await refetchActiveOrderIds();
+        await refetchActiveOrders();
+      };
+      syncNewOrder();
     }
-  }, [newOrderCounter, refetchActiveOrderIds, isPulseChain]);
+  }, [
+    newOrderCounter,
+    refetchActiveOrderIds,
+    refetchActiveOrders,
+    isPulseChain,
+  ]);
 
   useEffect(() => {
     if (activeOrders && isPulseChain) {
@@ -253,8 +262,9 @@ export function OrderList({
       });
       return;
     }
+    await refetchActiveOrderIds();
     const result = await refetchActiveOrders();
-    if (result.isSuccess) {
+    if (result.isSuccess || result.status === "success") {
       onStatusMessage({
         type: "success",
         message: `Fetched ${
@@ -373,9 +383,9 @@ export function OrderList({
         addClientDataToOrder(details);
       }
     };
-    window.addEventListener("gemini:orderCreated", handleOrderCreated);
+    window.addEventListener("orderCreated", handleOrderCreated);
     return () => {
-      window.removeEventListener("gemini:orderCreated", handleOrderCreated);
+      window.removeEventListener("orderCreated", handleOrderCreated);
     };
   }, [addClientDataToOrder]);
 
