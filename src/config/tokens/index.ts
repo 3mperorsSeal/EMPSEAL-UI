@@ -5,6 +5,7 @@ import baseTokens from './base.json';
 import seiTokens from './sei.json';
 import berachainTokens from './berachain.json';
 import rootstockTokens from './rootstock.json';
+import bscTokens from './bsc.json';
 
 export const CHAIN_TOKENS: Record<number, any[]> = {
   369: pulsechainTokens,
@@ -14,4 +15,5 @@ export const CHAIN_TOKENS: Record<number, any[]> = {
   1329: seiTokens,
   80094: berachainTokens,
   30: rootstockTokens,
+  56: bscTokens,
 };

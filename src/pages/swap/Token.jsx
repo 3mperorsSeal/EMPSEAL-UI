@@ -182,6 +182,8 @@ const Token = ({ onClose, onSelect }) => {
         return "https://berachain.drpc.org";
       case 30:
         return "https://public-node.rsk.co";
+      case 56:
+        return "https://bsc-rpc.publicnode.com";
       default:
         return null;
     }

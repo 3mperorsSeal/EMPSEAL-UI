@@ -37,6 +37,7 @@ import {
   SEI_ROUTER_ABI,
   BERA_ROUTER_ABI,
   ROOTSTOCK_ROUTER_ABI,
+  BSC_ROUTER_ABI,
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
@@ -90,6 +91,8 @@ const getRouterABI = (chainId) => {
       return BERA_ROUTER_ABI;
     case 30:
       return ROOTSTOCK_ROUTER_ABI;
+    case 56:
+      return BSC_ROUTER_ABI;
     case 369:
     default:
       return PLS_ROUTER_ABI;

@@ -5,6 +5,7 @@ import Wallet from "./components/Wallet";
 // import { Link } from "react-router-dom";
 // import { useLocation } from "react-router-dom";
 import BG from "../../assets/images/empx-bg1.webp";
+import { Helmet } from "react-helmet";
 
 const BridgePage = () => {
   // const [activeTab, setActiveTab] = useState("via-bridge");
@@ -19,16 +20,28 @@ const BridgePage = () => {
   // }, [path]);
 
   return (
-    <div className="relative">
-      <img
-        src={BG}
-        alt="Background"
-        className="w-full h-full fixed top-0 left-0 -z-10"
-      />
-      <div className="block relative top140 container mx-auto">
-        <Wallet />
-      </div>
-      {/* <div
+    <>
+      <Helmet>
+        <title>EMPX | Via Bridge - Cross-Chain Asset Bridge</title>
+        <meta
+          name="description"
+          content="Bridge assets across multiple blockchains seamlessly with EMPX Via Bridge. Secure, fast cross-chain transfers with optimal routing and competitive rates."
+        />
+        <meta
+          name="keywords"
+          content="EMPX, DeFi, decentralized finance, crypto trading, multi-chain bridge, DEX aggregator, limit orders, Web3, blockchain, cryptocurrency, on-chain trading"
+        />
+      </Helmet>
+      <div className="relative">
+        <img
+          src={BG}
+          alt="Background"
+          className="w-full h-full fixed top-0 left-0 -z-10"
+        />
+        <div className="block relative top140 container mx-auto">
+          <Wallet />
+        </div>
+        {/* <div
         className={`w-full scales-b scales-top_via rounded-xl lg:pt-1 pt-2 2xl:px-16 lg:px-12 md:px-8 px-1 md:mt-0 mt-1 lg:pb-0 pb-5`}
       >
         <div className="w-full">
@@ -45,8 +58,8 @@ const BridgePage = () => {
                       ? "border-[#FF9900]"
                       : "border-black bg-black"
                   } 
-      px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
-      rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
+                  px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
+                  rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
                   Native Bridge
                 </div>
@@ -58,8 +71,8 @@ const BridgePage = () => {
                       ? "border-[#FF9900] bg-black"
                       : "border-white"
                   } 
-      px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
-      rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
+                  px-3 py-2 w-full md:h-10 h-[28px] flex justify-center items-center 
+                  rounded-md border text-white md:text-[15px] text-xs font-bold font-orbitron`}
                 >
                   Via Bridge
                 </div>
@@ -68,8 +81,9 @@ const BridgePage = () => {
           </div>
         </div>
       </div> */}
-      <BridgeInterface />
-    </div>
+        <BridgeInterface />
+      </div>
+    </>
   );
 };
 

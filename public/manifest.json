@@ -1,0 +1,33 @@
+{
+  "name": "EMPX DeFi Platform",
+  "short_name": "EMPX",
+  "description": "Multi-chain DeFi platform offering swapping, bridging, limit orders, and advanced trading features across multiple blockchain networks",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0a0a",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary",
+  "categories": ["finance", "crypto", "defi", "blockchain"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "/src/assets/images/emp-logo.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/src/assets/images/emp-logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/src/assets/images/emp-logo.png",
+      "sizes": "1280x720",
+      "type": "image/png"
+    }
+  ]
+}

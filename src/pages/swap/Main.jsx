@@ -26,17 +26,14 @@ const Main = () => {
   return (
     <>
       <Helmet>
-        <title>
-          Decentralized On-chain Aggregation, Trading & Swapping with EMPSEAL:
-          On-Chain Efficiency Meets Transparency
-        </title>
+        <title>EMPX | On-Chain DEX Aggregator - Multi-Chain DeFi Trading Platform</title>
         <meta
           name="description"
-          content="Empower your cryptocurrency trading with EMPSEAL's decentralized swap platform. Enjoy efficient, on-chain aggregation for the best prices. Trade, swap, and explore a censorship-resistant environment designed for everyone."
+          content="Trade cryptocurrencies on EMPX's decentralized DEX aggregator with best price execution across multiple chains. Advanced on-chain aggregation, low slippage, and censorship-resistant trading."
         />
         <meta
           name="keywords"
-          content="EMPSEAL,Trading,Swapping,Cryptocurrency,Decentralized Exchange,Aggregation,Buy Sell Crypto,Onchain Aggregator,Best Prices,Censorship Resistant,Efficient Trading"
+          content="EMPX, DeFi, decentralized finance, crypto trading, multi-chain bridge, DEX aggregator, limit orders, Web3, blockchain, cryptocurrency, on-chain trading"
         />
       </Helmet>
       <Normal />
