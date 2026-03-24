@@ -124,6 +124,10 @@ export function CreateOrderForm({
   const selectedTokenOut = form.watch("tokenOut");
   const currentLimitPrice = form.watch("limitPrice");
   const currentStrategy = form.watch("strategy");
+  const isSellLikeStrategy = currentStrategy === OrderStrategy.SELL;
+  const isBuyLikeStrategy =
+    currentStrategy === OrderStrategy.BUY ||
+    currentStrategy === OrderStrategy.BRACKET;
   const normalizedExitToken = exitTokenAddress.trim();
   const hasExitTokenInput = normalizedExitToken.length > 0;
   const exitTokenValidationError = hasExitTokenInput
@@ -467,28 +471,28 @@ export function CreateOrderForm({
       }
 
       if (currentStrategy === OrderStrategy.SELL) {
-        // For Sell orders, limit price should be greater than market price
+        // Sell High: target should be above market
         if (limit < market) {
           setLimitPriceError(
-            "For Exit Strategy (Sell), limit price should be greater than market price.",
+            "For Exit Strategy (Sell), exit price should be above market price.",
           );
         } else {
           setLimitPriceError(null);
         }
       } else if (currentStrategy === OrderStrategy.BUY) {
-        // For Buy orders, limit price should be less than market price
-        if (limit > market) {
+        // Buy Low (entry): internal quote must move above market to represent a lower entry
+        if (limit < market) {
           setLimitPriceError(
-            "For Accumulation Strategy (Buy), limit price should be less than market price.",
+            "For Accumulation Strategy (Buy), entry price should be below market price.",
           );
         } else {
           setLimitPriceError(null);
         }
       } else if (currentStrategy === OrderStrategy.BRACKET) {
-        if (orderMode === OrderMode.BRACKET && limit > market) {
+        if (orderMode === OrderMode.BRACKET && limit < market) {
           // OCO/Bracket entry is BUY only
           setLimitPriceError(
-            "For OCO (Bracket) BUY entries, limit price should be less than market price.",
+            "For OCO (Bracket) BUY entries, entry price should be below market price.",
           );
         } else {
           setLimitPriceError(null);
@@ -956,7 +960,7 @@ export function CreateOrderForm({
         currentStrategy === OrderStrategy.BUY ||
         currentStrategy === OrderStrategy.BRACKET
       ) {
-        newPrice = market / (1 + percent / 100);
+        newPrice = market * (1 + percent / 100);
       } else {
         newPrice = market * (1 + percent / 100);
       }
@@ -1032,8 +1036,8 @@ export function CreateOrderForm({
         currentStrategy === OrderStrategy.BUY ||
         currentStrategy === OrderStrategy.BRACKET
       ) {
-        // For BUY and BRACKET (OCO): inverse of SELL movement to keep values positive
-        newLimitPrice = market / (1 + percentValue / 100);
+        // For BUY and BRACKET (OCO): higher internal quote = lower entry in user terms
+        newLimitPrice = market * (1 + percentValue / 100);
       } else {
         // Fallback
         newLimitPrice = market * (1 + percentValue / 100);
@@ -1089,7 +1093,7 @@ export function CreateOrderForm({
       return Math.min(10000, Math.max(0, ((limitPriceValue - market) / market) * 100));
     }
 
-    const percentBelow = (market / limitPriceValue - 1) * 100;
+    const percentBelow = (limitPriceValue / market - 1) * 100;
     return Math.min(10000, Math.max(0, percentBelow));
   };
 
@@ -1930,8 +1934,8 @@ export function CreateOrderForm({
                   )}
                   <span className="text-[#FF9900] md:text-lg text-base font-orbitron font-bold">
                     {quoteReversed && tokenInInfo && tokenOutInfo
-                      ? `${tokenOutInfo.symbol} per ${tokenInInfo.symbol}`
-                      : `${tokenInInfo?.symbol || "Token"} per ${tokenOutInfo?.symbol || "USDT"}`}
+                      ? `${tokenInInfo.symbol} per ${tokenOutInfo.symbol}`
+                      : `${tokenOutInfo?.symbol || "USDT"} per ${tokenInInfo?.symbol || "Token"}`}
                   </span>
                 </div>
 
@@ -1944,11 +1948,6 @@ export function CreateOrderForm({
 
                   let targetPosition = 0;
                   let priceDiffPercent = 0;
-                  const isSellLikeStrategy = currentStrategy === OrderStrategy.SELL;
-                  const isBuyLikeStrategy =
-                    currentStrategy === OrderStrategy.BUY ||
-                    currentStrategy === OrderStrategy.BRACKET;
-
                   if (market > 0 && limit > 0) {
                     if (isSellLikeStrategy) {
                       // For SELL: limit higher than market
@@ -1959,8 +1958,8 @@ export function CreateOrderForm({
                       );
                       targetPosition = clampedPercent / 100;
                     } else if (isBuyLikeStrategy) {
-                      // For BUY/OCO: inverse of SELL so values remain positive for large percentages
-                      priceDiffPercent = (market / limit - 1) * 100;
+                      // For BUY/OCO: larger internal quote means deeper buy-low entry
+                      priceDiffPercent = (limit / market - 1) * 100;
                       const clampedPercent = Math.min(
                         10000,
                         Math.max(0, priceDiffPercent),
@@ -2043,7 +2042,7 @@ export function CreateOrderForm({
                                 const percentBelowMarket =
                                   (100 - newTargetPosition) * 100;
                                 newLimitPrice =
-                                  market / (1 + percentBelowMarket / 100);
+                                  market * (1 + percentBelowMarket / 100);
                                 // Update custom percentage
                                 setCustomPercentage(
                                   percentBelowMarket.toFixed(2),
@@ -2083,10 +2082,10 @@ export function CreateOrderForm({
                           </>
                         ) : (
                           <>
-                            <span>10000%</span>
-                            <span>7500%</span>
-                            <span>5000%</span>
-                            <span>2500%</span>
+                            <span>-10000%</span>
+                            <span>-7500%</span>
+                            <span>-5000%</span>
+                            <span>-2500%</span>
                             <span>0%</span>
                           </>
                         )}
@@ -2134,6 +2133,9 @@ export function CreateOrderForm({
                   </div>
                   <div className="flex flex-col items-center justify-center gap-2">
                     <div className="py-1 px-2 bg-[#FFE3BA] rounded-lg text-center text-black md:text-base text-sm font-normal font-orbitron flex items-center gap-1">
+                      {isBuyLikeStrategy && (
+                        <span className="text-black font-bold">-</span>
+                      )}
                       <input
                         type="text"
                         value={customPercentage}
@@ -2938,14 +2940,12 @@ export function CreateOrderForm({
                             const priceDiffPercent = ((limit - market) / market) * 100;
                             // Only show profit if limit > market
                             return priceDiffPercent > 0 ? `${priceDiffPercent.toFixed(2)}%` : "0%";
-                          } else if (
-                            (currentStrategy === OrderStrategy.BUY ||
-                              orderMode === OrderMode.BRACKET) &&
-                            limit > 0
-                          ) {
-                            // To mirror "buying X% below market" and track infinite positive potential (like the 10000% slider)
+                          } else if (currentStrategy === OrderStrategy.BUY && limit > 0) {
+                            // Entry delta for Buy Low is expected to be negative vs market
                             const priceDiffPercent = ((market - limit) / limit) * 100;
-                            // Only show profit if limit < market (which means priceDiffPercent > 0)
+                            return priceDiffPercent < 0 ? `${priceDiffPercent.toFixed(2)}%` : "0%";
+                          } else if (orderMode === OrderMode.BRACKET && limit > 0) {
+                            const priceDiffPercent = ((limit - market) / market) * 100;
                             return priceDiffPercent > 0 ? `${priceDiffPercent.toFixed(2)}%` : "0%";
                           } else if (orderMode === OrderMode.POSITION && takeProfitPrice) {
                             const tp = parseFloat(takeProfitPrice);
@@ -2961,7 +2961,9 @@ export function CreateOrderForm({
                     <div className="text-white md:text-[11px] mt-1 text-[9px] font-semibold">
                       {orderMode === OrderMode.BRACKET || orderMode === OrderMode.POSITION
                         ? "Potential Profit"
-                        : "Profit"}
+                        : currentStrategy === OrderStrategy.BUY
+                          ? "Entry Delta"
+                          : "Profit"}
                     </div>
                   </div>
                 </div>
