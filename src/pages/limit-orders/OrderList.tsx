@@ -21,8 +21,8 @@ import {
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 import type { OrderGroup } from "./schema";
 import { GroupType } from "./schema";
+import { CONTRACT_ADDRESS } from "./create-order-form/constants";
 
-const CONTRACT_ADDRESS = "0xF4856ce8BE6E992819167D55C82a1Fae09Ddd9E2";
 const LOCAL_STORAGE_ORDERS_KEY_PREFIX = "limit-orders-";
 
 const loadOrdersFromLocalStorage = (userAddress: string): Order[] => {
@@ -132,6 +132,18 @@ export function OrderList({
   const activeOrders = activeOrdersData
     ? (activeOrdersData as any[]).map((order: any) => {
         const tokenOutInfo = getTokenInfo(order.tokenOut);
+        const statusMap: Record<number, string> = {
+          0: "active",
+          1: "active", // PartiallyFilled
+          2: "fulfilled",
+          3: "cancelled",
+          4: "expired",
+          5: "pending",
+        };
+        const orderType = Number(order.orderType);
+        const strategy =
+          orderType === 0 ? OrderStrategy.SELL : OrderStrategy.BUY;
+
         return {
           id: order.id.toString(),
           user: order.user,
@@ -143,13 +155,13 @@ export function OrderList({
           deadline: order.deadline.toString(),
           allowPartialFill: order.fillMode > 0 || order.maxSplits > 1,
           filledAmount: order.filledAmount.toString(),
-          status:
-            ["active", "fulfilled", "cancelled", "expired"][order.status] ||
-            "unknown",
+          status: statusMap[Number(order.status)] || "unknown",
           tokenOutDecimals: tokenOutInfo?.decimals || 18,
           groupId: order.groupId?.toString(),
           groupRole: order.groupRole,
           fundsDeposited: order.fundsDeposited,
+          orderType,
+          strategy,
         };
       })
     : [];
@@ -216,7 +228,8 @@ export function OrderList({
           fillMode: 0,
           maxSplits: 0,
           fillCount: 0,
-          strategy: "GreedyOrderRouter" as OrderStrategy,
+          strategy:
+            activeOrder.orderType === 0 ? OrderStrategy.SELL : OrderStrategy.BUY,
           ...existingOrder,
           ...activeOrder,
           status: newStatus,

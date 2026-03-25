@@ -10,8 +10,7 @@ import { formatUnits } from "viem";
 import { LIMIT_ORDER_ABI } from "../../utils/abis/limitOrderEscrowABI";
 import { TokenLogo } from "../../components/TokenLogo.tsx";
 import { Badge } from "../../components/ui/badge";
-
-const CONTRACT_ADDRESS = "0xF4856ce8BE6E992819167D55C82a1Fae09Ddd9E2";
+import { CONTRACT_ADDRESS } from "./create-order-form/constants";
 
 export type PulseToken = {
   name: string;
@@ -197,19 +196,14 @@ export function OrderListItem({
     : 0;
 
   const isStarted = orderProgress && Number(orderProgress.fills) > 0;
+  const isSellOrder =
+    order.orderType !== undefined
+      ? Number(order.orderType) === 0
+      : order.strategy === OrderStrategy.SELL;
 
   // Get strategy display name
   const getStrategyName = () => {
-    switch (order.strategy) {
-      case OrderStrategy.SELL:
-        return "Sell High";
-      case OrderStrategy.BUY:
-        return "Buy Low";
-      case OrderStrategy.BRACKET:
-        return "Bracket";
-      default:
-        return "Order";
-    }
+    return isSellOrder ? "Sell" : "Buy";
   };
   const isFulfilled = order.status === "fulfilled" || progressPercent >= 100;
 
@@ -274,7 +268,7 @@ export function OrderListItem({
             >
               {formatPrice(order.limitPrice)}
             </span>
-            {order.strategy === OrderStrategy.SELL ? (
+            {isSellOrder ? (
               <ArrowUp className="text-green-500" />
             ) : (
               <ArrowDown className="text-red-500" />

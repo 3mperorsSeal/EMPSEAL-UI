@@ -1,4 +1,6 @@
-export const LIMIT_ORDER_ABI = [
+export const LIMIT_ORDER_ABI = 
+
+[
 	{
 		"inputs": [
 			{
@@ -216,6 +218,60 @@ export const LIMIT_ORDER_ABI = [
 			},
 			{
 				"internalType": "address",
+				"name": "tokenOut",
+				"type": "address"
+			},
+			{
+				"internalType": "uint256",
+				"name": "amountIn",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "minAmountOut",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "limitPrice",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "deadline",
+				"type": "uint256"
+			},
+			{
+				"internalType": "enum LimitOrderEscrow.PartialFillMode",
+				"name": "fillMode",
+				"type": "uint8"
+			},
+			{
+				"internalType": "enum LimitOrderEscrow.OrderType",
+				"name": "orderType",
+				"type": "uint8"
+			}
+		],
+		"name": "createOrder",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "orderId",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "tokenIn",
+				"type": "address"
+			},
+			{
+				"internalType": "address",
 				"name": "exitToken",
 				"type": "address"
 			},
@@ -270,60 +326,6 @@ export const LIMIT_ORDER_ABI = [
 			{
 				"internalType": "uint256",
 				"name": "takeProfitOrderId",
-				"type": "uint256"
-			}
-		],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "tokenIn",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "tokenOut",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "amountIn",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "minAmountOut",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "limitPrice",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "deadline",
-				"type": "uint256"
-			},
-			{
-				"internalType": "enum LimitOrderEscrow.PartialFillMode",
-				"name": "fillMode",
-				"type": "uint8"
-			},
-			{
-				"internalType": "enum LimitOrderEscrow.OrderType",
-				"name": "orderType",
-				"type": "uint8"
-			}
-		],
-		"name": "createOrder",
-		"outputs": [
-			{
-				"internalType": "uint256",
-				"name": "orderId",
 				"type": "uint256"
 			}
 		],
@@ -835,30 +837,6 @@ export const LIMIT_ORDER_ABI = [
 			{
 				"indexed": false,
 				"internalType": "uint256",
-				"name": "filledAmount",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint8",
-				"name": "fillCount",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "enum LimitOrderEscrow.OrderStatus",
-				"name": "status",
-				"type": "uint8"
-			},
-			{
-				"indexed": false,
-				"internalType": "bool",
-				"name": "fundsDeposited",
-				"type": "bool"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
 				"name": "groupId",
 				"type": "uint256"
 			},
@@ -1219,6 +1197,25 @@ export const LIMIT_ORDER_ABI = [
 		"type": "function"
 	},
 	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "executedBuyAmountByOrder",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
 		"inputs": [],
 		"name": "feeCollector",
 		"outputs": [
@@ -1371,6 +1368,40 @@ export const LIMIT_ORDER_ABI = [
 				"internalType": "struct LimitOrderEscrow.Order",
 				"name": "",
 				"type": "tuple"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "orderId",
+				"type": "uint256"
+			}
+		],
+		"name": "getOrderExecutionAmounts",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "executedSellAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "executedBuyAmount",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "committedFilled",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "committedTotal",
+				"type": "uint256"
 			}
 		],
 		"stateMutability": "view",
@@ -2040,6 +2071,25 @@ export const LIMIT_ORDER_ABI = [
 				"internalType": "uint256",
 				"name": "",
 				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "whitelistArray",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
 			}
 		],
 		"stateMutability": "view",
