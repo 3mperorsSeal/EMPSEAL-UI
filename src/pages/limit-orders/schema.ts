@@ -35,6 +35,7 @@ export interface Order {
   fundsDeposited?: boolean;
   groupId?: string;
   groupRole?: GroupType;
+  orderType?: number;
 }
 
 export interface OrderGroup {
