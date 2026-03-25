@@ -116,11 +116,18 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     }
   }, [selectedTokenA, selectedTokenB, onTokensChange]);
 
-  // Handle activeTab prop changes from DotsMenu
+  // Keep limit orders disabled for now, even if someone hits /swap?tab=limit directly.
   useEffect(() => {
     const tab = searchParams.get("tab");
-    setOrder(tab === "limit");
-  }, [searchParams]);
+    if (tab === "limit") {
+      const nextParams = new URLSearchParams(searchParams);
+      nextParams.delete("tab");
+      setSearchParams(nextParams, { replace: true });
+      setOrder(false);
+      return;
+    }
+    setOrder(false);
+  }, [searchParams, setSearchParams]);
 
   // const [selectedTokenA, setSelectedTokenA] = useState(null);
   // const [selectedTokenB, setSelectedTokenB] = useState(null);
