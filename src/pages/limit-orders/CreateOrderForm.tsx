@@ -60,6 +60,74 @@ import {
   sanitizeNumericInput,
 } from "./create-order-form/utils";
 
+type ExpiryPreset =
+  | "5m"
+  | "30m"
+  | "1h"
+  | "1d"
+  | "3d"
+  | "7d"
+  | "1mo"
+  | "3mo"
+  | "custom";
+
+const EXPIRY_PRESET_OPTIONS: Array<{ value: ExpiryPreset; label: string }> = [
+  { value: "5m", label: "5 minutes" },
+  { value: "30m", label: "30 minutes" },
+  { value: "1h", label: "1 hour" },
+  { value: "1d", label: "1 day" },
+  { value: "3d", label: "3 days" },
+  { value: "7d", label: "7 days" },
+  { value: "1mo", label: "1 month" },
+  { value: "3mo", label: "3 months (max)" },
+  { value: "custom", label: "Custom" },
+];
+
+const formatLocalDateTime = (date: Date) => {
+  const pad = (value: number) => String(value).padStart(2, "0");
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours(),
+  )}:${pad(date.getMinutes())}`;
+};
+
+const getPresetDeadline = (preset: ExpiryPreset) => {
+  if (preset === "custom") return null;
+
+  const next = new Date();
+  next.setSeconds(0, 0);
+
+  switch (preset) {
+    case "5m":
+      next.setMinutes(next.getMinutes() + 5);
+      break;
+    case "30m":
+      next.setMinutes(next.getMinutes() + 30);
+      break;
+    case "1h":
+      next.setHours(next.getHours() + 1);
+      break;
+    case "1d":
+      next.setDate(next.getDate() + 1);
+      break;
+    case "3d":
+      next.setDate(next.getDate() + 3);
+      break;
+    case "7d":
+      next.setDate(next.getDate() + 7);
+      break;
+    case "1mo":
+      next.setMonth(next.getMonth() + 1);
+      break;
+    case "3mo":
+      next.setMonth(next.getMonth() + 3);
+      break;
+    default:
+      return null;
+  }
+
+  return next;
+};
+
 export function CreateOrderForm({
   onStatusMessage,
   onOrderCreated,
@@ -101,6 +169,13 @@ export function CreateOrderForm({
   const [tokenInUSDPrice, setTokenInUSDPrice] = useState<number | null>(null);
   const [tokenOutUSDPrice, setTokenOutUSDPrice] = useState<number | null>(null);
   const [standardSide, setStandardSide] = useState<OrderStrategy>(OrderStrategy.SELL);
+  const [deadlinePreset, setDeadlinePreset] = useState<ExpiryPreset>("30m");
+  const [selectedInPercentage, setSelectedInPercentage] = useState<number | null>(
+    null,
+  );
+  const [selectedOutPercentage, setSelectedOutPercentage] = useState<number | null>(
+    null,
+  );
 
   // bracket
   const [takeProfitPercent, setTakeProfitPercent] = useState<number | string>(0);
@@ -612,6 +687,8 @@ export function CreateOrderForm({
     const currentCustomTokenIn = customTokenIn;
     setCustomTokenIn(customTokenOut);
     setCustomTokenOut(currentCustomTokenIn);
+    setSelectedInPercentage(null);
+    setSelectedOutPercentage(null);
 
     // Swapping the pair toggles user intent between sell-style and buy-style entry.
     setStandardSide((prev) =>
@@ -964,6 +1041,9 @@ export function CreateOrderForm({
       setTakeProfitPrice("");
       setStopLossPrice("");
       setTakeProfitDeadline("");
+      setDeadlinePreset("30m");
+      setSelectedInPercentage(null);
+      setSelectedOutPercentage(null);
       setOrderMode(OrderMode.STANDARD);
       setStandardSide(OrderStrategy.SELL);
       setExitTokenMode("select");
@@ -991,6 +1071,47 @@ export function CreateOrderForm({
   };
 
   const { minDeadline, maxDeadline } = getDeadlineBounds();
+  const minDeadlineDate = useMemo(() => new Date(minDeadline), [minDeadline]);
+  const maxDeadlineDate = useMemo(() => new Date(maxDeadline), [maxDeadline]);
+
+  const applyPresetDeadline = (
+    preset: Exclude<ExpiryPreset, "custom">,
+    shouldMarkDirty: boolean,
+  ) => {
+    const presetDeadline = getPresetDeadline(preset);
+    if (!presetDeadline) return;
+
+    const boundedDeadline =
+      presetDeadline < minDeadlineDate
+        ? minDeadlineDate
+        : presetDeadline > maxDeadlineDate
+          ? maxDeadlineDate
+          : presetDeadline;
+
+    form.setValue("deadline", formatLocalDateTime(boundedDeadline), {
+      shouldValidate: true,
+      shouldDirty: shouldMarkDirty,
+      shouldTouch: shouldMarkDirty,
+    });
+  };
+
+  const handleDeadlinePresetChange = (value: string) => {
+    const preset = value as ExpiryPreset;
+    setDeadlinePreset(preset);
+
+    if (preset === "custom") return;
+
+    applyPresetDeadline(preset, true);
+  };
+
+  useEffect(() => {
+    if (deadlinePreset === "custom") return;
+
+    const currentDeadline = form.getValues("deadline");
+    if (currentDeadline) return;
+
+    applyPresetDeadline(deadlinePreset, false);
+  }, [deadlinePreset, form, minDeadlineDate, maxDeadlineDate]);
 
   // For Limit Price
   // Apply limit price by +/- percentage from market
@@ -1056,26 +1177,60 @@ export function CreateOrderForm({
     setCalculatedMarketPrice(displayedMarketPrice);
   };
 
-  // For Limit Price
-  // Percentage selection
-  const [selectedPercentage, setSelectedPercentage] = useState<number | null>(
-    null,
-  );
+  const handleTokenInPercentageChange = (value: number) => {
+    if (selectedInPercentage === value) {
+      setSelectedInPercentage(null);
+      return;
+    }
 
-  const handlePercentageChange = (value: number) => {
     if (!tokenInBalance) return;
-
-    setSelectedPercentage(value);
-
     const balance = parseFloat(tokenInBalance);
+    if (!Number.isFinite(balance)) return;
+
     const percentValue = (balance * value) / 100;
+    setSelectedInPercentage(value);
 
     // Update input visually
     form.setValue("amountIn", percentValue.toFixed(4), {
       shouldValidate: true,
       shouldDirty: true,
     });
+
+    if (orderMode === OrderMode.STANDARD) {
+      setStandardSide(OrderStrategy.SELL);
+    }
   };
+
+  const handleTokenOutPercentageChange = (value: number) => {
+    if (selectedOutPercentage === value) {
+      setSelectedOutPercentage(null);
+      return;
+    }
+
+    if (!tokenOutBalance) return;
+    const balance = parseFloat(tokenOutBalance);
+    if (!Number.isFinite(balance)) return;
+
+    const percentValue = (balance * value) / 100;
+    setSelectedOutPercentage(value);
+
+    form.setValue("minAmountOut", percentValue.toFixed(4), {
+      shouldValidate: true,
+      shouldDirty: true,
+    });
+
+    if (orderMode === OrderMode.STANDARD) {
+      setStandardSide(OrderStrategy.BUY);
+    }
+  };
+
+  useEffect(() => {
+    setSelectedInPercentage(null);
+  }, [selectedTokenIn]);
+
+  useEffect(() => {
+    setSelectedOutPercentage(null);
+  }, [selectedTokenOut]);
 
   const [inputEl, setInputEl] = useState<HTMLInputElement | null>(null);
 
@@ -1083,7 +1238,11 @@ export function CreateOrderForm({
     inputEl?.showPicker?.(); // Safely trigger calendar
   };
 
-  const { ref: formRef, ...rest } = form.register("deadline");
+  const {
+    ref: formRef,
+    onChange: onDeadlineInputChange,
+    ...rest
+  } = form.register("deadline");
 
   const mergedRef = (el: HTMLInputElement | null) => {
     setInputEl(el); // Save to state
@@ -1412,6 +1571,7 @@ export function CreateOrderForm({
                           const sanitized = sanitizeNumericInput(
                             e.target.value,
                           );
+                          setSelectedInPercentage(null);
                           form.setValue("amountIn", sanitized);
                           if (orderMode === OrderMode.STANDARD) {
                             setStandardSide(OrderStrategy.SELL);
@@ -1450,11 +1610,11 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-      ${selectedPercentage === value
+      ${selectedInPercentage === value
                           ? "!text-black !bg-[#FF9900] border-[#FF9900]"
                           : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
                         }`}
-                      onClick={() => handlePercentageChange(value)}
+                      onClick={() => handleTokenInPercentageChange(value)}
                     >
                       {value}%
                     </button>
@@ -1712,6 +1872,7 @@ export function CreateOrderForm({
                           const sanitized = sanitizeNumericInput(
                             e.target.value,
                           );
+                          setSelectedOutPercentage(null);
                           form.setValue("minAmountOut", sanitized);
                           if (orderMode === OrderMode.STANDARD) {
                             setStandardSide(OrderStrategy.BUY);
@@ -1750,11 +1911,11 @@ export function CreateOrderForm({
                       key={value}
                       type="button"
                       className={`py-1 border bg-[#EEC485] text-black flex justify-center items-center rounded-full md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
-            ${selectedPercentage === value
+            ${selectedOutPercentage === value
                           ? "!text-black !bg-[#FF9900] border-[#FF9900]"
                           : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
                         }`}
-                      onClick={() => handlePercentageChange(value)}
+                      onClick={() => handleTokenOutPercentageChange(value)}
                     >
                       {value}%
                     </button>
@@ -1915,18 +2076,41 @@ export function CreateOrderForm({
                       Expiry{" "}
                     </div>
                     {/* Deadline */}
-                    <div onClick={handleClick} className="inline-block">
-                      <input
-                        id="deadline"
-                        {...rest}
-                        ref={mergedRef}
-                        type="datetime-local"
-                        className="cursor bg-black  md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
-                        placeholder="Deadline"
-                        data-testid="input-deadline"
-                        min={minDeadline}
-                        max={maxDeadline}
-                      />
+                    <div className="inline-block">
+                      <Select
+                        value={deadlinePreset}
+                        onValueChange={handleDeadlinePresetChange}
+                      >
+                        <SelectTrigger className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-sm font-normal leading-tight tracking-wide">
+                          <SelectValue placeholder="Select expiry" />
+                        </SelectTrigger>
+                        <SelectContent className="!bg-black text-white border border-[#FF9900]">
+                          {EXPIRY_PRESET_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {deadlinePreset === "custom" && (
+                        <div onClick={handleClick} className="inline-block mt-2">
+                          <input
+                            id="deadline"
+                            {...rest}
+                            ref={mergedRef}
+                            onChange={(e) => {
+                              setDeadlinePreset("custom");
+                              onDeadlineInputChange(e);
+                            }}
+                            type="datetime-local"
+                            className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                            placeholder="Deadline"
+                            data-testid="input-deadline"
+                            min={minDeadline}
+                            max={maxDeadline}
+                          />
+                        </div>
+                      )}
                     </div>
                     {/* Slip */}
                     <div className="flex">
@@ -2823,18 +3007,41 @@ export function CreateOrderForm({
                       Expiry{" "}
                     </div>
                     {/* Deadline */}
-                    <div onClick={handleClick} className="inline-block">
-                      <input
-                        id="deadline"
-                        {...rest}
-                        ref={mergedRef}
-                        type="datetime-local"
-                        className="cursor bg-black  md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
-                        placeholder="Deadline"
-                        data-testid="input-deadline"
-                        min={minDeadline}
-                        max={maxDeadline}
-                      />
+                    <div className="inline-block">
+                      <Select
+                        value={deadlinePreset}
+                        onValueChange={handleDeadlinePresetChange}
+                      >
+                        <SelectTrigger className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-sm font-normal leading-tight tracking-wide">
+                          <SelectValue placeholder="Select expiry" />
+                        </SelectTrigger>
+                        <SelectContent className="!bg-black text-white border border-[#FF9900]">
+                          {EXPIRY_PRESET_OPTIONS.map((option) => (
+                            <SelectItem key={option.value} value={option.value}>
+                              {option.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      {deadlinePreset === "custom" && (
+                        <div onClick={handleClick} className="inline-block mt-2">
+                          <input
+                            id="deadline"
+                            {...rest}
+                            ref={mergedRef}
+                            onChange={(e) => {
+                              setDeadlinePreset("custom");
+                              onDeadlineInputChange(e);
+                            }}
+                            type="datetime-local"
+                            className="cursor bg-black md:w-[210px] w-[180px] text-right rounded-[4.83px] h-[43px] text-white px-2 outline-none border border-[#FF9900] text-white/opacity-70 text-sm font-normal leading-tight tracking-wide"
+                            placeholder="Deadline"
+                            data-testid="input-deadline"
+                            min={minDeadline}
+                            max={maxDeadline}
+                          />
+                        </div>
+                      )}
                     </div>
                     {/* Slip */}
                     <div className="flex w-full">
