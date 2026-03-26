@@ -63,7 +63,7 @@ const Transaction = ({
 
             {/* Header */}
             <div className="flex items-center justify-center gap-3">
-              <div className="text-white text-2xl font-bold roboto leading-7">
+              <div className="text-white text-2xl font-bold font-orbitron leading-7">
                 Transaction Submitted
               </div>
             </div>
@@ -71,10 +71,10 @@ const Transaction = ({
             {/* You Pay */}
             {tokenA && amountIn && (
               <div className="mt-6">
-                <div className="text-white mb-2 text-sm font-normal roboto">
+                <div className="text-white mb-2 text-sm font-normal font-orbitron">
                   You Paid
                 </div>
-                <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
+                <div className="text-white text-2xl font-bold font-orbitron flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                   {formatNumber(amountIn)} {tokenA?.ticker}
                   <img
                     src={tokenA?.image}
@@ -88,10 +88,10 @@ const Transaction = ({
             {/* You Receive */}
             {tokenB && amountOut && (
               <div className="mt-6">
-                <div className="text-white text-sm font-normal roboto mb-2">
+                <div className="text-white text-sm font-normal font-orbitron mb-2">
                   You Received
                 </div>
-                <div className="text-white text-2xl font-bold roboto flex gap-3 items-center w-auto-search bg-search bg-search-padd">
+                <div className="text-white text-2xl font-bold font-orbitron flex gap-3 items-center w-auto-search bg-search bg-search-padd">
                   {formatNumber(amountOut)} {tokenB?.ticker}
                   <img
                     src={tokenB?.image}
@@ -105,10 +105,10 @@ const Transaction = ({
             {/* Price */}
             {tokenA && tokenB && rate && (
               <div className="flex justify-between items-center w-full mt-6">
-                <div className="text-white text-sm font-normal roboto">
+                <div className="text-white text-sm font-normal font-orbitron">
                   Price
                 </div>
-                <div className="text-white text-sm font-normal roboto">
+                <div className="text-white text-sm font-normal font-orbitron">
                   1 {tokenA?.ticker} = {rate} {tokenB?.ticker}
                 </div>
               </div>
@@ -129,11 +129,11 @@ const Transaction = ({
             {/* Price Impact */}
             {usdValueTokenA && usdValueTokenB && (
               <div className="flex justify-between items-center w-full mt-2">
-                <div className="text-white text-sm font-normal roboto">
+                <div className="text-white text-sm font-normal font-orbitron">
                   Price Impact
                 </div>
                 <div
-                  className={`text-sm font-normal roboto ${parseFloat(priceImpact) > 0
+                  className={`text-sm font-normal font-orbitron ${parseFloat(priceImpact) > 0
                       ? "text-green-500"
                       : parseFloat(priceImpact) < 0
                         ? "text-red-500"
@@ -151,7 +151,7 @@ const Transaction = ({
                 target="_blank"
                 to={`${blockExplorer}${transactionHash}`}
               >
-                <div className="text-white text-base font-bold roboto text-center leading-normal">
+                <div className="text-white text-base font-bold font-orbitron text-center leading-normal">
                   View on {blockExplorerName}
                 </div>
               </Link>
@@ -165,7 +165,7 @@ const Transaction = ({
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 text-white/50 hover:text-white transition-colors cursor-pointer"
               >
-                <span className="text-md font-normal roboto">Powered by</span>
+                <span className="text-md font-normal font-orbitron">Powered by</span>
                 <img src={Logo} alt="EmpX Logo" className="w-10 h-8 object-contain" />
               </a>
             </div>

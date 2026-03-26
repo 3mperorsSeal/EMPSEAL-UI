@@ -38,11 +38,13 @@ import {
   BERA_ROUTER_ABI,
   ROOTSTOCK_ROUTER_ABI,
   BSC_ROUTER_ABI,
+  MONAD_ROUTER_ABI,
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 import TokenLogo from "../../components/TokenLogo.jsx";
 import { fetchTokenPrice } from "../../utils/priceFetcher";
+import { getQuoteHopFallbackPlan } from "../../config/quoteFallback";
 
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
@@ -51,6 +53,7 @@ import { WETH } from "../../utils/abis/wethBaseABI";
 import { WSEI } from "../../utils/abis/wseiABI";
 import { WBERA } from "../../utils/abis/wberaABI";
 import { WRBTC } from "../../utils/abis/wrbtcABI";
+import { WMON } from "../../utils/abis/wmonABI";
 
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
@@ -71,6 +74,8 @@ const getWrappedTokenABI = (chainId) => {
       return WBERA;
     case 30:
       return WRBTC;
+    case 143:
+      return WMON;
     case 369:
     default:
       return WPLS;
@@ -93,6 +98,8 @@ const getRouterABI = (chainId) => {
       return ROOTSTOCK_ROUTER_ABI;
     case 56:
       return BSC_ROUTER_ABI;
+    case 143:
+      return MONAD_ROUTER_ABI;
     case 369:
     default:
       return PLS_ROUTER_ABI;
@@ -222,73 +229,189 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     }
   };
 
+  const normalizeAddress = (address) => address?.toLowerCase?.() || "";
+  const isSameAddress = (a, b) =>
+    normalizeAddress(a) === normalizeAddress(b);
+  const getQuoteTokenAddress = (tokenAddress) =>
+    isSameAddress(tokenAddress, EMPTY_ADDRESS)
+      ? wethAddress || EMPTY_ADDRESS
+      : tokenAddress || EMPTY_ADDRESS;
+
   // Check if it's a direct route (native to wrapped or wrapped to native)
   const isDirectRoute = useMemo(() => {
     return (
-      (selectedTokenA?.address === EMPTY_ADDRESS &&
-        selectedTokenB?.address === wethAddress) ||
-      (selectedTokenA?.address === wethAddress &&
-        selectedTokenB?.address === EMPTY_ADDRESS)
+      (isSameAddress(selectedTokenA?.address, EMPTY_ADDRESS) &&
+        isSameAddress(selectedTokenB?.address, wethAddress)) ||
+      (isSameAddress(selectedTokenA?.address, wethAddress) &&
+        isSameAddress(selectedTokenB?.address, EMPTY_ADDRESS))
     );
   }, [selectedTokenA?.address, selectedTokenB?.address, wethAddress]);
 
   // Get the appropriate router ABI based on chainId
   const routerABI = useMemo(() => getRouterABI(chainId), [chainId]);
 
-  // Use findBestPath to get quotes from the router contract
+  const quoteRequestedMaxSteps = BigInt(maxHops?.toString() || "3");
+  const quoteFallbackPlan = useMemo(
+    () => getQuoteHopFallbackPlan(chainId, quoteRequestedMaxSteps),
+    [chainId, quoteRequestedMaxSteps],
+  );
+  const quoteFallbackSecondStep =
+    quoteFallbackPlan.secondStep ?? quoteRequestedMaxSteps;
+  const quoteFallbackThirdStep = quoteFallbackPlan.thirdStep ?? 1n;
+  const quoteEnabled =
+    !isDirectRoute &&
+    !!selectedTokenA &&
+    !!selectedTokenB &&
+    !!amountIn &&
+    parseFloat(amountIn) > 0;
+  const quoteAmountInWei =
+    amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+      ? convertToBigInt(parseFloat(amountIn), parseInt(selectedTokenA.decimal) || 18)
+      : BigInt(0);
+  const quoteTokenInAddress = getQuoteTokenAddress(selectedTokenA?.address);
+  const quoteTokenOutAddress = getQuoteTokenAddress(selectedTokenB?.address);
+
+  // Use findBestPath to get quotes from the router contract (with fallback max steps)
   const {
-    data,
-    isLoading: quoteLoading,
+    data: primaryQuoteData,
+    isLoading: primaryQuoteLoading,
     refetch: quoteRefresh,
-    error,
+    error: primaryQuoteError,
   } = useReadContract({
     abi: routerABI,
     address: routerAddress,
     functionName: "findBestPath",
     chainId,
     args: [
-      amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
-        ? convertToBigInt(
-          parseFloat(amountIn),
-          parseInt(selectedTokenA.decimal) || 18,
-        )
-        : BigInt(0),
-      selectedTokenA?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenA?.address || EMPTY_ADDRESS,
-      selectedTokenB?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenB?.address || EMPTY_ADDRESS,
-      BigInt(maxHops?.toString() || "3"),
+      quoteAmountInWei,
+      quoteTokenInAddress,
+      quoteTokenOutAddress,
+      quoteRequestedMaxSteps,
     ],
-    enabled:
-      !isDirectRoute &&
-      !!selectedTokenA &&
-      !!selectedTokenB &&
-      !!amountIn &&
-      parseFloat(amountIn) > 0,
+    enabled: quoteEnabled,
   });
 
-  // Get single token price for rate display
-  const { data: singleToken, refetch: singleTokenRefresh } = useReadContract({
+  const {
+    data: fallbackQuoteData,
+    isLoading: fallbackQuoteLoading,
+    error: fallbackQuoteError,
+  } = useReadContract({
     abi: routerABI,
     address: routerAddress,
     functionName: "findBestPath",
     chainId,
     args: [
-      selectedTokenA?.decimal
-        ? convertToBigInt(1, parseInt(selectedTokenA.decimal))
-        : BigInt(0),
-      selectedTokenA?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenA?.address || EMPTY_ADDRESS,
-      selectedTokenB?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenB?.address || EMPTY_ADDRESS,
-      BigInt(maxHops?.toString() || "3"),
+      quoteAmountInWei,
+      quoteTokenInAddress,
+      quoteTokenOutAddress,
+      quoteFallbackSecondStep,
     ],
-    enabled: !isDirectRoute && !!selectedTokenA && !!selectedTokenB,
+    enabled:
+      quoteFallbackPlan.enabled &&
+      quoteEnabled &&
+      !primaryQuoteData &&
+      !!primaryQuoteError &&
+      !!quoteFallbackPlan.secondStep,
   });
+
+  const {
+    data: fallbackQuoteDataOne,
+    isLoading: fallbackQuoteLoadingOne,
+    error: fallbackQuoteErrorOne,
+  } = useReadContract({
+    abi: routerABI,
+    address: routerAddress,
+    functionName: "findBestPath",
+    chainId,
+    args: [
+      quoteAmountInWei,
+      quoteTokenInAddress,
+      quoteTokenOutAddress,
+      quoteFallbackThirdStep,
+    ],
+    enabled:
+      quoteFallbackPlan.enabled &&
+      quoteEnabled &&
+      !primaryQuoteData &&
+      !fallbackQuoteData &&
+      !!quoteFallbackPlan.thirdStep &&
+      !!fallbackQuoteError,
+  });
+
+  const data = quoteFallbackPlan.enabled
+    ? primaryQuoteData ?? fallbackQuoteData ?? fallbackQuoteDataOne
+    : primaryQuoteData;
+  const quoteLoading = quoteFallbackPlan.enabled
+    ? primaryQuoteLoading || fallbackQuoteLoading || fallbackQuoteLoadingOne
+    : primaryQuoteLoading;
+
+  const singleTokenAmountInWei = selectedTokenA?.decimal
+    ? convertToBigInt(1, parseInt(selectedTokenA.decimal))
+    : BigInt(0);
+  const singleTokenEnabled = !isDirectRoute && !!selectedTokenA && !!selectedTokenB;
+
+  // Get single token price for rate display (with fallback max steps)
+  const {
+    data: primarySingleToken,
+    refetch: singleTokenRefresh,
+    error: primarySingleTokenError,
+  } = useReadContract({
+    abi: routerABI,
+    address: routerAddress,
+    functionName: "findBestPath",
+    chainId,
+    args: [
+      singleTokenAmountInWei,
+      quoteTokenInAddress,
+      quoteTokenOutAddress,
+      quoteRequestedMaxSteps,
+    ],
+    enabled: singleTokenEnabled,
+  });
+
+  const { data: fallbackSingleToken, error: fallbackSingleTokenError } =
+    useReadContract({
+      abi: routerABI,
+      address: routerAddress,
+      functionName: "findBestPath",
+      chainId,
+      args: [
+        singleTokenAmountInWei,
+        quoteTokenInAddress,
+        quoteTokenOutAddress,
+        quoteFallbackSecondStep,
+      ],
+      enabled:
+        quoteFallbackPlan.enabled &&
+        singleTokenEnabled &&
+        !primarySingleToken &&
+        !!primarySingleTokenError &&
+        !!quoteFallbackPlan.secondStep,
+    });
+
+  const { data: fallbackSingleTokenOne } = useReadContract({
+    abi: routerABI,
+    address: routerAddress,
+    functionName: "findBestPath",
+    chainId,
+    args: [
+      singleTokenAmountInWei,
+      quoteTokenInAddress,
+      quoteTokenOutAddress,
+      quoteFallbackThirdStep,
+    ],
+    enabled:
+      quoteFallbackPlan.enabled &&
+      singleTokenEnabled &&
+      !primarySingleToken &&
+      !fallbackSingleToken &&
+      !!quoteFallbackPlan.thirdStep &&
+      !!fallbackSingleTokenError,
+  });
+
+  const singleToken = quoteFallbackPlan.enabled
+    ? primarySingleToken ?? fallbackSingleToken ?? fallbackSingleTokenOne
+    : primarySingleToken;
 
   // Update quoting state based on loading
   useEffect(() => {
@@ -407,14 +530,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     }
 
     const tokenAAddress =
-      selectedTokenA?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenA?.address || EMPTY_ADDRESS;
+      getQuoteTokenAddress(selectedTokenA?.address);
 
     const tokenBAddress =
-      selectedTokenB?.address === EMPTY_ADDRESS
-        ? wethAddress
-        : selectedTokenB?.address || EMPTY_ADDRESS;
+      getQuoteTokenAddress(selectedTokenB?.address);
 
     // Set route with replaced native token address
     setRoute([tokenAAddress, tokenBAddress]);
@@ -467,7 +586,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       path: data.path,
       pathTokens: data.path.map(
         (pathAddress) =>
-          tokenList.find((token) => token.address === pathAddress) ||
+          tokenList.find(
+            (token) =>
+              token?.address?.toLowerCase() === pathAddress?.toLowerCase(),
+          ) ||
           tokenList[0],
       ),
       adapters: data.adapters,

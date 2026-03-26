@@ -14,16 +14,18 @@ import { WSEI } from "./abis/wseiABI";
 import { WBERA } from "./abis/wberaABI";
 import { WRBTC } from "./abis/wrbtcABI";
 import { WBNB } from "./abis/wbnbABI";
+import { WMON } from "./abis/wmonABI";
 import { config } from "../Wagmi/config";
-import { 
-  ETHW_ROUTER_ABI, 
-  PLS_ROUTER_ABI, 
+import {
+  ETHW_ROUTER_ABI,
+  PLS_ROUTER_ABI,
   SONIC_ROUTER_ABI,
   BASECHAIN_ROUTER_ABI,
   SEI_ROUTER_ABI,
   BERA_ROUTER_ABI,
   ROOTSTOCK_ROUTER_ABI,
   BSC_ROUTER_ABI,
+  MONAD_ROUTER_ABI,
 } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
@@ -80,6 +82,12 @@ const ROUTER_FUNCTION_NAMES = {
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
   },
+  // Monad  
+  143: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
 } as const;
 
 // Create a union type of all possible function names
@@ -107,6 +115,8 @@ const getWrappedTokenABI = (chainId: number) => {
       return WRBTC;
     case 56: // BSC
       return WBNB;
+    case 143: // Monad
+      return WMON;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -133,6 +143,8 @@ const getRouterABI = (chainId: number) => {
       return ROOTSTOCK_ROUTER_ABI;
     case 56: // BSC
       return BSC_ROUTER_ABI;
+    case 143: // Monad
+      return MONAD_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;
@@ -140,15 +152,19 @@ const getRouterABI = (chainId: number) => {
 };
 
 const getRouterFunctionName = (chainId: number, functionType: keyof RouterFunctionNames) => {
-  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] || 
-         ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
+  return ROUTER_FUNCTION_NAMES[chainId as keyof typeof ROUTER_FUNCTION_NAMES]?.[functionType] ||
+    ROUTER_FUNCTION_NAMES[369][functionType]; // Default to Pulsechain if chain not found
 };
 
 export const EMPTY_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
 
+const normalizeAddress = (address?: string | null) => address?.toLowerCase() ?? "";
+const isSameAddress = (a?: string | null, b?: string | null) =>
+  normalizeAddress(a) === normalizeAddress(b);
+
 export const checkAllowance = async (chainId: number, tokenInAddress: string, userAddress: Address) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     let result = await readContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
@@ -166,7 +182,7 @@ export const checkAllowance = async (chainId: number, tokenInAddress: string, us
 
 export const callApprove = async (chainId: number, tokenInAddress: string, amountIn: bigint) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     let result = await writeContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
@@ -185,7 +201,7 @@ export const callApprove = async (chainId: number, tokenInAddress: string, amoun
 
 const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address, protocolFee: number) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
       abi: routerABI,
@@ -216,7 +232,7 @@ const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: A
 
 const swapToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address, protocolFee: number) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
       abi: routerABI,
@@ -245,7 +261,7 @@ const swapToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Add
 
 const swapNoSplitToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
     const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
@@ -269,7 +285,7 @@ const swapNoSplitFromEth = async (
   userAddress: Address
 ) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
     const wrappedTokenABI = getWrappedTokenABI(chainId);
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
@@ -290,7 +306,7 @@ const swapNoSplitFromEth = async (
 
 const swap = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address, protocolFee: number) => {
   try {
-    const {routerAddress} = getCurrentChainConfig(chainId);
+    const { routerAddress } = getCurrentChainConfig(chainId);
     const routerABI = getRouterABI(chainId);
     let result = await writeContract(config, {
       abi: routerABI,
@@ -349,22 +365,24 @@ export const swapTokens = async (
   protocolFee: number = 28,
 ) => {
   try {
-    const {wethAddress} = getCurrentChainConfig(chainId);
+    const { wethAddress } = getCurrentChainConfig(chainId);
+    const isTokenInNative = isSameAddress(tokenInAddress, EMPTY_ADDRESS);
+    const isTokenOutNative = isSameAddress(tokenOutAddress, EMPTY_ADDRESS);
+    const isTokenInWrapped = isSameAddress(tokenInAddress, wethAddress);
+    const isTokenOutWrapped = isSameAddress(tokenOutAddress, wethAddress);
+
     const defaultResponse = {
       success: false,
       data: EMPTY_ADDRESS,
     };
     let swapResponse = defaultResponse;
-    if (tokenInAddress === EMPTY_ADDRESS && tokenOutAddress === wethAddress) {
+    if (isTokenInNative && isTokenOutWrapped) {
       swapResponse = await swapNoSplitFromEth(chainId, tradeInfo, userAddress);
-    } else if (
-      tokenInAddress === wethAddress &&
-      tokenOutAddress === EMPTY_ADDRESS
-    ) {
+    } else if (isTokenInWrapped && isTokenOutNative) {
       swapResponse = await swapNoSplitToEth(chainId, tradeInfo, userAddress);
-    } else if (tokenInAddress === EMPTY_ADDRESS) {
+    } else if (isTokenInNative) {
       swapResponse = await swapFromEth(chainId, tradeInfo, userAddress, protocolFee);
-    } else if (tokenOutAddress === EMPTY_ADDRESS) {
+    } else if (isTokenOutNative) {
       swapResponse = await swapToEth(chainId, tradeInfo, userAddress, protocolFee);
     } else {
       swapResponse = await swap(chainId, tradeInfo, userAddress, protocolFee);

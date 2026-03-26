@@ -139,6 +139,32 @@ export const berachain = defineChain({
   },
 } as const);
 
+export const monad = defineChain({
+  id: 143,
+  name: "Monad",
+  nativeCurrency: {
+    name: "Monad",
+    symbol: "MONAD",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: ["https://rpc.monad.xyz"],
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: "0xca11bde05977b3631167028862be2a173976ca11",
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: "Monadscan",
+      url: "https://monadscan.com/",
+    },
+  },
+} as const);
+
 // Wallet configuration for swap
 const swapConnectors = connectorsForWallets(
   [
@@ -172,7 +198,7 @@ export const config = getDefaultConfig({
   projectId: 'YOUR_PROJECT_ID',
   // Note: ethw and sonic are temporarily disabled (not up to date)
   // To re-enable, change to: chains: [pulsechain, ethw, sonic],
-  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc],
+  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc, monad],
   transports: {
     [pulsechain.id]: http(),
     [sonic.id]: http(),
@@ -190,6 +216,7 @@ export const config = getDefaultConfig({
     [rootstock.id]: http(),
     [ethw.id]: http(),
     [bsc.id]: http(),
+    [monad.id]: http(),
   },
   ssr: true,
   connectors: swapConnectors,

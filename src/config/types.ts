@@ -16,4 +16,8 @@ export interface ChainConfig {
   maxHops: number;
   stableTokens?: string[];
   blockTime: number; // in seconds
+  quoteHopFallback?: {
+    strategy?: "decrement_to_one";
+    minStep?: number;
+  };
 }
