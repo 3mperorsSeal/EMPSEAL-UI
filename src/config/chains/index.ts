@@ -83,6 +83,10 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     rpcUrl: 'https://mainnet.base.org',
     maxHops: 3,
     blockTime: 5,
+    quoteHopFallback: {
+      strategy: "decrement_to_one",
+      minStep: 1,
+    },
     stableTokens: [
       "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913", // usdc
       "0xEB466342C4d449BC9f53A865D5Cb90586f405215", // axlusdc
@@ -192,11 +196,15 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       tokenPriceEndpoint: 'simple/networks/monad/token_price',
       graphEndpoint: 'networks/monad/pools',
     },
-    blockExplorer: 'https://monadscan.io/tx/',
-    blockExplorerName: "MonadScan",
+    blockExplorer: 'https://monadvision.com/tx/',
+    blockExplorerName: "Monadvision",
     rpcUrl: 'https://rpc.monad.xyz',
-    maxHops: 2,
+    maxHops: 3,
     blockTime: 2,
+    quoteHopFallback: {
+      strategy: "decrement_to_one",
+      minStep: 1,
+    },
     stableTokens: [
       "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
       "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
