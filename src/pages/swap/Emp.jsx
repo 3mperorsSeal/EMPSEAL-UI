@@ -38,6 +38,7 @@ import {
   BERA_ROUTER_ABI,
   ROOTSTOCK_ROUTER_ABI,
   BSC_ROUTER_ABI,
+  MONAD_ROUTER_ABI,
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
@@ -51,6 +52,7 @@ import { WETH } from "../../utils/abis/wethBaseABI";
 import { WSEI } from "../../utils/abis/wseiABI";
 import { WBERA } from "../../utils/abis/wberaABI";
 import { WRBTC } from "../../utils/abis/wrbtcABI";
+import { WMON } from "../../utils/abis/wmonABI";
 
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
@@ -71,6 +73,8 @@ const getWrappedTokenABI = (chainId) => {
       return WBERA;
     case 30:
       return WRBTC;
+    case 143:
+      return WMON;
     case 369:
     default:
       return WPLS;
@@ -93,6 +97,8 @@ const getRouterABI = (chainId) => {
       return ROOTSTOCK_ROUTER_ABI;
     case 56:
       return BSC_ROUTER_ABI;
+    case 143:
+      return MONAD_ROUTER_ABI;
     case 369:
     default:
       return PLS_ROUTER_ABI;

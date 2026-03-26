@@ -31,7 +31,7 @@ const ChainSwitcher = ({ children }) => {
 
   useEffect(() => {
     if (isConnected && chainId) {
-      const swapChainIds = [pulsechain.id, 10001, sonic.id, 8453, sei.id, 80094, rootstock.id, bsc.id]; // pulsechain, ethw, sonic, base, sei, berachain, rootstock, bsc
+      const swapChainIds = [pulsechain.id, 10001, sonic.id, 8453, sei.id, 80094, rootstock.id, bsc.id, 143]; // pulsechain, ethw, sonic, base, sei, berachain, rootstock, bsc
       if (!swapChainIds.includes(chainId)) {
         switchChain({ chainId: pulsechain.id });
       }

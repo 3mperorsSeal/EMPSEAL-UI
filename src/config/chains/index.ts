@@ -178,5 +178,29 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d", // USDC
       "0xe9e7cea3dedca5984780bafc599bd69add087d56", // BUSD
     ],
+  },
+  // Monad
+  143: {
+    chainId: 143, 
+    name: 'Monad',
+    symbol: 'monad',
+    routerAddress: '0x867c1fd9341DEC12e4B779C35D7b7C475316b334',
+    wethAddress: '0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A',
+    // 0x3bd359C1119dA7Da1D913D1C4D2B7c461115433A
+    priceApi: {
+      baseUrl: 'https://api.geckoterminal.com/api/v2',
+      tokenPriceEndpoint: 'simple/networks/monad/token_price',
+      graphEndpoint: 'networks/monad/pools',
+    },
+    blockExplorer: 'https://monadscan.io/tx/',
+    blockExplorerName: "MonadScan",
+    rpcUrl: 'https://rpc.monad.xyz',
+    maxHops: 2,
+    blockTime: 2,
+    stableTokens: [
+      "0x754704Bc059F8C67012fEd69BC8A327a5aafb603",
+      "0x00000000eFE302BEAA2b3e6e1b18d08D69a9012a",
+      "0xe7cd86e13AC4309349F30B3435a9d337750fC82D",
+    ]
   }
 };

@@ -6,6 +6,7 @@ import seiAdapters from './sei.json';
 import berachainAdapters from './berachain.json';
 import rootstockAdapters from './rootstock.json';
 import bscAdapters from './bsc.json';
+import monadAdapters from './monad.json';
 
 export const CHAIN_ADAPTERS: Record<number, any[]> = {
   369: pulsechainAdapters,
@@ -16,4 +17,5 @@ export const CHAIN_ADAPTERS: Record<number, any[]> = {
   80094: berachainAdapters,
   30: rootstockAdapters,
   56: bscAdapters,
+  143: monadAdapters,
 };

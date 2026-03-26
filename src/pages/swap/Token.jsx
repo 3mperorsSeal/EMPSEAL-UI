@@ -184,6 +184,8 @@ const Token = ({ onClose, onSelect }) => {
         return "https://public-node.rsk.co";
       case 56:
         return "https://bsc-rpc.publicnode.com";
+      case 143: 
+        return "https://rpc.monad.xyz";
       default:
         return null;
     }
