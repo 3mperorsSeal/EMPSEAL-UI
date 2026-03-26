@@ -80,26 +80,35 @@ const DotsMenu = ({ onTabChange }) => {
           <h3 className="text-white 2xl:text-2xl text-2xl text2xl font-bold mb-3 relative top-0">
             Products
           </h3>
-            {["Swap", "Limit Orders", "Bridge", "Gas"].map((item) => (
-              <p
-                key={item}
-                onClick={() => {
-                  if (item === "Limit Orders") {
-                    navigate("/swap?tab=limit");
-                  } else if (item === "Swap") {
-                    navigate("/swap");
-                  } else if (item === "Bridge") {
-                    navigate("/via-bridge");
-                  } else if (item === "Gas") {
-                    navigate("/gas");
-                  }
+            {[
+              { label: "Swap", path: "/swap" },
+              { label: "Limit Orders", disabled: true },
+              { label: "Bridge", path: "/via-bridge" },
+              { label: "Gas", path: "/gas" },
+            ].map((item) => (
+              <div key={item.label} className="relative w-fit group">
+                <p
+                  onClick={() => {
+                    if (item.disabled) return;
 
-                  setOpen(false);
-                }}
-                className="cursor-pointer hover:translate-x-1 transition 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold"
-              >
-                {item}
-              </p>
+                    navigate(item.path);
+
+                    setOpen(false);
+                  }}
+                  className={`transition 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold ${
+                    item.disabled
+                      ? "opacity-50 cursor-not-allowed"
+                      : "cursor-pointer hover:translate-x-1"
+                  }`}
+                >
+                  {item.label}
+                </p>
+                {item.disabled && (
+                  <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded bg-[#FFA600] px-2 py-0.5 text-[10px] font-bold text-black opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                    Coming soon
+                  </span>
+                )}
+              </div>
             ))}
           </div>
         <div className="md:col-span-1 relative">
@@ -142,9 +151,14 @@ const DotsMenu = ({ onTabChange }) => {
             >
               Widget
             </p>
-            <p className="2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold opacity-50 cursor-not-allowed">
-              APIs (coming soon)
-            </p>
+            <div className="relative w-fit group">
+              <p className="2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold opacity-50 cursor-not-allowed">
+                APIs
+              </p>
+              <span className="pointer-events-none absolute left-full top-1/2 ml-2 -translate-y-1/2 whitespace-nowrap rounded bg-[#FFA600] px-2 py-0.5 text-[10px] font-bold text-black opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                Coming soon
+              </span>
+            </div>
           </div>
         {/* <div className="hidden"></div> */}
         <div className="col-span-1 md:col-span-3 relative 2xl:bottom-0 md:bottom-[-20px] bottom-0 md:right-3 text-white flex gap-3 flex-col 2xl:text-2xl text-lg 2xl:my-1 text2xl my4 font-extrabold md:text-right md:self-end">

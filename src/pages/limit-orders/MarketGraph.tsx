@@ -18,6 +18,17 @@ export default function MarketTargetChart({
   marketPrice,
   limitPrice,
 }: MarketTargetChartProps) {
+  const formatChartPrice = (value?: string) => {
+    if (!value) return "--";
+    const num = Number(value);
+    if (!Number.isFinite(num)) return "--";
+    const abs = Math.abs(num);
+    if (abs >= 1000) return num.toFixed(2);
+    if (abs >= 1) return num.toFixed(3);
+    if (abs >= 0.01) return num.toFixed(4);
+    if (abs >= 0.0001) return num.toFixed(6);
+    return num.toFixed(8);
+  };
   const sellPoints = [
     [0, 80],
     [40, 70],
@@ -326,9 +337,7 @@ export default function MarketTargetChart({
           <>
             <div>
               <div className="text-lg font-semibold text-[#FFD484]">
-                {currentMarketPrice
-                  ? ` ${parseFloat(currentMarketPrice).toFixed(3)}`
-                  : "$ 0.673"}
+                {currentMarketPrice ? ` ${formatChartPrice(currentMarketPrice)}` : "$ 0.673"}
               </div>
               <div className="text-white text-xs">
                 Current Price
@@ -338,15 +347,19 @@ export default function MarketTargetChart({
               <div className="text-lg font-semibold text-[#FFD484]">
                 {(() => {
                   if (limitPrice) {
-                    return ` ${parseFloat(limitPrice).toFixed(3)}`;
+                    return ` ${formatChartPrice(limitPrice)}`;
                   }
                   if (isSellStrategy) {
                     return marketPrice
-                      ? ` ${(parseFloat(marketPrice) * 1.2).toFixed(3)}`
+                      ? ` ${formatChartPrice(
+                          String(parseFloat(marketPrice) * 1.2)
+                        )}`
                       : "$ 54";
                   } else {
                     return marketPrice
-                      ? ` ${(parseFloat(marketPrice) * 0.8).toFixed(3)}`
+                      ? ` ${formatChartPrice(
+                          String(parseFloat(marketPrice) * 0.8)
+                        )}`
                       : "$ 28";
                   }
                 })()}
