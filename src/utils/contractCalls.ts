@@ -84,9 +84,9 @@ const ROUTER_FUNCTION_NAMES = {
   },
   // Monad  
   143: {
-    swapFromNative: "swapNoSplitFromMON",
-    swapToNative: "swapNoSplitToMON",
-    swapWithPermit: "swapNoSplitToMONWithPermit"
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
   },
 } as const;
 
@@ -157,6 +157,10 @@ const getRouterFunctionName = (chainId: number, functionType: keyof RouterFuncti
 };
 
 export const EMPTY_ADDRESS: Address = "0x0000000000000000000000000000000000000000";
+
+const normalizeAddress = (address?: string | null) => address?.toLowerCase() ?? "";
+const isSameAddress = (a?: string | null, b?: string | null) =>
+  normalizeAddress(a) === normalizeAddress(b);
 
 export const checkAllowance = async (chainId: number, tokenInAddress: string, userAddress: Address) => {
   try {
@@ -362,21 +366,23 @@ export const swapTokens = async (
 ) => {
   try {
     const { wethAddress } = getCurrentChainConfig(chainId);
+    const isTokenInNative = isSameAddress(tokenInAddress, EMPTY_ADDRESS);
+    const isTokenOutNative = isSameAddress(tokenOutAddress, EMPTY_ADDRESS);
+    const isTokenInWrapped = isSameAddress(tokenInAddress, wethAddress);
+    const isTokenOutWrapped = isSameAddress(tokenOutAddress, wethAddress);
+
     const defaultResponse = {
       success: false,
       data: EMPTY_ADDRESS,
     };
     let swapResponse = defaultResponse;
-    if (tokenInAddress === EMPTY_ADDRESS && tokenOutAddress === wethAddress) {
+    if (isTokenInNative && isTokenOutWrapped) {
       swapResponse = await swapNoSplitFromEth(chainId, tradeInfo, userAddress);
-    } else if (
-      tokenInAddress === wethAddress &&
-      tokenOutAddress === EMPTY_ADDRESS
-    ) {
+    } else if (isTokenInWrapped && isTokenOutNative) {
       swapResponse = await swapNoSplitToEth(chainId, tradeInfo, userAddress);
-    } else if (tokenInAddress === EMPTY_ADDRESS) {
+    } else if (isTokenInNative) {
       swapResponse = await swapFromEth(chainId, tradeInfo, userAddress, protocolFee);
-    } else if (tokenOutAddress === EMPTY_ADDRESS) {
+    } else if (isTokenOutNative) {
       swapResponse = await swapToEth(chainId, tradeInfo, userAddress, protocolFee);
     } else {
       swapResponse = await swap(chainId, tradeInfo, userAddress, protocolFee);
