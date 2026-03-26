@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "../../components/ui/button";
-import { ArrowDown, ArrowUp, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Trash2, XCircle } from "lucide-react";
 import type { Order } from "./schema";
 // import { getTokenInfo } from "./tokens";
 import tokens from "../../config/tokens/pulsechain.json";
@@ -206,6 +206,14 @@ export function OrderListItem({
     return isSellOrder ? "Sell" : "Buy";
   };
   const isFulfilled = order.status === "fulfilled" || progressPercent >= 100;
+  const cancelableStatuses = new Set([
+    "active",
+    "pending",
+    "expired",
+    "inactive",
+    "none",
+  ]);
+  const canCancel = cancelableStatuses.has(order.status);
 
   return (
     <div
@@ -394,26 +402,39 @@ export function OrderListItem({
         </div>
 
         {/* Action */}
-        <div className="ml-auto">
-          {order.status === "active" || order.status === "none" ? (
-            <Button
-              size="sm"
-              onClick={() => onCancel(order.id)}
-              disabled={isCancelling || order.id === "unknown"}
-              className="!border-0 hover:bg-[#FF9900]/20"
-              data-testid={`button-cancel-${order.id}`}
-            >
-              <Trash2 className="md:h-10 md:w-10 w-5 h-5 !text-2xl text-[#ff9900]" />
-            </Button>
-          ) : (
+        <div className="ml-auto flex items-center gap-2">
+          {canCancel && (
+            <div className="relative group">
+              <Button
+                size="sm"
+                onClick={() => onCancel(order.id)}
+                disabled={isCancelling || order.id === "unknown"}
+                className="!border-0 hover:bg-[#FF9900]/20 text-[#FF9900]"
+                data-testid={`button-cancel-${order.id}`}
+                aria-label="Cancel Order"
+              >
+                <XCircle className="h-4 w-4" />
+              </Button>
+              <div className="pointer-events-none absolute right-0 top-full mt-1 z-50 whitespace-nowrap rounded border border-[#FF9900] bg-black px-2 py-1 text-xs text-white opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-none">
+                Cancel Order
+              </div>
+            </div>
+          )}
+
+          <div className="relative group">
             <Button
               size="sm"
               onClick={() => onRemove(order.id)}
               className="!border-0 hover:bg-[#FF9900]/20"
+              data-testid={`button-remove-${order.id}`}
+              aria-label="Remove Order from list"
             >
               <Trash2 className="md:h-10 md:w-10 w-5 h-5 !text-2xl text-[#ff9900]" />
             </Button>
-          )}
+            <div className="pointer-events-none absolute right-0 top-full mt-1 z-50 whitespace-nowrap rounded border border-[#FF9900] bg-black px-2 py-1 text-xs text-white opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-none">
+              Remove order from list
+            </div>
+          </div>
         </div>
       </div>
     </div>
