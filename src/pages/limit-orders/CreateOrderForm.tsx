@@ -250,7 +250,7 @@ export function CreateOrderForm({
     if (!Number.isFinite(parsedMarket) || parsedMarket <= 0) return null;
     const displayValue = quoteReversed ? 1 / parsedMarket : parsedMarket;
     if (!Number.isFinite(displayValue) || displayValue <= 0) return null;
-    return displayValue.toFixed(6);
+    return displayValue.toFixed(8);
   }, [marketPrice, quoteReversed]);
 
   const { data: tokenInBalanceData } = useBalance({
@@ -1157,7 +1157,7 @@ export function CreateOrderForm({
     if (Number.isFinite(currentPrice) && currentPrice > 0) {
       const invertedPrice = 1 / currentPrice;
       if (Number.isFinite(invertedPrice) && invertedPrice > 0) {
-        const formattedPrice = invertedPrice.toFixed(6);
+        const formattedPrice = invertedPrice.toFixed(8);
         form.setValue("limitPrice", formattedPrice, {
           shouldValidate: true,
           shouldDirty: true,
