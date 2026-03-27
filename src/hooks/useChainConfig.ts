@@ -1,4 +1,4 @@
-import { useChainId } from 'wagmi';
+import { useSelectedChainId } from './ChainContext';
 import { SUPPORTED_CHAINS } from '../config/chains';
 import { CHAIN_TOKENS } from '../config/tokens';
 import { CHAIN_ADAPTERS } from '../config/adapters';
@@ -19,7 +19,7 @@ interface Adapter {
 }
 
 export function useChainConfig() {
-  const chainId = useChainId();
+  const chainId = useSelectedChainId();
   const [tokenList, setTokenList] = useState<Token[]>([]);
   const [adapters, setAdapters] = useState<Adapter[]>([]);
   const [featureTokens, setfeatureTokens] = useState<Token[]>([]);
@@ -32,9 +32,9 @@ export function useChainConfig() {
     // Load chain-specific configurations
     setTokenList(CHAIN_TOKENS[chainId] || []);
     setAdapters(CHAIN_ADAPTERS[chainId] || []);
-    
+
     // Load feature tokens
-    const featureTokensForChain = CHAIN_TOKENS[chainId]?.filter(token => 
+    const featureTokensForChain = CHAIN_TOKENS[chainId]?.filter(token =>
       token.featured === true
     ) || [];
     setfeatureTokens(featureTokensForChain);
@@ -54,5 +54,7 @@ export function useChainConfig() {
     blockExplorerName: currentChain?.blockExplorerName,
     isSupported: !!currentChain,
     maxHops: currentChain?.maxHops || 2,
+    stableTokens: currentChain?.stableTokens || [],
+    blockTime: currentChain?.blockTime || 10, // default to 15 seconds if not defined
   };
 }

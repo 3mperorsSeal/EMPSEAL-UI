@@ -1,0 +1,50 @@
+// import ChainSelector from "../components/gas/ChainSelector";
+import TransferPanel from "../components/gas/TransferPanel";
+import TransactionHistory from "../components/gas/TransactionHistory";
+import Wallet from "./swap/Wallet";
+import BG from "../assets/images/empx-bg1.webp";
+import { useState } from "react";
+import { Helmet } from "react-helmet";
+
+export default function GasBridgePage() {
+  const [isChainModalOpen, setIsChainModalOpen] = useState(false);
+
+  return (
+    <>
+      <Helmet>
+        <title>EMPX | Gas Bridge - Gasless Cross-Chain Transfers</title>
+        <meta
+          name="description"
+          content="Send gas tokens across chains with EMPX Gas Bridge. Seamless gas token bridging with optimal routing, low fees, and fast confirmations."
+        />
+        <meta
+          name="keywords"
+          content="EMPX, DeFi, decentralized finance, crypto trading, multi-chain bridge, DEX aggregator, limit orders, Web3, blockchain, cryptocurrency, on-chain trading"
+        />
+      </Helmet>
+      <div className="w-full">
+        <img
+          src={BG}
+          alt="Background"
+          className="w-full h-full fixed top-0 left-0 -z-10"
+        />
+        <div className="md:max-w-[1100px] w-full mx-auto p-4 text-white">
+          <div className="lg:absolute relative 2xl:top-[100px] lg:top-[90px] top-[-5px] right-0 w-full">
+            <Wallet allowUnsupported={true} />
+          </div>
+          <div className={!isChainModalOpen ? "scales8 top70" : ""}>
+            <div className="text-center mb-8 lg:mt-0 mt-1">
+              <h1 className="2xl:text-[43px] 2xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
+                Gas <br /> <span className="text-white">Anywhere</span>
+              </h1>
+            </div>
+            <TransferPanel setIsChainModalOpen={setIsChainModalOpen} />
+            <div className="md:mt-5 mt-4 md:max-w-[1000px] w-full mx-auto p-4">
+              <TransactionHistory />
+            </div>
+          </div>
+        </div>
+      </div>
+    </>
+  );
+}

@@ -1,21 +1,27 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { lazy, Suspense } from "react";
+
 // import Base from "../layout/base/Base";
-import Home from '../pages/Home/Main';
-import Swap from '../pages/swap/Main';
-import BreadCrumb from '../components/BreadCrumb';
-import NFTMarketplace from '../pages/Home/NFTMarketPlace';
-import CollectionDetail from '../components/CollectionDetail';
-import ItemDetail from '../pages/Home/ItemDetail';
-import Bridge from '../pages/bridge/Main';
-import NativeBridge from '../pages/nativeBridge';
-import BridgeWrapper from '../components/BridgeWrapper';
-import WagmiProviderWrapper from '../Wagmi/WagmiProvider';
-import { Provider } from 'react-redux';
-import store from '../redux/store/store';
-import { ToastContainer } from 'react-toastify';
-import { useEffect } from 'react';
-import { useAccount, useChainId, useSwitchChain } from 'wagmi';
-import { pulsechain,sonic } from 'wagmi/chains';
+// Home page removed — root path redirects to /swap
+import Swap from "../pages/swap/Main";
+import BreadCrumb from "../components/BreadCrumb";
+import NFTMarketplace from "../pages/Home/NFTMarketPlace";
+import CollectionDetail from "../components/CollectionDetail";
+import ItemDetail from "../pages/Home/ItemDetail";
+import Bridge from "../pages/bridge/Main";
+import NativeBridge from "../pages/nativeBridge";
+import BridgeWrapper from "../components/BridgeWrapper";
+import WagmiProviderWrapper from "../Wagmi/WagmiProvider";
+import { Provider } from "react-redux";
+import store from "../redux/store/store";
+import { ToastContainer, Slide } from "react-toastify";
+import { useEffect } from "react";
+import { useAccount, useChainId, useSwitchChain } from "wagmi";
+import { pulsechain, sonic, sei, rootstock, bsc } from "wagmi/chains";
+import ViaBridge from "../pages/via-bridge/BridgePage";
+import NotFound from "../pages/NotFound";
+
+const GasBridgePage = lazy(() => import("../pages/GasBridgePage"));
 
 // This component will be rendered inside WagmiProvider
 const ChainSwitcher = ({ children }) => {
@@ -25,7 +31,7 @@ const ChainSwitcher = ({ children }) => {
 
   useEffect(() => {
     if (isConnected && chainId) {
-      const swapChainIds = [pulsechain.id, 10001, sonic.id]; // pulsechain, ethw, sonic
+      const swapChainIds = [pulsechain.id, 10001, sonic.id, 8453, sei.id, 80094, rootstock.id, bsc.id, 143]; // pulsechain, ethw, sonic, base, sei, berachain, rootstock, bsc
       if (!swapChainIds.includes(chainId)) {
         switchChain({ chainId: pulsechain.id });
       }
@@ -40,8 +46,47 @@ const SwapWrapper = ({ children }) => (
     <Provider store={store}>
       <ChainSwitcher>
         {children}
-        <ToastContainer position="top-right" theme="dark" autoClose={5000} />
+        <ToastContainer
+          position="bottom-right"
+          autoClose={5000}
+          hideProgressBar={true}
+          newestOnTop={true}
+          closeOnClick={false}
+          rtl={false}
+          pauseOnFocusLoss={true}
+          draggable={true}
+          pauseOnHover={true}
+          theme="dark"
+          transition={Slide}
+          toastClassName="empseal-toast"
+          bodyClassName="empseal-toast-body"
+          closeButton={false}
+        />
       </ChainSwitcher>
+    </Provider>
+  </WagmiProviderWrapper>
+);
+
+const ViaBridgeWrapper = ({ children }) => (
+  <WagmiProviderWrapper appType="via-bridge">
+    <Provider store={store}>
+      {children}
+      <ToastContainer
+        position="bottom-right"
+        autoClose={5000}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeOnClick={false}
+        rtl={false}
+        pauseOnFocusLoss={true}
+        draggable={true}
+        pauseOnHover={true}
+        theme="dark"
+        transition={Slide}
+        toastClassName="empseal-toast"
+        bodyClassName="empseal-toast-body"
+        closeButton={false}
+      />
     </Provider>
   </WagmiProviderWrapper>
 );
@@ -54,9 +99,9 @@ function MyRoutes() {
         <div>
           <BreadCrumb />
           <Routes>
-            <Route path='/' element={<Home />} />
+            <Route path="/" element={<Navigate to="/swap" replace />} />
             <Route
-              path='/swap'
+              path="/swap"
               element={
                 <SwapWrapper>
                   <Swap />
@@ -64,33 +109,46 @@ function MyRoutes() {
               }
             />
             <Route
-              path='/nft-marketplace/:name'
+              path="/nft-marketplace/:name"
               element={<CollectionDetail />}
             />
-            <Route
-              path='/nft-marketplace'
-              element={<NFTMarketplace />}
-            />
-            <Route
-              path='/item-detail'
-              element={<ItemDetail />}
-            />
-            <Route
-              path='/bridge'
+            <Route path="/nft-marketplace" element={<NFTMarketplace />} />
+            <Route path="/item-detail" element={<ItemDetail />} />
+            {/* <Route
+              path="/bridge"
               element={
                 <BridgeWrapper>
                   <Bridge />
                 </BridgeWrapper>
               }
-            />
+            /> */}
             <Route
-              path='/native-bridge'
+              path="/native-bridge"
               element={
                 <BridgeWrapper>
                   <NativeBridge />
                 </BridgeWrapper>
               }
             />
+            <Route
+              path="/via-bridge"
+              element={
+                <ViaBridgeWrapper>
+                  <ViaBridge />
+                </ViaBridgeWrapper>
+              }
+            />
+            <Route
+              path="/gas"
+              element={
+                <BridgeWrapper>
+                  <Suspense fallback={<div>Loading...</div>}>
+                    <GasBridgePage />
+                  </Suspense>
+                </BridgeWrapper>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
         {/* </Base> */}

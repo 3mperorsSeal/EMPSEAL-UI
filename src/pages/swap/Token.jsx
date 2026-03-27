@@ -1,49 +1,87 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import Arrow from "../../assets/icons/downarrow.svg";
+import { Star, StarIcon } from "lucide-react";
 import { ERC20_ABI } from "./tokenFetch";
-import { useBalance } from "wagmi";
+import TokenLogo from "../../components/TokenLogo.jsx";
 import { useChainConfig } from "../../hooks/useChainConfig";
+import { useMulticallBalances } from "../../hooks/useMulticallBalances";
+import { useAccount } from "wagmi";
 import Web3 from "web3";
+import EL from "../../assets/images/emp-logo.png";
 
-const TokenListItem = ({ token, walletAddress, onClick }) => {
-  const { data: tokenBalance, isLoading: balanceLoading } = useBalance({
-    address: walletAddress,
-    token:
-      token.address === "0x0000000000000000000000000000000000000000"
-        ? undefined
-        : token.address,
-    watch: true,
-  });
+// Maximum number of tokens to render initially (virtualization)
+const INITIAL_RENDER_LIMIT = 30;
+const LOAD_MORE_COUNT = 20;
 
-  const formattedBalance = tokenBalance
-    ? parseFloat(tokenBalance.formatted).toFixed(4)
+// Local storage key for favorites
+const FAVORITES_STORAGE_KEY = "favoriteTokens";
+
+const TokenListItem = ({
+  token,
+  balance,
+  isLoading,
+  onClick,
+  isFavorite,
+  onToggleFavorite,
+}) => {
+  const formattedBalance = balance
+    ? parseFloat(balance.formatted).toFixed(4)
     : "0.0000";
+
+  const handleFavoriteClick = (e) => {
+    e.stopPropagation();
+    onToggleFavorite(token);
+  };
 
   return (
     <div
-      className="flex justify-between items-center mt-4 cursor-pointer hover:bg-gray-800 p-2 rounded"
+      className="flex justify-between items-center mt-2 cursor-pointer hoverclip md:p-2 p-1 rounded-xl group"
       onClick={() => onClick(token)}
     >
-      <div className="flex items-center gap-2">
-        <img
-          src={token.logoURI || token.image}
-          className="w-4 h-4"
-          alt={token.name}
-          onError={(e) => {
-            e.target.src = "path/to/fallback/image.png";
-          }}
-        />
+      <div className="flex items-center gap-2 flex-1">
+        <div className="flex justify-center items-center rounded-full p-1">
+          <TokenLogo
+            token={token}
+            className="md:w-6 md:h-6 w-4 h-4 object-contain"
+            fallbackImg={EL}
+          />
+        </div>
         <div>
-          <div className="text-white text-base roboto leading-relaxed tracking-wide">
+          <div className="text-[#FFD484] font-orbitron font-bold md:text-base text-xs font-orbitron leading-relaxed tracking-wide">
             {token.name}
+          </div>
+          <div className="text-white text-xs font-orbitron">
+            {token.symbol || token.ticker}
           </div>
         </div>
       </div>
-      <div className="text-right">
-        <div className="text-white text-sm font-normal roboto tracking-wide">
-          {balanceLoading ? "Loading..." : formattedBalance}
+
+      <div className="flex items-center gap-3">
+        {/* Star button - always visible for favorites, on hover for non-favorites */}
+        <button
+          onClick={handleFavoriteClick}
+          className={`transition-opacity duration-200 ${isFavorite ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+            }`}
+          title={isFavorite ? "Remove from favorites" : "Add to favorites"}
+        >
+          {isFavorite ? (
+            <StarIcon
+              className="w-5 h-5 text-[#FF9900] fill-[#FF9900]"
+              strokeWidth={1.5}
+            />
+          ) : (
+            <Star
+              className="w-5 h-5 text-white hover:text-[#FF9900]"
+              strokeWidth={1.5}
+            />
+          )}
+        </button>
+
+        <div className="text-right min-w-[100px]">
+          <div className="text-[#FFD484] md:text-base text-xs font-bold font-orbitron tracking-wide">
+            {isLoading ? "Loading..." : formattedBalance}
+          </div>
         </div>
-        <div className="text-gray-400 text-xs roboto mt-2">{token.symbol || token.ticker}</div>
       </div>
     </div>
   );
@@ -51,90 +89,188 @@ const TokenListItem = ({ token, walletAddress, onClick }) => {
 
 const Token = ({ onClose, onSelect }) => {
   const { chainId, tokenList, featureTokens, isSupported } = useChainConfig();
+  const { address: walletAddress, isConnected } = useAccount();
   const [searchQuery, setSearchQuery] = useState("");
   const [tokenDetails, setTokenDetails] = useState(null);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [walletAddress, setWalletAddress] = useState(null);
+  const [displayLimit, setDisplayLimit] = useState(INITIAL_RENDER_LIMIT);
+  // const [favorites, setFavorites] = useState([]);
+  const [favorites, setFavorites] = useState(() => {
+    try {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
   const modalRef = useRef(null);
+  const listContainerRef = useRef(null);
+
+  // Load favorites from localStorage on component mount
+  useEffect(() => {
+    const loadFavorites = () => {
+      try {
+        const savedFavorites = localStorage.getItem(FAVORITES_STORAGE_KEY);
+        if (savedFavorites) {
+          const parsedFavorites = JSON.parse(savedFavorites);
+          // Ensure it's an array
+          if (Array.isArray(parsedFavorites)) {
+            setFavorites(parsedFavorites);
+            // console.log("Loaded favorites from localStorage:", parsedFavorites);
+          } else {
+            // If it's not an array, reset it
+            localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+            setFavorites([]);
+          }
+        } else {
+          // Initialize empty array if nothing exists
+          localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+          setFavorites([]);
+        }
+      } catch (error) {
+        console.error("Error loading favorites from localStorage:", error);
+        // Reset on error
+        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify([]));
+        setFavorites([]);
+      }
+    };
+
+    loadFavorites();
+  }, []);
+  // Toggle favorite status for a token
+  const toggleFavorite = (token) => {
+    const tokenAddress = token.address.toLowerCase();
+
+    setFavorites((prev) => {
+      let newFavorites;
+
+      if (prev.includes(tokenAddress)) {
+        newFavorites = prev.filter((addr) => addr !== tokenAddress);
+      } else {
+        newFavorites = [...prev, tokenAddress];
+      }
+
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(newFavorites));
+
+      return newFavorites;
+    });
+  };
+
+  // Check if a token is favorited
+  const isTokenFavorite = (tokenAddress) => {
+    return favorites.includes(tokenAddress.toLowerCase());
+  };
+
+  // Fetch all balances in a single batched multicall
+  const { balances, isLoading: balancesLoading } =
+    useMulticallBalances(tokenList);
 
   const getRpcUrl = () => {
     switch (chainId) {
-      case 369: return "https://rpc.pulsechain.com";
-      case 10001: return "https://mainnet.ethereumpow.org";
-      case 146: return "https://rpc.soniclabs.com";
-      default: return null;
+      case 369:
+        return "https://rpc.pulsechain.com";
+      case 10001:
+        return "https://mainnet.ethereumpow.org";
+      case 146:
+        return "https://rpc.soniclabs.com";
+      case 8453:
+        return "https://mainnet.base.org";
+      case 1329:
+        return "https://sei.api.pocket.network";
+      case 80094:
+        return "https://berachain.drpc.org";
+      case 30:
+        return "https://public-node.rsk.co";
+      case 56:
+        return "https://bsc-rpc.publicnode.com";
+      case 143: 
+        return "https://rpc.monad.xyz";
+      default:
+        return null;
     }
   };
 
   const web3 = new Web3(getRpcUrl());
 
-  useEffect(() => {
-    const getAddress = async () => {
-      if (window.ethereum) {
-        try {
-          const accounts = await window.ethereum.request({
-            method: "eth_requestAccounts",
-          });
-          setWalletAddress(accounts[0]);
-        } catch (error) {
-          console.error("Error getting wallet address:", error);
-        }
-      }
-    };
-    getAddress();
-  }, []);
+  // Filter tokens based on search query (with deduplication by address)
+  const filteredTokens = useMemo(() => {
+    // Deduplicate by address (keep first occurrence)
+    const seen = new Set();
+    const uniqueTokens = tokenList.filter((token) => {
+      const addr = token.address.toLowerCase();
+      if (seen.has(addr)) return false;
+      seen.add(addr);
+      return true;
+    });
 
-  const filteredTokens = tokenList.filter(
-    (token) =>
-      (token.name && token.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (token.symbol && token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (token.ticker && token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
-      (token.address && token.address.toLowerCase().includes(searchQuery.toLowerCase()))
-  ).sort((a, b) => a.name.localeCompare(b.name));
+    return uniqueTokens.filter(
+      (token) =>
+        (token.name &&
+          token.name.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (token.symbol &&
+          token.symbol.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (token.ticker &&
+          token.ticker.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        (token.address &&
+          token.address.toLowerCase().includes(searchQuery.toLowerCase())),
+    );
+  }, [tokenList, searchQuery]);
 
-  const SortedTokenList = () => {
-    const tokenPromises = filteredTokens.map((token) => ({
-      token,
-      balancePromise: useBalance({
-        address: walletAddress,
-        token:
-          token.address === "0x0000000000000000000000000000000000000000"
-            ? undefined
-            : token.address,
-        watch: true,
-      }),
-    }));
+  // Sort tokens by favorites first, then by balance, then alphabetically
+  const sortedTokens = useMemo(() => {
+    return [...filteredTokens].sort((a, b) => {
+      const addressA = a.address.toLowerCase();
+      const addressB = b.address.toLowerCase();
 
-    // Sort based on balance
-    const sortedTokens = [...tokenPromises].sort((a, b) => {
-      const balanceA = parseFloat(a.balancePromise.data?.formatted || "0");
-      const balanceB = parseFloat(b.balancePromise.data?.formatted || "0");
+      const isFavoriteA = favorites.includes(addressA);
+      const isFavoriteB = favorites.includes(addressB);
 
+      // Favorites come first
+      if (isFavoriteA && !isFavoriteB) return -1;
+      if (!isFavoriteA && isFavoriteB) return 1;
+
+      // If both are favorites or both are not favorites, sort by balance
+      const balanceA = parseFloat(balances.get(addressA)?.formatted || "0");
+      const balanceB = parseFloat(balances.get(addressB)?.formatted || "0");
+
+      // Both have balance - sort by balance descending
       if (balanceA > 0 && balanceB > 0) {
         if (balanceA !== balanceB) {
-          return balanceB - balanceA; // Sort descending
+          return balanceB - balanceA;
         }
       }
+      // One has balance, prioritize it
       if (balanceA > 0 && balanceB === 0) return -1;
       if (balanceB > 0 && balanceA === 0) return 1;
 
-      return a.token.name.localeCompare(b.token.name);
+      // Neither has balance - sort alphabetically
+      return a.name.localeCompare(b.name);
     });
+  }, [filteredTokens, balances, favorites]);
 
-    return (
-      <div className="max-h-[400px] overflow-y-auto">
-        {sortedTokens.map(({ token }, index) => (
-          <TokenListItem
-            key={index}
-            token={token}
-            walletAddress={walletAddress}
-            onClick={handleTokenSelect}
-          />
-        ))}
-      </div>
-    );
+  // Get tokens to display (virtualization)
+  const displayedTokens = useMemo(() => {
+    return sortedTokens.slice(0, displayLimit);
+  }, [sortedTokens, displayLimit]);
+
+  // Handle scroll to load more tokens
+  const handleScroll = (e) => {
+    const { scrollTop, scrollHeight, clientHeight } = e.target;
+    // Load more when user scrolls to bottom (with 100px buffer)
+    if (scrollHeight - scrollTop - clientHeight < 100) {
+      if (displayLimit < sortedTokens.length) {
+        setDisplayLimit((prev) =>
+          Math.min(prev + LOAD_MORE_COUNT, sortedTokens.length),
+        );
+      }
+    }
   };
+
+  // Reset display limit when search changes
+  useEffect(() => {
+    setDisplayLimit(INITIAL_RENDER_LIMIT);
+  }, [searchQuery]);
 
   const lookupTokenByAddress = async (address) => {
     if (!web3.utils.isAddress(address)) {
@@ -150,16 +286,16 @@ const Token = ({ onClose, onSelect }) => {
         tokenContract.methods.decimals().call(),
       ]);
 
-      const decimal = Number(decimalsRaw); // Convert BigInt to Number
+      const decimal = Number(decimalsRaw);
       return {
         address,
         name,
         symbol,
         decimal,
-        logoURI: null,
+        logoURI: `https://tokens.app.pulsex.com/images/tokens/${address}.png`,
+        image: `https://raw.githubusercontent.com/piteasio/app-tokens/main/token-logo/${address}.png`,
         ticker: symbol,
       };
-
     } catch (error) {
       console.error("Error fetching token details:", error);
       return null;
@@ -174,7 +310,7 @@ const Token = ({ onClose, onSelect }) => {
     try {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        token => token.address.toLowerCase() === address.toLowerCase()
+        (token) => token.address.toLowerCase() === address.toLowerCase(),
       );
 
       if (existingToken) {
@@ -203,7 +339,7 @@ const Token = ({ onClose, onSelect }) => {
     if (web3.utils.isAddress(searchQuery)) {
       // First check if token exists in tokenList
       const existingToken = tokenList.find(
-        token => token.address.toLowerCase() === searchQuery.toLowerCase()
+        (token) => token.address.toLowerCase() === searchQuery.toLowerCase(),
       );
 
       if (existingToken) {
@@ -245,6 +381,24 @@ const Token = ({ onClose, onSelect }) => {
     onClose();
   };
 
+  // Add a clear all favorites function (optional)
+  const clearAllFavorites = () => {
+    if (favorites.length > 0) {
+      if (window.confirm("Clear all favorite tokens?")) {
+        setFavorites([]);
+      }
+    }
+  };
+
+  // For debugging - check localStorage on mount
+  useEffect(() => {
+    const checkStorage = () => {
+      const saved = localStorage.getItem(FAVORITES_STORAGE_KEY);
+      // console.log("Current localStorage value:", saved);
+    };
+    checkStorage();
+  }, []);
+
   if (!isSupported) {
     return (
       <div className="text-white text-center">
@@ -258,11 +412,11 @@ const Token = ({ onClose, onSelect }) => {
       <div className="w-full flex justify-center my-auto items-center">
         <div
           ref={modalRef}
-          className="md:max-w-[564px] w-full bg-black border border-white rounded-3xl relative py-6 px-5 mx-auto"
+          className="md:max-w-[618px] w-full rounded-3xl relative py-4 md:px-8 px-4 mx-auto clip-bg"
         >
           <svg
             onClick={onClose}
-            className="absolute cursor-pointer right-8 top-9"
+            className="absolute cursor-pointer md:right-14 right-7 md:top-12 top-9 tilt md:w-[18px] w-4"
             width={18}
             height={19}
             viewBox="0 0 18 19"
@@ -277,22 +431,65 @@ const Token = ({ onClose, onSelect }) => {
               strokeLinejoin="round"
             />
           </svg>
-
-          <div className="flex gap-4 items-center justify-center cursor-pointer mt-2">
-            <p className="md:text-2xl text-lg font-medium text-white roboto text-center tracking-widest">
+          <div className="flex gap-4 items-center justify-center cursor-pointer mt-2 md:py-3">
+            <h2 className="md:text-lg capitalize text-base font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+              <img src={EL} alt="EL" className="w-10 object-contain" />
               Select a token
-            </p>
+            </h2>
           </div>
-
-          <div className="mt-6 relative h-[43px] w-full flex gap-2 items-center">
+          <div className="grid md:grid-cols-5 grid-cols-4 gap-2 mt-4 md:px-2 px-1">
+            {featureTokens.slice(0, 10).map((token, index) => (
+              <div
+                key={index}
+                className="flex flex-row items-center cursor-pointer font-orbitron md:rounded-xl rounded-lg border border-[#FF9900] md:p-[12px] px-1 py-1.5"
+                onClick={() => handleFeaturedTokenClick(token)}
+              >
+                <span className="flex items-center">
+                  <div className="relative flex justify-center items-center">
+                    <TokenLogo
+                      token={token}
+                      className="md:w-5 md:h-5 w-3 h-3 rounded-full relative z-10 p-[1px] object-contain flex shrink-0"
+                      fallbackImg={EL}
+                    />
+                  </div>
+                  <p className="text-white font-black md:text-[12px] text-[9px] mt-0 ms-2 font-orbitron truncate md:w-14 w-10">
+                    {token.symbol || token.ticker}
+                  </p>
+                </span>
+              </div>
+            ))}
+          </div>
+          <div className="flex gap-4 items-center justify-between cursor-pointer mt-1 py-3">
+            <p className="md:text-lg capitalize text-base font-bold text-white font-orbitron text-center tracking-widest">
+              Search token
+            </p>
+            {/* Show favorite count and clear button */}
+            {favorites.length > 0 && (
+              <div className="flex items-center gap-2">
+                <span className="text-[#FF9900] text-sm">
+                  {favorites.length} ⭐
+                </span>
+                <button
+                  onClick={clearAllFavorites}
+                  className="text-xs text-white hover:text-red-400 transition-colors"
+                >
+                  Clear all
+                </button>
+              </div>
+            )}
+          </div>
+          <div className="mt-3 relative px-[10px] md:h-[54px] h-10 w-full flex gap-2 items-center border border-[#FF9900] rounded-xl">
             <input
               type="text"
               placeholder="Search token name or paste address"
-              className="bg-neutral-950 rounded-[4.83px] h-[43px] text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+              className="bg-transparent rounded-[4.83px] md:h-[43px] h-10 text-white md:max-w-[490px] w-full px-5 outline-none border-none text-white/opacity-70 md:text-sm text-xs font-normal font-orbitron leading-tight tracking-wide"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
             />
-            <button onClick={() => handleTokenLookup(searchQuery)}>
+            <button
+              className="ms-4"
+              onClick={() => handleTokenLookup(searchQuery)}
+            >
               <svg
                 className="flex flex-shrink-0 cursor-pointer"
                 width={24}
@@ -303,38 +500,36 @@ const Token = ({ onClose, onSelect }) => {
               >
                 <path
                   d="M18.8632 19.0535L13.3482 13.5375C10.8947 15.2818 7.51414 14.8552 5.57102 12.556C3.62792 10.257 3.7706 6.85254 5.89925 4.72413C8.02735 2.59479 11.4322 2.45149 13.7317 4.3945C16.0311 6.3375 16.458 9.71849 14.7137 12.1721L20.2287 17.688L18.8642 19.0526L18.8632 19.0535ZM9.99282 4.95765C8.16287 4.95724 6.58411 6.24178 6.21237 8.03356C5.84064 9.82534 6.7781 11.6319 8.45718 12.3596C10.1363 13.0871 12.0955 12.5358 13.1486 11.0392C14.2018 9.54268 14.0594 7.51235 12.8078 6.17743L13.3916 6.75644L12.7335 6.10023L12.7219 6.08865C11.9999 5.36217 11.0171 4.95489 9.99282 4.95765Z"
-                  fill="white"
+                  fill="#5C5C5C"
                 />
               </svg>
             </button>
           </div>
-          <div className="flex flex-wrap gap-4 mt-6">
-            {featureTokens.map((token, index) => (
-              <div
-                key={index}
-                className="flex flex-row items-center cursor-pointer roboto p-2 rounded-2xl border border-[#3b3c4e]"
-                onClick={() => handleFeaturedTokenClick(token)}
-              >
-                <img
-                  src={token.logoURI || token.image}
-                  alt={token.name}
-                  className="w-6 h-6 rounded-full"
-                  onError={(e) => (e.target.src = "path/to/fallback/image.png")}
+
+          <div className="mt-4 px-[2px]">
+            {/* Virtualized token list with scroll handler */}
+            <div
+              ref={listContainerRef}
+              className="max-h-[400px] overflow-y-auto px-1"
+              onScroll={handleScroll}
+            >
+              {displayedTokens.map((token, index) => (
+                <TokenListItem
+                  key={token.address || index}
+                  token={token}
+                  balance={balances.get(token.address.toLowerCase())}
+                  isLoading={balancesLoading}
+                  onClick={handleTokenSelect}
+                  isFavorite={isTokenFavorite(token.address)}
+                  onToggleFavorite={toggleFavorite}
                 />
-                <p className="text-white text-xs mt-0 ms-2">{token.symbol || token.ticker}</p>
-              </div>
-            ))}
-          </div>
-          <hr className="h-px my-8 bg-gray-200 border-[#3b3c4e] d" />
-
-          <div className="mt-6">
-            <div className="flex justify-between gap-4 items-center">
-              <p className="text-white text-xl font-medium roboto leading-relaxed tracking-wide">
-                Token Name
-              </p>
+              ))}
+              {displayLimit < sortedTokens.length && (
+                <div className="text-center text-white py-2 text-sm">
+                  Scroll for more tokens...
+                </div>
+              )}
             </div>
-
-            <SortedTokenList />
 
             {isLoading && (
               <div className="text-white text-center mt-4">Loading...</div>
@@ -347,8 +542,11 @@ const Token = ({ onClose, onSelect }) => {
             {tokenDetails && (
               <TokenListItem
                 token={tokenDetails}
-                walletAddress={walletAddress}
+                balance={balances.get(tokenDetails.address.toLowerCase())}
+                isLoading={balancesLoading}
                 onClick={handleTokenSelect}
+                isFavorite={isTokenFavorite(tokenDetails.address)}
+                onToggleFavorite={toggleFavorite}
               />
             )}
 

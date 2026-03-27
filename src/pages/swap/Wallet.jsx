@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Logo from "../../assets/images/emp-logo.png";
 import WalletImg from "../../assets/images/wallet-2.svg";
 import Home from "../../assets/images/house.svg";
@@ -6,11 +6,13 @@ import { Link } from "react-router-dom";
 import WalletConnect from "./WalletConnect/WalletConnect";
 import { useBalance, useAccount } from "wagmi";
 import { formatEther } from "viem";
+import DotSquare from "../../assets/images/dots.png";
+import DotsMenu from "./DotsMenu";
 
 const truncateAddress = (address) =>
   `${address.slice(0, 6)}...${address.slice(-4)}`;
 
-const Wallet = () => {
+const Wallet = ({ onTabChange }) => {
   const [balance, setBalance] = useState(null);
   const [chainIconUrl, setChainIconUrl] = useState(undefined);
   const [chainName, setChainName] = useState(undefined);
@@ -28,10 +30,10 @@ const Wallet = () => {
   const formattedBalance = isLoading
     ? "Loading..."
     : isError
-    ? "Error fetching balance"
-    : balance
-    ? `${parseFloat(balance).toFixed(2)}`
-    : "0.00";
+      ? "Error fetching balance"
+      : balance
+        ? `${parseFloat(balance).toFixed(2)}`
+        : "0.00";
 
   const formatNumber = (value) => {
     if (!value) return ""; // Handle empty input
@@ -47,13 +49,14 @@ const Wallet = () => {
       : formattedInteger;
   };
 
-  const handleChainChange = (iconUrl, name) => {
+  const handleChainChange = useCallback((iconUrl, name) => {
     setChainIconUrl(iconUrl);
     setChainName(name);
-  };
+  }, []);
 
   return (
-    <div className="w-full border border-white rounded-xl py-4 2xl:px-6 lg:px-5 px-4 bg-black md:flex gap-8">
+    <>
+      {/* <div className="w-full border border-white rounded-xl py-4 2xl:px-6 lg:px-5 px-4 bg-black md:flex gap-8">
       <div className="flex flex-col bg-[#161616] p-5 rounded-lg w-full md:max-w-[202px]">
         <div className="flex items-center gap-2 mb-4">
           <img src={Logo} alt="Logo" className="h-8" />
@@ -90,19 +93,30 @@ const Wallet = () => {
           </div>
         </div>
       </div>
-      <div className="flex justify-center gap-4 flex-col wallet_bg relative z-10 md:mt-0 mt-3">
+      <div className="flex justify-center gap-4 flex-col wallet_bg z-10 md:mt-0 mt-3 absolute wallet-bg-bridge ">
         <WalletConnect
           icon={<img src={WalletImg} alt="Wallet Icon" />}
           onChainChange={handleChainChange}
         />
         <Link to="/">
-          <button className="flex items-center md:justify-start justify-center gap-2 bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-semibold w-full roboto">
+          <button className="flex items-center md:justify-start justify-center gap-2 bg-[#FF9900] text-black text-sm py-2 px-6 rounded-md font-semibold w-full font-orbitron">
             <img className="pe-2" src={Home} alt="Home Icon" />
             Home Page
           </button>
         </Link>
       </div>
+    </div> */}
+    <div className="relative container mx-auto w-full">
+      <div className="flex justify-center lg:gap-2 gap-2 wallet_bg md:z-10 z-10 md:mt-0 mt-0 absolute wallet-bg-bridge lefts1">
+        <WalletConnect
+          icon={<img src={WalletImg} alt="Wallet Icon" />}
+          onChainChange={handleChainChange}
+        />
+        {/* https://empx.io/dapp */}
+        <DotsMenu onTabChange={onTabChange} />
+      </div>
     </div>
+    </>
   );
 };
 

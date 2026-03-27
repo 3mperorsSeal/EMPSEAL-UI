@@ -1,0 +1,442 @@
+// NEW
+import { ConnectButton } from "@rainbow-me/rainbowkit";
+import { useEffect, useState } from "react";
+import ChainPopup from "./Chainpopup";
+import dummyImage from "../../../assets/images/emp-logo.png";
+import Eth from "../../../assets/icons/eth.svg";
+import Pulse from "../../../assets/icons/pls.svg";
+import Sonic from "../../../assets/icons/sonic.png";
+import Base from "../../../assets/icons/base.svg";
+import Arbitrum from "../../../assets/icons/arbitrum.svg";
+import BSC from "../../../assets/icons/binance.svg";
+import Avalanche from "../../../assets/icons/avalanche.svg";
+import Polygon from "../../../assets/icons/polygon.svg";
+import OP from "../../../assets/icons/op.svg";
+import EL from "../../../assets/images/emp-logo.png";
+import Berachain from "../../../assets/icons/berachain.svg";
+
+
+import {
+  useAccount,
+  useConnect,
+  useDisconnect,
+  useSwitchChain,
+  useChains,
+} from "wagmi";
+import AddressCard from "./AddressCard";
+import TermsModal from "../TermsModal";
+import { useSelectedChainId, useSetSelectedChainId } from "../../../hooks/ChainContext";
+import { SUPPORTED_CHAINS } from "../../../config/chains";
+import { useConnectPopup } from "../../../hooks/ConnectPopupContext";
+
+const ChainChangeHandler = ({
+  chain,
+  onChainChange,
+  chains,
+  switchChain,
+  allowUnsupported,
+}) => {
+  useEffect(() => {
+    if (onChainChange) {
+      onChainChange(chain?.iconUrl, chain?.name);
+    }
+  }, [chain, onChainChange]);
+
+  useEffect(() => {
+    if (!allowUnsupported && chain?.unsupported && chains?.length > 0) {
+      switchChain({ chainId: chains[0].id });
+    }
+  }, [chain, chains, switchChain, allowUnsupported]);
+
+  return null; // This component doesn't render anything visible
+};
+
+export default function WalletConnect({
+  onChainChange,
+  allowUnsupported = false,
+}) {
+  const { address } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { chains, switchChain } = useSwitchChain();
+  const availableChains = useChains();
+  const { connect, connectors } = useConnect();
+  const selectedChainId = useSelectedChainId();
+  const setSelectedChainId = useSetSelectedChainId();
+
+  const [showPopup, setShowPopup] = useState(false);
+  const [showChainPopup, setShowChainPopup] = useState(false);
+  const { showConnectPopup, openConnectPopup, closeConnectPopup } = useConnectPopup();
+
+  const [showTermsPopup, setShowTermsPopup] = useState(false);
+
+  const [searchTerm, setSearchTerm] = useState("");
+  // Filter connectors by search term (case-insensitive)
+  const filteredConnectors = connectors
+    .slice(0, 6) // keep the limit if needed
+    .filter((connector) =>
+      connector.name.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+
+  useEffect(() => {
+    if (address && !sessionStorage.getItem("walletReloaded")) {
+      sessionStorage.setItem("walletReloaded", "true");
+      window.location.reload();
+    }
+  }, [address]);
+
+  const chainIcons = {
+    ethereum: Eth,
+    ethereumpow: Eth,
+    pulse: Pulse,
+    pulsechain: Pulse,
+    sonic: Sonic,
+    berachain: Berachain,
+    bsc: BSC, // local import
+    "arbitrum one": Arbitrum, // local import
+    avalanche: Avalanche, // local import
+    polygon: Polygon, // local import
+    "op mainnet": OP, // local import
+    "cronos mainnet":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK7JCGpwklwB4QMz4g7NoNTd1Epuyi48zgS91loU1-b2RHCK5W",
+    base: Base, // local import
+    monad: "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fassets.geckoterminal.com%2Fmxy95kpjer9bgo8k4jr366qx7qyj&w=64&q=75",
+    blast:
+      "https://cdn.prod.website-files.com/65a6baa1a3f8ed336f415cb4/65a6c461965bf28af43b80bc_Logo%20Yellow%20on%20Transparent%20Background.png",
+    "manta pacific mainnet":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRPaO9GeImBmVNTXZVGHaNUhp1WKKObzjDKDg&s",
+    zetachain:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDYhJxwXa_YkqJGPOLRh64V0J8BZkYEHlZOA&s",
+    "zksync era":
+      "https://s2.coinmarketcap.com/static/img/coins/200x200/24091.png",
+    "sei network":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6fwxNLN1-so5tXQr4z_Z-VcgryIoKU2iaFw&s",
+    sei: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQ6fwxNLN1-so5tXQr4z_Z-VcgryIoKU2iaFw&s",
+    "polygon zkevm":
+      "https://www.alchemy.com/dapps/_next/image?url=https%3A%2F%2Fres.cloudinary.com%2Falchemy-website%2Fimage%2Fupload%2Fv1694675395%2Fdapp-store%2Fdapp-logos%2FPolygon%2520zkEVM.png&w=640&q=75",
+    moonriver: "https://cryptologos.cc/logos/moonriver-movr-logo.png",
+    fantom: "https://s2.coinmarketcap.com/static/img/coins/200x200/3513.png",
+    aurora:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQDrtG7a1CUnAO9IZwRPWThw71z_uLm1nyjyw&s",
+    gnosis: "https://cryptologos.cc/logos/gnosis-gno-gno-logo.png",
+    "linea mainnet":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTpHUmXshY3mPDmQmpf-VMFK_i9JxdG_FEFeg&s",
+    scroll:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTSESM97ra0eogVU9F-jgvHWyUcFFN6ZEh9SQ&s",
+    fuse: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlWRds0-tcHOYrR8jafkXU8U5Q0MFvo56Asw&s",
+    moonbeam:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTekV-fnTPaXukurGta7NgI0gWy6z4-kj0hrg&s",
+    celo: "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRADqqjgCRSQG2l648A0-x4vWeKph203JqS4w&s",
+    "boba network":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTH1xnrUkBwf1Xgfsb-zcuzc0qbq4ADIdWkww&s",
+    mantle:
+      "https://static1.tokenterminal.com//mantle/logo.png?logo_hash=eee8c4258e118b4c7d96ac52a6f83cc9b5ea8232",
+    telos: "https://s2.coinmarketcap.com/static/img/coins/200x200/4660.png",
+    "kava evm":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQC931Eoyh14rn1dPlVQiMbcLLn7o7g6UtZ7w&s",
+    "arbitrum nova":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTCsXde41ET2SnLR9qJlY3YduFS0r5BnXR1jg&s",
+    tron: "https://s2.coinmarketcap.com/static/img/coins/200x200/1958.png",
+    metis:
+      "https://s3.coinmarketcap.com/static-gravity/image/6cbb40029f714c00ab3103055cb4ed44.jpeg",
+    bahamut:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT63y2NYI8NM_NvlrJr7BSszLAVYEBb786FIg&s",
+    "mode mainnet":
+      "https://s2.coinmarketcap.com/static/img/coins/200x200/31016.png",
+    "rootstock mainnet": "https://icons.llamao.fi/icons/chains/rsz_rsk.jpg",
+    rootstock: "https://icons.llamao.fi/icons/chains/rsz_rsk.jpg",
+    merlin:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcR0Xu_YMl9FlDCmW-gvl67pGW3fo0qxjdE61g&s",
+    "zklink nova":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRlHmpeXv7eaK5agMtNG357V4QLPvd0APew6Q&s",
+    "taiko mainnet":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSDFbe84aaBvGR_nv04FGC0XHg0pM9NhHplBQ&s",
+    fraxtal: "https://docs.frax.com/images/protocol/FRAX.png",
+    "gravity alpha mainnet":
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQIKmPOe5bVW147dDpEkRGpmnceagyTOr0c-Q&s",
+    morph:
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTovaGDebI_0rH6JiRXIhwUnUVRV1NmyyJWHA&s",
+  };
+  return (
+    <ConnectButton.Custom>
+      {({
+        account,
+        chain,
+        openConnectModal,
+        authenticationStatus,
+        mounted,
+      }) => {
+        const ready = mounted && authenticationStatus !== "loading";
+        const connected = ready && account && chain;
+
+        // Effects moved inside render prop to correctly access `chain`
+        // and avoid infinite loops.
+
+        if (!ready) return null;
+        if (!connected) {
+          // Find the currently selected chain info for the icon
+          const selectedChainInfo = SUPPORTED_CHAINS[selectedChainId];
+          const selectedChainName = selectedChainInfo?.name?.toLowerCase() || 'pulsechain';
+          const selectedChainIcon = chainIcons[selectedChainName] || dummyImage;
+
+          return (
+            <>
+              <button
+                className="new_shad !bg-black !rounded-2xl transition-all flex items-center justify-center gap-2 px-2"
+                onClick={() => setShowChainPopup(true)}
+                type="button"
+              >
+                <img
+                  src={selectedChainIcon}
+                  alt={selectedChainInfo?.name || 'Chain'}
+                  className="w-5 h-5 object-contain rounded-full"
+                  onError={(e) => (e.currentTarget.src = dummyImage)}
+                />
+              </button>
+              <button
+                className="new_shad !bg-black !rounded-2xl !text-[#FF9900] transition-all text-center font-extrabold px-4 whitespace-nowrap"
+                onClick={() => openConnectPopup()}
+                type="button"
+              >
+                Connect Wallet
+              </button>
+              {showChainPopup && (
+                <ChainPopup
+                  setShowChainPopup={setShowChainPopup}
+                  availableChains={availableChains}
+                  chain={{ id: selectedChainId, name: selectedChainInfo?.name }}
+                  switchChain={switchChain}
+                  onSelectChain={(chainId) => setSelectedChainId(chainId)}
+                />
+              )}
+              {showConnectPopup && (
+                <div
+                  className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 px-4"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget)
+                      closeConnectPopup();
+                  }}
+                >
+                  <div className="relative text-white md:p-8 p-4 rounded-2xl md:max-w-[560px] w-full clip-bg font-orbitron">
+                    <svg
+                      onClick={() => closeConnectPopup()}
+                      className="absolute cursor-pointer md:right-10 right-4 md:top-10 top-4 tilt"
+                      width={18}
+                      height={19}
+                      viewBox="0 0 18 19"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M17 1.44824L1 17.6321M1 1.44824L17 17.6321"
+                        stroke="#fff"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+
+                    <h2 className="mt-4 md:text-lg capitalize text-base font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+                      <img src={EL} alt="EL" className="w-10 object-contain" />
+                      Wallet Connect
+                    </h2>
+                    <div className="relative my-5">
+                      <svg
+                        className="flex flex-shrink-0 cursor-pointer absolute left-3 top-3"
+                        width={26}
+                        height={26}
+                        viewBox="0 0 26 26"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M11.9167 20.5833C16.7031 20.5833 20.5833 16.7031 20.5833 11.9167C20.5833 7.1302 16.7031 3.25 11.9167 3.25C7.1302 3.25 3.25 7.1302 3.25 11.9167C3.25 16.7031 7.1302 20.5833 11.9167 20.5833Z"
+                          stroke="#FF9900"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                        <path
+                          d="M22.7496 22.7501L18.0371 18.0376"
+                          stroke="#FF9900"
+                          strokeWidth={2}
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <input
+                        type="text"
+                        placeholder="Search"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="bg-[#382B19] h-12 rounded-lg text-[#FF9900] w-full pr-3 pl-12 outline-none border-none placeholder:text-[#FF9900] text-sm font-normal roboto leading-tight tracking-wide"
+                      />
+                    </div>
+
+                    {/* Wallet options */}
+                    <div className="grid md:grid-cols-2 grid-cols-1 gap-x-2 gap-y-4 mt-2">
+                      {filteredConnectors.slice(0, 6).map((connector) => (
+                        <div
+                          key={connector.uid}
+                          className="flex items-center justify-start gap-4 cursor-pointer rounded-lg d:py-3 py-2 px-3 transition-all hoverclip_1"
+                          onClick={() => {
+                            connect({ connector });
+                            closeConnectPopup();
+                          }}
+                        >
+                          <div className="relative">
+                            {/* <img
+                              src={Sbg}
+                              alt="sbg"
+                              className="absolute z-0 left-[-1.5px] top-0 bottom-0 my-auto min-w-[20px] h-[20px]"
+                            /> */}
+                            <img
+                              src={
+                                connector.name.includes("MetaMask")
+                                  ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
+                                  : // "https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
+                                  connector.name.includes("WalletConnect")
+                                    ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
+                                    : connector.name.includes("Coinbase")
+                                      ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
+                                      : "https://rainbowkit.com/icons/wallet.svg"
+                              }
+                              alt={connector.name}
+                              className="w-5 h-5 relative z-10 flex flex-shrink-0 object-contain rounded-full"
+                            />
+                          </div>
+                          <p className="md:text-base text-[10px] text-[#FF9900] font-orbitron font-bold">
+                            {connector.name}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="bg-[#444444] w-full h-[1px] mb-4 mt-10"></div>
+                    <div className="text-white md:text-base text-sm mt-4 font-orbitron font-bold text-center">
+                      By logging in I agree to the
+                      <span
+                        onClick={() => {
+                          setShowTermsPopup(true);
+                          closeConnectPopup();
+                        }}
+                        className="ml-1 text-[#FF9900] cursor-pointer hover:underline md:text-base text-sm font-orbitron font-bold"
+                      >
+                        Terms & Privacy Policy
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+              {showTermsPopup && (
+                <div
+                  className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 px-4"
+                  onClick={(e) => {
+                    if (e.target === e.currentTarget) setShowTermsPopup(false);
+                  }}
+                >
+                  <TermsModal onClose={() => setShowTermsPopup(false)} />
+                </div>
+              )}
+            </>
+          );
+        }
+        if (chain.unsupported && !allowUnsupported) {
+          return (
+            <>
+              <button
+                className="new_shad !bg-black !rounded-2xl hover:opacity-80 transition-all !text-[#FF494A] font-extrabold"
+                onClick={() => setShowChainPopup(true)}
+                type="button"
+              >
+                Wrong Network
+              </button>
+              {showChainPopup && (
+                <ChainPopup
+                  setShowChainPopup={setShowChainPopup}
+                  availableChains={availableChains}
+                  chain={chain}
+                  switchChain={switchChain}
+                />
+              )}
+            </>
+          );
+        }
+        return (
+          <>
+            <ChainChangeHandler
+              chain={chain}
+              onChainChange={onChainChange}
+              chains={chains}
+              switchChain={switchChain}
+              allowUnsupported={allowUnsupported}
+            />
+            <button
+              className="new_shad !bg-black !rounded-2xl transition-all flex items-center justify-center gap-2 px-2"
+              onClick={() => setShowChainPopup(true)}
+              type="button"
+            >
+              {chain ? (
+                <>
+                  <img
+                    src={
+                      chainIcons[chain.name.toLowerCase()] ||
+                      chain.iconUrl ||
+                      dummyImage
+                    }
+                    alt={chain.name}
+                    className="w-5 h-5 object-contain rounded-full"
+                    onError={(e) => (e.currentTarget.src = dummyImage)}
+                  />
+                  {/* <span
+                    className={
+                      chain.name.length > 11
+                        ? "truncate md:w-[150px] w-[110px]"
+                        : ""
+                    }
+                  >
+                    {chain.name}
+                  </span> */}
+                </>
+              ) : (
+                "Select Chain"
+              )}
+            </button>
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-4">
+              <button
+                className="new_shad !bg-black !text-[#FF9900] !rounded-2xl transition-all text-center font-extrabold font-orbitron"
+                onClick={() => setShowPopup(true)}
+                type="button"
+              >
+                Disconnect
+              </button>
+            </div>
+
+            {/* Address popup */}
+            {showPopup && (
+              <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50 px-4">
+                <AddressCard
+                  address={address || ""}
+                  onCopy={() => navigator.clipboard.writeText(address || "")}
+                  onDisconnect={() => {
+                    disconnect();
+                    setShowPopup(false);
+                  }}
+                  onClose={() => setShowPopup(false)}
+                />
+              </div>
+            )}
+
+            {/* Chain popup */}
+            {showChainPopup && (
+              <ChainPopup
+                setShowChainPopup={setShowChainPopup}
+                availableChains={availableChains}
+                chain={chain}
+                switchChain={switchChain}
+              />
+            )}
+          </>
+        );
+      }}
+    </ConnectButton.Custom>
+  );
+}
