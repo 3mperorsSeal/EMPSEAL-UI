@@ -7,7 +7,7 @@ import {
   walletConnectWallet,
 } from '@rainbow-me/rainbowkit/wallets';
 import { http } from 'wagmi';
-import { pulsechain, sonic, rootstock} from 'wagmi/chains';
+import { pulsechain, sonic, rootstock, arbitrum} from 'wagmi/chains';
 import { defineChain, fallback } from 'viem';
 
 export const ethw = defineChain({
@@ -198,7 +198,7 @@ export const config = getDefaultConfig({
   projectId: 'YOUR_PROJECT_ID',
   // Note: ethw and sonic are temporarily disabled (not up to date)
   // To re-enable, change to: chains: [pulsechain, ethw, sonic],
-  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc, monad],
+  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc, monad, arbitrum],
   transports: {
     [pulsechain.id]: http(),
     [sonic.id]: http(),
@@ -217,6 +217,7 @@ export const config = getDefaultConfig({
     [ethw.id]: http(),
     [bsc.id]: http(),
     [monad.id]: http(),
+    [arbitrum.id]: http(),
   },
   ssr: true,
   connectors: swapConnectors,
