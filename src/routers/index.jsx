@@ -130,14 +130,8 @@ function MyRoutes() {
                 </BridgeWrapper>
               }
             />
-            <Route
-              path="/via-bridge"
-              element={
-                <ViaBridgeWrapper>
-                  <ViaBridge />
-                </ViaBridgeWrapper>
-              }
-            />
+            {/* via-bridge disabled — coming soon */}
+            <Route path="/via-bridge" element={<Navigate to="/swap" replace />} />
             <Route
               path="/gas"
               element={
