@@ -263,4 +263,27 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0xDecaf9CD2367cdbb726E904cD6397eDFcAe6068D", // USDD
     ],
   },
+  137: {
+    chainId: 137,
+    name: "Polygon",
+    symbol: "polygon",
+    routerAddress: "0x9a64E7a18f5A9edcE3A3728B2C12643FA0cee26B",
+    wethAddress: "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270",
+    priceApi: {
+      baseUrl: "https://api.geckoterminal.com/api/v2",
+      tokenPriceEndpoint: "simple/networks/polygon_pos/token_price",
+      graphEndpoint: "networks/polygon_pos/pools",
+    },
+    blockExplorer: "https://polygonscan.com/tx/",
+    blockExplorerName: "PolygonScan",
+    rpcUrl: "https://polygon.drpc.org",
+    maxHops: 3,
+    blockTime: 2,
+    stableTokens: [
+      "0x2791bca1f2de4661ed88a30c99a7a9449aa84174", // USDC
+      "0xc2132d05d31c914a87c6611c10748aeb04b58e8f", // USDT
+      "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", // DAI
+      "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", // USDC.e
+    ], 
+  }
 };

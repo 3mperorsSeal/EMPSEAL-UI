@@ -18,6 +18,7 @@ const DEXSCREENER_CHAIN_BY_SYMBOL = {
   monad: "monad",
   arbitrum: "arbitrum",
   optimism: "optimism",
+  polygon: "polygon_pos",
 };
 
 const getMostLiquidPair = (pairs = []) => {
@@ -97,7 +98,8 @@ export const fetchTokenPrice = async (symbol, address) => {
     // Use DexScreener for Sei Network because GeckoTerminal doesn't index its tokens natively yet.
     if (
       symbol?.toLowerCase() === "sei-network" ||
-      symbol?.toLowerCase() === "sei"
+      symbol?.toLowerCase() === "sei" || 
+      symbol?.toLowerCase() === "polygon_pos" || symbol?.toLowerCase() === "polygon"
     ) {
       const response = await fetch(
         `https://api.dexscreener.com/latest/dex/tokens/${normalizedAddress}`

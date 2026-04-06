@@ -204,6 +204,29 @@ export const optimism = defineChain({
   },
 } as const);
 
+export const polygon = defineChain({
+  id: 137,
+  name: 'Polygon',
+  nativeCurrency: { name: 'POL', symbol: 'POL', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://polygon.drpc.org'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'PolygonScan',
+      url: 'https://polygonscan.com',
+      apiUrl: 'https://api.polygonscan.com/api',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xca11bde05977b3631167028862be2a173976ca11',
+    },
+  },
+} as const);
+
 export const chains = [
   pulsechain,
   sonic,
@@ -216,4 +239,5 @@ export const chains = [
   monad,
   arbitrum,
   optimism,
+  polygon,
 ] as const;

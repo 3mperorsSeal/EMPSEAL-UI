@@ -15,6 +15,7 @@ import { WBERA } from "./abis/wberaABI";
 import { WRBTC } from "./abis/wrbtcABI";
 import { WBNB } from "./abis/wbnbABI";
 import { WMON } from "./abis/wmonABI";
+import { WPOL } from "./abis/wpolABI";
 import { config } from "../Wagmi/config";
 import {
   ETHW_ROUTER_ABI,
@@ -28,6 +29,7 @@ import {
   MONAD_ROUTER_ABI,
   ARBITRUM_ROUTER_ABI,
   OPTIMISM_ROUTER_ABI,
+  POLYGON_ROUTER_ABI,
 } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
@@ -102,6 +104,12 @@ const ROUTER_FUNCTION_NAMES = {
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
   },
+  // Polygon
+  137: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  }
 } as const;
 
 // Create a union type of all possible function names
@@ -135,6 +143,8 @@ const getWrappedTokenABI = (chainId: number) => {
       return WETH;
     case 10: // Optimism
       return WETH;
+    case 137: // Polygon
+      return WPOL;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -167,6 +177,8 @@ const getRouterABI = (chainId: number) => {
       return ARBITRUM_ROUTER_ABI;
     case 10: // Optimism
       return OPTIMISM_ROUTER_ABI;
+    case 137: // Polygon
+      return POLYGON_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;

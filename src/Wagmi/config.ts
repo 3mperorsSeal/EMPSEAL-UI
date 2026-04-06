@@ -21,6 +21,7 @@ import {
   monad,
   arbitrum,
   optimism,
+  polygon,
 } from './chains';
 
 // Wallet configuration for swap
@@ -77,6 +78,7 @@ export const config = getDefaultConfig({
     [monad.id]: http(),
     [arbitrum.id]: http(),
     [optimism.id]: http(),
+    [polygon.id]: http(),
   },
   ssr: true,
   connectors: swapConnectors,
