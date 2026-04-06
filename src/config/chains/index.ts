@@ -235,4 +235,32 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34", // USDe
     ],
   },
+  // Optimism
+  10: {
+    chainId: 10,
+    name: "Optimism",
+    symbol: "optimism",
+    routerAddress: "0x686c652d079A370eC97F93B2b4805Ee06aE25d04",
+    wethAddress: "0x4200000000000000000000000000000000000006",
+    priceApi: {
+      baseUrl: "https://api.geckoterminal.com/api/v2",
+      tokenPriceEndpoint: "simple/networks/optimism/token_price",
+      graphEndpoint: "networks/optimism/pools",
+    },
+    blockExplorer: "https://optimistic.etherscan.io/tx/",
+    blockExplorerName: "Optimistic Etherscan",
+    rpcUrl: "https://mainnet.optimism.io",
+    maxHops: 3,
+    blockTime: 2,
+    quoteHopFallback: {
+      strategy: "decrement_to_one",
+      minStep: 1,
+    },
+    stableTokens: [
+      "0x7f5c764cbc14f9669b88837ca1490cca17c31607", // USDC
+      "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58", // USDT
+      "0x8c6f28f2F1A3C87F0f93840faE2Eae5a30666eDc", // USDP
+      "0xDecaf9CD2367cdbb726E904cD6397eDFcAe6068D", // USDD
+    ],
+  },
 };

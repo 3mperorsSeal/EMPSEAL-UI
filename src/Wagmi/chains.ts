@@ -215,4 +215,5 @@ export const chains = [
   bsc,
   monad,
   arbitrum,
+  optimism,
 ] as const;

@@ -1,3 +1,5 @@
+import { optimism } from "viem/chains";
+
 const parsePrice = (value) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : null;
@@ -15,6 +17,7 @@ const DEXSCREENER_CHAIN_BY_SYMBOL = {
   bsc: "bsc",
   monad: "monad",
   arbitrum: "arbitrum",
+  optimism: "optimism",
 };
 
 const getMostLiquidPair = (pairs = []) => {

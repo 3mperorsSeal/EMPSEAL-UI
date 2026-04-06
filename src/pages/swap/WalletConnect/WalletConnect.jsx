@@ -95,7 +95,7 @@ export default function WalletConnect({
     arbitrum: Arbitrum, // local import
     avalanche: Avalanche, // local import
     polygon: Polygon, // local import
-    "op mainnet": OP, // local import
+    optimism: "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F25244%2Flarge%2FToken.png%3F1774456081&w=128&q=75", // local import
     "cronos mainnet":
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK7JCGpwklwB4QMz4g7NoNTd1Epuyi48zgS91loU1-b2RHCK5W",
     base: Base, // local import

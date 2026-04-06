@@ -8,6 +8,7 @@ import rootstockAdapters from './rootstock.json';
 import bscAdapters from './bsc.json';
 import monadAdapters from './monad.json';
 import arbitrumAdapters from './arbitrum.json';
+import optimismAdapters from './optimism.json';
 
 export const CHAIN_ADAPTERS: Record<number, any[]> = {
   369: pulsechainAdapters,
@@ -20,4 +21,5 @@ export const CHAIN_ADAPTERS: Record<number, any[]> = {
   56: bscAdapters,
   143: monadAdapters,
   42161: arbitrumAdapters,
+  10: optimismAdapters,
 };

@@ -27,6 +27,7 @@ import {
   BSC_ROUTER_ABI,
   MONAD_ROUTER_ABI,
   ARBITRUM_ROUTER_ABI,
+  OPTIMISM_ROUTER_ABI,
 } from "./abis/empSealRouterAbi";
 import Tokens from "../pages/tokenList.json";
 import { convertToBigInt } from "./utils";
@@ -95,6 +96,12 @@ const ROUTER_FUNCTION_NAMES = {
     swapToNative: "swapNoSplitToETH",
     swapWithPermit: "swapNoSplitToETHWithPermit"
   },
+  // Optimism
+  10: {
+    swapFromNative: "swapNoSplitFromETH",
+    swapToNative: "swapNoSplitToETH",
+    swapWithPermit: "swapNoSplitToETHWithPermit"
+  },
 } as const;
 
 // Create a union type of all possible function names
@@ -126,6 +133,8 @@ const getWrappedTokenABI = (chainId: number) => {
       return WMON;
     case 42161: // Arbitrum
       return WETH;
+    case 10: // Optimism
+      return WETH;
     case 369: // Pulsechain
     default:
       return WPLS;
@@ -156,6 +165,8 @@ const getRouterABI = (chainId: number) => {
       return MONAD_ROUTER_ABI;
     case 42161: // Arbitrum
       return ARBITRUM_ROUTER_ABI;
+    case 10: // Optimism
+      return OPTIMISM_ROUTER_ABI;
     case 369: // Pulsechain
     default:
       return PLS_ROUTER_ABI;

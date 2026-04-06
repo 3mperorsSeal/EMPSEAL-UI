@@ -24,6 +24,8 @@ const getFallbackUrl = (chainId, address) => {
       return `https://raw.githubusercontent.com/Shadow-Exchange/shadow-assets/main/blockchains/sonic/assets/${address}/logo.png`;
     case 42161: // Arbitrum
       return `https://api-assets.rubic.exchange/assets/coingecko/arbitrum/${lowerAddress}/logo.png`;
+    case 10: // Optimism
+      return `https://api-assets.rubic.exchange/assets/coingecko/optimism/${lowerAddress}/logo.png`;
     default:
       return null;
   }
