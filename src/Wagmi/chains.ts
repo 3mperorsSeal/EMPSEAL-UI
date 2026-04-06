@@ -1,7 +1,7 @@
 import { defineChain } from 'viem';
-import { pulsechain, sonic, rootstock } from 'wagmi/chains';
+import { pulsechain, sonic, rootstock, avalanche } from 'wagmi/chains';
 
-export { pulsechain, sonic, rootstock };
+export { pulsechain, sonic, rootstock, avalanche };
 
 export const ethw = defineChain({
   id: 10001,
@@ -240,4 +240,5 @@ export const chains = [
   arbitrum,
   optimism,
   polygon,
+  avalanche,
 ] as const;

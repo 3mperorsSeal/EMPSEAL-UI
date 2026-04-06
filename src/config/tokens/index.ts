@@ -10,6 +10,7 @@ import monadTokens from './monad.json';
 import arbitrumTokens from './arbitrum.json';
 import optimismTokens from './optimism.json';
 import polygonTokens from './polygon.json';
+import avalancheTokens from './avalanche.json';
 
 export const CHAIN_TOKENS: Record<number, any[]> = {
   369: pulsechainTokens,
@@ -24,4 +25,5 @@ export const CHAIN_TOKENS: Record<number, any[]> = {
   42161: arbitrumTokens,
   10: optimismTokens,
   137: polygonTokens,
+  43114: avalancheTokens,
 };

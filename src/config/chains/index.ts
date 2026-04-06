@@ -263,6 +263,30 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0xDecaf9CD2367cdbb726E904cD6397eDFcAe6068D", // USDD
     ],
   },
+  // Avalanche
+  43114: {
+    chainId: 43114,
+    name: "Avalanche",
+    symbol: "avalanche",
+    routerAddress: "0xf4e53aAe1D9f27851B03842007D0a8a023317cD2",
+    wethAddress: "0xB31f66AA3C1e785363F0875A1B74E27b85FD66c7",
+    priceApi: {
+      baseUrl: "https://api.geckoterminal.com/api/v2",
+      tokenPriceEndpoint: "simple/networks/avalanche/token_price",
+      graphEndpoint: "networks/avalanche/pools",
+    },
+    blockExplorer: "https://snowtrace.io/tx/",
+    blockExplorerName: "SnowTrace",
+    rpcUrl: "https://api.avax.network/ext/bc/C/rpc",
+    maxHops: 3,
+    blockTime: 2,
+    stableTokens: [
+      "0xb97ef9ef8734c71904d8002f8b6bc66dd9c48a6e", // USDC.e
+      "0x9702230a8ea53601f5cd2dc00fdbc13d4df4a8c7", // USDT.e
+      "0x00000000efe302beaa2b3e6e1b18d08d69a9012a", // AUSD
+    ],
+  },
+  // Polygon
   137: {
     chainId: 137,
     name: "Polygon",

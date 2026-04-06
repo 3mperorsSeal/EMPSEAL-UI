@@ -42,6 +42,7 @@ import {
   ARBITRUM_ROUTER_ABI,
   OPTIMISM_ROUTER_ABI,
   POLYGON_ROUTER_ABI,
+  AVALANCHE_ROUTER_ABI,
 } from "../../utils/abis/empSealRouterAbi";
 import { toast } from "../../utils/toastHelper";
 import { usePriceMonitor } from "../../hooks/usePriceMonitor";
@@ -58,6 +59,7 @@ import { WBERA } from "../../utils/abis/wberaABI";
 import { WRBTC } from "../../utils/abis/wrbtcABI";
 import { WMON } from "../../utils/abis/wmonABI";
 import { WPOL } from "../../utils/abis/wpolABI";
+import { WAVAX } from "../../utils/abis/wavaxABI";
 
 import { SlippageCalculator as LimitOrderSlippageCalculator } from "../limit-orders/SlippageCalculator";
 
@@ -86,6 +88,8 @@ const getWrappedTokenABI = (chainId) => {
       return WETH;
     case 137: 
       return WPOL;
+    case 43114:
+      return WAVAX;
     case 369:
     default:
       return WPLS;
@@ -116,6 +120,8 @@ const getRouterABI = (chainId) => {
       return OPTIMISM_ROUTER_ABI;
     case 137:
       return POLYGON_ROUTER_ABI;
+    case 43114:
+      return AVALANCHE_ROUTER_ABI;
     case 369:
     default:
       return PLS_ROUTER_ABI;

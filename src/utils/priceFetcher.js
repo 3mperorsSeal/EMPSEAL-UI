@@ -19,6 +19,7 @@ const DEXSCREENER_CHAIN_BY_SYMBOL = {
   arbitrum: "arbitrum",
   optimism: "optimism",
   polygon: "polygon_pos",
+  avalanche: "avalanche",
 };
 
 const getMostLiquidPair = (pairs = []) => {
