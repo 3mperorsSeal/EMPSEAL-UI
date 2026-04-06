@@ -215,9 +215,31 @@ export const polygon = defineChain({
   },
   blockExplorers: {
     default: {
-      name: 'PolygonScan',
+    name: 'PolygonScan',
       url: 'https://polygonscan.com',
       apiUrl: 'https://api.polygonscan.com/api',
+    },
+  },
+  contracts: {
+    multicall3: {
+      address: '0xca11bde05977b3631167028862be2a173976ca11',
+    },
+  },
+} as const);
+
+export const hyperEVM = defineChain({
+  id: 999,
+  name: 'HyperEVM',
+  nativeCurrency: { name: 'HyperEVM', symbol: 'HEVM', decimals: 18 },
+  rpcUrls: {
+    default: {
+      http: ['https://rpc.hyperliquid.xyz/evm'],
+    },
+  },
+  blockExplorers: {
+    default: {
+      name: 'hyperevmscan',
+      url: 'https://hyperevmscan.io/',
     },
   },
   contracts: {
@@ -241,4 +263,5 @@ export const chains = [
   optimism,
   polygon,
   avalanche,
+  hyperEVM,
 ] as const;

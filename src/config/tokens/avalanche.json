@@ -98,6 +98,7 @@
       "name": "Bitcoin",
       "ticker": "BTC.b",
       "blockchainNetwork": "AVALANCHE",
+      "featured": true,
       "network": "AVALANCHE",
       "decimal": 8,
       "image": "http://api-assets.rubic.exchange/assets/coingecko/avalanche/0x152b9d0fdc40c096757f570a51e494bd4b943e50/logo.png",
@@ -244,6 +245,32 @@
       },
       "usdPriceChangePercentage24h": 2.16430252837776,
       "usdPriceChangePercentage7d": -4.86742118427086
+    },
+    {
+      "address": "0x2775d5105276781b4b85ba6ea6a6653beed1dd32",
+      "name": "XAUt0",
+      "ticker": "XAUt0",
+      "blockchainNetwork": "AVALANCHE",
+      "featured": true,
+      "network": "AVALANCHE",
+      "decimal": 6,
+      "image": "http://api-assets.rubic.exchange/assets/coingecko/avalanche/0x2775d5105276781b4b85ba6ea6a6653beed1dd32/logo.png",
+      "rank": 0,
+      "source_rank": 99999,
+      "type": "TOKEN",
+      "usdPrice": 4709.65,
+      "token_security": {
+        "has_info": true,
+        "trust_list": null,
+        "buy_tax": "0.00000",
+        "sell_tax": "0.00000",
+        "risky_security_items": 0,
+        "attention_security_items": 1,
+        "is_airdrop_scam": null,
+        "fake_token": false
+      },
+      "usdPriceChangePercentage24h": 2.67160509908109,
+      "usdPriceChangePercentage7d": 3.80267186089628
     },
     {
       "address": "0x5d3a1ff2b6bab83b63cd9ad0787074081a52ef34",
@@ -474,6 +501,7 @@
       "address": "0xfc421ad3c883bf9e7c4f42de845c4e4405799e73",
       "name": "Gho Token",
       "ticker": "GHO",
+      "featured": true,
       "blockchainNetwork": "AVALANCHE",
       "network": "AVALANCHE",
       "decimal": 18,
@@ -15096,31 +15124,6 @@
       },
       "usdPriceChangePercentage24h": 0,
       "usdPriceChangePercentage7d": 0
-    },
-    {
-      "address": "0x2775d5105276781b4b85ba6ea6a6653beed1dd32",
-      "name": "XAUt0",
-      "ticker": "XAUt0",
-      "blockchainNetwork": "AVALANCHE",
-      "network": "AVALANCHE",
-      "decimal": 6,
-      "image": "http://api-assets.rubic.exchange/assets/coingecko/avalanche/0x2775d5105276781b4b85ba6ea6a6653beed1dd32/logo.png",
-      "rank": 0,
-      "source_rank": 99999,
-      "type": "TOKEN",
-      "usdPrice": 4709.65,
-      "token_security": {
-        "has_info": true,
-        "trust_list": null,
-        "buy_tax": "0.00000",
-        "sell_tax": "0.00000",
-        "risky_security_items": 0,
-        "attention_security_items": 1,
-        "is_airdrop_scam": null,
-        "fake_token": false
-      },
-      "usdPriceChangePercentage24h": 2.67160509908109,
-      "usdPriceChangePercentage7d": 3.80267186089628
     },
     {
       "address": "0x913c61ec3573e5e4ee6488552535fb1be84ff2ac",

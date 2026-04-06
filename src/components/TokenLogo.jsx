@@ -28,6 +28,10 @@ const getFallbackUrl = (chainId, address) => {
       return `https://api-assets.rubic.exchange/assets/coingecko/optimism/${lowerAddress}/logo.png`;
     case 43114: // Avalanche
       return `https://api-assets.rubic.exchange/assets/coingecko/avalanche/${lowerAddress}/logo.png`;
+    case 137: // Polygon
+      return `https://api-assets.rubic.exchange/assets/coingecko/polygon/${lowerAddress}/logo.png`;
+    case 999: // HyperEVM
+      return `https://api-assets.rubic.exchange/assets/coingecko/hyper_evm/${lowerAddress}/logo.png`;
     default:
       return null;
   }

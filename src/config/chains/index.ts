@@ -112,7 +112,7 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
     maxHops: 3,
     blockTime: 1,
     stableTokens: [
-      "0x3894085ef7ff0f0aedf52e2a2704928d1ec074f1", // USDC
+      "0xe15fc38f6d8c56af07bbcbe3baf5708a2bf42392", // USDC
       "0xb75d0b03c06a926e488e2659df1a861f860bd3d1", // USDT
       "0x37a4dd9ced2b19cfe8fac251cd727b5787e45269", // fastusd
     ]
@@ -309,5 +309,32 @@ export const SUPPORTED_CHAINS: Record<number, ChainConfig> = {
       "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063", // DAI
       "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359", // USDC.e
     ], 
+  },
+  // HyperEVM 
+  999: {
+    chainId: 999,
+    name: "HyperEVM",
+    symbol: "hyperevm",
+    routerAddress: "0xd3c8153351df63287cCD042ba75f6Be2583d939E",
+    wethAddress: "0x5555555555555555555555555555555555555555",
+    priceApi: {
+      baseUrl: "https://api.geckoterminal.com/api/v2",
+      tokenPriceEndpoint: "simple/networks/hyperevm/token_price",
+      graphEndpoint: "networks/hyperevm/pools",
+    },
+    quoteHopFallback: {
+      strategy: "decrement_to_one",
+      minStep: 1,
+    },
+    blockExplorer: "https://hyperevmscan.io/tx/",
+    blockExplorerName: "HyperEVMScan",
+    rpcUrl: "https://rpc.hyperliquid.xyz/evm",
+    maxHops: 3,
+    blockTime: 1,
+     stableTokens: [
+      "0xb88339cb7199b77e23db6e890353e22632ba630f", // USDC
+      "0xb8ce59fc3717ada4c02eadf9682a9e934f625ebb", // USDTO
+      "0x111111a1a0667d36bd57c0a9f569b98057111111", // USDH
+    ],
   }
 };

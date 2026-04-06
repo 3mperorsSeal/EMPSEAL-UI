@@ -23,6 +23,7 @@ import {
   optimism,
   polygon,
   avalanche,
+  hyperEVM,
 } from './chains';
 
 // Wallet configuration for swap
@@ -81,6 +82,7 @@ export const config = getDefaultConfig({
     [optimism.id]: http(),
     [polygon.id]: http(),
     [avalanche.id]: http(),
+    [hyperEVM.id]: http(),
   },
   ssr: true,
   connectors: swapConnectors,
