@@ -7,6 +7,11 @@ import berachainTokens from './berachain.json';
 import rootstockTokens from './rootstock.json';
 import bscTokens from './bsc.json';
 import monadTokens from './monad.json';
+import arbitrumTokens from './arbitrum.json';
+import optimismTokens from './optimism.json';
+import polygonTokens from './polygon.json';
+import avalancheTokens from './avalanche.json';
+import hyperEVMTokens from './hyperEVM.json';
 
 export const CHAIN_TOKENS: Record<number, any[]> = {
   369: pulsechainTokens,
@@ -18,4 +23,9 @@ export const CHAIN_TOKENS: Record<number, any[]> = {
   30: rootstockTokens,
   56: bscTokens,
   143: monadTokens,
+  42161: arbitrumTokens,
+  10: optimismTokens,
+  137: polygonTokens,
+  43114: avalancheTokens,
+  999: hyperEVMTokens,
 };

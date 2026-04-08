@@ -1,175 +1,36 @@
-import { getDefaultConfig } from '@rainbow-me/rainbowkit';
-import { connectorsForWallets } from '@rainbow-me/rainbowkit';
+import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   rainbowWallet,
   metaMaskWallet,
   coinbaseWallet,
   walletConnectWallet,
-} from '@rainbow-me/rainbowkit/wallets';
-import { http } from 'wagmi';
-import { pulsechain, sonic, rootstock} from 'wagmi/chains';
-import { defineChain, fallback } from 'viem';
-
-export const ethw = defineChain({
-  id: 10001,
-  name: 'EthereumPoW',
-  nativeCurrency: {
-    name: 'EthereumPoW',
-    symbol: 'ETHW',
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ['https://mainnet.ethereumpow.org'],
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: 'OKLink',
-      url: 'https://www.oklink.com/ethereum-pow',
-    },
-  },
-} as const);
-
-export const base = defineChain({
-  id: 8453,
-  name: "Base",
-  nativeCurrency: {
-    name: "Base Ether",
-    symbol: "ETH",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://base.drpc.org"],
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: "0xca11bde05977b3631167028862be2a173976ca11",
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "BaseScan",
-      url: "https://basescan.org",
-    },
-  },
-} as const);
-
-export const bsc = defineChain({
-  id: 56,
-  name: "BSC",
-  nativeCurrency: {
-    name: "BNB",
-    symbol: "BNB",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://bsc-rpc.publicnode.com"],
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: "0xca11bde05977b3631167028862be2a173976ca11",
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "BscScan",
-      url: "https://bscscan.com",
-    },
-  },
-} as const);
-
-export const sei = defineChain({
-  id: 1329,
-  name: "Sei Network",
-  nativeCurrency: {
-    name: "Sei",
-    symbol: "SEI",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://sei.api.pocket.network"],
-      // https://evm-rpc.sei-apis.com
-      // https://sei.drpc.org
-      // https://sei-evm-rpc.stakeme.pro
-      // https://sei-evm-rpc.publicnode.com
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: "0xcA11bde05977b3631167028862bE2a173976CA11",
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "seitrace",
-      url: "https://seitrace.com/",
-    },
-  },
-} as const);
-
-export const berachain = defineChain({
-  id: 80094,
-  name: "Berachain",
-  nativeCurrency: {
-    name: "Bera",
-    symbol: "BERA",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://berachain.drpc.org"],
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: "0xca11bde05977b3631167028862be2a173976ca11",
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Berascan",
-      url: "https://berascan.org",
-    },
-  },
-} as const);
-
-export const monad = defineChain({
-  id: 143,
-  name: "Monad",
-  nativeCurrency: {
-    name: "Monad",
-    symbol: "MONAD",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: {
-      http: ["https://rpc.monad.xyz"],
-    },
-  },
-  contracts: {
-    multicall3: {
-      address: "0xca11bde05977b3631167028862be2a173976ca11",
-    },
-  },
-  blockExplorers: {
-    default: {
-      name: "Monadscan",
-      url: "https://monadscan.com/",
-    },
-  },
-} as const);
+} from "@rainbow-me/rainbowkit/wallets";
+import { http } from "wagmi";
+import { fallback } from "viem";
+import {
+  chains,
+  pulsechain,
+  sonic,
+  base,
+  sei,
+  berachain,
+  rootstock,
+  ethw,
+  bsc,
+  monad,
+  arbitrum,
+  optimism,
+  polygon,
+  avalanche,
+  hyperEVM,
+} from "./chains";
 
 // Wallet configuration for swap
 const swapConnectors = connectorsForWallets(
   [
     {
-      groupName: 'Suggested',
+      groupName: "Suggested",
       wallets: [
         metaMaskWallet,
         rainbowWallet,
@@ -178,45 +39,135 @@ const swapConnectors = connectorsForWallets(
       ],
     },
   ],
-  { appName: 'RainbowKit Swap', projectId: 'YOUR_PROJECT_ID' },
+  { appName: "RainbowKit Swap", projectId: "YOUR_PROJECT_ID" },
 );
 
-const fallbackTransport = (urls: string[]) =>
-  fallback(
-    urls.map((url) =>
-      http(url, {
-        timeout: 30_000,
-        retryCount: 1,
-        retryDelay: 2500,
-      }),
-    ),
-    { rank: false },
-  );
+const transportOptions = {
+  timeout: 12_000,
+  retryCount: 1,
+  retryDelay: 1_000,
+} as const;
+
+const uniqueUrls = (urls: string[]) => [...new Set(urls.filter(Boolean))];
+
+const chainTransport = (
+  chain: { rpcUrls: { default: { http: readonly string[] } } },
+  preferredUrls: string[] = [],
+) => {
+  const urls = uniqueUrls([...preferredUrls, ...chain.rpcUrls.default.http]);
+  const transports = urls.map((url) => http(url, transportOptions));
+
+  if (transports.length <= 1) {
+    return transports[0];
+  }
+
+  // Keep failover passive. `rank: true` actively probes all RPCs on an interval.
+  return fallback(transports, { rank: false });
+};
 
 export const config = getDefaultConfig({
-  appName: 'Empseal Swap',
-  projectId: 'YOUR_PROJECT_ID',
-  // Note: ethw and sonic are temporarily disabled (not up to date)
-  // To re-enable, change to: chains: [pulsechain, ethw, sonic],
-  chains: [pulsechain, sonic, base, sei, berachain, rootstock, ethw, bsc, monad],
+  appName: "Empseal Swap",
+  projectId: "YOUR_PROJECT_ID",
+  chains,
   transports: {
-    [pulsechain.id]: http(),
-    [sonic.id]: http(),
-    [base.id]: fallbackTransport([
-      "https://base.drpc.org",
-      "https://base-rpc.publicnode.com",
+    [pulsechain.id]: chainTransport(pulsechain, [
+      "https://rpc.pulsechain.com",
+      "https://rpc.pulsechain.box",
+      "https://pulsechain-rpc.publicnode.com",
+      "https://rpc.pulsechainrpc.com",
     ]),
-    [sei.id]: fallbackTransport([
+    [sonic.id]: chainTransport(sonic, [
+      "https://rpc.soniclabs.com",
+      "https://sonic-rpc.publicnode.com",
+      "https://sonic.drpc.org",
+      "https://sonic.api.pocket.network",
+    ]),
+    [base.id]: chainTransport(base, [
+      "https://mainnet.base.org",
+      "https://base-rpc.publicnode.com",
+      "https://base.llamarpc.com",
+      "https://developer-access-mainnet.base.org",
+      "https://1rpc.io/base",
+      "https://base.drpc.org",
+      "https://base.public.blockpi.network/v1/rpc/public",
+      "https://base.meowrpc.com",
+    ]),
+    [sei.id]: chainTransport(sei, [
       "https://evm-rpc.sei-apis.com",
       "https://sei.api.pocket.network",
       "https://sei.drpc.org",
       "https://sei-evm-rpc.publicnode.com",
+      "https://sei.llamarpc.com",
     ]),
-    [berachain.id]: http(),
-    [rootstock.id]: http(),
-    [ethw.id]: http(),
-    [bsc.id]: http(),
-    [monad.id]: http(),
+    [berachain.id]: chainTransport(berachain, [
+      "https://berachain.drpc.org",
+      "https://berachain-rpc.publicnode.com",
+      "https://rpc.berachain-apis.com",
+      "https://berachain.api.pocket.network",
+    ]),
+    [rootstock.id]: chainTransport(rootstock, [
+      "https://public-node.rsk.co",
+      "https://mycrypto.rsk.co",
+      "https://rootstock-mainnet.public.blastapi.io",
+      "https://rootstock.drpc.org",
+    ]),
+    [ethw.id]: chainTransport(ethw, [
+      "https://mainnet.ethereumpow.org",
+      "https://ethw.public-rpc.com",
+    ]),
+    [bsc.id]: chainTransport(bsc, [
+      "https://bsc-rpc.publicnode.com",
+      "https://bsc.api.pocket.network",
+      "https://bsc-dataseed.binance.org",
+      "https://bsc.blockpi.network/v1/rpc/public",
+      "https://binance.llamarpc.com",
+    ]),
+    [monad.id]: chainTransport(monad, [
+      "https://rpc.monad.xyz",
+      "https://rpc4.monad.xyz",
+      "https://rpc3.monad.xyz",
+      "https://monad-mainnet.drpc.org",
+    ]),
+    [arbitrum.id]: chainTransport(arbitrum, [
+      "https://arb1.arbitrum.io/rpc",
+      "https://arbitrum.lava.build",
+      "https://arb-one.api.pocket.network",
+      "https://1rpc.io/arb",
+      "https://arbitrum.blockpi.network/v1/rpc/public",
+      "https://endpoints.omniatech.io/v1/arbitrum/one/public",
+    ]),
+    [optimism.id]: chainTransport(optimism, [
+      "https://mainnet.optimism.io",
+      "https://optimism.blockpi.network/v1/rpc/public",
+      "https://1rpc.io/op",
+      "https://endpoints.omniatech.io/v1/op/mainnet/public",
+    ]),
+    [polygon.id]: chainTransport(polygon, [
+      "https://polygon.drpc.org",
+      "https://polygon-rpc.com",
+      "https://rpc.ankr.com/polygon",
+      "https://polygon-bor-rpc.publicnode.com",
+      "https://1rpc.io/matic",
+      "https://polygon-mainnet.public.blastapi.io",
+      "https://polygon.blockpi.network/v1/rpc/public",
+    ]),
+    [avalanche.id]: chainTransport(avalanche, [
+      "https://api.avax.network/ext/bc/C/rpc",
+      "https://avalanche.public-rpc.com",
+      "https://avax.api.pocket.network",
+      "https://avalanche.blockpi.network/v1/rpc/public",
+      "https://endpoints.omniatech.io/v1/avax/mainnet/public",
+    ]),
+    [hyperEVM.id]: chainTransport(hyperEVM, [
+      "https://hyperevm-rpc.publicnode.com",
+      "https://hyperliquid-json-rpc.stakely.io",
+      "https://rpc.hypurrscan.io",
+      "https://hyperliquid.api.onfinality.io/evm/public",
+      "https://hyperliquid.llamarpc.com",
+      "https://rpc.ankr.com/hyperliquid_evm",
+      "https://hyperliquid.drpc.org",
+      "https://rpc.hyperliquid.xyz/evm",
+    ]),
   },
   ssr: true,
   connectors: swapConnectors,

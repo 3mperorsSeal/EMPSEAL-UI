@@ -186,6 +186,14 @@ const Token = ({ onClose, onSelect }) => {
         return "https://bsc-rpc.publicnode.com";
       case 143: 
         return "https://rpc.monad.xyz";
+      case 42161:
+        return "https://arb-one.api.pocket.network";
+      case 10: 
+        return "https://mainnet.optimism.io";
+      case 43114: 
+        return "https://avalanche-c-chain.publicnode.com";
+      case 999: 
+        return "https://rpc.hyperliquid.xyz/evm";
       default:
         return null;
     }
@@ -408,7 +416,7 @@ const Token = ({ onClose, onSelect }) => {
   }
 
   return (
-    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
+    <div className="bg-black bg-opacity-40 backdrop-blur-sm py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999] fade-in-out fade-out">
       <div className="w-full flex justify-center my-auto items-center">
         <div
           ref={modalRef}

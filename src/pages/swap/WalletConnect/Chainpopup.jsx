@@ -33,14 +33,15 @@ const ChainPopup = ({
     pulsechain: Pulse,
     sonic: Sonic,
     bsc: BSC, // local import
-    "arbitrum one": Arbitrum, // local import
+    arbitrum: Arbitrum, // local import
     avalanche: Avalanche, // local import
     polygon: Polygon, // local import
-    "op mainnet": OP, // local import
+    optimism: "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fcoin-images.coingecko.com%2Fcoins%2Fimages%2F25244%2Flarge%2FToken.png%3F1774456081&w=128&q=75", // local import
     "cronos mainnet":
       "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQK7JCGpwklwB4QMz4g7NoNTd1Epuyi48zgS91loU1-b2RHCK5W",
     base: Base, // local import
     monad: "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fassets.geckoterminal.com%2Fmxy95kpjer9bgo8k4jr366qx7qyj&w=64&q=75",
+    hyperevm: "https://www.geckoterminal.com/_next/image?url=https%3A%2F%2Fassets.geckoterminal.com%2Fcre8xcjrtfqah7f2sjx8whz68izg&w=64&q=75",
     berachain: Berachain,
     blast:
       "https://cdn.prod.website-files.com/65a6baa1a3f8ed336f415cb4/65a6c461965bf28af43b80bc_Logo%20Yellow%20on%20Transparent%20Background.png",
@@ -98,7 +99,7 @@ const ChainPopup = ({
   };
 
   return (
-    <div className="bg-black bg-opacity-40 py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
+    <div className="bg-black bg-opacity-40 backdrop-blur-sm py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
       <div className="w-full flex justify-center my-auto items-center">
         <div className="md:max-w-[618px] w-full rounded-3xl relative py-6 md:px-8 px-4 mx-auto clip-bg">
           <svg
