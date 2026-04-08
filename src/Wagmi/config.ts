@@ -161,6 +161,8 @@ export const config = getDefaultConfig({
     [hyperEVM.id]: chainTransport(hyperEVM, [
       "https://hyperevm-rpc.publicnode.com",
       "https://hyperliquid-json-rpc.stakely.io",
+      "https://rpc.hypurrscan.io",
+      "https://hyperliquid.api.onfinality.io/evm/public",
       "https://hyperliquid.llamarpc.com",
       "https://rpc.ankr.com/hyperliquid_evm",
       "https://hyperliquid.drpc.org",
