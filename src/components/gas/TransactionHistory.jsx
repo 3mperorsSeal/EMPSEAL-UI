@@ -27,7 +27,7 @@ const TransactionHistory = () => {
 
   return (
     <div className="text-white w-full sctable pb-10">
-      <h2 className="font-extrabold text-center text-[#FF9900] md:text-3xl text-lg font-orbitron transition-all duration-200">
+      <h2 className="font-extrabold text-center text-[#FF8A00] md:text-3xl text-lg  transition-all duration-200">
         Transaction History
       </h2>
       <div className="mt-6 clip-bg1 w-full rounded-2xl lg:py-8 lg:px-8 md:px-6 px-4 md:py-6 py-6 space-y-3 max-h-[350px] overflow-y-auto chain_scroll">
@@ -41,7 +41,7 @@ const TransactionHistory = () => {
               ) : isLoading ? (
                 <p className="text-center text-white">Loading history...</p>
               ) : error ? (
-                <p className="text-center text-[#FF9900]">
+                <p className="text-center text-[#FF8A00]">
                   Could not fetch transaction history.
                 </p>
               ) : history.length === 0 ? (
@@ -49,9 +49,9 @@ const TransactionHistory = () => {
                   You have no past bridge transactions.
                 </p>
               ) : (
-                <div className="max-h-96 overflow-y-auto font-orbitron">
+                <div className="max-h-96 overflow-y-auto ">
                   <div className="min-w-full space-y-2">
-                    <div className="md:grid hidden grid-cols-6 text-sm font-semibold text-[#FF9900] px-6 py-3">
+                    <div className="md:grid hidden grid-cols-6 text-sm font-semibold text-[#FF8A00] px-6 py-3">
                       <div>Deposit Hash</div>
                       <div>Date</div>
                       <div>Status</div>
@@ -63,14 +63,14 @@ const TransactionHistory = () => {
                     {history.map((tx) => (
                       <div
                         key={tx.deposit.hash}
-                        className="grid md:grid-cols-6 md:gap-4 gap-2 md:items-center md:text-center border border-[#FF9900] rounded-xl px-6 py-5 md:text-sm text-xs text-white hover:bg-[#FF9900]/10 transition"
+                        className="grid md:grid-cols-6 md:gap-4 gap-2 md:items-center md:text-center border border-[#FF8A00]  px-6 py-5 md:text-sm text-xs text-white hover:bg-[#FF8A00]/10 transition"
                       >
                         <div className="font-medium text-white">
                           <a
                             href={`https://etherscan.io/tx/${tx.deposit.hash}`}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="flex items-center hover:text-[#FF9900]"
+                            className="flex items-center hover:text-[#FF8A00]"
                           >
                             {`${tx.deposit.hash.slice(
                               0,
@@ -98,7 +98,7 @@ const TransactionHistory = () => {
                         <div className="text-right">
                           <button
                             onClick={() => handleRemoveTx(tx.deposit.hash)}
-                            className="text-[#FF9900] hover:text-red-500"
+                            className="text-[#FF8A00] hover:text-red-500"
                           >
                             <Trash2 size={20} />
                           </button>

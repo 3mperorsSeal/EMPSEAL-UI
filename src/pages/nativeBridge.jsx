@@ -43,7 +43,7 @@ const NativeBridge = () => {
             <div
               className={`border-2 ${
                 activeTab === "native"
-                  ? "border-[#FF9900]"
+                  ? "border-[#FF8A00]"
                   : "border-black bg-black"
               } 
       px-3 py-2 w-full md:h-9 h-[28px] flex justify-center items-center 
@@ -58,7 +58,7 @@ const NativeBridge = () => {
             <div
               className={`border-2 ${
                 activeTab === "viabridge"
-                  ? "border-[#FF9900] bg-black"
+                  ? "border-[#FF8A00] bg-black"
                   : "border-white"
               } 
       px-3 py-2 w-full md:h-9 h-[28px] flex justify-center items-center 

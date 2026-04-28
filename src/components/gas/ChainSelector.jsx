@@ -92,13 +92,13 @@ const ChainModal = ({
           setSearchTerm("");
           onClose();
         }}
-        className="flex items-center gap-3 rounded-lg hoverclip text-[#FFD484] hover:text-white my-3 px-3 py-3 cursor-pointer"
+        className="flex items-center gap-3  hoverclip text-[#FFD484] hover:text-white my-3 px-3 py-3 cursor-pointer"
       >
         <ChainLogo
           chain={chain}
           className="md:w-5 md:h-5 w-4 h-4 rounded-full"
         />
-        <span className="font-orbitron text-base font-semibold">
+        <span className=" text-base font-semibold">
           {chain.name}
         </span>
       </div>
@@ -109,35 +109,35 @@ const ChainModal = ({
     <div className="bg-black bg-opacity-40 backdrop-blur-sm py-10 flex justify-center items-center overflow-y-auto h-full my-auto fixed top-0 px-4 left-0 right-0 bottom-0 z-[9999999] fade-in-out fade-out">
       <div
         ref={modalRef}
-        className="relative w-full max-w-[650px] rounded-3xl bg-black py-6 md:px-8 md:py-8 px-6 clip-bg"
+        className="relative w-full max-w-[650px]  bg-black py-6 md:px-8 md:py-8 px-6 clip-bg"
       >
         {/* Close */}
         <button
           onClick={onClose}
-          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 text-2xl tilt hover:text-[#FF9900]"
+          className="absolute md:top-10 top-7 md:right-10 right-7 text-white hover:opacity-80 text-2xl tilt hover:text-[#FF8A00]"
         >
           ✕
         </button>
 
         {/* Title */}
-        <h2 className="md:text-lg capitalize text-base font-medium text-white font-orbitron text-center tracking-widest flex gap-1 items-center justify-center">
+        <h2 className="text-[13px] capitalize font-bold text-white  text-center tracking-widest flex gap-1 items-center justify-center">
           <img src={EL} alt="EL" className="w-10 object-contain" />
           {title}
         </h2>
 
         {/* Search */}
         {/* bg-search */}
-        <div className="mt-10 relative px-[10px] h-[54px] w-full flex gap-2 items-center bg-[#382B19] rounded-xl">
+        <div className="mt-10 relative px-[10px] h-[54px] w-full flex gap-2 items-center bg-[#382B19] ">
           <Search
             size={18}
-            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF9900]"
+            className="absolute left-4 top-1/2 -translate-y-1/2 text-[#FF8A00]"
           />
           <input
             type="text"
             placeholder="Search chain..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="bg-[#382B19] rounded-[4.83px] h-[43px] text-[#FF9900] md:max-w-[490px] w-full pr-4 pl-10 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
+            className="bg-[#382B19] rounded-[4.83px] h-[43px] text-[#FF8A00] md:max-w-[490px] w-full pr-4 pl-10 outline-none border-none text-white/opacity-70 text-sm font-normal roboto leading-tight tracking-wide"
           />
         </div>
 
@@ -188,14 +188,14 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
 
   if (isLoading)
     return (
-      <div className="text-white font-extrabold font-orbitron md:text-xs text-[10px] capitalize">
+      <div className="text-white font-extrabold  md:text-xs text-[10px] capitalize">
         Loading chains...
       </div>
     );
 
   if (error)
     return (
-      <div className="font-extrabold font-orbitron md:text-xs text-[10px] capitalize text-red-500">
+      <div className="font-extrabold  md:text-xs text-[10px] capitalize text-red-500">
         Error fetching chains.
       </div>
     );
@@ -237,7 +237,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
             setActiveModal("from");
             setIsChainModalOpen(true);
           }}
-          className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
+          className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF8A00] md:rounded-[7px]  md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
         >
           {fromChain ? (
             <>
@@ -247,7 +247,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
               />
               {/* lg:text-xl text-sm */}
               <span
-                className={`text-white font-bold font-orbitron leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
+                className={`text-white font-bold  leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
                   fromChain.name,
                 )}`}
               >
@@ -255,7 +255,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
               </span>
             </>
           ) : (
-            <span className="text-white font-extrabold font-orbitron md:text-xs text-[10px] capitalize">
+            <span className="text-white font-extrabold  md:text-xs text-[10px] capitalize">
               Select Chain
             </span>
           )}
@@ -266,7 +266,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
             setActiveModal("to");
             setIsChainModalOpen(true);
           }}
-          className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF9900] md:rounded-[7px] rounded-lg md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
+          className="flex md:gap-4 gap-1 items-center bg-black border border-[#FF8A00] md:rounded-[7px]  md:px-5 px-3 md:py-[10px] py-2 justify-center w-full"
         >
           {toChain ? (
             <>
@@ -275,7 +275,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
                 className="md:w-5 md:h-5 w-4 h-4 rounded-full"
               />
               <span
-                className={`text-white font-bold font-orbitron leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
+                className={`text-white font-bold  leading-normal bg-black appearance-none outline-none ${getFontSizeClass(
                   toChain.name,
                 )}`}
               >
@@ -283,7 +283,7 @@ const ChainSelector = ({ onSwitch, setIsChainModalOpen }) => {
               </span>
             </>
           ) : (
-            <span className="text-white font-extrabold font-orbitron md:text-xs text-[10px] capitalize">
+            <span className="text-white font-extrabold  md:text-xs text-[10px] capitalize">
               Select Chain
             </span>
           )}

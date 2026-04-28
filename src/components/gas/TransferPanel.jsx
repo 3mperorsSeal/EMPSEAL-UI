@@ -385,14 +385,14 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
         <div className="lg:max-w-[650px] md:max-w-[650px] mx-auto w-full">
           <div className="relative bg_swap_box_chain">
             <div className="flex justify-between gap-3 items-center">
-              <h2 className="font-orbitron md:text-[15px] text-xs font-extrabold leading-normal text-[#FF9900]">
+              <h2 className="you_pay_heading">
                 Gas Out
               </h2>
-              <div className="md:text-xs text-[10px] font-orbitron">
-                <span className="font-normal leading-normal text-[#FF9900]">
+              <div className="md:text-xs text-[10px] ">
+                <span className="font-normal leading-normal text-[#FF8A00]">
                   BAL
                 </span>
-                <span className="font-normal leading-normal text-[#FF9900]">
+                <span className="font-normal leading-normal text-[#FF8A00]">
                   {" "}
                   :{" "}
                 </span>
@@ -449,7 +449,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                         value={amount}
                         onChange={handleAmountChange}
                         placeholder="0.1"
-                        className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
+                        className=" font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full outline-none border-none transition-all duration-200 ease-in-out bg-black space"
                         style={{
                           fontSize: `${dynamicFontSize}px`,
                         }}
@@ -466,14 +466,14 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                   }}
                   className="relative flex-flex-col justify-end items-end w-full cursor-pointer mt-2"
                 >
-                  <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-[100px] w-[80px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF9900] hover:text-black">
+                  <p className="ml-auto py-1 border border-[#FFE7C3] flex justify-center items-center  md:text-[10px] text-[8px] font-medium  md:w-[100px] w-[80px] px-2 bg-[#FFE7C3] text-[#040404] hover:border-black hover:bg-[#FF8A00] hover:text-black">
                     Max Amount
                   </p>
                 </div>
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-10 mt-7">
-              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col relative top-2">
+              <div className="you_pay_heading flex flex-col relative top-2">
                 {isFromPriceLoading ? (
                   <span className="animate-pulse">Loading...</span>
                 ) : fromTokenPrice ? (
@@ -483,7 +483,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                 )}
                 <span className="font-bold mt-1">Market Price</span>
               </div>
-              <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
+              <div className="text-zinc-200 text-[10px] font-normal  leading-normal flex md:gap-2 gap-1 justify-end">
                 {[25, 50, 75, 100].map((value) => (
                   <button
                     key={value}
@@ -491,10 +491,10 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                     // disabled={isLoading}
                     disabled={isBalanceLoading || !balance}
                     onClick={() => handlePercentageChange(value)}
-                    className={`py-1 border border-[#EEC485] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
+                    className={`py-1 border border-[#EEC485] flex justify-center items-center  md:text-[10px] text-[8px] font-medium  md:w-12 w-11 px-2
         ${selectedPercentage === value
-                        ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                        : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        ? "!text-black !bg-[#FF8A00] border-[#FF8A00]"
+                        : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF8A00] hover:text-black"
                       }`}
                   >
                     {value}%
@@ -503,7 +503,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
               </div>
             </div>
             {/* USD Value Display */}
-            <div className="text-right text-white text-xs mt-2 font-orbitron">
+            <div className="text-right text-white text-xs mt-2 ">
               {isFromPriceLoading ? (
                 <span className="animate-pulse">Fetching...</span>
               ) : fromTokenPrice ? (
@@ -524,14 +524,14 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
           <img
             src={UpDownAr}
             alt="Ar"
-            className="hoverswap transition-all rounded-xl"
+            className="hoverswap transition-all "
           />
         </button>
         {/*  */}
         <div className="lg:max-w-[650px] md:max-w-[650px] mx-auto w-full">
           <div className="relative bg_swap_box_chain">
             <div className="flex justify-between gap-3 items-center">
-              <h2 className="font-orbitron md:text-[15px] text-xs font-extrabold leading-normal text-[#FF9900]">
+              <h2 className="you_pay_heading">
                 Gas In
               </h2>
             </div>
@@ -562,7 +562,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                     defaultFontSize - excessDigits * SHRINK_RATE,
                   );
                   return (
-                    <div className="font-orbitron font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full flex justify-end items-center outline-none border-none transition-all duration-200 ease-in-out space">
+                    <div className=" font-extrabold text-white rounded-[10px] px-1 py-3 text-end w-full h-full flex justify-end items-center outline-none border-none transition-all duration-200 ease-in-out space">
                       <div
                         className={`text-white`}
                         style={{
@@ -573,7 +573,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                       </div>
 
                       {quoteError && (
-                        <p className="text-[#FF9900] text-xs mt-2 absolute bottom-4 right-4">
+                        <p className="text-[#FF8A00] text-xs mt-2 absolute bottom-4 right-4">
                           Could not fetch quote. Please check inputs.
                         </p>
                       )}
@@ -583,7 +583,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
               </div>
             </div>
             <div className="flex justify-between gap-2 items-center md:mt-3 mt-2">
-              <div className="text-[#FF9900] font-orbitron md:text-[15px] text-xs flex flex-col relative top-2">
+              <div className="you_pay_heading flex flex-col relative top-2">
                 {isToPriceLoading ? (
                   <span className="animate-pulse">Loading...</span>
                 ) : toTokenPrice ? (
@@ -593,7 +593,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                 )}
                 <span className="font-bold mt-1">Market Price</span>
               </div>
-              {/* <div className="text-zinc-200 text-[10px] font-normal font-orbitron leading-normal flex md:gap-2 gap-1 justify-end">
+              {/* <div className="text-zinc-200 text-[10px] font-normal  leading-normal flex md:gap-2 gap-1 justify-end">
                 {[25, 50, 75, 100].map((value) => (
                   <button
                     key={value}
@@ -601,10 +601,10 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                     // disabled={isLoading}
                     disabled={isBalanceLoading || !balance}
                     onClick={() => handlePercentageChange(value)}
-                    className={`py-1 border border-[#EEC485] flex justify-center items-center rounded-xl md:text-[10px] text-[8px] font-medium font-orbitron md:w-12 w-11 px-2
+                    className={`py-1 border border-[#EEC485] flex justify-center items-center  md:text-[10px] text-[8px] font-medium  md:w-12 w-11 px-2
         ${selectedPercentage === value
-                        ? "!text-black !bg-[#FF9900] border-[#FF9900]"
-                        : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF9900] hover:text-black"
+                        ? "!text-black !bg-[#FF8A00] border-[#FF8A00]"
+                        : "bg-[#EEC485] text-[#040404] border-black hover:border-black hover:bg-[#FF8A00] hover:text-black"
                       }`}
                   >
                     {value}%
@@ -613,7 +613,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
               </div> */}
             </div>
             {/* USD Value Display for expected amount */}
-            <div className="text-right text-white text-xs mt-2 font-orbitron">
+            <div className="text-right text-white text-xs mt-2 ">
               {isToPriceLoading ? (
                 <span className="animate-pulse">Fetching...</span>
               ) : toTokenPrice ? (
@@ -633,10 +633,10 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
                 value={recipientAddress}
                 onChange={(e) => setRecipientAddress(e.target.value)}
                 placeholder="Recipient Address"
-                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 md:pr-20 pr-20 py-10 bg-transparent text-white font-orbitron md:text-base text-[8px] truncate outline-none"
+                className="absolute inset-0 top-0 bottom-0 my-auto w-full h-full md:pl-4 pl-4 md:pr-20 pr-20 py-10 bg-transparent text-white  md:text-base text-[8px] truncate outline-none"
               />
               <button
-                className={`!absolute !bg-transparent md:w-[90px] w-16 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF9900] top-2 right-3 flex justify-center items-center rounded-xl px-2 font-orbitron !text-[#FF9900] md:text-base text-xs font-bold`}
+                className={`!absolute !bg-transparent md:w-[90px] w-16 md:h-10 h-10 hover:opacity-70 bg-black !border !border-[#FF8A00] top-2 right-3 flex justify-center items-center  px-2  !text-[#FF8A00] md:text-base text-xs font-bold`}
               // onClick={handleSelfButtonClick}
               >
                 Self
@@ -648,7 +648,7 @@ const TransferPanel = ({ setIsChainModalOpen }) => {
               onClick={handleBridgeClick}
               disabled={!quoteData || isSending || isConfirming}
               type="button"
-              className="gtw relative w-full md:h-12 h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto cursor-pointer button-trans text-center flex justify-center items-center transition-all font-orbitron lg:text-base text-base font-extrabold"
+              className="gtw relative w-full md:h-12 h-11 bg-[#FF8A00] mx-auto font-bold cursor-pointer button-trans text-center flex justify-center items-center transition-all  text-xs"
             >
               <span>
                 {" "}

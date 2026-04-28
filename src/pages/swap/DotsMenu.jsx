@@ -39,7 +39,7 @@ const DotsMenu = ({ onTabChange }) => {
         <button
           ref={buttonRef}
           onClick={() => setOpen((prev) => !prev)}
-          className="flex items-center justify-center !bg-black transition-all md:w-[70px] w-10 md:h-[51px] h-8 md:rounded-2xl rounded-lg new_shad"
+          className="flex items-center justify-center !bg-black transition-all md:w-[70px] w-10 md:h-[51px] h-8 md:rounded-2xl  new_shad"
         >
           <img
             src={DotSquare}
@@ -58,7 +58,7 @@ const DotsMenu = ({ onTabChange }) => {
       />
       <div
         className={`fixed inset-x-0 top-0 2xl:h-[280px] h280 md:h-[280px] bg-black border-4 border-[#FFA600]
-  md:rounded-2xl rounded-lg 2xl:px-10 md:px-7 px-4 py-10 z-50 shadow-xl w-full
+  md:rounded-2xl  2xl:px-10 md:px-7 px-4 py-10 z-50 shadow-xl w-full
   transform transition-all duration-500 ease-in-out
   ${
     open
@@ -68,7 +68,7 @@ const DotsMenu = ({ onTabChange }) => {
       >
         <div
           ref={menuRef}
-          className="grid md:grid-cols-6 grid-cols-1 md:gap-10 gap-5 items-start text-[#FFA600] font-orbitron relative 2xl:pt-2 pt10"
+          className="grid md:grid-cols-6 grid-cols-1 md:gap-10 gap-5 items-start text-[#FFA600]  relative 2xl:pt-2 pt10"
         >
           <div
             onClick={() => setOpen(false)}

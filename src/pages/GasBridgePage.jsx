@@ -34,7 +34,7 @@ export default function GasBridgePage() {
           </div>
           <div className={!isChainModalOpen ? "scales8 top70" : ""}>
             <div className="text-center mb-8 lg:mt-0 mt-1">
-              <h1 className="2xl:text-[43px] 2xl:leading-[40px] font40 text-2xl text-center text-[#FF9900] font-orbitron font-bold mb-2">
+              <h1 className="2xl:text-[43px] 2xl:leading-[40px] font40 text-2xl text-center text-[#FF8A00]  font-bold mb-2">
                 Gas <br /> <span className="text-white">Anywhere</span>
               </h1>
             </div>
