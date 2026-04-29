@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Routes,
-  Route,
-  Navigate,
-  useLocation,
-} from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { lazy, Suspense } from "react";
 
 // import Base from "../layout/base/Base";
@@ -23,8 +17,6 @@ import store from "../redux/store/store";
 import { ToastContainer, Slide } from "react-toastify";
 import { useEffect } from "react";
 import { useAccount, useChainId, useSwitchChain } from "wagmi";
-import Portfolio from "../pages/portfolio/Portfolio"
-
 import {
   pulsechain,
   sonic,
@@ -39,6 +31,7 @@ import {
 import ViaBridge from "../pages/via-bridge/BridgePage";
 import NotFound from "../pages/NotFound";
 import Landing from "../pages/landing/Home";
+import Portfolio from "../pages/portfolio/Portfolio";
 
 const GasBridgePage = lazy(() => import("../pages/GasBridgePage"));
 
@@ -125,76 +118,83 @@ const ViaBridgeWrapper = ({ children }) => (
   </WagmiProviderWrapper>
 );
 
-function AppRoutes() {
-  const location = useLocation();
-  const hideBreadcrumb = location.pathname === "/";
-
-  return (
-    <WagmiProviderWrapper appType="swap">
-      <div>
-        {!hideBreadcrumb && <BreadCrumb />}
-        <Routes>
-          {/* <Route path="/" element={<Navigate to="/landing" replace />} /> */}
-          <Route path="/" element={<Landing />} />
-          <Route path="/portfolio" element={<Portfolio />} />
-          <Route
-            path="/swap"
-            element={
-              <SwapWrapper>
-                <Swap />
-              </SwapWrapper>
-            }
-          />
-          <Route
-            path="/nft-marketplace/:name"
-            element={<CollectionDetail />}
-          />
-          <Route path="/nft-marketplace" element={<NFTMarketplace />} />
-          <Route path="/item-detail" element={<ItemDetail />} />
-          {/* <Route
-            path="/bridge"
-            element={
-              <BridgeWrapper>
-                <Bridge />
-              </BridgeWrapper>
-            }
-          /> */}
-          <Route
-            path="/native-bridge"
-            element={
-              <BridgeWrapper>
-                <NativeBridge />
-              </BridgeWrapper>
-            }
-          />
-          {/* <Route path="/landing" element={<Landing />} /> */}
-          {/* via-bridge disabled — coming soon */}
-          <Route
-            path="/via-bridge"
-            element={<Navigate to="/swap" replace />}
-          />
-          <Route
-            path="/gas"
-            element={
-              <BridgeWrapper>
-                <Suspense fallback={<div>Loading...</div>}>
-                  <GasBridgePage />
-                </Suspense>
-              </BridgeWrapper>
-            }
-          />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </div>
-    </WagmiProviderWrapper>
-  );
-}
-
 function MyRoutes() {
   return (
-    <BrowserRouter>
-      <AppRoutes />
-    </BrowserRouter>
+    <>
+      <BrowserRouter>
+        {/* <Base> */}
+        <div>
+          {/* <BreadCrumb /> */}
+          <Routes>
+            {/* <Route path="/" element={<Navigate to="/landing" replace />} /> */}
+            <Route path="/" element={<Landing />} />
+            <Route path="/landing" element={<Landing />} />
+            <Route
+              path="/portfolio"
+              element={
+                <SwapWrapper>
+                  <Portfolio />
+                </SwapWrapper>
+              }
+            />
+            {/* <Route path="/" element={<Navigate to="/swap" replace />} /> */}
+            <Route
+              path="/swap"
+              element={
+                <SwapWrapper>
+                  <Swap />
+                </SwapWrapper>
+              }
+            />
+            <Route
+              path="/nft-marketplace/:name"
+              element={<CollectionDetail />}
+            />
+            <Route path="/nft-marketplace" element={<NFTMarketplace />} />
+            <Route path="/item-detail" element={<ItemDetail />} />
+            {/* <Route
+              path="/bridge"
+              element={
+                <BridgeWrapper>
+                  <Bridge />
+                </BridgeWrapper>
+              }
+            /> */}
+            <Route
+              path="/native-bridge"
+              element={
+                <BridgeWrapper>
+                  <NativeBridge />
+                </BridgeWrapper>
+              }
+            />
+            {/* via-bridge disabled — coming soon */}
+            <Route
+              path="/via-bridge"
+              element={<Navigate to="/swap" replace />}
+            />
+            <Route
+              path="/gas"
+              element={
+                <BridgeWrapper>
+                  <Suspense
+                    fallback={
+                      <div className="w-full h-screen flex items-center justify-center">
+                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent" />
+                      </div>
+                    }
+                  >
+                    <GasBridgePage />
+                  </Suspense>
+                </BridgeWrapper>
+              }
+            />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </div>
+        {/* </Base> */}
+      </BrowserRouter>
+    </>
   );
 }
 

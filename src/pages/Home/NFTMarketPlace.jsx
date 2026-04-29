@@ -31,7 +31,7 @@ const NFTMarketplace = () => {
   ];
   return (
     <>
-      <div className="bg-[#121214] py-3 relative">
+      <div className="py-3 relative">
         <div className="md:max-w-[1536px] mx-auto w-full px-4 flex justify-center xl:gap-9 gap-4 items-start 2xl:pb-10 py-2 md:flex-nowrap flex-wrap">
           <div className="xl:max-w-[450px] lg:max-w-[300px] md:max-w-[220px] w-full text-white ">
             <div className="flex flex-row items-center border_gradient p-4  mb-4">
@@ -40,7 +40,7 @@ const NFTMarketplace = () => {
               </div>
 
               <div>
-                <h2 className="text-xl font-bold roboto underline font-semibold">
+                <h2 className="text-xl underline font-semibold">
                   Collection Name
                 </h2>
                 <p className="text-gray-400 roboto">Creator Name</p>

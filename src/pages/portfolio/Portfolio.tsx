@@ -1,9 +1,10 @@
-
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
+import { useAccount } from "wagmi";
 import { motion } from "framer-motion";
 import { Link } from "wouter";
-import WalletConnectModal from "../swap/WalletConnect/WalletConnect";
+// import WalletConnectModal from "../landing/dapp/WalletConnectModal";
 import { fetchPortfolio, PortfolioData, ChainBalance } from "../../lib/api";
+import BreadCrumb from "../../components/BreadCrumb";
 
 function Sparkline({ data, up }: { data: number[]; up: boolean }) {
   const min = Math.min(...data);
@@ -296,18 +297,14 @@ type SortKey = "value" | "change24h" | "change7d" | "allocation";
 
 export default function PortfolioPage() {
   const [walletOpen, setWalletOpen] = useState(false);
-  const [connected, setConnected] = useState(false);
-  const [address, setAddress] = useState("");
+  const { address, isConnected } = useAccount();
   const [portfolio, setPortfolio] = useState<PortfolioData | null>(null);
   const [sortBy, setSortBy] = useState<SortKey>("value");
   const [sortDir, setSortDir] = useState<1 | -1>(-1);
   const [period, setPeriod] = useState<"24H" | "7D" | "30D" | "ALL">("30D");
 
-  // Handle wallet connection
+  // Handle wallet connection from the local demo modal
   const handleConnect = async (wallet: string, addr: string) => {
-    setConnected(true);
-    setAddress(addr);
-
     try {
       const data = await fetchPortfolio(addr);
       setPortfolio(data);
@@ -316,11 +313,22 @@ export default function PortfolioPage() {
     }
   };
 
-  const handleDisconnect = () => {
-    setConnected(false);
-    setAddress("");
-    setPortfolio(null);
-  };
+  useEffect(() => {
+    if (!isConnected || !address) return;
+
+    const loadPortfolio = async () => {
+      try {
+        const data = await fetchPortfolio(address);
+        setPortfolio(data);
+      } catch (error) {
+        console.error("Failed to fetch portfolio:", error);
+      }
+    };
+
+    loadPortfolio();
+  }, [address, isConnected]);
+
+  const connected = isConnected || Boolean(portfolio);
 
   // Get data from portfolio or use defaults
   const totalValue = portfolio?.totalValue ?? 11551.1;
@@ -349,8 +357,9 @@ export default function PortfolioPage() {
 
   return (
     <>
+      <BreadCrumb />
       <div
-        className="min-h-[calc(100vh-52px)] px-4 md:px-8 pb-16"
+        className="min-h-[calc(100vh-52px)] px-4 md:px-8 py-16"
         style={{ maxWidth: 1280, margin: "0 auto" }}
       >
         <div style={{ paddingTop: 32 }}>
@@ -438,7 +447,6 @@ export default function PortfolioPage() {
             </div>
 
             <div className="flex items-center gap-2">
-              {/* Period selector — flat square tabs */}
               <div
                 className="flex"
                 style={{
@@ -493,8 +501,6 @@ export default function PortfolioPage() {
               )}
             </div>
           </div>
-
-          {/* ── Stats strip ── */}
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1687,12 +1693,6 @@ export default function PortfolioPage() {
           </p>
         </div>
       </div>
-
-      <WalletConnectModal
-        open={walletOpen}
-        onClose={() => setWalletOpen(false)}
-        onConnect={handleConnect}
-      />
     </>
   );
 }

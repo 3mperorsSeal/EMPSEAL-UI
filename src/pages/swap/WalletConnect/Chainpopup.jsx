@@ -167,7 +167,7 @@ const ChainPopup = ({
                       }
                       setShowChainPopup(false);
                     }}
-                    className={`group relative mt-2 flex items-center px-2 gap-1 cursor-pointer  hover:bg-[#FF8A00]/5 text-white py-2 w-full transition-all hoverclip ${
+                    className={`group relative mt-2 flex items-center px-2 gap-1 cursor-pointer hover:bg-[#FF8A00]/5 text-white py-2 w-full transition-all hoverclip ${
                       isActive ? "" : ""
                       // sc1
                     }`}

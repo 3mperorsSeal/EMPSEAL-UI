@@ -56,16 +56,16 @@ const Wallet = ({ onTabChange }) => {
 
   return (
     <>
-    <div className="relative container mx-auto w-full hidden">
-      <div className="flex justify-center lg:gap-2 gap-2 wallet_bg md:z-10 z-10 md:mt-0 mt-0 absolute wallet-bg-bridge lefts1">
-        <WalletConnect
-          icon={<img src={WalletImg} alt="Wallet Icon" />}
-          onChainChange={handleChainChange}
-        />
-        {/* https://empx.io/dapp */}
-        <DotsMenu onTabChange={onTabChange} />
-      </div>
-    </div>
+      {/* <div className="relative container mx-auto w-full">
+      <div className="flex justify-center lg:gap-2 gap-2 wallet_bg md:z-10 z-10 md:mt-0 mt-0 absolute wallet-bg-bridge lefts1"> */}
+      <WalletConnect
+        icon={<img src={WalletImg} alt="Wallet Icon" />}
+        onChainChange={handleChainChange}
+      />
+      {/* https://empx.io/dapp */}
+      {/* <DotsMenu onTabChange={onTabChange} /> */}
+      {/* </div>
+    </div> */}
     </>
   );
 };

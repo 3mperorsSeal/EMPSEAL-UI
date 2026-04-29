@@ -177,35 +177,68 @@ export default function WalletConnect({
                         />
                       </div>
                     </div>
-
-                    {/* Wallet options */}
-                    <div className="grid md:grid-cols-2 grid-cols-1 gap-x-2 gap-y-4 mt-2 px-2">
-                      {filteredConnectors.slice(0, 6).map((connector) => (
+                    <p className="text-[10px] tracking-widest text-[#ff8a0066] mb-3 px-4">
+                      POPULAR
+                    </p>
+                    <div className="grid grid-cols-2 gap-3 mt-2 px-4">
+                      {filteredConnectors.slice(0, 2).map((connector) => (
                         <div
                           key={connector.uid}
-                          className="flex items-center justify-start gap-4 cursor-pointer  md:py-3 py-2 px-3 transition-all hover:bg-[#FF8A00]/5"
+                          className="flex flex-col items-center justify-center gap-2 cursor-pointer py-4 px-3 border border-[#FFFFFF20] transition-all hover:bg-[#FF8A00]/5"
                           onClick={() => {
                             connect({ connector });
-                            setShowConnectPopup(false);
+                            closeConnectPopup();
                           }}
                         >
-                          <div className="relative">
-                            <div className="slippage-btn1 p-1">
-                              <img
-                                src={
-                                  connector.name.includes("MetaMask")
-                                    ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
-                                    : // "https://raw.githubusercontent.com/MetaMask/brand-resources/master/SVG/metamask-fox.svg"
-                                      connector.name.includes("WalletConnect")
-                                      ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
-                                      : connector.name.includes("Coinbase")
-                                        ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
-                                        : "https://rainbowkit.com/icons/wallet.svg"
-                                }
-                                alt={connector.name}
-                                className="w-4 h-4 relative z-10 flex flex-shrink-0 object-contain rounded-full"
-                              />
-                            </div>
+                          <div className="slippage-btn1 p-2">
+                            <img
+                              src={
+                                connector.name.includes("MetaMask")
+                                  ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
+                                  : connector.name.includes("WalletConnect")
+                                    ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
+                                    : connector.name.includes("Coinbase")
+                                      ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
+                                      : "https://rainbowkit.com/icons/wallet.svg"
+                              }
+                              alt={connector.name}
+                              className="w-6 h-6 object-contain "
+                            />
+                          </div>
+
+                          <p className="text-[11px] text-white font-bold uppercase">
+                            {connector.name}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                    <p className="text-[9px] font-bold tracking-[0.25em] text-white/20 mb-2 px-4 pt-4">
+                      MORE OPTIONS
+                    </p>
+                    <div className="flex flex-col gap-2 mt-4 px-2">
+                      {filteredConnectors.slice(2, 6).map((connector) => (
+                        <div
+                          key={connector.uid}
+                          className="flex items-center gap-4 cursor-pointer py-3 px-3 transition-all hover:bg-[#FF8A00]/5"
+                          onClick={() => {
+                            connect({ connector });
+                            closeConnectPopup();
+                          }}
+                        >
+                          <div className="slippage-btn1 p-1">
+                            <img
+                              src={
+                                connector.name.includes("MetaMask")
+                                  ? "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3ymr3UNKopfI0NmUY95Dr-0589vG-91KuAA&s"
+                                  : connector.name.includes("WalletConnect")
+                                    ? "https://avatars.githubusercontent.com/u/37784886?s=200&v=4"
+                                    : connector.name.includes("Coinbase")
+                                      ? "https://avatars.githubusercontent.com/u/18060234?s=200&v=4"
+                                      : "https://rainbowkit.com/icons/wallet.svg"
+                              }
+                              alt={connector.name}
+                              className="w-4 h-4 object-contain "
+                            />
                           </div>
                           <p className="md:text-xs uppercase text-[10px] text-white font-bold">
                             {connector.name}
@@ -215,7 +248,7 @@ export default function WalletConnect({
                     </div>
                     <div className="bg-[#444444] w-full h-[1px] mb-4 mt-10"></div>
                     <div className="text-white md:text-xs text-xs uppercase mt-4  font-bold text-center">
-                      By logging in I agree to the
+                      By connecting, you agree to
                       <span
                         onClick={() => {
                           setShowTermsPopup(true);

@@ -8,6 +8,7 @@ import Y from "../../assets/images/youtube.svg";
 import BG from "../../assets/images/empx-bg1.webp";
 // import Routing from "./Routing";
 import RoutingButton from "./RoutingButton";
+import BreadCrumb from "../../components/BreadCrumb";
 
 const Normal = () => {
   const [padding, setPadding] = useState("lg:min-h-[429px] h-full");
@@ -27,7 +28,8 @@ const Normal = () => {
 
   return (
     <>
-      <div className="md:pt-3 pb-10 relative">
+      <div className="relative">
+        <BreadCrumb />
         <div className="mx-auto w-full px-4 flex flex-col justify-start xl:gap-4 gap-4 items-start 2xl:pt-1 py-2 md:flex-nowrap flex-wrap">
           <div className="w-full">
             <Emp

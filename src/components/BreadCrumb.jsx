@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Link, useLocation } from "react-router-dom";
 import Logo from "../assets/images/emp-main-logo.png";
-import WalletConnect from "../pages/swap/WalletConnect/WalletConnect";
-import { useBalance, useAccount } from "wagmi";
+import WalletConnect from "../pages/swap/Wallet";
+// import { useBalance, useAccount } from "wagmi";
 import { formatEther } from "viem";
 import WalletImg from "../assets/images/wallet-2.svg";
 
@@ -14,9 +14,9 @@ const NAV_ITEMS = [
   { label: "Portfolio", href: "/portfolio" },
   { label: "Swap", href: "/swap" },
   { label: "Cross", href: "/cross" },
-  { label: "Bridge", href: "/bridge" },
+  { label: "Bridge", href: "/native-bridge" },
   { label: "Limit", href: "/orders" },
-  { label: "Widget", href: "/widget" },
+  { label: "Widget", href: "https://widget.empx.io/builder" },
   { label: "Gas", href: "/gas" },
 ];
 
@@ -29,61 +29,29 @@ const NETWORKS = [
 ];
 
 const BreadCrumb = () => {
-  const { address, chain } = useAccount();
-  const { data, isLoading, isError, error } = useBalance({ address });
+  // const { address, chain, isConnected } = useAccount();
+  // const { data, isLoading, isError, error } = useBalance({ address });
 
-  const [balance, setBalance] = useState(null);
-  const [chainIconUrl, setChainIconUrl] = useState(undefined);
-  const [chainName, setChainName] = useState(undefined);
+  // const [balance, setBalance] = useState(null);
+  // const [chainIconUrl, setChainIconUrl] = useState(undefined);
+  // const [chainName, setChainName] = useState(undefined);
   //
-  const location = useLocation();
+  // const location = useLocation();
   const pathname = location.pathname;
   const [menuOpen, setMenuOpen] = useState(false);
-  const [networkOpen, setNetworkOpen] = useState(false);
-  const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS[0]);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [settingsSlippage, setSettingsSlippage] = useState("0.5");
-  const [settingsDeadline, setSettingsDeadline] = useState("20");
-  const [settingsExpert, setSettingsExpert] = useState(false);
+  // const [networkOpen, setNetworkOpen] = useState(false);
+  // const [selectedNetwork, setSelectedNetwork] = useState(NETWORKS[0]);
+  // const [settingsOpen, setSettingsOpen] = useState(false);
+  // const [settingsSlippage, setSettingsSlippage] = useState("0.5");
+  // const [settingsDeadline, setSettingsDeadline] = useState("20");
+  // const [settingsExpert, setSettingsExpert] = useState(false);
 
-  // const shortAddr = address
-  //   ? `${address.slice(0, 6)}...${address.slice(-4)}`
-  //   : "";
-
-  useEffect(() => {
-    if (address && data) {
-      setBalance(formatEther(data.value));
-    } else if (!address) {
-      setBalance("0.00");
-    }
-  }, [address, data]);
-
-  const formattedBalance = isLoading
-    ? "Loading..."
-    : isError
-      ? "Error fetching balance"
-      : balance
-        ? `${parseFloat(balance).toFixed(2)}`
-        : "0.00";
-
-  const formatNumber = (value) => {
-    if (!value) return ""; // Handle empty input
-
-    const [integerPart, decimalPart] = value.split("."); // Split into integer and decimal parts
-    const formattedInteger = integerPart
-      .replace(/\D/g, "") // Allow only digits
-      .replace(/\B(?=(\d{3})+(?!\d))/g, ","); // Add commas to integer part
-
-    // If there's a decimal part, return formatted integer + decimal
-    return decimalPart !== undefined
-      ? `${formattedInteger}.${decimalPart.replace(/\D/g, "")}` // Remove non-numeric from decimal
-      : formattedInteger;
-  };
-
-  const handleChainChange = useCallback((iconUrl, name) => {
-    setChainIconUrl(iconUrl);
-    setChainName(name);
-  }, []);
+  // const openGlobalConnect = () => {
+  //   const connectButton = document.querySelector("button.v1-connect-btn");
+  //   if (connectButton) {
+  //     connectButton.click();
+  //   }
+  // };
 
   return (
     <>
@@ -97,7 +65,7 @@ const BreadCrumb = () => {
           borderBottom: "1px solid rgba(255,255,255,0.06)",
         }}
       >
-        <Link to="/portfolio" className="flex items-center shrink-0 mr-8">
+        <Link to="/" className="flex items-center shrink-0 mr-8">
           <div className="relative" style={{ width: 90, height: 30 }}>
             <img
               src={Logo}
@@ -133,7 +101,7 @@ const BreadCrumb = () => {
           })}
         </div>
         <div className="flex items-center gap-1 shrink-0">
-          <div className="relative hidden">
+          {/* <div className="relative hidden">
             <button
               onClick={() => setNetworkOpen(!networkOpen)}
               className="flex items-center gap-2 transition-all"
@@ -302,7 +270,6 @@ const BreadCrumb = () => {
                     </button>
                   </div>
                   <div style={{ padding: "16px" }}>
-                    {/* Slippage */}
                     <p
                       style={{
                         fontSize: 9,
@@ -364,7 +331,6 @@ const BreadCrumb = () => {
                         }}
                       />
                     </div>
-                    {/* Deadline */}
                     <p
                       style={{
                         fontSize: 9,
@@ -409,7 +375,6 @@ const BreadCrumb = () => {
                         min
                       </span>
                     </div>
-                    {/* Expert mode */}
                     <div className="flex items-center justify-between">
                       <div>
                         <p
@@ -463,7 +428,7 @@ const BreadCrumb = () => {
                 </div>
               </>
             )}
-          </div>
+          </div> */}
           {/* Mobile hamburger */}
           <button
             onClick={() => setMenuOpen((o) => !o)}
@@ -542,10 +507,7 @@ const BreadCrumb = () => {
         </div>
       </nav>
       <div className="fixed top-3 right-4 z-50 flex gap-3 items-center">
-        <WalletConnect
-          icon={<img src={WalletImg} alt="Wallet Icon" />}
-          onChainChange={handleChainChange}
-        />
+        <WalletConnect />
       </div>
 
       {/* Mobile slide-down menu */}
@@ -592,10 +554,10 @@ const BreadCrumb = () => {
                   </Link>
                 );
               })}
-              {!connected ? (
+              {/* {!connected ? (
                 <button
                   onClick={() => {
-                    onConnectWallet();
+                    openGlobalConnect();
                     setMenuOpen(false);
                   }}
                   style={{
@@ -639,7 +601,7 @@ const BreadCrumb = () => {
                     {shortAddr}
                   </span>
                 </div>
-              )}
+              )} */}
             </div>
           </motion.div>
         )}

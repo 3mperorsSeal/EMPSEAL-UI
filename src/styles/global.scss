@@ -50,7 +50,7 @@ html {
   scroll-behavior: auto;
 }
 body {
-  background: oklch(0.05 0.01 260);
+  background: #05050c !important;
   color: oklch(0.94 0.01 60);
   font-family: "Space Grotesk", sans-serif;
   overflow-x: hidden;
@@ -1216,6 +1216,15 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 
   // padding: 18px 20px 16px;
 }
+.bg_swap_box_gas {
+  background: rgba(6, 6, 14, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 0;
+  backdrop-filter: blur(60px);
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.7);
+
+  // padding: 18px 20px 16px;
+}
 .bg_slip_box {
   background: rgba(6, 6, 14, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.05);
@@ -1243,45 +1252,45 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
   // background: #000000;
   // border-radius: 16px;
 }
-@media (min-width: 1200px) and (max-width: 1536px) {
-  .bg_swap_box_chain {
-    padding-top: 14px;
-    padding-left: 14px;
-    padding-right: 14px;
-    padding-bottom: 14px;
-  }
-  .bg_swap_box {
-    padding-top: 20px !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    padding-bottom: 20px !important;
-  }
-  .bg_swap_box_black {
-    padding-top: 20px !important;
-    padding-left: 20px !important;
-    padding-right: 20px !important;
-    padding-bottom: 20px !important;
-  }
-  .font40 {
-    font-size: 40px !important;
-  }
-  .mt6 {
-    margin-top: 12px !important;
-  }
-  .text2xl {
-    font-size: 20px !important;
-  }
-  .my4 {
-    margin-top: 1px !important;
-    margin-bottom: 1px !important;
-  }
-  .pt10 {
-    padding-top: 1px !important;
-  }
-  .h280 {
-    height: 250px !important;
-  }
-}
+// @media (min-width: 1200px) and (max-width: 1536px) {
+//   .bg_swap_box_chain {
+//     padding-top: 14px;
+//     padding-left: 14px;
+//     padding-right: 14px;
+//     padding-bottom: 14px;
+//   }
+//   .bg_swap_box {
+//     padding-top: 20px !important;
+//     padding-left: 20px !important;
+//     padding-right: 20px !important;
+//     padding-bottom: 20px !important;
+//   }
+//   .bg_swap_box_black {
+//     padding-top: 20px !important;
+//     padding-left: 20px !important;
+//     padding-right: 20px !important;
+//     padding-bottom: 20px !important;
+//   }
+//   .font40 {
+//     font-size: 40px !important;
+//   }
+//   .mt6 {
+//     margin-top: 12px !important;
+//   }
+//   .text2xl {
+//     font-size: 20px !important;
+//   }
+//   .my4 {
+//     margin-top: 1px !important;
+//     margin-bottom: 1px !important;
+//   }
+//   .pt10 {
+//     padding-top: 1px !important;
+//   }
+//   .h280 {
+//     height: 250px !important;
+//   }
+// }
 .mtb {
   margin-top: 12px;
   margin-bottom: 12px;
@@ -1303,33 +1312,33 @@ input[type="datetime-local"]::-webkit-calendar-picker-indicator {
 //     top: 4rem;
 //   }
 // }
-@media (max-width: 768px) {
-  // .top45 {
-  //   top: 3rem;
-  // }
-  .mtb {
-    margin-top: 20px;
-    margin-bottom: 20px;
-  }
-  .bg_swap_box {
-    padding-top: 16px;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: 16px;
-    border: 4px solid #ffa600;
-    background: #000000;
-    border-radius: 16px;
-  }
-  .bg_swap_box_black {
-    padding-top: 16px;
-    padding-left: 16px;
-    padding-right: 16px;
-    padding-bottom: 16px;
-    border: 4px solid #ffa600;
-    background: #000000;
-    border-radius: 16px;
-  }
-}
+// @media (max-width: 768px) {
+// .top45 {
+//   top: 3rem;
+// }
+// .mtb {
+//   margin-top: 20px;
+//   margin-bottom: 20px;
+// }
+// .bg_swap_box {
+//   padding-top: 16px;
+//   padding-left: 16px;
+//   padding-right: 16px;
+//   padding-bottom: 16px;
+//   border: 4px solid #ffa600;
+//   background: #000000;
+//   border-radius: 16px;
+// }
+// .bg_swap_box_black {
+//   padding-top: 16px;
+//   padding-left: 16px;
+//   padding-right: 16px;
+//   padding-bottom: 16px;
+//   border: 4px solid #ffa600;
+//   background: #000000;
+//     border-radius: 16px;
+//   }
+// }
 /* width */
 .terms::-webkit-scrollbar {
   width: 4px;
@@ -1751,4 +1760,161 @@ input[type="range"]::-moz-range-track {
   padding: 5px 10px 5px 6px;
   cursor: pointer;
   flex-shrink: 0;
+}
+.gas-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.gas-header-title {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: rgba(255, 255, 255, 0.18);
+}
+
+.gas-page-indicator {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.18);
+  letter-spacing: 0.04em;
+}
+
+.gas-nav-btn {
+  width: 26px;
+  height: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  color: rgba(255, 255, 255, 1);
+}
+/* Hover */
+.gas-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+/* Click */
+.gas-nav-btn:active {
+  background: rgba(255, 138, 0, 0.15);
+  border: 1px solid rgba(255, 138, 0, 0.4);
+}
+
+/* Disabled (both ways) */
+.gas-nav-btn:disabled,
+.gas-nav-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* Optional: when button is usable */
+.gas-nav-btn:not(:disabled) {
+  opacity: 1;
+}
+.gas-nav-btn svg {
+  fill: white;
+}
+.gas-nav-btn.disabled {
+  cursor: not-allowed;
+  color: rgba(255, 255, 255, 1);
+}
+
+.gas-chain-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+@media (min-width: 768px) {
+  .gas-chain-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.gas-chain-card {
+  padding: 16px;
+  text-align: left;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.gas-chain-card:focus {
+  background: rgba(255, 138, 0, 0.05);
+  border: 1px solid rgba(255, 138, 0, 0.2);
+}
+.gas-chain-card:hover {
+  // background: rgba(255, 255, 255, 0.06);
+  transform: scale(1.01);
+}
+
+/* Click feedback */
+.gas-chain-card:active {
+  transform: scale(0.98);
+}
+
+/* Active (selected chain) */
+.gas-chain-card.active {
+  background: rgba(255, 138, 0, 0.1);
+  border: 1px solid rgba(255, 138, 0, 0.4);
+}
+
+/* Disabled (if you ever need it) */
+.gas-chain-card.disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* Optional: active text highlight */
+// .gas-chain-card.active .gas-chain-name {
+//   color: #ff8a00;
+// }
+.gas-chain-top {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.gas-chain-icon {
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.06);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.gas-chain-status {
+  width: 6px;
+  height: 6px;
+  background: rgb(74, 222, 128);
+  box-shadow: 0 0 6px rgba(74, 222, 128, 0.4);
+}
+
+.gas-chain-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.gas-chain-price {
+  font-size: 18px;
+  font-weight: 200;
+  color: white;
+  letter-spacing: -0.03em;
+  margin-bottom: 2px;
+}
+
+.gas-chain-meta {
+  font-size: 9px;
+  color: rgba(255, 255, 255, 0.25);
+  letter-spacing: 0.04em;
 }
