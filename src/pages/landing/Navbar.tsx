@@ -40,7 +40,7 @@ export default function Navbar() {
       >
         {/* Logo only */}
         <Link to="/" className="flex items-center shrink-0">
-          <div className="relative" style={{ width: 120, height: 44 }}>
+          <div className="relative" style={{ width: 120 }}>
             <img
               src={Logo}
               alt="EMPX"

@@ -98,7 +98,7 @@ const TransactionHistory = () => {
                   Loading history...
                 </p>
               ) : error ? (
-                <p className="text-center text-[#FF8A00]">
+                <p className="text-xs py-8 text-white/20 text-center">
                   Could not fetch transaction history.
                 </p>
               ) : history.length === 0 ? (
