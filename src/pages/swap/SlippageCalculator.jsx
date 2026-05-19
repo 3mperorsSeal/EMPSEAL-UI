@@ -4,19 +4,25 @@ import EL from "../../assets/images/emp-logo.png";
 
 // Helper function to calculate slippage
 const calculateSlippage = (amountOut, slippagePercent) => {
-  if (slippagePercent < 0 || slippagePercent > 5) {
-    throw new Error("Invalid slippage percentage. Must be between 0.5 and 5");
-  }
+  const pct = Math.max(0, Math.min(5, Number(slippagePercent) || 0));
   // console.log("Calculated Slippage: ", amountOut, slippagePercent);
   return (
-    (amountOut * BigInt(10000 - Math.round(slippagePercent * 100))) /
+    (amountOut * BigInt(10000 - Math.round(pct * 100))) /
     BigInt(10000)
   );
 };
 
-const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
-  const [slippage, setSlippage] = useState(0);
-  const [customSlippage, setCustomSlippage] = useState("");
+const SlippageCalculator = ({
+  inputAmount,
+  selectedSlippage = 0.5,
+  onSlippageChange,
+  onSlippageCalculated,
+  onClose,
+}) => {
+  const [slippage, setSlippage] = useState(selectedSlippage);
+  const [customSlippage, setCustomSlippage] = useState(
+    selectedSlippage ? selectedSlippage.toString() : "",
+  );
   const [slippageApplied, setSlippageApplied] = useState(false);
   const [error, setError] = useState("");
   const originalAmountRef = useRef(null);
@@ -31,11 +37,16 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
     }
   }, [inputAmount]);
 
-  // Store original amount when tradeInfo changes and ref is empty
   useEffect(() => {
-    if (inputAmount && !originalAmountRef.current) {
-      originalAmountRef.current = inputAmount;
-    }
+    setSlippage(selectedSlippage);
+    setCustomSlippage(selectedSlippage ? selectedSlippage.toString() : "");
+    setSlippageApplied(false);
+  }, [selectedSlippage]);
+
+  // Keep original amount in sync with the current quote.
+  useEffect(() => {
+    originalAmountRef.current = inputAmount && inputAmount > 0n ? inputAmount : null;
+    setSlippageApplied(false);
   }, [inputAmount]);
 
   // Calculate slippage when necessary
@@ -70,6 +81,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
     if (slippage !== value) {
       setSlippage(value);
       setCustomSlippage(value.toString());
+      onSlippageChange?.(value);
       setSlippageApplied(false);
     }
   };
@@ -81,6 +93,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
     const inputValue = e.target.value;
     if (inputValue === "") {
       setCustomSlippage("");
+      onSlippageChange?.(0);
       return;
     }
 
@@ -89,6 +102,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
 
     setCustomSlippage(inputValue);
     setSlippage(value);
+    onSlippageChange?.(value);
     setSlippageApplied(false);
   };
 
@@ -106,6 +120,7 @@ const SlippageCalculator = ({ inputAmount, onSlippageCalculated, onClose }) => {
         onSlippageCalculated(adjustedAmount);
         setSlippage(defaultSlippage);
         setCustomSlippage("");
+        onSlippageChange?.(defaultSlippage);
         setSlippageApplied(true);
       } catch (error) {
         console.error("Error resetting slippage:", error);

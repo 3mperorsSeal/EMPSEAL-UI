@@ -128,10 +128,9 @@ import { useChainConfig } from "../../hooks/useChainConfig";
 
 export default function RoutingSplitModal({ isOpen, onClose, bestRoute, tokenA, tokenB }) {
   // if (!isOpen || !bestRoute || bestRoute.type !== "SPLIT") return null;
-  if (!isOpen || !bestRoute) return null;
-
   const [tokenImages, setTokenImages] = useState({});
   const { chainId, tokenList, adapters, wethAddress } = useChainConfig();
+  const isHidden = !isOpen || !bestRoute;
 
   // Function to get token image from tokenList.json
   const getLocalTokenImage = (address) => {
@@ -271,6 +270,8 @@ export default function RoutingSplitModal({ isOpen, onClose, bestRoute, tokenA, 
 
     setTokenImages(newTokenImages);
   }, [bestRoute, chainId]);
+
+  if (isHidden) return null;
 
   return (
     <div

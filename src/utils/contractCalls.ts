@@ -226,6 +226,7 @@ export const checkAllowance = async (chainId: number, tokenInAddress: string, us
     let result = await readContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
+      chainId,
       functionName: "allowance",
       args: [userAddress, routerAddress],
     });
@@ -244,6 +245,7 @@ export const callApprove = async (chainId: number, tokenInAddress: string, amoun
     let result = await writeContract(config, {
       abi: erc20Abi,
       address: tokenInAddress as Address,
+      chainId,
       functionName: "approve",
       args: [routerAddress, amountIn],
     });
@@ -264,6 +266,7 @@ const swapFromEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: A
     let result = await writeContract(config, {
       abi: routerABI,
       address: routerAddress,
+      chainId,
       functionName: chainId === 369 ? "swapNoSplitFromPLS" : "swapNoSplitFromETH",
       args: [
         {
@@ -295,6 +298,7 @@ const swapToEth = async (chainId: number, tradeInfo: TradeInfo, userAddress: Add
     let result = await writeContract(config, {
       abi: routerABI,
       address: routerAddress,
+      chainId,
       functionName: chainId === 369 ? "swapNoSplitToPLS" : "swapNoSplitToETH",
       args: [
         {
@@ -324,6 +328,7 @@ const swapNoSplitToEth = async (chainId: number, tradeInfo: TradeInfo, userAddre
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
       address: wethAddress,
+      chainId,
       functionName: "withdraw",
       args: [tradeInfo.amountIn],
     });
@@ -348,6 +353,7 @@ const swapNoSplitFromEth = async (
     let result = await writeContract(config, {
       abi: wrappedTokenABI,
       address: wethAddress,
+      chainId,
       functionName: "deposit",
       args: [],
       value: tradeInfo.amountIn,
@@ -369,6 +375,7 @@ const swap = async (chainId: number, tradeInfo: TradeInfo, userAddress: Address,
     let result = await writeContract(config, {
       abi: routerABI,
       address: routerAddress,
+      chainId,
       functionName: "swapNoSplit",
       args: [
         {
@@ -444,10 +451,10 @@ export const swapTokens = async (
       swapResponse = await swapToEth(chainId, tradeInfo, userAddress, protocolFee);
     } else {
       swapResponse = await swap(chainId, tradeInfo, userAddress, protocolFee);
-      toast.success("Transaction Successful");
     }
     setStatus("SWAPPED");
     setSwapHash(swapResponse.data);
+    toast.success("Transaction Successful");
     return swapResponse;
   } catch (error) {
     if (

@@ -1,8 +1,20 @@
 import { optimism } from "viem/chains";
 
+const PRICE_FETCH_TIMEOUT_MS = 3500;
+
+const fetchWithTimeout = async (url, timeoutMs = PRICE_FETCH_TIMEOUT_MS) => {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timeout);
+  }
+};
+
 const parsePrice = (value) => {
   const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : null;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 };
 
 const DEXSCREENER_CHAIN_BY_SYMBOL = {
@@ -102,7 +114,7 @@ export const fetchTokenPrice = async (symbol, address) => {
       symbol?.toLowerCase() === "sei" || 
       symbol?.toLowerCase() === "polygon_pos" || symbol?.toLowerCase() === "polygon"
     ) {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://api.dexscreener.com/latest/dex/tokens/${normalizedAddress}`
       );
 
@@ -120,7 +132,7 @@ export const fetchTokenPrice = async (symbol, address) => {
 
     // Default GeckoTerminal logic for all other chains.
     try {
-      const response = await fetch(
+      const response = await fetchWithTimeout(
         `https://api.geckoterminal.com/api/v2/simple/networks/${symbol}/token_price/${normalizedAddress}`
       );
       if (!response.ok) throw new Error("Failed to fetch from GeckoTerminal");
@@ -142,7 +154,7 @@ export const fetchTokenPrice = async (symbol, address) => {
     // Fallback to DexScreener.
     if (!fetchSuccess) {
       try {
-        const response = await fetch(
+        const response = await fetchWithTimeout(
           `https://api.dexscreener.com/latest/dex/tokens/${normalizedAddress}`
         );
         if (!response.ok) throw new Error("Failed to fetch from DexScreener");

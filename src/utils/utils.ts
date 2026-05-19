@@ -1,11 +1,33 @@
-import { Address, erc20Abi } from "viem";
+import { Address, erc20Abi, parseUnits } from "viem";
 import { Token } from "./types/interface";
 import Tokens from "../pages/tokenList.json";
 
-export function convertToBigInt(amount: number, decimals: number) {
-  const parsedAmountIn = BigInt(Math.floor(amount * Math.pow(10, 6)));
-  if (decimals >= 6) return parsedAmountIn * BigInt(10) ** BigInt(decimals - 6);
-  else return parsedAmountIn / BigInt(10) ** BigInt(6 - decimals);
+export function convertToBigInt(amount: number | string, decimals: number): bigint {
+  if (amount === undefined || amount === null || amount === "") return 0n;
+
+  const normalizedDecimals = Number(decimals);
+  if (!Number.isFinite(normalizedDecimals) || normalizedDecimals < 0) return 0n;
+
+  const rawAmount = typeof amount === "number" ? amount.toString() : amount.trim();
+  if (!rawAmount || rawAmount === "." || rawAmount === "-" || rawAmount === "-.") {
+    return 0n;
+  }
+
+  const numericAmount = Number(rawAmount);
+  if (!Number.isFinite(numericAmount) || numericAmount <= 0) return 0n;
+
+  const decimalIndex = rawAmount.indexOf(".");
+  const safeAmount =
+    decimalIndex !== -1 &&
+    rawAmount.length - decimalIndex - 1 > normalizedDecimals
+      ? rawAmount.slice(0, decimalIndex + 1 + normalizedDecimals)
+      : rawAmount;
+
+  try {
+    return parseUnits(safeAmount, normalizedDecimals);
+  } catch {
+    return 0n;
+  }
 }
 
 // export function buildBalanceCheckParams(_tokens: Token[], address: Address) {

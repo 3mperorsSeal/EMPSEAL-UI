@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useRef } from "react";
+import { useCallback, useEffect, useState, useMemo, useRef } from "react";
 import Routing from "./Routing";
 
 import { useSearchParams } from "react-router-dom";
@@ -14,6 +14,15 @@ import {
   useReadContract,
 } from "wagmi";
 import SlippageCalculator from "./SlippageCalculator";
+import { convertToBigInt as toBigIntUnits } from "../../utils/utils";
+import {
+  calculateMinReceived,
+  calculateRoutePriceImpact,
+  calculateValuePriceImpact,
+  getEffectiveSlippagePercent,
+  hasUsableRoute,
+  shouldSuppressImpact,
+} from "../../utils/swapMath";
 import { EmpsealRouterLiteV3 } from "../../utils/lite/EmpsealRouterLiteV3";
 import Tokens from "../tokenList.json";
 import { useStore } from "../../redux/store/routeStore";
@@ -50,6 +59,7 @@ import { usePriceMonitor } from "../../hooks/usePriceMonitor";
 import TokenLogo from "../../components/TokenLogo.jsx";
 import { fetchTokenPrice } from "../../utils/priceFetcher";
 import { getQuoteHopFallbackPlan } from "../../config/quoteFallback";
+import { buildTradeInfoFromQuote } from "../../utils/quoteTrade";
 
 import { WPLS } from "../../utils/abis/wplsABI";
 import { WETHW } from "../../utils/abis/wethwABI";
@@ -195,6 +205,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const [isLoadingBetterQuote, setIsLoadingBetterQuote] = useState(false);
   const [protocolFee, setProtocolFee] = useState(28);
   const [limitOrderSlippage, setLimitOrderSlippage] = useState(0.5);
+  const [selectedSlippage, setSelectedSlippage] = useState(0.5);
   const [needsApproval, setNeedsApproval] = useState(false);
   const [tradeInfo, setTradeInfo] = useState(undefined);
 
@@ -236,26 +247,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
 
   const publicClient = usePublicClient({ chainId });
 
-  const convertToBigInt = (amount, decimals) => {
-    // Add input validation
-    if (!amount || isNaN(amount) || !decimals || isNaN(decimals)) {
-      return BigInt(0);
-    }
-
-    try {
-      const parsedAmount = parseFloat(amount);
-      const parsedAmountIn = BigInt(Math.floor(parsedAmount * Math.pow(10, 6)));
-
-      if (decimals >= 6) {
-        return parsedAmountIn * BigInt(10) ** BigInt(decimals - 6);
-      } else {
-        return parsedAmountIn / BigInt(10) ** BigInt(6 - decimals);
-      }
-    } catch (error) {
-      console.error("Error converting to BigInt:", error);
-      return BigInt(0);
-    }
-  };
+  const convertToBigInt = (amount, decimals) =>
+    toBigIntUnits(amount, Number(decimals) || 18);
 
   const normalizeAddress = (address) => address?.toLowerCase?.() || "";
   const isSameAddress = (a, b) =>
@@ -290,11 +283,13 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     !isDirectRoute &&
     !!selectedTokenA &&
     !!selectedTokenB &&
-    !!amountIn &&
-    parseFloat(amountIn) > 0;
+    !!debouncedAmountIn &&
+    parseFloat(debouncedAmountIn) > 0;
   const quoteAmountInWei =
-    amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
-      ? convertToBigInt(parseFloat(amountIn), parseInt(selectedTokenA.decimal) || 18)
+    debouncedAmountIn &&
+    selectedTokenA &&
+    !isNaN(parseFloat(debouncedAmountIn))
+      ? convertToBigInt(debouncedAmountIn, parseInt(selectedTokenA.decimal) || 18)
       : BigInt(0);
   const quoteTokenInAddress = getQuoteTokenAddress(selectedTokenA?.address);
   const quoteTokenOutAddress = getQuoteTokenAddress(selectedTokenB?.address);
@@ -305,6 +300,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     isLoading: primaryQuoteLoading,
     refetch: quoteRefresh,
     error: primaryQuoteError,
+    dataUpdatedAt: primaryQuoteUpdatedAt = 0,
   } = useReadContract({
     abi: routerABI,
     address: routerAddress,
@@ -322,7 +318,9 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const {
     data: fallbackQuoteData,
     isLoading: fallbackQuoteLoading,
+    refetch: fallbackQuoteRefresh,
     error: fallbackQuoteError,
+    dataUpdatedAt: fallbackQuoteUpdatedAt = 0,
   } = useReadContract({
     abi: routerABI,
     address: routerAddress,
@@ -337,15 +335,16 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     enabled:
       quoteFallbackPlan.enabled &&
       quoteEnabled &&
-      !primaryQuoteData &&
-      !!primaryQuoteError &&
+      (!!primaryQuoteError || !hasUsableRoute(primaryQuoteData)) &&
       !!quoteFallbackPlan.secondStep,
   });
 
   const {
     data: fallbackQuoteDataOne,
     isLoading: fallbackQuoteLoadingOne,
+    refetch: fallbackQuoteRefreshOne,
     error: fallbackQuoteErrorOne,
+    dataUpdatedAt: fallbackQuoteUpdatedAtOne = 0,
   } = useReadContract({
     abi: routerABI,
     address: routerAddress,
@@ -360,15 +359,25 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     enabled:
       quoteFallbackPlan.enabled &&
       quoteEnabled &&
-      !primaryQuoteData &&
-      !fallbackQuoteData &&
-      !!quoteFallbackPlan.thirdStep &&
-      !!fallbackQuoteError,
+      !hasUsableRoute(primaryQuoteData) &&
+      (!!fallbackQuoteError || !hasUsableRoute(fallbackQuoteData)) &&
+      !!quoteFallbackPlan.thirdStep,
   });
 
   const data = quoteFallbackPlan.enabled
-    ? primaryQuoteData ?? fallbackQuoteData ?? fallbackQuoteDataOne
+    ? hasUsableRoute(primaryQuoteData)
+      ? primaryQuoteData
+      : hasUsableRoute(fallbackQuoteData)
+        ? fallbackQuoteData
+        : fallbackQuoteDataOne
     : primaryQuoteData;
+  const activeQuoteUpdatedAt = quoteFallbackPlan.enabled
+    ? hasUsableRoute(primaryQuoteData)
+      ? primaryQuoteUpdatedAt
+      : hasUsableRoute(fallbackQuoteData)
+        ? fallbackQuoteUpdatedAt
+        : fallbackQuoteUpdatedAtOne
+    : primaryQuoteUpdatedAt;
   const quoteLoading = quoteFallbackPlan.enabled
     ? primaryQuoteLoading || fallbackQuoteLoading || fallbackQuoteLoadingOne
     : primaryQuoteLoading;
@@ -397,7 +406,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     enabled: singleTokenEnabled,
   });
 
-  const { data: fallbackSingleToken, error: fallbackSingleTokenError } =
+  const {
+    data: fallbackSingleToken,
+    refetch: fallbackSingleTokenRefresh,
+    error: fallbackSingleTokenError,
+  } =
     useReadContract({
       abi: routerABI,
       address: routerAddress,
@@ -412,12 +425,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       enabled:
         quoteFallbackPlan.enabled &&
         singleTokenEnabled &&
-        !primarySingleToken &&
-        !!primarySingleTokenError &&
+        (!!primarySingleTokenError || !hasUsableRoute(primarySingleToken)) &&
         !!quoteFallbackPlan.secondStep,
     });
 
-  const { data: fallbackSingleTokenOne } = useReadContract({
+  const {
+    data: fallbackSingleTokenOne,
+    refetch: fallbackSingleTokenRefreshOne,
+  } = useReadContract({
     abi: routerABI,
     address: routerAddress,
     functionName: "findBestPath",
@@ -431,20 +446,23 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     enabled:
       quoteFallbackPlan.enabled &&
       singleTokenEnabled &&
-      !primarySingleToken &&
-      !fallbackSingleToken &&
-      !!quoteFallbackPlan.thirdStep &&
-      !!fallbackSingleTokenError,
+      !hasUsableRoute(primarySingleToken) &&
+      (!!fallbackSingleTokenError || !hasUsableRoute(fallbackSingleToken)) &&
+      !!quoteFallbackPlan.thirdStep,
   });
 
   const singleToken = quoteFallbackPlan.enabled
-    ? primarySingleToken ?? fallbackSingleToken ?? fallbackSingleTokenOne
+    ? hasUsableRoute(primarySingleToken)
+      ? primarySingleToken
+      : hasUsableRoute(fallbackSingleToken)
+        ? fallbackSingleToken
+        : fallbackSingleTokenOne
     : primarySingleToken;
 
   // Update quoting state based on loading
   useEffect(() => {
-    setIsQuoting(quoteLoading);
-  }, [quoteLoading]);
+    setIsQuoting(quoteLoading || isLoadingBetterQuote);
+  }, [quoteLoading, isLoadingBetterQuote]);
 
   const DEADLINE_MINUTES = 10;
   const deadline = Math.floor(Date.now() / 1000) + DEADLINE_MINUTES * 60;
@@ -481,7 +499,15 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     }
 
     setCalculatedRoute();
-  }, [data, selectedTokenA, selectedTokenB, amountIn, isDirectRoute]);
+  }, [
+    data,
+    activeQuoteUpdatedAt,
+    selectedTokenA,
+    selectedTokenB,
+    debouncedAmountIn,
+    isDirectRoute,
+    selectedSlippage,
+  ]);
 
   // Refresh quotes when tokens or amount changes
   useEffect(() => {
@@ -543,6 +569,52 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     return () => clearTimeout(timer);
   }, [amountIn]);
 
+  const [nowTick, setNowTick] = useState(() => Date.now());
+  useEffect(() => {
+    const timer = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  const isQuoteExpired =
+    !!tradeInfo?.validUntil && nowTick > tradeInfo.validUntil;
+  const quoteSecondsLeft = tradeInfo?.validUntil
+    ? Math.max(0, Math.ceil((tradeInfo.validUntil - nowTick) / 1000))
+    : null;
+
+  const refreshQuoteState = useCallback(async () => {
+    setIsLoadingBetterQuote(true);
+    try {
+      await Promise.allSettled([
+        typeof quoteRefresh === "function" ? quoteRefresh() : null,
+        typeof fallbackQuoteRefresh === "function" ? fallbackQuoteRefresh() : null,
+        typeof fallbackQuoteRefreshOne === "function"
+          ? fallbackQuoteRefreshOne()
+          : null,
+        typeof singleTokenRefresh === "function" ? singleTokenRefresh() : null,
+        typeof fallbackSingleTokenRefresh === "function"
+          ? fallbackSingleTokenRefresh()
+          : null,
+        typeof fallbackSingleTokenRefreshOne === "function"
+          ? fallbackSingleTokenRefreshOne()
+          : null,
+      ]);
+    } finally {
+      setIsLoadingBetterQuote(false);
+    }
+  }, [
+    fallbackQuoteRefresh,
+    fallbackQuoteRefreshOne,
+    fallbackSingleTokenRefresh,
+    fallbackSingleTokenRefreshOne,
+    quoteRefresh,
+    singleTokenRefresh,
+  ]);
+
+  useEffect(() => {
+    if (!isQuoteExpired || !quoteEnabled) return;
+    void refreshQuoteState();
+  }, [isQuoteExpired, quoteEnabled, refreshQuoteState]);
+
   // Helper Functions
   const handleEmptyData = () => {
     setAmountOut("0");
@@ -572,9 +644,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
 
     // Create trade object directly without using findBestPath data
     const amountInBigInt =
-      amountIn && selectedTokenA && !isNaN(parseFloat(amountIn))
+      debouncedAmountIn &&
+      selectedTokenA &&
+      !isNaN(parseFloat(debouncedAmountIn))
         ? convertToBigInt(
-          parseFloat(amountIn),
+          debouncedAmountIn,
           parseInt(selectedTokenA.decimal) || 18,
         )
         : BigInt(0);
@@ -600,30 +674,24 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       return;
     }
 
+    const trade = buildTradeInfoFromQuote({
+      quoteData: data,
+      selectedTokenB,
+      tokenList,
+      selectedSlippage,
+    });
+    if (!trade) {
+      handleEmptyData();
+      return;
+    }
+
     const amountOutValue = formatUnits(
       data.amounts[data.amounts.length - 1],
       parseInt(selectedTokenB.decimal),
     );
     setAmountOut(amountOutValue);
-
-    const trade = {
-      amountIn: data.amounts[0],
-      amountOut:
-        (data.amounts[data.amounts.length - 1] * BigInt(98)) / BigInt(100),
-      amounts: data.amounts,
-      path: data.path,
-      pathTokens: data.path.map(
-        (pathAddress) =>
-          tokenList.find(
-            (token) =>
-              token?.address?.toLowerCase() === pathAddress?.toLowerCase(),
-          ) ||
-          tokenList[0],
-      ),
-      adapters: data.adapters,
-    };
-    setRoute(data.path);
-    setAdapter(data.adapters);
+    setRoute(trade.path);
+    setAdapter(trade.adapters);
     setTradeInfo(trade);
     setIsSlippageApplied(false);
   };
@@ -785,74 +853,55 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   };
 
   const handleSlippageCalculated = (adjustedAmount) => {
-    const tokenDecimals = selectedTokenB.decimal;
-    const decimalAdjusted = Number(adjustedAmount) / 10 ** tokenDecimals;
-
-    // Update states
-    setMinAmountOut(adjustedAmount);
-    setAmountOut(decimalAdjusted);
-
-    // Reset minAmountOut if needed
-    setMinAmountOut("0");
+    setMinAmountOut(adjustedAmount?.toString?.() ?? "0");
   };
 
   useEffect(() => {
-    const fetchConversionRateTokenA = async () => {
-      try {
-        if (!currentChain?.name || !selectedTokenA?.address) {
-          console.error("Missing required data for token A price fetch");
-          return;
-        }
+    let cancelled = false;
+    const resolveAddress = (address) =>
+      address === EMPTY_ADDRESS && wethAddress
+        ? wethAddress.toLowerCase()
+        : address?.toLowerCase?.();
 
-        const addressToFetch =
-          selectedTokenA?.address === EMPTY_ADDRESS && wethAddress
-            ? wethAddress?.toLowerCase()
-            : selectedTokenA?.address?.toLowerCase();
+    const tokenAAddress = selectedTokenA?.address
+      ? resolveAddress(selectedTokenA.address)
+      : null;
+    const tokenBAddress = selectedTokenB?.address
+      ? resolveAddress(selectedTokenB.address)
+      : null;
 
-        const tokenPrice = await fetchTokenPrice(symbol, addressToFetch);
+    if (!tokenAAddress) setConversionRate(null);
+    if (!tokenBAddress) setConversionRateTokenB(null);
+    if (!currentChain?.name || (!tokenAAddress && !tokenBAddress)) return;
 
-        if (tokenPrice) {
-          setConversionRate(tokenPrice);
-        } else {
-          setConversionRate(null);
-          console.error("Token A price could not be established.");
-        }
-      } catch (error) {
-        console.error("Error fetching token price:", error.message);
-      }
+    const priceFor = (address) =>
+      address ? fetchTokenPrice(symbol, address) : Promise.resolve(null);
+
+    (async () => {
+      const [tokenAPrice, tokenBPrice] = await Promise.allSettled([
+        priceFor(tokenAAddress),
+        priceFor(tokenBAddress),
+      ]);
+      if (cancelled) return;
+      setConversionRate(
+        tokenAPrice.status === "fulfilled" ? tokenAPrice.value ?? null : null,
+      );
+      setConversionRateTokenB(
+        tokenBPrice.status === "fulfilled" ? tokenBPrice.value ?? null : null,
+      );
+    })();
+
+    return () => {
+      cancelled = true;
     };
-
-    fetchConversionRateTokenA();
-  }, [chainId, selectedTokenA?.address, wethAddress]);
-
-  useEffect(() => {
-    const fetchConversionRateTokenB = async () => {
-      try {
-        if (!currentChain?.name || !selectedTokenB?.address) {
-          console.error("Missing required data for token B price fetch");
-          return;
-        }
-
-        const addressToFetch =
-          selectedTokenB?.address === EMPTY_ADDRESS && wethAddress
-            ? wethAddress?.toLowerCase()
-            : selectedTokenB?.address?.toLowerCase();
-
-        const tokenPrice = await fetchTokenPrice(symbol, addressToFetch);
-
-        if (tokenPrice) {
-          setConversionRateTokenB(tokenPrice);
-        } else {
-          setConversionRateTokenB(null);
-          console.error("Token B price could not be established.");
-        }
-      } catch (error) {
-        console.error("Error fetching token price:", error.message);
-      }
-    };
-
-    fetchConversionRateTokenB();
-  }, [chainId, selectedTokenB?.address, wethAddress]);
+  }, [
+    chainId,
+    symbol,
+    currentChain?.name,
+    selectedTokenA?.address,
+    selectedTokenB?.address,
+    wethAddress,
+  ]);
 
   useEffect(() => {
     if (conversionRate && !isNaN(conversionRate)) {
@@ -862,7 +911,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       setUsdValue(valueInUSD);
       setUsdValueTokenA(valueInUSD);
     } else {
-      console.error("Missing or invalid conversion rate:", conversionRate);
+      setUsdValue("0.00");
+      setUsdValueTokenA("0.00");
     }
   }, [amountIn, conversionRate]);
 
@@ -873,15 +923,21 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       ).toFixed(2);
       setUsdValueTokenB(valueInUSD);
     } else {
-      console.error(
-        "Missing or invalid conversion rate:",
-        conversionRateTokenB,
-      );
+      setUsdValueTokenB("0.00");
     }
   }, [amountOut, conversionRateTokenB]);
 
   const confirmSwap = async () => {
     if (selectedTokenA.address == selectedTokenB.address) {
+      return null;
+    }
+    if (amountIn !== debouncedAmountIn) {
+      toast.error("Quote is refreshing. Please try again.");
+      return null;
+    }
+    if (tradeInfo?.validUntil && Date.now() > tradeInfo.validUntil) {
+      toast.error("Quote expired. Refreshing — please try again.");
+      void refreshQuoteState();
       return null;
     }
     await swapTokens(
@@ -940,7 +996,21 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       return "0";
     }
 
-    // Use the singleToken data for accurate 1 token price
+    // Show the realised quote rate first. The 1-token spot route can be noisy
+    // for tiny native-token inputs and made the displayed rate disagree with
+    // the actual output amount.
+    if (
+      amountIn &&
+      amountOut &&
+      parseFloat(amountIn) > 0 &&
+      parseFloat(amountOut) > 0
+    ) {
+      const rate = parseFloat(amountOut) / parseFloat(amountIn);
+      if (!isNaN(rate) && rate > 0) {
+        return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
+      }
+    }
+
     if (
       singleToken?.amounts &&
       singleToken.amounts.length >= 2 &&
@@ -953,19 +1023,6 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
         ),
       );
 
-      if (!isNaN(rate) && rate > 0) {
-        return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
-      }
-    }
-
-    // Fallback: calculate from current amounts
-    if (
-      amountIn &&
-      amountOut &&
-      parseFloat(amountIn) > 0 &&
-      parseFloat(amountOut) > 0
-    ) {
-      const rate = parseFloat(amountOut) / parseFloat(amountIn);
       if (!isNaN(rate) && rate > 0) {
         return isRateReversed ? (1 / rate).toFixed(6) : rate.toFixed(6);
       }
@@ -1008,10 +1065,24 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const getButtonText = () => {
     if (!address) return "Connect Wallet";
     if (isInsufficientBalance()) return "Insufficient Balance";
+    if (isQuoteStaleForInput) return "Refreshing quote...";
     if (isQuoting) return "Loading...";
+    if (isQuoteExpired) return "Refreshing quote...";
     if (needsApproval) return "Approve";
     if (order) return "Place Order";
+    if (isBlockingImpact) return "Price impact too high";
+    if (isHighImpact && !acknowledgedHighImpact) return "Acknowledge high impact";
     return "Swap";
+  };
+
+  const isSwapDisabled = () => {
+    if (!address) return false;
+    if (isInsufficientBalance()) return true;
+    if (isQuoteStaleForInput) return true;
+    if (isQuoteExpired) return true;
+    if (isBlockingImpact) return true;
+    if (isHighImpact && !acknowledgedHighImpact) return true;
+    return false;
   };
 
   // Function to format the number with commas
@@ -1036,8 +1107,10 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
     setAmountIn(rawValue); // Update the state with the raw number
   };
 
-  const minToReceive = amountOut * 0.0024;
-  const minToReceiveAfterFee = amountOut - minToReceive;
+  const minToReceiveAfterFee = calculateMinReceived(amountOut, selectedSlippage);
+  const minToReceive = (parseFloat(amountOut || "0") || 0) - minToReceiveAfterFee;
+  const isQuoteStaleForInput = amountIn !== debouncedAmountIn;
+  const effectiveSlippage = getEffectiveSlippagePercent(selectedSlippage);
 
   // effect to clear amountOut and quotes when tokens are swapped
   useEffect(() => {
@@ -1109,23 +1182,57 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
   const handleOutputChange = () => {
     // This input is read-only, so we don't need an onChange handler
   };
-  // For Price Impact
-  const priceImpact =
-    usdValueTokenA > 0
-      ? (
-        ((parseFloat(usdValueTokenB) - parseFloat(usdValueTokenA)) /
-          parseFloat(usdValueTokenA)) *
-        100
-      ).toFixed(2)
-      : 0;
+  const suppressImpact = shouldSuppressImpact({
+    amountIn,
+    debouncedAmountIn,
+    isQuoting,
+    isQuoteExpired,
+  });
+  const routePriceImpact = suppressImpact
+    ? null
+    : isDirectRoute
+      ? "0.00"
+      : calculateRoutePriceImpact({
+      amountIn,
+      amountOut,
+      spotAmountOut: singleToken?.amounts?.[singleToken.amounts.length - 1],
+      outputDecimals: parseInt(selectedTokenB?.decimal),
+    });
+  const valuePriceImpact = suppressImpact
+    ? null
+    : calculateValuePriceImpact({
+      inputValueUsd: usdValueTokenA,
+      outputValueUsd: usdValueTokenB,
+    });
+  // Prefer the same USD values shown on screen when both sides are priced.
+  // Fall back to route spot-vs-execution only when USD pricing is unavailable.
+  const priceImpact = valuePriceImpact ?? routePriceImpact;
   // Determine color based on value
   const getPriceImpactColor = (impact) => {
+    if (impact === null || impact === undefined) return "text-white";
     const value = parseFloat(impact);
     // Green for positive (profit), Red for negative (loss)
+    if (!Number.isFinite(value)) return "text-white";
     if (value > 0) return "text-green-500";
-    if (value < 0) return "text-red-500";
+    if (value < -1) return "text-red-500";
+    if (value < 0) return "text-yellow-500";
     return "text-white";
   };
+
+  const HIGH_IMPACT_WARN_PCT = -5;
+  const HIGH_IMPACT_BLOCK_PCT = -15;
+  const impactNum =
+    priceImpact === null || priceImpact === undefined
+      ? null
+      : parseFloat(priceImpact);
+  const hasImpact = impactNum !== null && Number.isFinite(impactNum);
+  const isHighImpact = hasImpact && impactNum <= HIGH_IMPACT_WARN_PCT;
+  const isBlockingImpact = hasImpact && impactNum <= HIGH_IMPACT_BLOCK_PCT;
+  const [acknowledgedHighImpact, setAcknowledgedHighImpact] = useState(false);
+
+  useEffect(() => {
+    setAcknowledgedHighImpact(false);
+  }, [selectedTokenA?.address, selectedTokenB?.address, amountIn]);
   //
   // For Limit Tab
   useEffect(() => {
@@ -1660,8 +1767,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                         setAmountVisible(true);
                       }
                     }}
-                    disabled={address ? isInsufficientBalance() : false}
-                    className={`gtw relative z-50 w-full uppercase md:h-12 h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${address && isInsufficientBalance()
+                    disabled={isSwapDisabled()}
+                    className={`gtw relative z-50 w-full uppercase md:h-12 h-11 bg-[#F59216] md:rounded-[10px] rounded-md mx-auto button-trans h- flex justify-center items-center transition-all ${isSwapDisabled()
                       ? "opacity-50 cursor-not-allowed"
                       : " "
                       } font-orbitron lg:text-base text-base font-extrabold`}
@@ -1679,9 +1786,11 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             Min Received :
                             <span className="text-[#FF9900] text-xs font-bold mr-1">
                               {" "}
-                              {formatNumber(
-                                parseFloat(minToReceiveAfterFee).toFixed(6),
-                              )}
+                              {isQuoteStaleForInput
+                                ? "..."
+                                : formatNumber(
+                                  parseFloat(minToReceiveAfterFee).toFixed(6),
+                                )}
                             </span>
                             {selectedTokenB.ticker}
                           </div>
@@ -1697,7 +1806,7 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             =
                             <span className="text-[#FF9900] text-xs font-bold mr-1">
                               {" "}
-                              {getRateDisplay()}
+                              {isQuoteStaleForInput ? "..." : getRateDisplay()}
                             </span>
                             {isRateReversed
                               ? selectedTokenA.ticker
@@ -1713,9 +1822,60 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
                             Price Impact
                           </div>
                           <div className="text-center text-black text-xs font-normal font-orbitron px-3 py-1 bg-[#FFE3BA] rounded-lg">
-                            {priceImpact} %
+                            {isQuoteStaleForInput
+                              ? "..."
+                              : priceImpact === null || priceImpact === undefined
+                              ? "—"
+                              : `${priceImpact} %`}
                           </div>
                         </div>
+                      </div>
+                    )}
+                    {isQuoteStaleForInput && (
+                      <div className="text-right text-[10px] font-orbitron mt-3 text-yellow-400">
+                        Refreshing quote...
+                      </div>
+                    )}
+                    {quoteSecondsLeft !== null && tradeInfo && !isQuoteStaleForInput && (
+                      <div
+                        className={`text-right text-[10px] font-orbitron mt-3 ${
+                          isQuoteExpired
+                            ? "text-red-400"
+                            : quoteSecondsLeft <= 5
+                              ? "text-yellow-400"
+                              : "text-[#FF9900]"
+                        }`}
+                      >
+                        {isQuoteExpired
+                          ? "Quote expired - refreshing"
+                          : `Quote refreshes in ${quoteSecondsLeft}s`}
+                      </div>
+                    )}
+                    {hasImpact && (isHighImpact || isBlockingImpact) && (
+                      <div
+                        className={`mt-4 p-3 text-xs font-orbitron border rounded-lg ${
+                          isBlockingImpact
+                            ? "border-red-500 text-red-300 bg-red-500/10"
+                            : "border-yellow-500 text-yellow-200 bg-yellow-500/10"
+                        }`}
+                      >
+                        {isBlockingImpact ? (
+                          <>
+                            Trade blocked. Price impact {priceImpact}% is too
+                            high for this amount.
+                          </>
+                        ) : (
+                          <>
+                            High price impact: {priceImpact}%.{" "}
+                            <button
+                              type="button"
+                              onClick={() => setAcknowledgedHighImpact(true)}
+                              className="underline font-bold"
+                            >
+                              I understand, swap anyway
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1736,6 +1896,8 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
       {isSlippageVisible && !order && (
         <SlippageCalculator
           inputAmount={tradeInfo?.amountOut}
+          selectedSlippage={selectedSlippage}
+          onSlippageChange={setSelectedSlippage}
           onSlippageCalculated={handleSlippageCalculated}
           onClose={() => setSlippageVisible(false)}
         />
@@ -1778,10 +1940,14 @@ const Emp = ({ setPadding, setBestRoute, onTokensChange, activeTab }) => {
             }}
             amountIn={amountIn}
             amountOut={parseFloat(amountOut).toFixed(6)}
+            minReceived={parseFloat(minToReceiveAfterFee).toFixed(6)}
+            selectedSlippage={selectedSlippage}
+            effectiveSlippage={effectiveSlippage}
             tokenA={selectedTokenA}
             tokenB={selectedTokenB}
             refresh={() => { }}
             confirm={confirmSwap}
+            disabled={isSwapDisabled()}
             handleApprove={handleApprove}
             needsApproval={needsApproval}
             usdValueTokenA={usdValueTokenA}

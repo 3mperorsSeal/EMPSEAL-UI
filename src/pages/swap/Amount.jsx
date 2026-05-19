@@ -8,6 +8,9 @@ const Amount = ({
   onClose,
   amountIn,
   amountOut,
+  minReceived,
+  selectedSlippage,
+  effectiveSlippage,
   tokenA,
   singleToken,
   tokenB,
@@ -76,6 +79,9 @@ const Amount = ({
         100
       ).toFixed(2)
       : 0;
+  const displayedMinReceived = minReceived || amountOut;
+  const displayedSlippage =
+    effectiveSlippage ?? selectedSlippage ?? null;
 
   return (
     <>
