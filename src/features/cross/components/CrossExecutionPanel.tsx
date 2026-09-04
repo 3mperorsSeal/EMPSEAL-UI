@@ -71,6 +71,12 @@ export function CrossExecutionPanel({
         singleAction.interchainGas ??
         singleAction.value
       : undefined;
+  const sequentialPlan =
+    session.mode === "single" && session.integration.mode === "sequential_wallet"
+      ? session.executionPlan
+      : undefined;
+  const sequentialCurrentStep = sequentialPlan?.steps[sequentialPlan.currentStep];
+  const sequentialSubmitted = sequentialCurrentStep?.status === "SUBMITTED";
 
   return (
     <div className="border border-white/[0.05] bg-white/[0.02] p-4">
@@ -96,6 +102,8 @@ export function CrossExecutionPanel({
           <p className="text-sm text-white/70">
             {session.integration?.mode === "router_intent"
               ? "Contract-backed execution is ready."
+              : session.integration?.mode === "sequential_wallet"
+                ? "Sequential execution is ready. Each wallet action is confirmed before the next leg is prepared."
               : singleClassification === "layerzero_steps"
                 ? "LayerZero provider steps are ready for execution."
                 : singleClassification === "deposit_instructions"
@@ -108,6 +116,23 @@ export function CrossExecutionPanel({
                       ? "The returned provider action is not supported by this wallet."
                 : "Provider-direct execution is ready."}
           </p>
+
+          {sequentialPlan ? (
+            <div className="space-y-2 border border-white/[0.05] bg-black/10 p-3 text-[10px] text-white/55">
+              <div className="flex items-center justify-between">
+                <span>Plan status</span>
+                <span className="uppercase text-white/75">{sequentialPlan.status.replace("_", " ")}</span>
+              </div>
+              {sequentialPlan.steps.map((step) => (
+                <div key={step.stepId} className="flex items-center justify-between gap-3">
+                  <span>{step.index + 1}. {step.kind.replace(/_/g, " ")}</span>
+                  <span className={step.index === sequentialPlan.currentStep ? "text-[#FF8A00]" : "text-white/35"}>
+                    {step.status}{step.kind === "destination_swap" && step.status === "PLANNED" ? " (provisional)" : ""}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ) : null}
 
           {singleRail ? (
             <div className="grid gap-2 border border-white/[0.05] bg-black/10 p-3 text-[10px] text-white/55 sm:grid-cols-2">
@@ -193,22 +218,28 @@ export function CrossExecutionPanel({
             disabled={
               isExecuting ||
               singleActionDisabled ||
-              singleClassificationBlocked
+              singleClassificationBlocked ||
+              sequentialSubmitted
             }
             className={`w-full px-4 py-3 text-[12px] font-bold uppercase tracking-[0.1em] ${
               isExecuting ||
               singleActionDisabled ||
-              singleClassificationBlocked
+              singleClassificationBlocked ||
+              sequentialSubmitted
                 ? "cursor-not-allowed bg-white/[0.06] text-white/25"
                 : "bg-[#FF8A00] text-[#03030a]"
             }`}
           >
             {isExecuting
               ? "Executing..."
-              : (singleActionLabel ??
+              : sequentialSubmitted
+                ? "Awaiting Confirmation"
+                : (singleActionLabel ??
                 (singleClassification === "deposit_instructions"
                   ? "Review Deposit Instructions"
-                  : "Execute Route"))}
+                  : session.integration.mode === "sequential_wallet"
+                    ? `Execute ${sequentialCurrentStep?.kind.replace(/_/g, " ") ?? "Current Step"}`
+                    : "Execute Route"))}
           </button>
         </div>
       ) : (

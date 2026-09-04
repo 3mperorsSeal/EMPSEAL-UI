@@ -6,6 +6,8 @@ import type {
   SubmittedRequest,
   LayerZeroValueTransferApiChainsResponse,
   LayerZeroValueTransferApiTokensResponse,
+  ExecutionPlanResponse,
+  ExecutionPlanStepSubmittedRequest,
 } from "./contracts";
 import { crossApiFetch } from "./client";
 
@@ -123,6 +125,19 @@ export const crossApi = {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getExecutionPlan: (planId: string) =>
+    crossApiFetch<ExecutionPlanResponse>(
+      `/api/v1/execution-plans/${encodeURIComponent(planId)}`,
+    ),
+  markExecutionPlanStepSubmitted: (
+    planId: string,
+    stepId: string,
+    payload: ExecutionPlanStepSubmittedRequest,
+  ) =>
+    crossApiFetch<ExecutionPlanResponse>(
+      `/api/v1/execution-plans/${encodeURIComponent(planId)}/steps/${encodeURIComponent(stepId)}/submitted`,
+      { method: "POST", body: JSON.stringify(payload) },
+    ),
   markLayerZeroSubmitted: (intentId: string, payload: SubmittedRequest) =>
     crossApiFetch<unknown>(
       `/api/v1/layerzero-value-transfer-api/intents/${intentId}/submitted`,

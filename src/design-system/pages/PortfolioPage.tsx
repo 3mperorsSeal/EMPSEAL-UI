@@ -13,6 +13,7 @@ import {
   AccountModal,
   Card,
   ChainPicker,
+  DappFooter,
   DappNavbar,
   EmptyState,
   NetworkSelector,
@@ -20,7 +21,6 @@ import {
   NFTPanel,
   Pill,
   Skeleton,
-  SocialTray,
   Tabs,
   Toaster,
   toast,
@@ -37,9 +37,7 @@ import {
   buildPortfolioV2ViewModel,
   type PortfolioV2Data,
 } from "../data/portfolioV2Adapters";
-import { EMPX_SOCIALS } from "../data/socials";
 import { V2_ALL_CHAINS } from "../data/v2ChainView";
-import { createV2NavLinks } from "../data/v2ProductRoutes";
 import EmpxPortfolioPanel from "../EmpxPortfolioPanel";
 
 const ALL_CHAINS: PickerChain[] = V2_ALL_CHAINS.map((chain) => ({
@@ -139,14 +137,10 @@ export default function PortfolioPage() {
       .finally(() => setPortfolioLoading(false));
   };
 
-  const navLinks = createV2NavLinks("portfolio");
-
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
-      {/* Navbar */}
       <DappNavbar
-        links={navLinks}
-        socials={<SocialTray links={EMPX_SOCIALS} withSeparator />}
+        activeHref="/portfolio-v2"
         controls={
           <>
             <NetworkSelector
@@ -365,6 +359,7 @@ export default function PortfolioPage() {
         />
       )}
 
+      <DappFooter />
       <Toaster />
     </div>
   );

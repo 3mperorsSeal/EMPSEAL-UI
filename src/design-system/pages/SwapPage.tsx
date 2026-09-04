@@ -17,6 +17,7 @@ import {
   Card,
   ChainPicker,
   ConfirmTradeModal,
+  DappFooter,
   DappNavbar,
   NetworkSelector,
   Pill,
@@ -24,7 +25,6 @@ import {
   QuoteCountdown,
   RouteVisualization,
   SplitRouteVisualization,
-  SocialTray,
   Tabs,
   Toaster,
   TokenPicker,
@@ -44,7 +44,7 @@ import { getTokensForChain } from "../data/v2TokenView";
 import { getExplorerAddressUrl, getExplorerTxUrl } from "../data/explorers";
 import { formatUSD, useUnifiedPrice } from "../hooks/useUnifiedPrice";
 import { classifyPair, modeAFeeBps } from "../data/empxRegistry";
-import { createV2NavLinks } from "../data/v2ProductRoutes";
+
 import { resolveSwapPageChain } from "../data/swapPageChainState";
 import { calculatePriceImpactBps } from "../data/tradeMetrics";
 import { SUPPORTED_CHAINS } from "../../config/chains";
@@ -72,13 +72,6 @@ import {
   type SwapHookToken,
 } from "../data/swapV2Adapters";
 
-// Shared social link set — referenced from every page navbar
-export const EMPX_SOCIALS = [
-  { kind: "x" as const,        href: "https://x.com/EmpXio" },
-  { kind: "telegram" as const, href: "https://t.me/EmpXEmpseal" },
-  { kind: "docs" as const,     href: "https://docs.empx.io" },
-  { kind: "github" as const,   href: "https://github.com/3mperorsSeal" },
-];
 import EmpxSwapWidget from "../EmpxSwapWidget";
 
 const SWAP_CHAINS: PickerChain[] = V2_AGGREGATOR_CHAINS.map((c) => ({
@@ -392,13 +385,10 @@ export default function SwapPage() {
     if (quoteTradeInfo?.quoteId) setExecutionError(null);
   }, [quoteTradeInfo?.quoteId]);
 
-  const navLinks = createV2NavLinks("swap");
-
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <DappNavbar
-        links={navLinks}
-        socials={<SocialTray links={EMPX_SOCIALS} withSeparator />}
+        activeHref="/swap-v2"
         controls={
           <>
             <NetworkSelector
@@ -866,6 +856,7 @@ export default function SwapPage() {
         />
       )}
 
+      <DappFooter />
       <Toaster />
     </div>
   );

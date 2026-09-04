@@ -40,13 +40,13 @@ import {
   Card,
   ChainPicker,
   ConfirmTradeModal,
+  DappFooter,
   DappNavbar,
   FeeBreakdown,
   NetworkSelector,
   Pill,
   PrimaryButton,
   QuoteCountdown,
-  SocialTray,
   Tabs,
   Toaster,
   TradeSuccessModal,
@@ -83,7 +83,7 @@ import {
   tierForChainId,
   tierLabel,
 } from "../data/empxRegistry";
-import { createV2NavLinks } from "../data/v2ProductRoutes";
+
 import {
   useGetCalldataQuote,
   useGetChains,
@@ -114,13 +114,6 @@ const GAS_CHAIN_ESTIMATES: Record<number, { nativeUsd: number; gasUsdPerSwap: nu
 const GAS_CHAINS = V2_AGGREGATOR_CHAINS
   .filter((c) => GAS_CHAIN_ESTIMATES[c.id])
   .map((c) => ({ ...c, ...GAS_CHAIN_ESTIMATES[c.id] }));
-
-const EMPX_SOCIALS = [
-  { kind: "x" as const,        href: "https://x.com/EmpXio" },
-  { kind: "telegram" as const, href: "https://t.me/EmpXEmpseal" },
-  { kind: "docs" as const,     href: "https://docs.empx.io" },
-  { kind: "github" as const,   href: "https://github.com/3mperorsSeal" },
-];
 
 // ─── Page state ───────────────────────────────────────────────────────────
 
@@ -409,15 +402,12 @@ export default function GasPage() {
     setShowConfirm(false);
     setTab("lookup");
   };
-
-  const navLinks = createV2NavLinks("gas");
-
   // ─── Render ──────────────────────────────────────────────────────────────
+
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <DappNavbar
-        links={navLinks}
-        socials={<SocialTray links={EMPX_SOCIALS} withSeparator />}
+        activeHref="/gas-v2"
         controls={
           <>
             <NetworkSelector
@@ -785,6 +775,7 @@ export default function GasPage() {
         />
       )}
 
+      <DappFooter />
       <Toaster />
     </div>
   );

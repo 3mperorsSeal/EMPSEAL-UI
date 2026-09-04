@@ -30,7 +30,7 @@ import {
   writeContract,
 } from "@wagmi/core";
 import { useCallback, useDeferredValue, useEffect, useMemo, useState } from "react";
-import { erc20Abi, formatUnits, type Address } from "viem";
+import { erc20Abi, formatUnits, getAddress, type Address } from "viem";
 import { useBalance, useChainId, useSignMessage, useSwitchChain } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { config } from "../../Wagmi/config";
@@ -39,11 +39,11 @@ import {
   Card,
   ChainPicker,
   ConfirmTradeModal,
+  DappFooter,
   DappNavbar,
   NetworkSelector,
   Pill,
   QuoteCountdown,
-  SocialTray,
   Tabs,
   Toaster,
   TokenPicker,
@@ -76,7 +76,8 @@ import {
   findMissingProviderApprovals,
   readProviderApprovalRequests,
 } from "../../features/cross/execution/approvals";
-import { executeCrossIntegration } from "../../features/cross/execution/crossExecution";
+import { executeCrossIntegration, syncSequentialExecutionPlan } from "../../features/cross/execution/crossExecution";
+import { buildExecutionPlanStepSubmittedMessage } from "../../features/cross/execution/executionPlanSignatures";
 import {
   getRequiredRouterIntentApproval,
   isRouterIntentExpired,
@@ -119,7 +120,7 @@ import EmpxCrossWidget from "../EmpxCrossWidget";
 import { getExplorerAddressUrl, getExplorerTxUrl } from "../data/explorers";
 import { V2_ALL_CHAINS, getV2Chain } from "../data/v2ChainView";
 import { getTokensForChain, type V2TokenConfig } from "../data/v2TokenView";
-import { createV2NavLinks } from "../data/v2ProductRoutes";
+import type { RailCardData } from "../widgetKit";
 import { calculatePriceImpactBps } from "../data/tradeMetrics";
 import {
   CROSS_V2_DEFAULT_SELECTION,
@@ -378,13 +379,6 @@ function findTokenByTicker(tokens: Token[], ticker: string) {
 // Gas-drop typical USD value per destination chain (rough — production reads
 // from DestinationGasAutoFund.ts policy).
 const GAS_DROP_USD = 2.5;
-
-const EMPX_SOCIALS = [
-  { kind: "x" as const,        href: "https://x.com/EmpXio" },
-  { kind: "telegram" as const, href: "https://t.me/EmpXEmpseal" },
-  { kind: "docs" as const,     href: "https://docs.empx.io" },
-  { kind: "github" as const,   href: "https://github.com/3mperorsSeal" },
-];
 
 export default function CrossPage() {
   const isMobile = useIsMobile();
@@ -762,9 +756,6 @@ export default function CrossPage() {
     return displayOffers.map((offer: any) => ({
       ...formatCrossOffer(offer, toTokenDecimals),
       rawOffer: offer,
-      railBadge: offer.railVariant ?? offer.executionMode ?? offer.deliveryShape,
-      executionMode: offer.executionMode,
-      deliveryShape: offer.deliveryShape,
     }));
   }, [displayOffers, toTokenDecimals]);
   const quoteUiState = getCrossQuoteUiState({
@@ -827,6 +818,39 @@ export default function CrossPage() {
     } else {
       clearCrossSession();
     }
+  }, [session]);
+
+  useEffect(() => {
+    if (
+      session?.mode !== "single" ||
+      session.integration.mode !== "sequential_wallet" ||
+      session.executionPlan?.steps[session.executionPlan.currentStep]?.status !== "SUBMITTED"
+    ) {
+      return;
+    }
+
+    let cancelled = false;
+    const refresh = async () => {
+      try {
+        const response = await crossApi.getExecutionPlan(session.integration.planId);
+        if (cancelled) return;
+        setSession((current) =>
+          current?.mode === "single" && current.executionPlan?.version !== response.executionPlan.version
+            ? syncSequentialExecutionPlan(current, response.executionPlan)
+            : current,
+        );
+      } catch {
+        // Settlement can take longer than one polling interval. The execution
+        // panel retains the last known plan and retries without discarding it.
+      }
+    };
+
+    void refresh();
+    const interval = window.setInterval(refresh, 5_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(interval);
+    };
   }, [session]);
 
   useEffect(() => {
@@ -958,6 +982,20 @@ export default function CrossPage() {
           requests: [],
           error: error instanceof Error ? error : new Error(String(error)),
         };
+      }
+    }
+
+    if (session.integration?.mode === "sequential_wallet") {
+      try {
+        return {
+          requests: readProviderApprovalRequests(
+            session.integration as any,
+            session.integration.tx.chainId,
+          ),
+          error: null as Error | null,
+        };
+      } catch (error) {
+        return { requests: [], error: error instanceof Error ? error : new Error(String(error)) };
       }
     }
 
@@ -1441,6 +1479,26 @@ export default function CrossPage() {
               sourceTxHash: txHash,
             });
           },
+          markExecutionPlanStepSubmitted: async (planId, stepId, txHash, expectedVersion) => {
+            if (!connectedAddress) throw new Error("Source wallet not connected.");
+            const userAddress = getAddress(connectedAddress);
+            const timestamp = Date.now();
+            const idempotencyKey = `ui-${stepId.slice(0, 40)}-${txHash.slice(2, 18)}`;
+            const signature = await signMessageAsync({
+              account: connectedAddress,
+              message: buildExecutionPlanStepSubmittedMessage({
+                planId, stepId, wallet: userAddress, txHash, expectedVersion, idempotencyKey, timestamp,
+              }),
+            });
+            const response = await crossApi.markExecutionPlanStepSubmitted(planId, stepId, {
+              userAddress, txHash, expectedVersion, idempotencyKey, timestamp, signature,
+            });
+            setSession((current) =>
+              current?.mode === "single" && current.executionPlan?.planId === planId
+                ? { ...current, executionPlan: response.executionPlan }
+                : current,
+            );
+          },
           executeThorchainBitcoinIntent,
         },
       );
@@ -1451,6 +1509,7 @@ export default function CrossPage() {
       executeThorchainBitcoinIntent,
       hasRequiredApproval,
       sendEvmTransaction,
+      signMessageAsync,
       sourceWalletAddress,
       submitStandardIntent,
     ],
@@ -1497,6 +1556,7 @@ export default function CrossPage() {
       offerSetId: quoteForSelection.offerSetId,
       quote: response.quote,
       integration: nextIntegration,
+      executionPlan: response.executionPlan,
       status: "SELECTED",
       sourceChainId: response.quote?.srcChainId ?? offerForSelection.srcChainId,
       lastError: null,
@@ -1859,7 +1919,6 @@ export default function CrossPage() {
     }
   }, [shownSuccessIntentId, session, trackingData]);
 
-  const navLinks = createV2NavLinks("cross");
   const activeWalletDisplay = sourceUsesNativeWallet && activeNativeSourceWallet
     ? {
         address: activeNativeSourceWallet.address,
@@ -1887,8 +1946,7 @@ export default function CrossPage() {
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <DappNavbar
-        links={navLinks}
-        socials={<SocialTray links={EMPX_SOCIALS} withSeparator />}
+        activeHref="/cross-v2"
         controls={
           <>
             <NetworkSelector
@@ -1966,7 +2024,7 @@ export default function CrossPage() {
               onSelectToChain={() => setChainPickerTarget("to")}
 
               railName={selectedOfferDisplay?.railName}
-              railBadge={selectedOffer?.railVariant ?? selectedOffer?.executionMode ?? selectedOffer?.deliveryShape}
+              railBadge={selectedOfferDisplay?.executionLabel}
               protocolFeeBps={selectedOffer?.economics?.protocolFeeBps ?? selectedOffer?.fees?.protocolFeeBps}
               protocolFeeUSD={selectedOfferDisplay?.protocolFeeUSD}
               bridgeFeeUSD={selectedOfferDisplay?.bridgeFeeUSD}
@@ -1988,6 +2046,19 @@ export default function CrossPage() {
                 (nativeDestinationRequired && !nativeDstAddressValid) ||
                 (destinationAddressRequired && !destinationAddressValid)
               }
+              rails={offerEntries.map((o): RailCardData => ({
+                name: o.railName,
+                mode: "B",
+                outAmount: o.outputAmount,
+                eta: o.estimatedTimeSeconds != null ? formatEtaSeconds(o.estimatedTimeSeconds) : "—",
+                tag: o.isBest ? "BEST" : undefined,
+                isActive: o.offerId === (selectedOffer?.offerId ?? selectedOfferId),
+              }))}
+              onSelectRail={(name) => {
+                const hit = offerEntries.find((entry) => entry.railName === name);
+                if (!hit) return;
+                setSelectedOfferId((cur) => (cur === hit.offerId ? effectiveQuote?.bestOfferId ?? null : hit.offerId));
+              }}
               swapLoading={quote.isFetching || execution.isSelecting}
               swapLabel={
                 !sourceWalletConnected
@@ -2256,7 +2327,10 @@ export default function CrossPage() {
           selectedOfferDisplay
             ? [
                 { label: "Via rail",      value: selectedOfferDisplay.railName },
-                { label: "Execution",     value: selectedOffer?.executionMode ?? selectedOffer?.deliveryShape ?? "Route" },
+                { label: "Execution",     value: selectedOfferDisplay.executionLabel },
+                ...(selectedOfferDisplay.stepSummary
+                  ? [{ label: "Route steps", value: selectedOfferDisplay.stepSummary }]
+                  : []),
                 { label: "Protocol fee",  value: `$${selectedOfferDisplay.protocolFeeUSD.toFixed(2)}`, accent: true },
                 { label: "Bridge fee",    value: selectedOfferDisplay.bridgeFeeUSD <= 0.005 ? "FREE" : `$${selectedOfferDisplay.bridgeFeeUSD.toFixed(2)}` },
                 ...(gasDropOnDestination ? [{ label: "Gas drop", value: `+$${GAS_DROP_USD.toFixed(2)} ${toChain.ticker}` }] : []),
@@ -2337,6 +2411,7 @@ export default function CrossPage() {
         />
       )}
 
+      <DappFooter />
       <Toaster />
     </div>
   );
@@ -2346,9 +2421,6 @@ export default function CrossPage() {
 
 type CrossOfferEntry = CrossV2OfferDisplay & {
   rawOffer: any;
-  railBadge?: string;
-  executionMode?: string;
-  deliveryShape?: string;
 };
 
 function OffersList({
@@ -2417,9 +2489,9 @@ function OffersList({
               ? "SELECTED"
               : isBest
                 ? "BEST"
-                : o.railBadge);
+                : null);
           const tagAccent = isSelected || isBest;
-          const modeColor = o.executionMode === "provider_direct" ? "#93C5FD" : "#FFB347";
+          const modeColor = o.executionLabel === "Provider Direct" ? "#93C5FD" : "#FFB347";
           return (
             <button
               key={o.offerId}
@@ -2456,7 +2528,7 @@ function OffersList({
               {/* Tiny mode dot — replaces the chunky "Mode A/B" pill */}
               <span
                 aria-hidden
-                title={o.executionMode ?? "route"}
+                title={o.executionLabel}
                 style={{
                   width: 6,
                   height: 6,
@@ -2488,6 +2560,20 @@ function OffersList({
                       {tag}
                     </span>
                   )}
+                  <span
+                    style={{
+                      fontSize: 8.5,
+                      fontWeight: 700,
+                      letterSpacing: "0.12em",
+                      padding: "1px 5px",
+                      borderRadius: 2,
+                      color: o.executionLabel === "Provider Direct" ? "#93C5FD" : "rgba(255,179,71,0.85)",
+                      background: o.executionLabel === "Provider Direct" ? "rgba(147,197,253,0.08)" : "rgba(255,179,71,0.08)",
+                      border: `1px solid ${o.executionLabel === "Provider Direct" ? "rgba(147,197,253,0.20)" : "rgba(255,179,71,0.20)"}`,
+                    }}
+                  >
+                    {o.executionLabel}
+                  </span>
                 </div>
                 <p
                   style={{
@@ -2499,7 +2585,7 @@ function OffersList({
                   }}
                   title={o.offerId}
                 >
-                  {o.executionMode ?? "route"} · {o.estimatedTimeSeconds ? formatEtaSeconds(o.estimatedTimeSeconds) : "ETA pending"} · ${o.totalFeeUSD.toFixed(2)}
+                  {o.stepSummary ?? "Direct bridge"} · {o.estimatedTimeSeconds ? formatEtaSeconds(o.estimatedTimeSeconds) : "ETA pending"} · ${o.totalFeeUSD.toFixed(2)}
                 </p>
                 {o.restrictionReason ? (
                   <p style={{ margin: "3px 0 0", fontSize: 10, color: "rgba(255,138,0,0.72)", lineHeight: 1.35 }}>

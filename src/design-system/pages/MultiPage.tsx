@@ -32,12 +32,12 @@ import {
   Card,
   ChainPicker,
   ChainSwitcher,
+  DappFooter,
   DappNavbar,
   FeeBreakdown,
   NetworkSelector,
   Pill,
   PrimaryButton,
-  SocialTray,
   Tabs,
   Toaster,
   TokenPicker,
@@ -53,7 +53,6 @@ import {
 } from "../components";
 import { useWalletConnection } from "../hooks/useWalletConnection";
 import { useV2Balances } from "../hooks/useV2Balances";
-import { EMPX_SOCIALS } from "./SwapPage";
 import { getExplorerAddressUrl } from "../data/explorers";
 import {
   defaultSettlementTicker,
@@ -63,7 +62,6 @@ import {
 } from "../data/empxRegistry";
 import {
   buildUnavailableRouteRows,
-  createV2NavLinks,
   V2_MULTI_ROUTE_STATUS,
 } from "../data/v2ProductRoutes";
 
@@ -291,13 +289,10 @@ export default function MultiPage() {
                || legCount > BASKET_LIMITS.maxLegs;
 
   const totalInputUSD = inputs.reduce((s, i) => s + Number(i.amount) * i.usdPrice, 0);
-  const navLinks = createV2NavLinks("multi");
-
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <DappNavbar
-        links={navLinks}
-        socials={<SocialTray links={EMPX_SOCIALS} withSeparator />}
+        activeHref="/multi-v2"
         controls={
           <>
             <NetworkSelector
@@ -725,6 +720,7 @@ export default function MultiPage() {
         />
       )}
 
+      <DappFooter />
       <Toaster />
     </div>
   );

@@ -4,6 +4,41 @@ import { hyperlaneApprovalSelectionFixture } from "../__fixtures__/railOffers";
 import { CrossExecutionPanel } from "./CrossExecutionPanel";
 
 describe("CrossExecutionPanel", () => {
+  it("shows sequential step progress and blocks duplicate submission while confirmation is pending", () => {
+    render(
+      <CrossExecutionPanel
+        session={{
+          mode: "single",
+          intentId: "intent-sequential",
+          selectedOfferId: "offer",
+          offerSetId: "set",
+          quote: { rail: "CCTP", srcChainId: 8453, dstChainId: 42161 },
+          sourceChainId: 8453,
+          status: "ACTIVE",
+          integration: {
+            mode: "sequential_wallet", planId: "plan", stepId: "source",
+            expectedVersion: 2, tx: { to: "0x1111111111111111111111111111111111111111", data: "0x", value: "0", chainId: 8453 },
+          },
+          executionPlan: {
+            planId: "plan", intentId: "intent-sequential", mode: "sequential_wallet",
+            status: "ACTIVE", version: 2, atomic: false, currentStep: 0, expiresAt: 9999999999,
+            steps: [
+              { stepId: "source", index: 0, kind: "source_swap", chainId: 8453, status: "SUBMITTED", tokenIn: "a", tokenOut: "b", quotedAmountIn: "1", quotedAmountOut: "1", minimumAmountOut: "1", expiresAt: 9999999999 },
+              { stepId: "destination", index: 1, kind: "destination_swap", chainId: 42161, status: "PLANNED", tokenIn: "b", tokenOut: "c", quotedAmountIn: "1", quotedAmountOut: "1", minimumAmountOut: "1", expiresAt: 9999999999 },
+            ],
+          },
+        } as any}
+        isExecuting={false}
+        onExecuteSingle={() => {}}
+        onExecutePrimary={() => {}}
+        onExecuteGas={() => {}}
+      />,
+    );
+
+    expect(screen.getByText(/provisional/i)).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /awaiting confirmation/i })).toBeDisabled();
+  });
+
   it("renders a custom single-route action label when provided", () => {
     render(
       <CrossExecutionPanel

@@ -213,7 +213,7 @@ export interface RailOffer {
     | "dst_swap_required"
     | "src_and_dst_swap_required"
     | "multi_hop";
-  executionMode?: "router_intent" | "provider_direct";
+  executionMode?: "router_intent" | "provider_direct" | "sequential_wallet";
   routeAsset?: ProviderAssetRef;
   sourceSettlementAsset: ProviderAssetRef;
   destinationSettlementAsset: ProviderAssetRef;
@@ -272,7 +272,7 @@ export interface CrossQuote {
   minAmountOut: string;
   rail: RailIdentifier | string;
   expiresAt: number;
-  executionMode?: "router_intent" | "provider_direct";
+  executionMode?: "router_intent" | "provider_direct" | "sequential_wallet";
   [key: string]: unknown;
 }
 
@@ -307,14 +307,63 @@ export interface ProviderDirectIntegration {
   tx?: TransactionEnvelope;
 }
 
+export interface SequentialWalletIntegration {
+  mode: "sequential_wallet";
+  planId: string;
+  stepId: string;
+  expectedVersion: number;
+  tx: TransactionEnvelope;
+  approvals?: ProviderApprovalRequest[];
+}
+
 export type SelectedOfferIntegration =
   | RouterIntentIntegration
-  | ProviderDirectIntegration;
+  | ProviderDirectIntegration
+  | SequentialWalletIntegration;
+
+export interface ExecutionPlanStep {
+  stepId: string;
+  index: number;
+  kind: "source_swap" | "rail_transfer" | "destination_swap";
+  chainId: number;
+  status: "PLANNED" | "READY" | "SUBMITTED" | "CONFIRMED" | "SETTLED" | "FAILED" | "SKIPPED";
+  tokenIn: string;
+  tokenOut: string;
+  quotedAmountIn: string;
+  quotedAmountOut: string;
+  minimumAmountOut: string;
+  dependsOnStepId?: string;
+  integration?: Record<string, unknown>;
+  preparedAction?: {
+    tx: TransactionEnvelope;
+    approvals?: ProviderApprovalRequest[];
+  };
+  txHash?: string;
+  expiresAt: number;
+}
+
+export interface ExecutionPlan {
+  planId: string;
+  intentId: string;
+  mode: "sequential_wallet";
+  status: "PLANNED" | "ACTIVE" | "REQUOTE_REQUIRED" | "COMPLETED" | "FAILED" | "EXPIRED";
+  version: number;
+  atomic: boolean;
+  carrierAsset?: string;
+  currentStep: number;
+  steps: ExecutionPlanStep[];
+  expiresAt: number;
+}
 
 export interface SelectionResponse {
   quote: CrossQuote;
   intentId: string;
   integration: SelectedOfferIntegration;
+  executionPlan?: ExecutionPlan;
+  currentAction?: {
+    tx: TransactionEnvelope;
+    approvals?: ProviderApprovalRequest[];
+  };
 }
 
 export interface ComposedSelectionResponse {
@@ -332,6 +381,19 @@ export interface SubmittedRequest {
   timestamp?: number;
 }
 
+export interface ExecutionPlanStepSubmittedRequest {
+  userAddress: string;
+  txHash: string;
+  expectedVersion: number;
+  idempotencyKey: string;
+  timestamp: number;
+  signature: string;
+}
+
+export interface ExecutionPlanResponse {
+  executionPlan: ExecutionPlan;
+}
+
 export interface SingleCrossExecutionSession {
   mode: "single";
   intentId: string;
@@ -339,6 +401,7 @@ export interface SingleCrossExecutionSession {
   offerSetId: string;
   quote: CrossQuote;
   integration: SelectedOfferIntegration;
+  executionPlan?: ExecutionPlan;
   status: string;
   sourceChainId: number;
   lastTxHash?: string;

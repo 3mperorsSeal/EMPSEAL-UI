@@ -89,6 +89,7 @@ export { default as Toaster, toast } from "./Toaster";
 // Navigation
 export { default as DappNavbar } from "./DappNavbar";
 export type { NavLink } from "./DappNavbar";
+export { default as DappFooter } from "./DappFooter";
 export { default as WalletButton } from "./WalletButton";
 export { default as NetworkSelector } from "./NetworkSelector";
 
