@@ -153,4 +153,103 @@ describe("CrossExecutionPanel", () => {
       screen.getByRole("button", { name: /review deposit instructions/i }),
     ).not.toBeDisabled();
   });
+
+  it("shows Garden Solana signing copy and keeps execution enabled", () => {
+    render(
+      <CrossExecutionPanel
+        session={{
+          mode: "single",
+          intentId: "intent-garden-sol",
+          selectedOfferId: "offer-garden-sol",
+          offerSetId: "set-garden-sol",
+          quote: {
+            intentId: "intent-garden-sol",
+            srcChainId: 99,
+            dstChainId: 1,
+            tokenIn: "SOL",
+            tokenOut: "ETH",
+            amountIn: "100000",
+            estimatedOut: "1",
+            minAmountOut: "1",
+            rail: "GARDEN",
+            expiresAt: Date.now() + 60_000,
+          },
+          integration: {
+            mode: "provider_direct",
+            action: { kind: "garden_htlc_order" },
+            nativeFunding: {
+              runtime: "solana",
+              unsignedTransaction: "AQIDBA==",
+            },
+          },
+          status: "SELECTED",
+          sourceChainId: 99,
+        } as any}
+        isExecuting={false}
+        onExecuteSingle={() => {}}
+        onExecutePrimary={() => {}}
+        onExecuteGas={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Garden Solana transaction is ready to sign and send/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /sign garden solana transaction/i }),
+    ).not.toBeDisabled();
+  });
+
+  it("shows Garden BTC PSBT copy and deposit summary", () => {
+    render(
+      <CrossExecutionPanel
+        session={{
+          mode: "single",
+          intentId: "intent-garden-btc",
+          selectedOfferId: "offer-garden-btc",
+          offerSetId: "set-garden-btc",
+          quote: {
+            intentId: "intent-garden-btc",
+            srcChainId: 0,
+            dstChainId: 1,
+            tokenIn: "BTC",
+            tokenOut: "ETH",
+            amountIn: "100000",
+            estimatedOut: "1",
+            minAmountOut: "1",
+            rail: "GARDEN",
+            expiresAt: Date.now() + 60_000,
+          },
+          integration: {
+            mode: "provider_direct",
+            action: { kind: "garden_htlc_order" },
+            nativeFunding: {
+              runtime: "bitcoin",
+              unsignedTransaction: "cHNidP8=",
+              depositAddress: "bc1qgardendeposit",
+              depositAmount: "100000",
+              changeAtomic: "48000",
+              feeAtomic: "2000",
+            },
+          },
+          status: "SELECTED",
+          sourceChainId: 0,
+        } as any}
+        sourceWallet={{ kind: "bitcoin", addressType: "p2wpkh" }}
+        isExecuting={false}
+        onExecuteSingle={() => {}}
+        onExecutePrimary={() => {}}
+        onExecuteGas={() => {}}
+      />,
+    );
+
+    expect(
+      screen.getByText(/Garden Bitcoin PSBT is ready to sign and broadcast/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText("bc1qgardendeposit")).toBeInTheDocument();
+    expect(screen.getByText("100000 sats")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /sign garden btc psbt/i }),
+    ).not.toBeDisabled();
+  });
 });

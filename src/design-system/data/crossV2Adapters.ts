@@ -15,6 +15,7 @@ import {
 } from "../../features/cross/utils/amounts";
 import {
   getOfferCapability,
+  type OfferCapabilityContext,
   type RailCapabilityStatus,
 } from "../../features/cross/model/capabilities";
 
@@ -544,7 +545,11 @@ export function buildCrossQuoteRequest({
   };
 }
 
-export function formatCrossOffer(offer: any, tokenOutDecimals = 18): CrossV2OfferDisplay {
+export function formatCrossOffer(
+  offer: any,
+  tokenOutDecimals = 18,
+  capabilityContext?: OfferCapabilityContext,
+): CrossV2OfferDisplay {
   // Backend offers can represent output/minimum amounts in a few legacy shapes.
   // Reuse the cross feature amount helpers so V2 displays match the old page.
   const quotedOutputAmount = getOfferOutputAmount(offer);
@@ -565,7 +570,7 @@ export function formatCrossOffer(offer: any, tokenOutDecimals = 18): CrossV2Offe
     : tokenOutDecimals;
   const bridgeFeeUSD = readUsd(offer?.economics?.providerFeeUSD ?? offer?.fees?.providerFeeUSD);
   const protocolFeeUSD = readUsd(offer?.economics?.protocolFeeUSD ?? offer?.fees?.protocolFeeUSD);
-  const capability = getOfferCapability(offer);
+  const capability = getOfferCapability(offer, capabilityContext);
 
   return {
     offerId: offer.offerId,

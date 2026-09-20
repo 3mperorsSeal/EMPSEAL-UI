@@ -300,11 +300,67 @@ export type ProviderDirectAction =
   | { kind: "garden_htlc_order"; [key: string]: unknown }
   | { kind: "teleswap_transfer" | "teleswap_deposit"; [key: string]: unknown };
 
+export interface GardenNativeUtxo {
+  txid: string;
+  vout: number;
+  valueSats: string;
+  scriptPubKey: string;
+  confirmations?: number;
+}
+
+export interface GardenBitcoinNativeSourceFunding {
+  runtime: "bitcoin";
+  utxos: GardenNativeUtxo[];
+  feeRateSatVbyte: number;
+  replaceByFee: true;
+  changeAddress: string;
+}
+
+export interface GardenNativeFundingSigningRequest {
+  format: "psbt" | "solana-versioned-transaction";
+  encoding: "base64";
+  account: string;
+  publicKey?: string;
+  feePayer?: string;
+}
+
+export interface GardenNativeFunding {
+  runtime: "bitcoin" | "solana";
+  unsignedTransaction: string;
+  depositAddress?: string;
+  depositAmount?: string;
+  changeAtomic?: string;
+  feeAtomic?: string;
+  sourceOwner?: string;
+  refundAddress?: string;
+  fundingInputs?: GardenNativeUtxo[];
+  signingRequest?: GardenNativeFundingSigningRequest;
+  [key: string]: unknown;
+}
+
+export interface NativeCallbackAuth {
+  submissionToken: string;
+  recoveryToken?: string;
+}
+
+export interface GardenSubmittedRequest {
+  userAddress: string;
+  sourceTxHash: string;
+  submissionToken: string;
+}
+
+export interface GardenRefundRequest {
+  userAddress: string;
+  recoveryToken: string;
+  reason: string;
+}
+
 export interface ProviderDirectIntegration {
   mode: "provider_direct";
   action: ProviderDirectAction;
   approvals?: ProviderApprovalRequest[];
   tx?: TransactionEnvelope;
+  nativeFunding?: GardenNativeFunding;
 }
 
 export interface SequentialWalletIntegration {
@@ -364,6 +420,28 @@ export interface SelectionResponse {
     tx: TransactionEnvelope;
     approvals?: ProviderApprovalRequest[];
   };
+  nativeCallbackAuth?: NativeCallbackAuth;
+}
+
+export type SequentialSelectionResponse = SelectionResponse & {
+  integration: SequentialWalletIntegration;
+  executionPlan: ExecutionPlan;
+  currentAction: {
+    tx: TransactionEnvelope;
+    approvals?: ProviderApprovalRequest[];
+  };
+};
+
+export class InvalidSelectionResponseError extends Error {
+  readonly code = "INVALID_SELECTION_RESPONSE";
+  readonly status = 422;
+  readonly body: { error: "INVALID_SELECTION_RESPONSE"; message: string };
+
+  constructor(message = "The route response was incomplete. No transaction was sent.") {
+    super(message);
+    this.name = "InvalidSelectionResponseError";
+    this.body = { error: "INVALID_SELECTION_RESPONSE", message };
+  }
 }
 
 export interface ComposedSelectionResponse {
@@ -406,6 +484,7 @@ export interface SingleCrossExecutionSession {
   sourceChainId: number;
   lastTxHash?: string;
   lastError?: string | null;
+  nativeCallbackAuth?: NativeCallbackAuth;
 }
 
 export interface ComposedCrossExecutionSession {
@@ -428,3 +507,88 @@ export interface ComposedCrossExecutionSession {
 export type CrossExecutionSession =
   | SingleCrossExecutionSession
   | ComposedCrossExecutionSession;
+
+const ADDRESS = /^0x[0-9a-fA-F]{40}$/;
+const HEX_DATA = /^0x(?:[0-9a-fA-F]{2})*$/;
+const QUANTITY = /^(0|[1-9]\d*|0x[0-9a-fA-F]+)$/;
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function readString(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function parseTransactionEnvelope(value: unknown): TransactionEnvelope {
+  const tx = asRecord(value);
+  const to = readString(tx?.to);
+  const data = readString(tx?.data);
+  const rawValue = readString(tx?.value) ?? (tx?.value === undefined ? "0" : null);
+  const chainId = Number(tx?.chainId);
+  if (!to || !ADDRESS.test(to) || !data || !HEX_DATA.test(data)
+    || !rawValue || !QUANTITY.test(rawValue)
+    || !Number.isInteger(chainId) || chainId <= 0) {
+    throw new InvalidSelectionResponseError();
+  }
+  return { to, data, value: rawValue, chainId };
+}
+
+function parseSequentialIntegration(value: Record<string, unknown>): SequentialWalletIntegration {
+  const planId = readString(value.planId);
+  const stepId = readString(value.stepId);
+  const expectedVersion = Number(value.expectedVersion);
+  if (!planId || !stepId || !Number.isInteger(expectedVersion) || expectedVersion < 1) {
+    throw new InvalidSelectionResponseError();
+  }
+  return {
+    mode: "sequential_wallet",
+    planId,
+    stepId,
+    expectedVersion,
+    tx: parseTransactionEnvelope(value.tx),
+    approvals: Array.isArray(value.approvals) ? value.approvals as ProviderApprovalRequest[] : [],
+  };
+}
+
+export function parseSelectionResponse(value: unknown): SelectionResponse {
+  const record = asRecord(value);
+  const intentId = readString(record?.intentId);
+  const quote = asRecord(record?.quote);
+  const integration = asRecord(record?.integration);
+  if (!record || !intentId || !quote || !integration || !readString(integration.mode)) {
+    throw new InvalidSelectionResponseError();
+  }
+
+  if (integration.mode === "sequential_wallet") {
+    const sequential = parseSequentialIntegration(integration);
+    const executionPlan = asRecord(record.executionPlan);
+    const currentAction = asRecord(record.currentAction);
+    if (!executionPlan || !readString(executionPlan.planId) || !currentAction) {
+      throw new InvalidSelectionResponseError();
+    }
+    return {
+      intentId,
+      quote: quote as unknown as CrossQuote,
+      integration: sequential,
+      executionPlan: executionPlan as unknown as ExecutionPlan,
+      currentAction: {
+        tx: parseTransactionEnvelope(currentAction.tx),
+        approvals: Array.isArray(currentAction.approvals)
+          ? currentAction.approvals as ProviderApprovalRequest[]
+          : undefined,
+      },
+    };
+  }
+
+  if (integration.mode === "router_intent") {
+    const nested = asRecord(integration.integration);
+    if (!nested || !readString(nested.contractAddress) || !readString(nested.calldata)) {
+      throw new InvalidSelectionResponseError();
+    }
+  }
+
+  return record as unknown as SelectionResponse;
+}

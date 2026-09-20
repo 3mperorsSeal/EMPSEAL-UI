@@ -146,6 +146,7 @@ export default function GasPage() {
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [tab, setTab] = useState<ActiveTab>("send");
 
@@ -167,7 +168,7 @@ export default function GasPage() {
   const [quoteIssuedAt, setQuoteIssuedAt] = useState(Date.now());
   const [submittedTxHash, setSubmittedTxHash] = useState<string | null>(null);
   const gasChainsQuery = useGetChains();
-  const tx = useGasBridgeTx();
+  const tx = useGasBridgeTx(toast);
 
   // ── Derived ─────────────────────────────────────────────────────────────
   const liveDestinationChains = useMemo<GasV2Chain[]>(
@@ -238,6 +239,7 @@ export default function GasPage() {
       connectedAddress &&
       txRequest &&
       quoteSummary.ready &&
+      !isSubmitting &&
       !tx.isSending &&
       !tx.isConfirming,
   );
@@ -382,6 +384,10 @@ export default function GasPage() {
 
   const onSubmit = () => {
     if (walletState.status !== "connected") { setShowWalletModal(true); return; }
+    if (sourceBalance && txRequest && txRequest.value >= sourceBalance.value) {
+      toast.error(`Insufficient ${sourceChain.ticker} balance. Reduce the amount or add funds to cover the transfer and network fee.`);
+      return;
+    }
     if (!canSubmit) {
       toast.error(quote.isLoading ? "Waiting for Gas.zip quote." : "Gas.zip route is not ready yet.");
       return;
@@ -390,7 +396,8 @@ export default function GasPage() {
     setShowConfirm(true);
   };
 
-  const onConfirmSend = () => {
+  const onConfirmSend = async () => {
+    if (isSubmitting) return;
     if (!txRequest) {
       toast.error("Gas.zip calldata is not ready yet.");
       return;
@@ -398,9 +405,17 @@ export default function GasPage() {
 
     // `useGasBridgeTx` owns wallet chain switching, sending, receipt waiting,
     // and backend status polling. Success UI opens only when polling confirms.
-    void tx.executeBridge(txRequest);
-    setShowConfirm(false);
-    setTab("lookup");
+    setIsSubmitting(true);
+    try {
+      const hash = await tx.executeBridge(txRequest);
+      if (hash) {
+        setSubmittedTxHash(hash);
+        setShowConfirm(false);
+        setTab("lookup");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
   // ─── Render ──────────────────────────────────────────────────────────────
 
@@ -675,7 +690,7 @@ export default function GasPage() {
         open={showConfirm}
         onClose={() => setShowConfirm(false)}
         onConfirm={onConfirmSend}
-        confirming={tx.isSending || tx.isConfirming}
+        confirming={isSubmitting || tx.isSending || tx.isConfirming}
         eyebrow="REVIEW · GAS BUNDLE"
         title="Confirm gas top-up"
         fromTicker={sourceChain.ticker}

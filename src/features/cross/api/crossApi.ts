@@ -1,5 +1,8 @@
 import type {
   ComposedSelectionResponse,
+  GardenBitcoinNativeSourceFunding,
+  GardenRefundRequest,
+  GardenSubmittedRequest,
   QuoteRequest,
   QuoteResponse,
   SelectionResponse,
@@ -9,6 +12,7 @@ import type {
   ExecutionPlanResponse,
   ExecutionPlanStepSubmittedRequest,
 } from "./contracts";
+import { parseSelectionResponse } from "./contracts";
 import { crossApiFetch } from "./client";
 
 const LAYERZERO_DISCOVERY_BASE_URL = "https://transfer.layerzero-api.com/v1";
@@ -96,15 +100,18 @@ export const crossApi = {
     } while (nextToken);
     return tokens;
   },
-  selectOffer: (payload: {
+  selectOffer: async (payload: {
     offerSetId: string;
     offerId: string;
     userAddress: string;
+    gardenNativeSourceFunding?: GardenBitcoinNativeSourceFunding;
   }) =>
-    crossApiFetch<SelectionResponse>("/api/v1/quote/select", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
+    parseSelectionResponse(
+      await crossApiFetch<SelectionResponse>("/api/v1/quote/select", {
+        method: "POST",
+        body: JSON.stringify(payload),
+      }),
+    ),
   selectComposed: (payload: {
     offerSetId: string;
     primaryTransferOfferId: string;
@@ -149,6 +156,22 @@ export const crossApi = {
   markThorchainSubmitted: (intentId: string, payload: SubmittedRequest) =>
     crossApiFetch<unknown>(
       `/api/v1/thorchain/intents/${intentId}/submitted`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  markGardenSubmitted: (intentId: string, payload: GardenSubmittedRequest) =>
+    crossApiFetch<unknown>(
+      `/api/v1/garden/intents/${encodeURIComponent(intentId)}/submitted`,
+      {
+        method: "POST",
+        body: JSON.stringify(payload),
+      },
+    ),
+  markGardenRefund: (intentId: string, payload: GardenRefundRequest) =>
+    crossApiFetch<unknown>(
+      `/api/v1/garden/intents/${encodeURIComponent(intentId)}/refund`,
       {
         method: "POST",
         body: JSON.stringify(payload),

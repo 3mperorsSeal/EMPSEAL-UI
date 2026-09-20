@@ -14,18 +14,32 @@
 //   • empx-cross-bridge/src/vps/services/BasketStatusEngine.ts rollup status
 //   • empx-cross-bridge/src/vps/services/WalletScanner.ts      liquidator scan
 //
-// Hard limits honoured from BASKET_LIMITS:
-//   maxInputs = 5, maxOutputs = 10, maxLegs = 25
-//
+// Caps come from GET /api/v1/basket/capabilities (fallback BASKET_LIMITS).
 // allocationBps MUST sum to 10_000 across outputs in one-to-many /
 // many-to-many; the form enforces this before letting the user quote.
 //
 // Honest disclosures:
 //   • Per-leg revenueTier surfaced ("agg-wired" / "api-direct" / "unknown")
 //   • `skipped` legs from BasketQuote are explicit in the review panel
-//   • Wallet-liquidator scan caps shown to the user (5 chains × 50 tokens)
+//   • Wallet-liquidator scan uses POST /api/v1/wallet/scan (50 tokens/chain)
 
-import { useEffect, useMemo, useState } from "react";
+import { sendTransaction, writeContract } from "@wagmi/core";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { erc20Abi, isAddress, type Address } from "viem";
+import { useChainId, useSignMessage, useSwitchChain } from "wagmi";
+import { config } from "../../Wagmi/config";
+import {
+  BasketReviewPanel,
+  basketApi,
+  basketEditorFingerprint,
+  basketLimits,
+  basketModeConfig,
+  buildBasketQuoteRequest,
+  mapBasketApiError,
+  mapWalletScanBalances,
+  useBasketCapabilities,
+  useBasketSession,
+} from "../../features/basket";
 import {
   AccountModal,
   BrandMark,
@@ -49,46 +63,29 @@ import {
   type FeeRow,
   type PickerChain,
   type PickerToken,
-  type WalletOption,
 } from "../components";
 import { useWalletConnection } from "../hooks/useWalletConnection";
 import { useV2Balances } from "../hooks/useV2Balances";
 import { getExplorerAddressUrl } from "../data/explorers";
 import {
-  defaultSettlementTicker,
-  RAILS,
   tierForChainId,
   tierLabel,
 } from "../data/empxRegistry";
-import {
-  buildUnavailableRouteRows,
-  V2_MULTI_ROUTE_STATUS,
-} from "../data/v2ProductRoutes";
+import { V2_AGGREGATOR_CHAINS, getV2Chain } from "../data/v2ChainView";
+import { getTokensForChain } from "../data/v2TokenView";
 
-// ─── Constants mirrored from IntentBasket.ts ──────────────────────────────
-
-const BASKET_LIMITS = {
-  maxInputs: 5,
-  maxOutputs: 10,
-  maxLegs: 25,
-} as const;
 
 const AUTO_FUND_MAX_TOPUP_USD = 10;
 
-// Small chain catalog (subset — full catalog lives in CrossPage)
-const CHAINS: { id: number; name: string; color: string; ticker: string }[] = [
-  { id: 1,     name: "Ethereum",  color: "#627EEA", ticker: "ETH" },
-  { id: 42161, name: "Arbitrum",  color: "#28A0F0", ticker: "ETH" },
-  { id: 8453,  name: "Base",      color: "#0052FF", ticker: "ETH" },
-  { id: 10,    name: "Optimism",  color: "#FF0420", ticker: "ETH" },
-  { id: 137,   name: "Polygon",   color: "#7B3FE4", ticker: "POL" },
-  { id: 56,    name: "BSC",       color: "#F0B90B", ticker: "BNB" },
-  { id: 43114, name: "Avalanche", color: "#E84142", ticker: "AVAX" },
-  { id: 369,   name: "PulseChain",color: "#FF66C4", ticker: "PLS" },
-];
+function basketChainCatalog(supportedChainIds?: number[]) {
+  const allowed = supportedChainIds && supportedChainIds.length > 0
+    ? new Set(supportedChainIds)
+    : null;
+  return V2_AGGREGATOR_CHAINS.filter((chain) => !allowed || allowed.has(chain.id));
+}
 
-const chainName = (id: number) => CHAINS.find((c) => c.id === id)?.name ?? `Chain ${id}`;
-const chainColor = (id: number) => CHAINS.find((c) => c.id === id)?.color ?? "#888";
+const chainName = (id: number) => getV2Chain(id)?.name ?? `Chain ${id}`;
+const chainColor = (id: number) => getV2Chain(id)?.color ?? "#888";
 
 // ─── Mode definitions ─────────────────────────────────────────────────────
 
@@ -165,7 +162,9 @@ interface InputLeg {
   chainId: number;
   ticker: string;
   amount: string;
-  /** Demo USD per token unit */
+  token?: string;
+  decimals?: number;
+  amountBase?: string;
   usdPrice: number;
 }
 
@@ -174,6 +173,7 @@ interface OutputLeg {
   chainId: number;
   ticker: string;
   allocationBps: number;
+  recipient?: string;
   gasTopUpUSD?: number;
 }
 
@@ -202,9 +202,40 @@ function _prefetchBasketPrices(pairs: { chainId: number; ticker: string }[]) {
 
 export default function MultiPage() {
   const isMobile = useIsMobile();
-  const { walletState, walletOptions, onSelectWallet, disconnect, switchChain, currentChain } =
+  const { walletState, walletOptions, onSelectWallet, disconnect, currentChain } =
     useWalletConnection();
   const connectedBalance = useV2Balances();
+  const connectedChainId = useChainId();
+  const connectedChainIdRef = useRef(connectedChainId);
+  connectedChainIdRef.current = connectedChainId;
+  const { switchChainAsync } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
+  const connectedAddress = walletState.status === "connected" ? walletState.address : undefined;
+  const { capabilities, errorMessage: capabilitiesError } = useBasketCapabilities();
+  const basketWallet = useMemo(() => ({
+    address: connectedAddress,
+    chainId: connectedChainId,
+    signMessage: (message: string) => signMessageAsync({ account: connectedAddress as Address, message }),
+    switchChain: (chainId: number) => switchChainAsync({ chainId: chainId as any }),
+    getConnectedChainId: () => connectedChainIdRef.current,
+    sendTransaction: async (tx: { to: string; data: string; value: string; chainId: number }) => sendTransaction(config, {
+      account: connectedAddress as Address,
+      chainId: tx.chainId as any,
+      to: tx.to as Address,
+      data: (tx.data || "0x") as `0x${string}`,
+      value: BigInt(tx.value || "0"),
+    }),
+    approveToken: async (approval: { token: string; spender: string; amount: string; chainId: number }) => writeContract(config, {
+      address: approval.token as Address,
+      abi: erc20Abi,
+      functionName: "approve",
+      args: [approval.spender as Address, BigInt(approval.amount)],
+      chainId: approval.chainId as any,
+      account: connectedAddress as Address,
+    }),
+  }), [connectedAddress, connectedChainId, signMessageAsync, switchChainAsync]);
+  const basket = useBasketSession({ wallet: basketWallet });
+  const [liquidatorInputs, setLiquidatorInputs] = useState<InputLeg[]>([]);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
 
@@ -274,21 +305,87 @@ export default function MultiPage() {
 
   // ── Derived: leg count + cap checks ─────────────────────────────────────
   const legCount = useMemo(() => {
-    if (mode === "multi-to-one")      return inputs.length;
+    if (mode === "multi-to-one" || mode === "wallet-liquidator") return inputs.length;
     if (mode === "one-to-many")       return outputs.length;
-    if (mode === "wallet-liquidator") return 0;
     return inputs.length * outputs.length; // many-to-many full cross-product
   }, [mode, inputs.length, outputs.length]);
 
   const totalBps = outputs.reduce((s, o) => s + o.allocationBps, 0);
   const allocOk = mode === "multi-to-one" || mode === "wallet-liquidator" || totalBps === 10_000;
+  const limits = basketLimits(capabilities?.limits);
+  const modeConfig = basketModeConfig(mode, capabilities?.limits);
+  const pickerChains = useMemo(
+    () => basketChainCatalog(capabilities?.supportedChainIds),
+    [capabilities?.supportedChainIds],
+  );
 
-  const inputsValid = mode === "wallet-liquidator" || (inputs.length > 0 && inputs.every((i) => Number(i.amount) > 0));
-  const overCap = inputs.length > BASKET_LIMITS.maxInputs
-               || outputs.length > BASKET_LIMITS.maxOutputs
-               || legCount > BASKET_LIMITS.maxLegs;
+  const quoteInputs = liquidatorInputs.length > 0 && mode === "wallet-liquidator" ? liquidatorInputs : inputs;
+  const inputsValid = quoteInputs.length > 0 && quoteInputs.every((i) => /^\s*(0|[1-9]\d*)(\.\d+)?\s*$/.test(i.amount) && i.amount.trim() !== "0" && !/^0\.0+$/.test(i.amount.trim()));
+  const recipientsValid = outputs.every((output) => {
+    const recipient = output.recipient?.trim();
+    return !recipient || isAddress(recipient);
+  });
+  const overCap = quoteInputs.length > modeConfig.maxInputs
+               || outputs.length > modeConfig.maxOutputs
+               || legCount > modeConfig.maxLegs;
 
-  const totalInputUSD = inputs.reduce((s, i) => s + Number(i.amount) * i.usdPrice, 0);
+  const totalInputUSD = quoteInputs.reduce((s, i) => s + Number(i.amount) * i.usdPrice, 0);
+
+  const runQuote = useCallback(async () => {
+    if (walletState.status !== "connected" || !connectedAddress) {
+      setShowWalletModal(true);
+      return;
+    }
+    try {
+      await basket.requestQuote(buildBasketQuoteRequest({
+        mode,
+        wallet: connectedAddress,
+        inputs: quoteInputs.map((leg) => ({
+          chainId: leg.chainId,
+          ticker: leg.ticker,
+          amount: leg.amount,
+          ...(leg.token ? { token: leg.token } : {}),
+          ...(leg.decimals != null ? { decimals: leg.decimals } : {}),
+          ...(leg.amountBase ? { amountBase: leg.amountBase } : {}),
+        })),
+        outputs: outputs.map((leg) => ({
+          chainId: leg.chainId,
+          ticker: leg.ticker,
+          allocationBps: leg.allocationBps,
+          ...(leg.recipient ? { recipient: leg.recipient } : {}),
+        })),
+        slippageBps,
+        deadlineSeconds,
+      }), mode);
+      toast.success("Basket quote ready");
+    } catch (error) {
+      toast.error(mapBasketApiError(error));
+    }
+  }, [basket, connectedAddress, deadlineSeconds, mode, outputs, quoteInputs, slippageBps, walletState.status]);
+
+  const editorFingerprint = useMemo(() => basketEditorFingerprint({
+    mode,
+    inputs: quoteInputs.map((leg) => ({
+      chainId: leg.chainId,
+      ticker: leg.ticker,
+      amount: leg.amount,
+      token: leg.token,
+      amountBase: leg.amountBase,
+    })),
+    outputs: outputs.map((leg) => ({
+      chainId: leg.chainId,
+      ticker: leg.ticker,
+      allocationBps: leg.allocationBps,
+      recipient: leg.recipient,
+    })),
+    slippageBps,
+    deadlineSeconds,
+  }), [deadlineSeconds, mode, outputs, quoteInputs, slippageBps]);
+  const clearQuote = basket.clearQuote;
+  useEffect(() => {
+    clearQuote();
+  }, [clearQuote, editorFingerprint]);
+
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
       <DappNavbar
@@ -391,20 +488,34 @@ export default function MultiPage() {
           {/* LEFT — inputs + outputs */}
           <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
             {/* Inputs panel */}
-            {mode === "wallet-liquidator" ? (
-              <LiquidatorScanCard />
-            ) : (
-              <LegsPanel
-                kind="input"
-                legs={inputs as any}
-                setLegs={setInputs as any}
-                mode={mode}
-                disabled={mode === "one-to-many" && inputs.length >= 1}
-                maxAdd={mode === "one-to-many" ? 1 : BASKET_LIMITS.maxInputs}
-                onPickChain={(id) => setChainPickerTarget({ kind: "input", id })}
-                onPickToken={(id) => setTokenPickerTarget({ kind: "input", id })}
+            {mode === "wallet-liquidator" && (
+              <LiquidatorScanCard
+                walletConnected={walletState.status === "connected"}
+                wallet={connectedAddress}
+                chainIds={capabilities?.supportedChainIds ?? []}
+                maxInputs={modeConfig.maxInputs}
+                onSelected={(next) => setLiquidatorInputs(next.map((asset) => ({
+                  id: asset.id,
+                  chainId: asset.chainId,
+                  ticker: asset.ticker,
+                  amount: asset.amount,
+                  token: asset.token,
+                  decimals: asset.decimals,
+                  amountBase: asset.amountBase,
+                  usdPrice: asset.usd / Number(asset.amount || 1) || priceOf(asset.ticker, asset.chainId),
+                })))}
               />
             )}
+            <LegsPanel
+              kind="input"
+              legs={inputs as any}
+              setLegs={setInputs as any}
+              mode={mode}
+              disabled={mode === "one-to-many" && inputs.length >= 1}
+              maxAdd={modeConfig.maxInputs}
+              onPickChain={(id) => setChainPickerTarget({ kind: "input", id })}
+              onPickToken={(id) => setTokenPickerTarget({ kind: "input", id })}
+            />
 
             {/* Outputs panel */}
             <LegsPanel
@@ -413,7 +524,7 @@ export default function MultiPage() {
               setLegs={setOutputs as any}
               mode={mode}
               disabled={(mode === "multi-to-one" || mode === "wallet-liquidator") && outputs.length >= 1}
-              maxAdd={(mode === "multi-to-one" || mode === "wallet-liquidator") ? 1 : BASKET_LIMITS.maxOutputs}
+              maxAdd={modeConfig.maxOutputs}
               onPickChain={(id) => setChainPickerTarget({ kind: "output", id })}
               onPickToken={(id) => setTokenPickerTarget({ kind: "output", id })}
             />
@@ -434,9 +545,21 @@ export default function MultiPage() {
                   rows={(() => {
                     const rows: FeeRow[] = [
                       { label: "Mode",          value: MODE_LABEL[mode] },
-                      { label: "Legs",          value: `${legCount} configured · cap ${BASKET_LIMITS.maxLegs}` },
+                      { label: "Legs",          value: `${legCount} configured · cap ${limits.maxLegs}` },
                       { label: "Input estimate", value: `$${totalInputUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, muted: true },
-                      ...buildUnavailableRouteRows("multi"),
+                      {
+                        label: "Capabilities",
+                        value: capabilities?.enabled ? "Available" : "Disabled",
+                        sub: capabilitiesError ?? capabilities?.modes?.[mode]?.reason,
+                        accent: !capabilities?.enabled,
+                      },
+                      ...(basket.quote ? [
+                        { label: "Quote", value: basket.quote.basketId, sub: `${basket.quote.legs.length} legs · v${basket.quote.quoteVersion}` },
+                        { label: "Skipped", value: String(basket.quote.skipped.length), muted: true },
+                      ] : []),
+                      ...(basket.status ? [
+                        { label: "Status", value: basket.status.composite, accent: true },
+                      ] : []),
                     ];
                     return rows;
                   })()}
@@ -462,7 +585,24 @@ export default function MultiPage() {
                 </div>
               )}
 
-              {!inputsValid && mode !== "wallet-liquidator" && (
+              {!recipientsValid && (
+                <div
+                  style={{
+                    marginTop: 12,
+                    padding: "10px 12px",
+                    background: "rgba(248,113,113,0.08)",
+                    border: "1px solid rgba(248,113,113,0.30)",
+                    borderRadius: 4,
+                    fontSize: 11.5,
+                    color: "#F87171",
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Each output recipient must be empty (connected wallet) or a valid address.
+                </div>
+              )}
+
+              {!inputsValid && (
                 <div
                   style={{
                     marginTop: 12,
@@ -480,12 +620,39 @@ export default function MultiPage() {
               )}
 
               <div style={{ marginTop: 14 }}>
-                <PrimaryButton
-                  disabled={!V2_MULTI_ROUTE_STATUS.executionEnabled}
-                  onClick={() => toast.info("Basket preview only — backend basket API required")}
-                >
-                  {V2_MULTI_ROUTE_STATUS.primaryActionLabel}
-                </PrimaryButton>
+                <BasketReviewPanel
+                  mode={mode}
+                  capabilities={capabilities}
+                  capabilitiesError={capabilitiesError}
+                  quote={basket.quote}
+                  plan={basket.plan}
+                  status={basket.status}
+                  busy={basket.busy}
+                  walletConnected={walletState.status === "connected"}
+                  canQuote={inputsValid && allocOk && recipientsValid && !overCap}
+                  executeLocked={basket.executeLocked}
+                  onQuote={() => { void runQuote(); }}
+                  onPlan={() => {
+                    void basket.requestPlan().then(() => toast.success("Server plan ready")).catch(() => {
+                      toast.error(basket.errorMessage ?? "Plan failed");
+                    });
+                  }}
+                  onExecute={() => {
+                    void basket.executePlan().then(() => toast.success("Submitted hashes acknowledged")).catch(() => {
+                      toast.error(basket.errorMessage ?? "Execution failed");
+                    });
+                  }}
+                  onRetry={() => {
+                    void basket.retryFailedLegs().then(() => toast.success("Failed legs retried")).catch(() => {
+                      toast.error(basket.errorMessage ?? "Retry failed");
+                    });
+                  }}
+                />
+                {basket.errorMessage && (
+                  <p style={{ margin: "10px 0 0", fontSize: 11.5, color: "#F87171", lineHeight: 1.5 }}>
+                    {basket.errorMessage}
+                  </p>
+                )}
               </div>
             </Card>
 
@@ -593,7 +760,7 @@ export default function MultiPage() {
                 </div>
               </div>
               <p style={{ margin: "10px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
-                BASKET_LIMITS: max {BASKET_LIMITS.maxInputs} inputs · max {BASKET_LIMITS.maxOutputs} outputs · max {BASKET_LIMITS.maxLegs} total legs.
+                Caps: max {limits.maxInputs} inputs · max {limits.maxOutputs} outputs · max {limits.maxLegs} total legs.
               </p>
             </Card>
 
@@ -635,7 +802,7 @@ export default function MultiPage() {
           open={!!chainPickerTarget}
           onClose={() => setChainPickerTarget(null)}
           mode="cross"
-          chains={CHAINS.map<PickerChain>((c) => {
+          chains={pickerChains.map<PickerChain>((c) => {
             const tier = tierForChainId(c.id);
             return {
               id: c.id,
@@ -668,18 +835,16 @@ export default function MultiPage() {
           ? inputs.find((l) => l.id === tokenPickerTarget.id)
           : outputs.find((l) => l.id === tokenPickerTarget.id);
         if (!targetLeg) return null;
-        const targetChain = CHAINS.find((c) => c.id === targetLeg.chainId) ?? CHAINS[1];
-        // Common tokens — production wires this to the chain's aggregator token registry.
-        const sampleTokens: PickerToken[] = [
-          { ticker: "USDC", name: "USD Coin",        chainName: targetChain.name, chainColor: targetChain.color, badge: "VERIFIED" },
-          { ticker: "USDT", name: "Tether",          chainName: targetChain.name, chainColor: targetChain.color, badge: "VERIFIED" },
-          { ticker: "ETH",  name: "Ether",           chainName: targetChain.name, chainColor: targetChain.color },
-          { ticker: "WBTC", name: "Wrapped BTC",     chainName: targetChain.name, chainColor: targetChain.color },
-          { ticker: "DAI",  name: "Dai",             chainName: targetChain.name, chainColor: targetChain.color },
-          { ticker: "ARB",  name: "Arbitrum",        chainName: targetChain.name, chainColor: targetChain.color },
-          { ticker: "OP",   name: "Optimism",        chainName: targetChain.name, chainColor: targetChain.color },
-          { ticker: "PEPE", name: "Pepe",            chainName: targetChain.name, chainColor: targetChain.color },
-        ];
+        const targetChain = getV2Chain(targetLeg.chainId);
+        const sampleTokens: PickerToken[] = getTokensForChain(targetLeg.chainId).map((token) => ({
+          ticker: token.ticker,
+          name: token.name,
+          address: token.address,
+          chainId: token.chainId,
+          chainName: targetChain?.name ?? chainName(targetLeg.chainId),
+          chainColor: targetChain?.color ?? chainColor(targetLeg.chainId),
+          badge: token.badge,
+        }));
         return (
           <TokenPicker
             open={!!tokenPickerTarget}
@@ -735,6 +900,7 @@ interface AnyLeg {
   amount?: string;
   usdPrice?: number;
   allocationBps?: number;
+  recipient?: string;
   gasTopUpUSD?: number;
 }
 
@@ -883,7 +1049,12 @@ function LegRow({
 }) {
   const showAlloc = kind === "output" && (mode === "one-to-many" || mode === "many-to-many");
   const showGasTopUp = kind === "output";
-  const chain = CHAINS.find((c) => c.id === leg.chainId) ?? CHAINS[1];
+  const chain = getV2Chain(leg.chainId) ?? {
+    id: leg.chainId,
+    name: chainName(leg.chainId),
+    color: chainColor(leg.chainId),
+    ticker: "ETH",
+  };
 
   return (
     <div style={{ padding: "12px 0", borderBottom: "1px solid rgba(255,255,255,0.04)" }}>
@@ -1015,6 +1186,16 @@ function LegRow({
         </span>
         {showGasTopUp && <GasTopUpToggle leg={leg} onChange={onChange} />}
       </div>
+      {kind === "output" && (
+        <input
+          type="text"
+          value={leg.recipient ?? ""}
+          onChange={(e) => onChange({ recipient: e.target.value })}
+          placeholder="Recipient (optional — connected wallet)"
+          spellCheck={false}
+          style={{ ...inputStyle(), marginTop: 8, fontSize: 11 }}
+        />
+      )}
     </div>
   );
 }
@@ -1105,31 +1286,122 @@ function inputStyle(): React.CSSProperties {
 interface ScannedAsset {
   id: string;
   chain: string;
+  chainId: number;
   chainColor: string;
   ticker: string;
+  token: string;
+  decimals: number;
+  amount: string;
+  amountBase: string;
   balance: string;
   usd: number;
   selected: boolean;
 }
 
-function LiquidatorScanCard() {
+function LiquidatorScanCard({
+  walletConnected,
+  wallet,
+  chainIds,
+  maxInputs,
+  onSelected,
+}: {
+  walletConnected: boolean;
+  wallet?: string;
+  chainIds: number[];
+  maxInputs: number;
+  onSelected: (assets: Array<{
+    id: string;
+    chainId: number;
+    ticker: string;
+    token: string;
+    decimals: number;
+    amount: string;
+    amountBase: string;
+    usd: number;
+  }>) => void;
+}) {
   const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [skipped, setSkipped] = useState<Array<{ chainId: number; reason: string }>>([]);
   const [assets, setAssets] = useState<ScannedAsset[] | null>(null);
 
-  const scan = () => {
+  const scan = async () => {
+    if (!walletConnected || !wallet) {
+      toast.info("Connect a wallet before scanning.");
+      return;
+    }
+    if (chainIds.length === 0) {
+      toast.info("Basket capabilities have not published supported chains yet.");
+      return;
+    }
     setScanning(true);
+    setScanError(null);
     setAssets(null);
-    setTimeout(() => {
-      setAssets([]);
+    onSelected([]);
+    try {
+      const result = await basketApi.scanWallet({ wallet, chainIds });
+      const mapped = mapWalletScanBalances(result, {
+        supportedChainIds: chainIds,
+        usdPrice: priceOf,
+      }).map((asset): ScannedAsset => ({
+        ...asset,
+        chain: chainName(asset.chainId),
+        chainColor: chainColor(asset.chainId),
+        balance: asset.amount,
+        selected: false,
+      }));
+      setSkipped(result.skipped ?? []);
+      setAssets(mapped);
+      if (mapped.length === 0) {
+        toast.info("No balances returned for the supported basket chains.");
+      }
+    } catch (error) {
+      const message = mapBasketApiError(error);
+      setScanError(message);
+      toast.error(message);
+    } finally {
       setScanning(false);
-      toast.info("Wallet scanner is preview-only until the basket backend is wired");
-    }, 1400);
+    }
   };
 
+  const emitSelected = (next: ScannedAsset[] | null) => {
+    onSelected((next ?? []).filter((a) => a.selected).map((a) => ({
+      id: a.id,
+      chainId: a.chainId,
+      ticker: a.ticker,
+      token: a.token,
+      decimals: a.decimals,
+      amount: a.amount,
+      amountBase: a.amountBase,
+      usd: a.usd,
+    })));
+  };
   const toggleAsset = (id: string) =>
-    setAssets((cur) => cur?.map((a) => (a.id === id ? { ...a, selected: !a.selected } : a)) ?? null);
+    setAssets((cur) => {
+      if (!cur) return cur;
+      const current = cur.find((asset) => asset.id === id);
+      const selectedCount = cur.filter((asset) => asset.selected).length;
+      if (current && !current.selected && selectedCount >= maxInputs) {
+        toast.info(`Basket inputs are capped at ${maxInputs}.`);
+        return cur;
+      }
+      const next = cur.map((a) => (a.id === id ? { ...a, selected: !a.selected } : a));
+      emitSelected(next);
+      return next;
+    });
   const setAll = (selected: boolean) =>
-    setAssets((cur) => cur?.map((a) => ({ ...a, selected })) ?? null);
+    setAssets((cur) => {
+      if (!cur) return cur;
+      let remaining = maxInputs;
+      const next = cur.map((asset) => {
+        if (!selected) return { ...asset, selected: false };
+        if (remaining <= 0) return { ...asset, selected: false };
+        remaining -= 1;
+        return { ...asset, selected: true };
+      });
+      emitSelected(next);
+      return next;
+    });
 
   const selectedAssets = (assets ?? []).filter((a) => a.selected);
   const totalSelectedUSD = selectedAssets.reduce((s, a) => s + a.usd, 0);
@@ -1144,19 +1416,24 @@ function LiquidatorScanCard() {
             Wallet scan + asset selection
           </p>
           <p style={{ margin: "4px 0 0", fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-            Check the tokens to liquidate. Uncheck any you want to preserve. Scan caps: 5 chains × 50 tokens.
+            Check the tokens to liquidate. Uncheck any you want to preserve. Scan uses supported basket chains, 50 tokens per chain, and at most {maxInputs} selected inputs.
           </p>
         </div>
         <Pill variant={assets ? "success" : "ghost"}>
-          {assets ? "provider required" : "preview"}
+          {assets ? `${assets.length} found` : "scan"}
         </Pill>
       </div>
 
       <div style={{ marginTop: 12 }}>
-        <PrimaryButton onClick={scan} disabled={scanning}>
+        <PrimaryButton onClick={() => { void scan(); }} disabled={scanning || !walletConnected}>
           {scanning ? "Scanning…" : assets ? "Re-scan wallet" : "Scan my wallet"}
         </PrimaryButton>
       </div>
+      {scanError && (
+        <p style={{ margin: "10px 0 0", fontSize: 11.5, color: "#F87171", lineHeight: 1.5 }}>
+          {scanError}
+        </p>
+      )}
 
       {assets && (
         <div style={{ marginTop: 14 }}>
@@ -1173,7 +1450,7 @@ function LiquidatorScanCard() {
                 marginBottom: 10,
               }}
             >
-              WalletScanner is not connected in this UI yet, so no balances are fabricated. This section will populate only after the backend scanner API is available.
+              No balances returned for the supported basket chains. Skipped chains stay listed below when the scanner could not read them.
             </div>
           )}
           {/* Totals + controls */}
@@ -1273,6 +1550,11 @@ function LiquidatorScanCard() {
           {assets.length > 0 && selectedAssets.length === 0 && (
             <p style={{ margin: "10px 0 0", fontSize: 11, color: "#FFB347", lineHeight: 1.45 }}>
               Select at least one asset to liquidate.
+            </p>
+          )}
+          {skipped.length > 0 && (
+            <p style={{ margin: "10px 0 0", fontSize: 11, color: "rgba(255,255,255,0.50)", lineHeight: 1.45 }}>
+              Skipped {skipped.length === 1 ? "chain" : `${skipped.length} chains`}: {skipped.map((entry) => chainName(entry.chainId)).join(", ")}
             </p>
           )}
         </div>

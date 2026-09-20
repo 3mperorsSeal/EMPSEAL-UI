@@ -42,6 +42,16 @@ export interface CrossExecutionDependencies {
     integration: SelectedOfferIntegration,
     sourceChainId: number,
   ) => Promise<string>;
+  executeGardenSolanaIntent?: (
+    intentId: string,
+    integration: SelectedOfferIntegration,
+    sourceChainId: number,
+  ) => Promise<string>;
+  executeGardenBitcoinIntent?: (
+    intentId: string,
+    integration: SelectedOfferIntegration,
+    sourceChainId: number,
+  ) => Promise<string>;
 }
 
 export async function executeCrossIntegration(
@@ -90,6 +100,28 @@ export async function executeCrossIntegration(
 
   if (classification === "layerzero_steps") {
     return dependencies.executeLayerZeroIntent(
+      intentId,
+      integration,
+      sourceChainId,
+    );
+  }
+
+  if (classification === "garden_solana_source") {
+    if (!dependencies.executeGardenSolanaIntent) {
+      throw new Error("UNSUPPORTED_SOURCE_WALLET: Solana Garden execution is unavailable.");
+    }
+    return dependencies.executeGardenSolanaIntent(
+      intentId,
+      integration,
+      sourceChainId,
+    );
+  }
+
+  if (classification === "garden_bitcoin_source") {
+    if (!dependencies.executeGardenBitcoinIntent) {
+      throw new Error("UNSUPPORTED_SOURCE_WALLET: Bitcoin Garden execution is unavailable.");
+    }
+    return dependencies.executeGardenBitcoinIntent(
       intentId,
       integration,
       sourceChainId,

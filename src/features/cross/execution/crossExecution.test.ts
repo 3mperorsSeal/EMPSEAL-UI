@@ -16,6 +16,8 @@ function dependencies() {
     markLayerZeroSubmitted: vi.fn().mockResolvedValue(undefined),
     markExecutionPlanStepSubmitted: vi.fn().mockResolvedValue(undefined),
     executeThorchainBitcoinIntent: vi.fn().mockResolvedValue("btctxid"),
+    executeGardenSolanaIntent: vi.fn().mockResolvedValue("solsig"),
+    executeGardenBitcoinIntent: vi.fn().mockResolvedValue("gardentxid"),
   };
 }
 
@@ -171,5 +173,63 @@ describe("executeCrossIntegration", () => {
       0,
     );
     expect(deps.submitStandardIntent).not.toHaveBeenCalled();
+  });
+
+  it("dispatches Garden Solana native funding through the Solana wallet path", async () => {
+    const deps = dependencies();
+    const integration = {
+      mode: "provider_direct" as const,
+      action: { kind: "garden_htlc_order" as const },
+      nativeFunding: {
+        runtime: "solana" as const,
+        unsignedTransaction: "AQIDBA==",
+      },
+    };
+
+    await expect(
+      executeCrossIntegration(
+        {
+          intentId: "intent-garden-sol",
+          sourceChainId: 99,
+          approvalsComplete: true,
+          integration,
+        },
+        deps,
+      ),
+    ).resolves.toBe("solsig");
+    expect(deps.executeGardenSolanaIntent).toHaveBeenCalledWith(
+      "intent-garden-sol",
+      integration,
+      99,
+    );
+  });
+
+  it("dispatches Garden Bitcoin native funding through the Bitcoin wallet path", async () => {
+    const deps = dependencies();
+    const integration = {
+      mode: "provider_direct" as const,
+      action: { kind: "garden_htlc_order" as const },
+      nativeFunding: {
+        runtime: "bitcoin" as const,
+        unsignedTransaction: "cHNidP8BA...",
+      },
+    };
+
+    await expect(
+      executeCrossIntegration(
+        {
+          intentId: "intent-garden-btc",
+          sourceChainId: 0,
+          approvalsComplete: true,
+          integration,
+        },
+        deps,
+      ),
+    ).resolves.toBe("gardentxid");
+    expect(deps.executeGardenBitcoinIntent).toHaveBeenCalledWith(
+      "intent-garden-btc",
+      integration,
+      0,
+    );
   });
 });

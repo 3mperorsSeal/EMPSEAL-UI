@@ -1,38 +1,11 @@
-// ─── RampPage — fiat on/off-ramp, multi-provider ──────────────────────────
-//
-// PURPOSE & HONEST SCOPE:
-//   Buy crypto with fiat, or sell crypto to fiat, and have it delivered on
-//   ANY chain in ANY asset — not just whatever the provider happens to settle.
-//
-//   The differentiator is the last mile. A single-provider ramp delivers one
-//   asset on one chain to one address; the user who wants ARB on Arbitrum buys
-//   USDC on Ethereum and is on their own from there. EmpX composes the
-//   provider's settlement with its own aggregator + cross-chain mesh so the
-//   user states an outcome and gets it in one flow.
-//
-//   PRODUCT MODEL (owner direction, 2026-08-04): v1 is MULTI-VENDOR. Several
-//   licensed providers are surfaced side by side and the user picks — the same
-//   offer-comparison pattern as the rail list on /cross-v2. Providers own fiat
-//   rails, KYC and licensing; EmpX owns the on-chain leg. A later phase may add
-//   an EmpX-operated wrapper over a settlement partner, which becomes one more
-//   row in the offers list rather than a rewrite.
-//
-// ⚠ THIS PAGE IS A STYLED DEMO. Nothing is wired.
-//   • No provider integration exists. Rates, fees, ETAs and coverage in
-//     data/rampProviders.ts are UNVERIFIED PLACEHOLDERS, labelled as such here.
-//   • The EmpX-side backend is scaffolded but unimplemented —
-//     empx-cross-bridge/src/vps/services/ramp/ (RampOrchestrator methods throw).
-//   • Design + open questions: docs/SPEC-003-fiat-ramp-wrapper.md. The
-//     load-bearing one (§7 Q1) is whether a provider will settle to an
-//     arbitrary user wallet, which is what keeps EmpX non-custodial.
-//
-// WIRING PATH WHEN GOING LIVE:
-//   • provider quotes  → RampOrchestrator.quote()  (per-provider fan-out)
-//   • crypto leg       → the ordinary QuoteEngine path, recipient = user wallet
-//   • status           → RampIntent lifecycle + provider webhook/poller
-//   • USD prices       → NativeUsdOracle (currently PRICE_USD_DEMO below)
+// ─── RampPage — public /api/v1/ramp/* composition ─────────────────────────
+// Hosted KYC, bank-link, and funding instructions are handoffs. Creating a
+// transfer does not move funds. A returned basketId is a funding reference only.
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { type Address } from "viem";
+import { useChainId, useSignMessage, useSwitchChain } from "wagmi";
 import {
   AccountModal,
   ChainPicker,
@@ -54,215 +27,217 @@ import EmpxRampWidget, { type RampFeeLine } from "../EmpxRampWidget";
 import { WidgetKitKeyframes, type RailCardData } from "../widgetKit";
 import { tokenLogoUrl } from "../data/logoRegistry";
 import { useWalletConnection } from "../hooks/useWalletConnection";
+import { useV2Balances } from "../hooks/useV2Balances";
+import { getExplorerAddressUrl } from "../data/explorers";
+import { getTokensForChain } from "../data/v2TokenView";
 import {
-  RAMP_PROVIDERS,
-  demoQuoteFor,
-  providersFor,
-  type RampDirection,
-  type RampProviderEntry,
-} from "../data/rampProviders";
+  RampDelegationPanel,
+  RampOnboardingPanel,
+  RampTransferPanel,
+  buildRampTransferFields,
+  canPreviewRampRoute,
+  capabilityBlockReason,
+  coerceFiatRail,
+  exchangeAfterPlaidLink,
+  onboardingBlockReason,
+  rampApi,
+  railsForDirection,
+  rampRouteSnapshot,
+  RAMP_CHAIN_IDS,
+  RAMP_TOKEN_TICKER,
+  useRampSession,
+  type RampFiatRail,
+} from "../../features/ramp";
 
-// ⚠ DEMO PRICES — production reads NativeUsdOracle.tokenUsd(chainId, address).
-const PRICE_USD_DEMO: Record<string, number> = {
-  ETH: 3184, USDC: 1, USDT: 1, ARB: 1.19, WBTC: 68000, POL: 0.42, AVAX: 38,
-};
-const priceOf = (t: string) => PRICE_USD_DEMO[t.toUpperCase()] ?? 1;
-
-// Destination chains the user can receive on. Mirrors the aggregator set so
-// the page never offers a chain EmpX cannot actually swap on.
-// SOURCE: empx-swap-sdk.getSupportedChainIds() (14 chains) — see
-// empx-cross-bridge/src/vps/config/chains.ts hasAggregator:true.
 const DEST_CHAINS: { id: number; name: string; color: string; ticker: string }[] = [
-  { id: 42161, name: "Arbitrum",   color: "#28A0F0", ticker: "ETH"  },
-  { id: 8453,  name: "Base",       color: "#0052FF", ticker: "ETH"  },
-  { id: 10,    name: "Optimism",   color: "#FF0420", ticker: "ETH"  },
-  { id: 137,   name: "Polygon",    color: "#7B3FE4", ticker: "POL"  },
-  { id: 56,    name: "BSC",        color: "#F0B90B", ticker: "BNB"  },
-  { id: 43114, name: "Avalanche",  color: "#E84142", ticker: "AVAX" },
-  { id: 146,   name: "Sonic",      color: "#FE9A4D", ticker: "S"    },
-  { id: 369,   name: "PulseChain", color: "#FF66C4", ticker: "PLS"  },
+  { id: 1,    name: "Ethereum", color: "#627EEA", ticker: "ETH" },
+  { id: 137,  name: "Polygon",  color: "#7B3FE4", ticker: "POL" },
+  { id: 8453, name: "Base",     color: "#0052FF", ticker: "ETH" },
 ];
-
-// Names for chains a provider may settle on but we do NOT offer as a
-// destination (Ethereum being the notable one) — display only.
-const SETTLEMENT_CHAIN_NAMES: Record<number, string> = {
-  1: "Ethereum",
-  ...Object.fromEntries(DEST_CHAINS.map((c) => [c.id, c.name])),
-};
-const settlementChainName = (id: number) => SETTLEMENT_CHAIN_NAMES[id] ?? `Chain ${id}`;
-
-/**
- * Choose where the provider should settle.
- *
- * Prefer a chain EmpX has an aggregator on, because the settlement asset can
- * then be swapped into ANY token there in one hop. Ethereum is deliberately
- * deprioritised despite being every provider's default: it is
- * `hasAggregator: false` and absent from the swap SDK's 14 chains, so USDC
- * landing there cannot be swapped into an arbitrary token by EmpX at all — it
- * has to be bridged out first. See SPEC-003 §3 ("Ethereum is the obvious
- * default and the worst choice").
- */
-function pickSettlementChainId(p: RampProviderEntry): number {
-  const onAggregator = p.settlementChainIds.find((id) => DEST_CHAINS.some((c) => c.id === id));
-  return onAggregator ?? p.settlementChainIds[0];
-}
-
-const TOKENS_BY_CHAIN: Record<number, string[]> = {
-  42161: ["ETH", "USDC", "USDT", "ARB", "WBTC"],
-  8453:  ["ETH", "USDC"],
-  10:    ["ETH", "USDC", "USDT"],
-  137:   ["POL", "USDC", "USDT"],
-  56:    ["USDC", "USDT"],
-  43114: ["AVAX", "USDC", "USDT"],
-  146:   ["USDC"],
-  369:   ["USDC"],
-};
 
 const FIAT_CURRENCIES: PickerToken[] = [
   { ticker: "USD", name: "US Dollar" },
-  { ticker: "EUR", name: "Euro" },
-  { ticker: "GBP", name: "British Pound" },
 ];
 
-// Fiat has no token-logo CDN entry, so the identity row and the route node
-// carry a flag glyph inside the same square 4px frame every other logo uses.
-const FIAT_FLAGS: Record<string, string> = {
-  USD: "🇺🇸",
-  EUR: "🇪🇺",
-  GBP: "🇬🇧",
-};
+const FIAT_FLAGS: Record<string, string> = { USD: "🇺🇸" };
 
 export default function RampPage() {
   const isMobile = useIsMobile();
   const { walletState, walletOptions, onSelectWallet, disconnect } = useWalletConnection();
+  const connectedBalance = useV2Balances();
+  const connectedChainId = useChainId();
+  const { switchChainAsync } = useSwitchChain();
+  const { signMessageAsync } = useSignMessage();
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
   const [chainPickerOpen, setChainPickerOpen] = useState(false);
   const [tokenPickerOpen, setTokenPickerOpen] = useState(false);
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false);
 
-  // Sell leads — off-ramp has no monthly account fee and is profitable at small
-  // tickets, while on-ramp's virtual account loses money below roughly $156/mo
-  // per user (BRIDGE-XYZ-CAPABILITY-BRIEF §9-10). Owner-approved with the draft.
-  const [direction, setDirection] = useState<RampDirection>("SELL");
+  const [direction, setDirection] = useState<"BUY" | "SELL">("SELL");
   const [fiatCurrency, setFiatCurrency] = useState("USD");
   const [fiatAmount, setFiatAmount] = useState("500");
   const [cryptoAmountInput, setCryptoAmountInput] = useState("250");
-  const [chainId, setChainId] = useState(42161);
-  const [ticker, setTicker] = useState("ARB");
-  const [pinnedProviderId, setPinnedProviderId] = useState<string | null>(null);
+  const [chainId, setChainId] = useState(8453);
+  const [ticker, setTicker] = useState(RAMP_TOKEN_TICKER);
+  const [fiatRail, setFiatRail] = useState<RampFiatRail>("ACH");
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [publicToken, setPublicToken] = useState("");
+  const [showTokenFallback, setShowTokenFallback] = useState(false);
+  const [bankSession, setBankSession] = useState<{ sessionId: string; linkToken: string; expiresAt: string } | null>(null);
+  const [partnerId, setPartnerId] = useState("");
+  const [externalAccountId, setExternalAccountId] = useState("");
+  const [previewSnapshot, setPreviewSnapshot] = useState<string | null>(null);
+
+  const connectedAddress = walletState.status === "connected" ? walletState.address : undefined;
+  const rampSigner = useMemo(() => ({
+    address: connectedAddress,
+    chainId: connectedChainId,
+    signMessage: (message: string) => signMessageAsync({ account: connectedAddress as Address, message }),
+    switchChain: (id: number) => switchChainAsync({ chainId: id as any }),
+  }), [connectedAddress, connectedChainId, signMessageAsync, switchChainAsync]);
+  const capsQuery = useQuery({
+    queryKey: ["ramp-capabilities"],
+    queryFn: rampApi.getCapabilities,
+    retry: 1,
+    staleTime: 30_000,
+  });
+  const capabilities = capsQuery.data ?? null;
+  const feature = direction === "BUY" ? capabilities?.features.onRamp : capabilities?.features.offRamp;
+  const transferDisabledReason = capabilityBlockReason(capabilities, feature)
+    ?? (capsQuery.error ? "Ramp capabilities are unavailable." : null);
+  const kycDisabledReason = onboardingBlockReason(capabilities)
+    ?? (capsQuery.error ? "Ramp capabilities are unavailable." : null);
+
+  const ramp = useRampSession({
+    signer: rampSigner,
+  });
 
   const chain = useMemo(
     () => DEST_CHAINS.find((c) => c.id === chainId) ?? DEST_CHAINS[0],
     [chainId],
   );
+  const token = getTokensForChain(chainId).find((entry) => entry.ticker.toUpperCase() === RAMP_TOKEN_TICKER);
+  const amount = direction === "BUY" ? fiatAmount.trim() : cryptoAmountInput.trim();
+  const activeAccounts = ramp.accounts.filter((account) => account.active);
+  const routeKey = rampRouteSnapshot({
+    direction,
+    chainId,
+    ticker,
+    fiatRail,
+    amount,
+    externalAccountId,
+  });
+  const previewMatches = Boolean(ramp.preview && previewSnapshot === routeKey);
+  const offRampBlocked = direction === "SELL" && !canPreviewRampRoute({ direction, externalAccountId });
+  const disabledReason = transferDisabledReason
+    ?? (offRampBlocked ? "Select an active external account before off-ramp preview or create." : null);
 
-  const eligible = useMemo(() => providersFor(direction), [direction]);
+  const clearPreview = ramp.clearPreview;
+  useEffect(() => {
+    clearPreview();
+    setPreviewSnapshot(null);
+  }, [clearPreview, routeKey]);
 
-  // Offers, ranked by what the user actually receives. Same principle as the
-  // rail offer list: every provider is shown, best wins, nothing is hidden.
-  const offers = useMemo(() => {
-    const fiat = Number(fiatAmount.replace(/,/g, "")) || 0;
-    const notional =
-      direction === "BUY"
-        ? fiat
-        : (Number(cryptoAmountInput.replace(/,/g, "")) || 0) * priceOf(ticker);
+  useEffect(() => {
+    if (externalAccountId && activeAccounts.some((account) => account.id === externalAccountId)) return;
+    const next = activeAccounts[0]?.id ?? "";
+    setExternalAccountId(next);
+  }, [activeAccounts, externalAccountId]);
 
-    return eligible
-      .map((p) => {
-        // The provider settles in whichever of its assets we can route from,
-        // on the chain EmpX can do the most with (see pickSettlementChainId).
-        const settlementAsset = p.settlementAssets[0];
-        const settlementChainId = pickSettlementChainId(p);
-        const { feeUsd } = demoQuoteFor(p, notional, priceOf(settlementAsset));
-        const netUsd = Math.max(0, notional - feeUsd);
-        return {
-          provider: p,
-          settlementAsset,
-          settlementChainId,
-          feeUsd,
-          netUsd,
-          // BUY: what the user ends up holding, after EmpX routes onward.
-          // SELL: the fiat they receive.
-          outAmount: direction === "BUY" ? netUsd / priceOf(ticker) : netUsd,
-        };
-      })
-      .sort((a, b) => b.outAmount - a.outAmount);
-  }, [eligible, direction, fiatAmount, cryptoAmountInput, ticker]);
-
-  const bestOffer = offers[0];
-  const selectedOffer =
-    offers.find((o) => o.provider.id === pinnedProviderId) ?? bestOffer;
-
-  const cryptoAmount =
-    direction === "BUY"
-      ? selectedOffer
-        ? selectedOffer.outAmount.toFixed(selectedOffer.outAmount > 1 ? 4 : 6)
-        : "0"
-      : cryptoAmountInput;
-
-  const fiatDisplay =
-    direction === "BUY"
-      ? fiatAmount
-      : selectedOffer
-        ? selectedOffer.outAmount.toFixed(2)
-        : "0";
-
-  // Fee split lives in the widget's disclosure — the surface itself shows one
-  // Total cost, not competing per-venue figures.
-  const rampFeeRows: RampFeeLine[] = selectedOffer
+  const feeRows: RampFeeLine[] = ramp.preview
     ? [
-        { label: `${selectedOffer.provider.name} fee`, value: `${selectedOffer.provider.feePctDemo}% · $${selectedOffer.feeUsd.toFixed(2)}`, accent: true },
-        { label: "Settles as", value: `${selectedOffer.settlementAsset} on ${settlementChainName(selectedOffer.settlementChainId)}` },
-        { label: "EmpX routing", value: "28 bps · settlement → target" },
-        { label: "Payment methods", value: selectedOffer.provider.paymentMethods.join(" · ") },
-        { label: "Integration status", value: selectedOffer.provider.status },
-        {
-          label: direction === "BUY" ? "You receive" : "You receive",
-          value: direction === "BUY" ? `${cryptoAmount} ${ticker}` : `${fiatDisplay} ${fiatCurrency}`,
-        },
-        { label: "Figures", value: "Demo — not a live quote" },
+        { label: "Source amount", value: ramp.preview.sourceAmount },
+        { label: "Destination amount", value: ramp.preview.destinationAmount },
+        { label: "Fee", value: `${ramp.preview.feeAmount} ${ramp.preview.feeCurrency}`, accent: true },
+        { label: "Rail", value: coerceFiatRail(direction, fiatRail) },
+        { label: "Figures", value: "Live preview — creating a transfer does not move funds" },
       ]
+    : [{ label: "Figures", value: disabledReason ?? "Preview required from /api/v1/ramp/preview" }];
+
+  const providerCards: RailCardData[] = ramp.preview
+    ? [{ name: "Bridge", mode: "B", outAmount: ramp.preview.destinationAmount, eta: `~${Math.round(ramp.preview.etaSeconds / 60)}m`, tag: "LIVE", isActive: true }]
     : [];
 
-  // Providers rendered with the SAME device rails get on /cross-v2: output +
-  // ETA on the card, fee never on a card. Best first, pinned wins.
-  const providerCards: RailCardData[] = offers.map((o) => ({
-    name: o.provider.name,
-    mode: "B",
-    outAmount:
-      direction === "BUY"
-        ? o.outAmount.toFixed(o.outAmount > 1 ? 3 : 5)
-        : o.outAmount.toFixed(2),
-    eta: `~${Math.round(o.provider.etaSecondsDemo / 60)}m`,
-    tag:
-      o.provider.id === pinnedProviderId
-        ? "PINNED"
-        : o.provider.id === bestOffer?.provider.id && !pinnedProviderId
-          ? "BEST"
-          : undefined,
-    isActive: o.provider.id === selectedOffer?.provider.id,
-  }));
+  const chainPickerList: PickerChain[] = DEST_CHAINS
+    .filter((c) => (RAMP_CHAIN_IDS as readonly number[]).includes(c.id))
+    .filter((c) => !capabilities || capabilities.supportedChainIds.includes(c.id))
+    .map((c) => ({ id: c.id, name: c.name, ticker: c.ticker, color: c.color }));
 
-  const chainPickerList: PickerChain[] = DEST_CHAINS.map((c) => ({
-    id: c.id,
-    name: c.name,
-    ticker: c.ticker,
-    color: c.color,
-  }));
+  const tokenPickerList: PickerToken[] = getTokensForChain(chainId)
+    .filter((t) => t.ticker.toUpperCase() === RAMP_TOKEN_TICKER)
+    .map((t) => ({
+      ticker: t.ticker,
+      name: t.name,
+      chainId,
+      chainName: chain.name,
+      chainColor: chain.color,
+    }));
 
-  const tokenPickerList: PickerToken[] = (TOKENS_BY_CHAIN[chainId] ?? ["USDC"]).map((t) => ({
-    ticker: t,
-    name: t,
-    chainId,
-    chainName: chain.name,
-    chainColor: chain.color,
-  }));
+  const requireWallet = () => {
+    if (walletState.status !== "connected" || !connectedAddress) {
+      setShowWalletModal(true);
+      return false;
+    }
+    return true;
+  };
 
+  const transferPayload = () => {
+    if (!connectedAddress) throw new Error("Wallet not connected.");
+    if (!token?.address) throw new Error("Select USDC on Ethereum, Polygon, or Base.");
+    if (!/^(0|[1-9]\d*)(\.\d+)?$/.test(amount) || amount === "0") {
+      throw new Error("Amount must be a positive decimal string.");
+    }
+    if (direction === "SELL" && !externalAccountId) {
+      throw new Error("Select an active external account for off-ramp.");
+    }
+    return buildRampTransferFields({
+      wallet: connectedAddress,
+      chainId,
+      direction,
+      tokenAddress: token.address,
+      fiatRail,
+      amount,
+      externalAccountId,
+    });
+  };
 
-  const onSubmit = () => {
-    if (walletState.status !== "connected") { setShowWalletModal(true); return; }
-    toast.info("Provider integration not wired — see SPEC-003 for the design.");
+  const onPreview = () => {
+    if (!requireWallet() || !connectedAddress) return;
+    if (disabledReason) {
+      toast.error(disabledReason);
+      return;
+    }
+    void (async () => {
+      try {
+        await ramp.previewTransfer(transferPayload());
+        setPreviewSnapshot(routeKey);
+        toast.info("Preview ready. Creating a transfer will return funding instructions, not a completed payment.");
+      } catch (error) {
+        toast.error(ramp.errorMessage ?? (error instanceof Error ? error.message : "Ramp request failed"));
+      }
+    })();
+  };
+
+  const onCreate = () => {
+    if (!requireWallet() || !connectedAddress) return;
+    if (disabledReason) {
+      toast.error(disabledReason);
+      return;
+    }
+    if (!previewMatches) {
+      toast.error("Preview the current route before creating funding instructions.");
+      return;
+    }
+    void (async () => {
+      try {
+        const created = await ramp.createTransfer(transferPayload());
+        toast.info(`Funding instructions ready for ${created.id}. Funds have not moved.`);
+      } catch (error) {
+        toast.error(ramp.errorMessage ?? (error instanceof Error ? error.message : "Ramp request failed"));
+      }
+    })();
   };
 
   return (
@@ -288,10 +263,6 @@ export default function RampPage() {
 
       <WidgetKitKeyframes />
 
-      {/* Single centred column, same measure as swap/cross/gas/bridge/multi —
-          no page header, the widget carries its own "Ramp" eyebrow. The
-          provider offer list moved INSIDE the widget as a RailCardStrip, so
-          the old right-hand aside is gone entirely. */}
       <main
         style={{
           maxWidth: 480 + (isMobile ? 32 : 40),
@@ -300,64 +271,195 @@ export default function RampPage() {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
+          gap: 16,
         }}
       >
-        <div style={{ width: "100%", maxWidth: 480, display: "flex", justifyContent: "flex-end", marginBottom: 18 }}>
-          <Pill variant="ghost">Demo · providers not wired</Pill>
+        <div style={{ width: "100%", maxWidth: 480, display: "flex", justifyContent: "flex-end" }}>
+          <Pill variant={capabilities?.enabled ? "success" : "ghost"}>
+            {capabilities?.enabled ? "Live capabilities" : "Ramp disabled"}
+          </Pill>
         </div>
 
         <EmpxRampWidget
           direction={direction}
-          onDirectionChange={(d) => { setDirection(d); setPinnedProviderId(null); }}
+          onDirectionChange={(d) => {
+            setDirection(d);
+            setFiatRail((rail) => coerceFiatRail(d, rail));
+          }}
           fiatCurrency={fiatCurrency}
           fiatCurrencyName={FIAT_CURRENCIES.find((f) => f.ticker === fiatCurrency)?.name}
-          fiatRailsLabel={selectedOffer?.provider.paymentMethods.join(" · ")}
+          fiatRailsLabel={railsForDirection(direction).join(" · ")}
           fiatFlag={FIAT_FLAGS[fiatCurrency]}
-          fiatAmount={fiatDisplay}
+          fiatAmount={fiatAmount}
           onFiatAmountChange={setFiatAmount}
           onSelectCurrency={() => setCurrencyPickerOpen(true)}
-
           chain={chain}
           tokenTicker={ticker}
           tokenName={ticker}
           tokenLogoUrl={tokenLogoUrl(chainId, ticker) ?? undefined}
-          cryptoAmount={cryptoAmount}
+          cryptoAmount={cryptoAmountInput}
           onCryptoAmountChange={setCryptoAmountInput}
           onSelectToken={() => setTokenPickerOpen(true)}
           onSelectChain={() => setChainPickerOpen(true)}
-          cryptoUsdValue={Number(cryptoAmount.replace(/,/g, "")) * priceOf(ticker)}
-          balance={direction === "SELL" && walletState.status === "connected" ? "452.18" : undefined}
-          onMax={direction === "SELL" ? () => setCryptoAmountInput("452.18") : undefined}
-
-          providerName={selectedOffer?.provider.name}
-          providerCount={eligible.length}
+          balance={direction === "SELL" && walletState.status === "connected" ? connectedBalance.nativeBalance : undefined}
+          providerName="Bridge"
+          providerCount={providerCards.length}
           providers={providerCards}
-          onSelectProvider={(name) => {
-            const hit = offers.find((o) => o.provider.name === name);
-            if (!hit) return;
-            setPinnedProviderId((cur) => (cur === hit.provider.id ? null : hit.provider.id));
-          }}
-          settlementTicker={selectedOffer?.settlementAsset}
-          settlementChainName={selectedOffer ? settlementChainName(selectedOffer.settlementChainId) : undefined}
-          settlementLogoUrl={
-            selectedOffer
-              ? tokenLogoUrl(selectedOffer.settlementChainId, selectedOffer.settlementAsset) ?? undefined
-              : undefined
-          }
-
-          totalCostUSD={selectedOffer?.feeUsd}
-          totalCostNote={selectedOffer ? `${selectedOffer.provider.feePctDemo}% · via ${selectedOffer.provider.name}` : undefined}
-          estimatedTime={selectedOffer ? `~${Math.round(selectedOffer.provider.etaSecondsDemo / 60)} min` : undefined}
-          etaNote="Demo figure · not a live quote"
-          feeRows={rampFeeRows}
-          noProvider={offers.length === 0}
-
+          settlementTicker={ticker}
+          settlementChainName={chain.name}
+          estimatedTime={ramp.preview ? `~${Math.round(ramp.preview.etaSeconds / 60)} min` : undefined}
+          etaNote="Live preview when available"
+          feeRows={feeRows}
+          noProvider={!capabilities?.enabled}
+          kycRequired={Boolean(ramp.profile && !ramp.profile.ready)}
           walletConnected={walletState.status === "connected"}
           onConnect={() => setShowWalletModal(true)}
-          onSubmit={onSubmit}
-          submitLabel={`Continue with ${selectedOffer?.provider.name ?? "provider"}`}
+          onSubmit={onPreview}
+          submitLabel="Preview route"
+          blockedReason={disabledReason ?? undefined}
         />
 
+        <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+          Fiat rail
+          <select value={coerceFiatRail(direction, fiatRail)} onChange={(e) => setFiatRail(e.target.value as RampFiatRail)} style={{ marginLeft: 8 }}>
+            {railsForDirection(direction).map((rail) => <option key={rail} value={rail}>{rail}</option>)}
+          </select>
+        </label>
+        {direction === "SELL" && (
+          <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+            External account
+            <select value={externalAccountId} onChange={(e) => setExternalAccountId(e.target.value)} style={{ marginLeft: 8 }}>
+              <option value="">Select account</option>
+              {activeAccounts.map((account) => (
+                <option key={account.id} value={account.id}>
+                  {account.bankName ?? "Account"} {account.lastFour ? `••••${account.lastFour}` : account.id}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+          Legal name
+          <input value={fullName} onChange={(e) => setFullName(e.target.value)} style={{ marginLeft: 8, width: "70%" }} />
+        </label>
+        <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+          Email
+          <input value={email} onChange={(e) => setEmail(e.target.value)} style={{ marginLeft: 8, width: "70%" }} />
+        </label>
+        {showTokenFallback && (
+          <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+            Bank public token fallback
+            <input value={publicToken} onChange={(e) => setPublicToken(e.target.value)} style={{ marginLeft: 8, width: "60%" }} />
+          </label>
+        )}
+        <label style={{ width: "100%", maxWidth: 480, fontSize: 11.5, color: "rgba(255,255,255,0.70)" }}>
+          Partner id
+          <input value={partnerId} onChange={(e) => setPartnerId(e.target.value)} style={{ marginLeft: 8, width: "70%" }} />
+        </label>
+
+        <RampOnboardingPanel
+          profile={ramp.profile}
+          kyc={ramp.kyc}
+          bankLink={bankSession}
+          accounts={ramp.accounts}
+          disabledReason={kycDisabledReason}
+          busy={ramp.busy}
+          onRegister={() => { if (requireWallet() && connectedAddress) void ramp.registerWallet(connectedAddress, chainId).then(() => toast.success("Wallet registered")).catch(() => toast.error(ramp.errorMessage ?? "Register failed")); }}
+          onProfile={() => { if (requireWallet() && connectedAddress) void ramp.loadProfile(connectedAddress, chainId).catch(() => toast.error(ramp.errorMessage ?? "Profile failed")); }}
+          onKyc={() => {
+            if (!requireWallet() || !connectedAddress) return;
+            void ramp.createKycLink({
+              wallet: connectedAddress,
+              chainId,
+              fullName,
+              email,
+              type: "individual",
+              redirectUri: `${window.location.origin}/ramp-v2`,
+            }).then((handoff) => {
+              toast.info("Hosted KYC/ToS links are handoffs. They do not move funds.");
+              if (handoff.kycUrl) window.open(handoff.kycUrl, "_blank", "noopener,noreferrer");
+              if (handoff.tosUrl) window.open(handoff.tosUrl, "_blank", "noopener,noreferrer");
+            }).catch(() => toast.error(ramp.errorMessage ?? "KYC link failed"));
+          }}
+          onRefreshKyc={() => { if (requireWallet() && connectedAddress) void ramp.refreshKyc(connectedAddress, chainId).catch(() => toast.error(ramp.errorMessage ?? "KYC refresh failed")); }}
+          onBankLink={() => {
+            if (!requireWallet() || !connectedAddress) return;
+            void ramp.createBankLink(connectedAddress, chainId).then(async (session) => {
+              setBankSession(session);
+              try {
+                await exchangeAfterPlaidLink({
+                  linkToken: session.linkToken,
+                  exchange: (token) => {
+                    setPublicToken(token);
+                    return ramp.exchangeBankLink({
+                      wallet: connectedAddress,
+                      chainId,
+                      sessionId: session.sessionId,
+                      publicToken: token,
+                    });
+                  },
+                });
+                toast.info("Bank account linked. Completing the handoff does not move funds.");
+              } catch (error) {
+                setShowTokenFallback(true);
+                toast.info("Complete bank link in the hosted Plaid window. Paste is only a fallback if the handoff did not return a token.");
+                toast.error(ramp.errorMessage ?? (error instanceof Error ? error.message : "Bank link failed"));
+              }
+            }).catch(() => toast.error(ramp.errorMessage ?? "Bank link failed"));
+          }}
+          onExchange={() => {
+            if (!requireWallet() || !connectedAddress || !bankSession || !publicToken) return;
+            void ramp.exchangeBankLink({
+              wallet: connectedAddress,
+              chainId,
+              sessionId: bankSession.sessionId,
+              publicToken,
+            }).catch(() => toast.error(ramp.errorMessage ?? "Bank exchange failed"));
+          }}
+          onSyncAccounts={() => { if (requireWallet() && connectedAddress) void ramp.syncAccounts(connectedAddress, chainId).catch(() => toast.error(ramp.errorMessage ?? "Account sync failed")); }}
+        />
+
+        <RampTransferPanel
+          preview={ramp.preview}
+          transfer={ramp.transfer}
+          disabledReason={disabledReason}
+          busy={ramp.busy}
+          canCreate={previewMatches}
+          onPreview={onPreview}
+          onCreate={onCreate}
+          onStatus={() => {
+            if (!ramp.transfer || !connectedAddress) return;
+            void ramp.loadTransferStatus(ramp.transfer.id, connectedAddress, chainId).catch(() => toast.error(ramp.errorMessage ?? "Status failed"));
+          }}
+          onCancel={() => {
+            if (!ramp.transfer || !connectedAddress) return;
+            void ramp.cancelTransfer(ramp.transfer.id, connectedAddress, chainId).then(() => toast.info("Cancel requested for an awaiting-funds transfer.")).catch(() => toast.error(ramp.errorMessage ?? "Cancel failed"));
+          }}
+        />
+
+        <RampDelegationPanel
+          delegation={ramp.delegation}
+          disabledReason={capabilityBlockReason(capabilities, capabilities?.features.delegatedActions)}
+          busy={ramp.busy}
+          onCreate={() => {
+            if (!requireWallet() || !connectedAddress) return;
+            void ramp.createDelegation({
+              wallet: connectedAddress,
+              chainId,
+              partner: partnerId,
+              delegateType: "PARTNER",
+              operations: ["READ", "PREVIEW"],
+              directions: [direction === "BUY" ? "ON_RAMP" : "OFF_RAMP"],
+              chainIds: [chainId],
+              externalAccountIds: ramp.accounts.map((account) => account.id),
+              expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            }).then(() => toast.success("Delegation created")).catch(() => toast.error(ramp.errorMessage ?? "Delegation failed"));
+          }}
+          onRevoke={() => {
+            if (!ramp.delegation || !connectedAddress) return;
+            void ramp.revokeDelegation(ramp.delegation.id, connectedAddress, chainId).then(() => toast.info("Delegation revoked")).catch(() => toast.error(ramp.errorMessage ?? "Revoke failed"));
+          }}
+        />
       </main>
 
       <DappFooter />
@@ -380,8 +482,7 @@ export default function RampPage() {
         selectedId={chainId}
         onSelect={(c) => {
           setChainId(c.id);
-          const toks = TOKENS_BY_CHAIN[c.id] ?? ["USDC"];
-          if (!toks.includes(ticker)) setTicker(toks[0]);
+          setTicker(RAMP_TOKEN_TICKER);
           setChainPickerOpen(false);
         }}
       />
@@ -408,10 +509,10 @@ export default function RampPage() {
           providerName={walletState.providerName}
           chainName={chain.name}
           chainColor={chain.color}
-          balanceUSD={51570.49}
-          nativeBalance="12.45"
-          nativeTicker={chain.ticker}
-          explorerUrl={`https://arbiscan.io/address/${walletState.address}`}
+          balanceUSD={connectedBalance.nativeBalanceUSD ?? undefined}
+          nativeBalance={connectedBalance.nativeBalance}
+          nativeTicker={connectedBalance.nativeTicker}
+          explorerUrl={getExplorerAddressUrl(chainId, walletState.address) ?? undefined}
           onCopy={() => toast.success("Address copied")}
           onSwitchNetwork={() => { setShowAccountModal(false); setChainPickerOpen(true); }}
           onSwitchWallet={() => { setShowAccountModal(false); setShowWalletModal(true); }}

@@ -19,7 +19,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: "Swap", href: "/swap-v2", sub: "Same-chain, best execution" },
       { label: "Cross", href: "/cross-v2", sub: "Any chain to any chain" },
       { label: "Bridge", href: "/bridge-v2", sub: "Move one asset, one hop", badge: "Preview" },
-      { label: "Multi", href: "/multi-v2", sub: "One basket, many recipients", badge: "Preview" },
+      { label: "Multi", href: "/multi-v2", sub: "One basket, many recipients" },
     ],
   },
   {
