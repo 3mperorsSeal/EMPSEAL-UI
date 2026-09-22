@@ -13,14 +13,14 @@ export interface MappedWalletScanAsset {
   decimals: number;
   amount: string;
   amountBase: string;
-  usd: number;
+  usd: number | null;
 }
 
 export function mapWalletScanBalances(
   result: WalletScanResult,
   options: {
     supportedChainIds?: readonly number[];
-    usdPrice?: (ticker: string, chainId: number) => number;
+    usdPrice?: (ticker: string, chainId: number, tokenAddress: string) => number | null;
   } = {},
 ): MappedWalletScanAsset[] {
   const allowed = options.supportedChainIds && options.supportedChainIds.length > 0
@@ -38,7 +38,7 @@ export function mapWalletScanBalances(
 function mapOneBalance(
   balance: WalletScanBalance,
   index: number,
-  usdPrice?: (ticker: string, chainId: number) => number,
+  usdPrice?: (ticker: string, chainId: number, tokenAddress: string) => number | null,
 ): MappedWalletScanAsset | null {
   if (!Number.isInteger(balance.chainId) || balance.chainId <= 0) return null;
   if (!Number.isInteger(balance.decimals) || balance.decimals < 0) return null;
@@ -55,9 +55,12 @@ function mapOneBalance(
   const ticker = resolved?.ticker
     ?? (typeof balance.symbol === "string" && balance.symbol.trim() ? balance.symbol.trim() : token.slice(0, 6));
   const decimals = resolved?.decimals ?? balance.decimals;
-  const usd = typeof balance.balanceUsd === "number"
+  const unitPrice = usdPrice?.(ticker, balance.chainId, token);
+  const usd = typeof balance.balanceUsd === "number" && Number.isFinite(balance.balanceUsd)
     ? balance.balanceUsd
-    : Number(amount) * (usdPrice?.(ticker, balance.chainId) ?? 0);
+    : unitPrice != null && Number.isFinite(unitPrice)
+      ? Number(amount) * unitPrice
+      : null;
 
   return {
     id: `${balance.chainId}:${token}:${index}`,
@@ -67,6 +70,6 @@ function mapOneBalance(
     decimals,
     amount,
     amountBase: balance.balance.trim(),
-    usd: Number.isFinite(usd) ? usd : 0,
+    usd: usd != null && Number.isFinite(usd) ? usd : null,
   };
 }

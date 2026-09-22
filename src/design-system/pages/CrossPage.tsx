@@ -34,9 +34,11 @@ import { erc20Abi, formatUnits, getAddress, type Address } from "viem";
 import { useBalance, useChainId, useSignMessage, useSwitchChain } from "wagmi";
 import { useQuery } from "@tanstack/react-query";
 import { config } from "../../Wagmi/config";
+import { resolveCrossNavbarChainId } from "../data/crossPageIdentity";
 import {
   AccountModal,
   Card,
+  ChainLogo,
   ChainPicker,
   ConfirmTradeModal,
   DappFooter,
@@ -46,6 +48,7 @@ import {
   QuoteCountdown,
   Tabs,
   Toaster,
+  TokenLogo,
   TokenPicker,
   TradeSuccessModal,
   WalletButton,
@@ -1217,6 +1220,9 @@ export default function CrossPage() {
         address: t.address ?? t.providerAssetId,
         ticker: t.ticker,
         name: t.name,
+        chainId,
+        logoUrl: t.logoUrl,
+        isNative: t.isNative,
         chainName,
         chainColor,
         badge: t.badge,
@@ -2030,6 +2036,7 @@ export default function CrossPage() {
 
   const activeWalletDisplay = sourceUsesNativeWallet && activeNativeSourceWallet
     ? {
+        chainId: fromChain.id,
         address: activeNativeSourceWallet.address,
         providerName: activeNativeSourceWallet.providerName,
         chainName: fromChain.name,
@@ -2040,6 +2047,7 @@ export default function CrossPage() {
       }
     : walletState.status === "connected"
       ? {
+          chainId: walletState.chain.id,
           address: walletState.address,
           providerName: walletState.providerName,
           chainName: walletState.chain.name,
@@ -2061,6 +2069,14 @@ export default function CrossPage() {
             <NetworkSelector
               name={activeWalletDisplay?.chainName ?? fromChain.name}
               color={activeWalletDisplay?.chainColor ?? fromChain.color}
+              logo={(
+                <ChainLogo
+                  chainId={resolveCrossNavbarChainId(fromChainId, activeWalletDisplay?.chainId)}
+                  symbol={(activeWalletDisplay?.chainName ?? fromChain.name).slice(0, 3).toUpperCase()}
+                  bg={activeWalletDisplay?.chainColor ?? fromChain.color}
+                  size={14}
+                />
+              )}
               onClick={() => setChainPickerTarget("from")}
             />
             <WalletButton
@@ -2115,8 +2131,30 @@ export default function CrossPage() {
           {/* LEFT — cross widget */}
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
             <EmpxCrossWidget
-              fromChain={fromChain}
-              fromToken={{ ticker: fromTicker }}
+              fromChain={{
+                ...fromChain,
+                logo: (
+                  <ChainLogo
+                    chainId={fromChainId}
+                    symbol={fromChain.name.slice(0, 3).toUpperCase()}
+                    bg={fromChain.color}
+                    size={17}
+                  />
+                ),
+              }}
+              fromToken={{
+                ticker: fromTicker,
+                logo: (
+                  <TokenLogo
+                    ticker={fromTicker}
+                    chainId={fromChainId}
+                    address={fromTokenConfig?.address}
+                    logoUrl={fromTokenConfig?.logoUrl}
+                    isNative={fromTokenConfig?.isNative}
+                    size={30}
+                  />
+                ),
+              }}
               fromAmount={fromAmount}
               fromBalance={fromBalanceLabel}
               fromUsdValue={fromUsdValue}
@@ -2125,8 +2163,30 @@ export default function CrossPage() {
               onSelectFromChain={() => setChainPickerTarget("from")}
               onPercentClick={(pct) => setFromAmount(String((fromBalanceNumeric * pct) / 100))}
 
-              toChain={toChain}
-              toToken={{ ticker: toTicker }}
+              toChain={{
+                ...toChain,
+                logo: (
+                  <ChainLogo
+                    chainId={toChainId}
+                    symbol={toChain.name.slice(0, 3).toUpperCase()}
+                    bg={toChain.color}
+                    size={17}
+                  />
+                ),
+              }}
+              toToken={{
+                ticker: toTicker,
+                logo: (
+                  <TokenLogo
+                    ticker={toTicker}
+                    chainId={toChainId}
+                    address={toTokenConfig?.address}
+                    logoUrl={toTokenConfig?.logoUrl}
+                    isNative={toTokenConfig?.isNative}
+                    size={30}
+                  />
+                ),
+              }}
               toAmount={toAmountDisplay}
               toUsdValue={toUsdValue}
               onSelectToToken={() => setTokenPickerTarget("to")}

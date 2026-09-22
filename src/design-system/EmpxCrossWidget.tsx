@@ -32,6 +32,7 @@ export interface SwapChain {
   id: number;
   name: string;
   color?: string;
+  logo?: ReactNode;
 }
 
 export interface EmpxCrossWidgetProps {
@@ -153,9 +154,9 @@ export default function EmpxCrossWidget({
           )}
         </div>
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ChainPill name={fromChain.name} onClick={onSelectFromChain} />
+          <ChainPill logo={fromChain.logo} name={fromChain.name} fallbackLabel={fromChain.name.slice(0, 3).toUpperCase()} onClick={onSelectFromChain} />
           <span style={{ fontSize: 11, color: wk.t4 }}>→</span>
-          <ChainPill name={toChain.name} onClick={onSelectToChain} />
+          <ChainPill logo={toChain.logo} name={toChain.name} fallbackLabel={toChain.name.slice(0, 3).toUpperCase()} onClick={onSelectToChain} />
         </span>
       </div>
 

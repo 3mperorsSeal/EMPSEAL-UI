@@ -1,3 +1,4 @@
+import { cloneElement, isValidElement, type ReactNode } from "react";
 import {
   ChainPill,
   LogoFrame,
@@ -20,6 +21,7 @@ export interface GasChain {
   name: string;
   color?: string;
   ticker: string;
+  logo?: ReactNode;
 }
 
 export interface GasDestination {
@@ -117,7 +119,12 @@ export default function EmpxGasWidget(props: EmpxGasWidgetProps) {
           </span>
         </div>
         <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <ChainPill name={sourceChain.name} onClick={onSelectSourceChain} />
+          <ChainPill
+            logo={sourceChain.logo}
+            name={sourceChain.name}
+            fallbackLabel={sourceChain.ticker}
+            onClick={onSelectSourceChain}
+          />
           <button
             type="button"
             onClick={canSwitchChains ? onSwitchChains : undefined}
@@ -136,7 +143,12 @@ export default function EmpxGasWidget(props: EmpxGasWidgetProps) {
           >
             ⇄
           </button>
-          <ChainPill name={destination.chain.name} onClick={onSelectDestinationChain} />
+          <ChainPill
+            logo={destination.chain.logo}
+            name={destination.chain.name}
+            fallbackLabel={destination.chain.ticker}
+            onClick={onSelectDestinationChain}
+          />
         </span>
       </div>
 
@@ -183,7 +195,9 @@ export default function EmpxGasWidget(props: EmpxGasWidgetProps) {
         <MicroLabel>Destination</MicroLabel>
       </div>
       <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-        <LogoFrame size={30} />
+        <LogoFrame size={30} fallback={destination.chain.ticker}>
+          {isValidElement(destination.chain.logo) ? cloneElement(destination.chain.logo) : destination.chain.logo}
+        </LogoFrame>
         <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 2 }}>
           <span style={{ fontSize: 12.5, fontWeight: 600, color: wk.t1, lineHeight: 1.15 }}>{destination.chain.name}</span>
           <span style={{ fontSize: 10, color: wk.t3, lineHeight: 1.15, fontVariantNumeric: "tabular-nums" }}>

@@ -31,6 +31,7 @@ export interface SwapChain {
   id: number;
   name: string;
   color?: string;
+  logo?: ReactNode;
 }
 
 export interface EmpxSwapWidgetProps {
@@ -133,7 +134,7 @@ export default function EmpxSwapWidget({
     <WidgetShell edge>
       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 22 }}>
         <span style={eyebrow}>Swap</span>
-        <ChainPill name={chain.name} />
+        <ChainPill logo={chain.logo} name={chain.name} fallbackLabel={chain.name.slice(0, 3).toUpperCase()} />
       </div>
 
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>

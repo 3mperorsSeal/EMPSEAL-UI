@@ -15,6 +15,7 @@ import { useDeferredValue, useEffect, useMemo, useState } from "react";
 import {
   AccountModal,
   Card,
+  ChainLogo,
   ChainPicker,
   ConfirmTradeModal,
   DappFooter,
@@ -27,6 +28,7 @@ import {
   SplitRouteVisualization,
   Tabs,
   Toaster,
+  TokenLogo,
   TokenPicker,
   TradeSuccessModal,
   WalletButton,
@@ -394,6 +396,14 @@ export default function SwapPage() {
             <NetworkSelector
               name={activeChain.name}
               color={activeChain.color}
+              logo={(
+                <ChainLogo
+                  chainId={activeChain.id}
+                  symbol={activeChain.name.slice(0, 3).toUpperCase()}
+                  bg={activeChain.color}
+                  size={14}
+                />
+              )}
               onClick={() => setShowChainPicker(true)}
             />
             <WalletButton
@@ -465,8 +475,32 @@ export default function SwapPage() {
           {/* LEFT — swap widget */}
           <div style={{ display: "flex", justifyContent: "center" }}>
             <EmpxSwapWidget
-              chain={activeChain}
-              fromToken={fromToken ? { ticker: fromToken.ticker, address: fromToken.address, decimals: fromToken.decimal } : null}
+              chain={{
+                ...activeChain,
+                logo: (
+                  <ChainLogo
+                    chainId={activeChain.id}
+                    symbol={activeChain.name.slice(0, 3).toUpperCase()}
+                    bg={activeChain.color}
+                    size={17}
+                  />
+                ),
+              }}
+              fromToken={fromToken ? {
+                ticker: fromToken.ticker,
+                address: fromToken.address,
+                decimals: fromToken.decimal,
+                logo: (
+                  <TokenLogo
+                    ticker={fromToken.ticker}
+                    chainId={fromToken.chainId}
+                    address={fromToken.address}
+                    logoUrl={fromToken.logoUrl}
+                    isNative={fromToken.isNative}
+                    size={30}
+                  />
+                ),
+              } : null}
               fromAmount={fromAmount}
               fromBalance={isTokenBalanceLoading ? "Loading..." : selectedFromToken?.balance}
               fromUsdValue={fromUSDValue}
@@ -476,7 +510,21 @@ export default function SwapPage() {
                 const bal = Number((selectedFromToken?.balance || "0").replace(/,/g, ""));
                 if (Number.isFinite(bal)) setFromAmount(String((bal * pct) / 100));
               }}
-              toToken={toToken ? { ticker: toToken.ticker, address: toToken.address, decimals: toToken.decimal } : null}
+              toToken={toToken ? {
+                ticker: toToken.ticker,
+                address: toToken.address,
+                decimals: toToken.decimal,
+                logo: (
+                  <TokenLogo
+                    ticker={toToken.ticker}
+                    chainId={toToken.chainId}
+                    address={toToken.address}
+                    logoUrl={toToken.logoUrl}
+                    isNative={toToken.isNative}
+                    size={30}
+                  />
+                ),
+              } : null}
               toAmount={toAmount}
               toUsdValue={toUSDValue}
               onSelectToToken={() => setShowTokenPicker("to")}

@@ -44,4 +44,39 @@ describe("mapWalletScanBalances", () => {
       amountBase: "500000000000000000",
     });
   });
+
+  it("prices scan balances by token address and leaves provider misses unpriced", () => {
+    const pricedToken = "0x3333333333333333333333333333333333333333";
+    const unpricedToken = "0x4444444444444444444444444444444444444444";
+    const usdPrice = vi.fn((_ticker: string, _chainId: number, token: string) =>
+      token.toLowerCase() === pricedToken ? 0.002 : null,
+    );
+
+    const mapped = mapWalletScanBalances({
+      wallet: WALLET,
+      scannedAt: 1,
+      skipped: [],
+      balances: [
+        {
+          chainId: 369,
+          token: pricedToken,
+          symbol: "PRICED",
+          decimals: 2,
+          balance: "5000",
+        },
+        {
+          chainId: 369,
+          token: unpricedToken,
+          symbol: "UNKNOWN",
+          decimals: 2,
+          balance: "5000",
+        },
+      ],
+    }, { usdPrice });
+
+    expect(mapped[0]?.usd).toBe(0.1);
+    expect(mapped[1]?.usd).toBeNull();
+    expect(usdPrice).toHaveBeenCalledWith("PRICED", 369, pricedToken);
+    expect(usdPrice).toHaveBeenCalledWith("UNKNOWN", 369, unpricedToken);
+  });
 });

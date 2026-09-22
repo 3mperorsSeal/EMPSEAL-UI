@@ -34,6 +34,7 @@ export { default as ChainSwitcher } from "./ChainSwitcher";
 export { default as ChainBadge } from "./ChainBadge";
 export { default as ChainLogo } from "./ChainLogo";
 export { default as TokenLogo } from "./TokenLogo";
+export { default as ResolvedLogo } from "./ResolvedLogo";
 
 // Inline labels
 export { default as Pill } from "./Pill";

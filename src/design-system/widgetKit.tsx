@@ -30,6 +30,8 @@
 import { CSSProperties, ReactNode, useEffect, useRef, useState } from "react";
 import TouchTooltip from "../components/TouchTooltip";
 import Skeleton from "./components/Skeleton";
+import ResolvedLogo from "./components/ResolvedLogo";
+import { normalizeLogoUrl } from "./data/logoRegistry";
 
 // ─── Palette ──────────────────────────────────────────────────────────────
 // Mirrors the prototype's :root. Kept local so a widget is readable without
@@ -197,13 +199,65 @@ export function MicroLabel({ children, style }: { children: ReactNode; style?: C
   return <span style={{ ...microLabel, ...style }}>{children}</span>;
 }
 
-/** Square-framed logo with a graceful blank when the source 404s. */
-export function LogoFrame({ src, size, alt = "", children }: { src?: string; size: number; alt?: string; children?: ReactNode }) {
-  return (
-    <span style={logoFrame(size)}>
-      {children ?? (src ? <img src={src} alt={alt} style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /> : null)}
+function identityFallbackLabel(value: string, max = 4): string {
+  const trimmed = value.trim();
+  return trimmed.slice(0, max) || "?";
+}
+
+function CompatibleLogo({
+  logo,
+  size,
+  alt,
+  fallbackLabel,
+}: {
+  logo?: string | ReactNode;
+  size: number;
+  alt: string;
+  fallbackLabel: string;
+}) {
+  const fallback = (
+    <span style={{ fontSize: Math.max(8, Math.round(size * 0.34)), fontWeight: 700, color: "rgba(255,255,255,0.88)" }}>
+      {fallbackLabel}
     </span>
   );
+  if (typeof logo === "string") {
+    const url = normalizeLogoUrl(logo);
+    return (
+      <ResolvedLogo
+        candidates={url ? [url] : []}
+        alt={alt}
+        size={size}
+        fallback={fallback}
+      />
+    );
+  }
+  return <>{logo ?? fallback}</>;
+}
+
+/** Square-framed logo. URLs are resolved safely; missing art uses fallback. */
+export function LogoFrame({
+  src,
+  size,
+  alt = "",
+  children,
+  fallback,
+}: {
+  src?: string;
+  size: number;
+  alt?: string;
+  children?: ReactNode;
+  fallback?: ReactNode;
+}) {
+  const url = src ? normalizeLogoUrl(src) : null;
+  const content = children ?? (url ? (
+    <ResolvedLogo
+      candidates={[url]}
+      alt={alt}
+      size={size}
+      fallback={fallback ?? <span>?</span>}
+    />
+  ) : fallback);
+  return <span style={logoFrame(size)}>{content}</span>;
 }
 
 /**
@@ -213,8 +267,8 @@ export function LogoFrame({ src, size, alt = "", children }: { src?: string; siz
 export function TokenIdentityRow({
   logo, name, sub, onClick, compact, ariaLabel,
 }: { logo?: string | ReactNode; name: string; sub?: string; onClick?: () => void; compact?: boolean; ariaLabel?: string }) {
-  const logoSrc = typeof logo === "string" ? logo : undefined;
-  const logoChild = typeof logo === "string" || logo == null ? undefined : logo;
+  const size = compact ? 26 : 30;
+  const fallbackLabel = identityFallbackLabel(name);
   return (
     <button
       type="button"
@@ -231,7 +285,9 @@ export function TokenIdentityRow({
       onMouseEnter={(e) => { if (onClick) e.currentTarget.style.background = "rgba(255,255,255,.035)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
     >
-      <LogoFrame src={logoSrc} size={compact ? 26 : 30}>{logoChild}</LogoFrame>
+      <LogoFrame size={size} fallback={fallbackLabel}>
+        <CompatibleLogo logo={logo} size={size} alt={`${name} logo`} fallbackLabel={fallbackLabel} />
+      </LogoFrame>
       <span style={{ flex: compact ? undefined : 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 3 }}>
         <span style={{ fontSize: compact ? 12.5 : 13, fontWeight: 600, color: wk.t1, lineHeight: 1.15 }}>{name}</span>
         {sub && <span style={{ fontSize: 10, color: wk.t3, lineHeight: 1.15, fontVariantNumeric: "tabular-nums" }}>{sub}</span>}
@@ -369,7 +425,15 @@ export function Disclosure({
  * A 6px colour dot cannot separate 15 chains, several of them near-identical
  * blues; that was tried and rejected.
  */
-export function ChainPill({ logo, name, onClick }: { logo?: string; name: string; onClick?: () => void }) {
+export function ChainPill({
+  logo, name, onClick, fallbackLabel,
+}: {
+  logo?: string | ReactNode;
+  name: string;
+  onClick?: () => void;
+  fallbackLabel?: string;
+}) {
+  const label = fallbackLabel || identityFallbackLabel(name, 3);
   return (
     <button
       type="button"
@@ -384,7 +448,9 @@ export function ChainPill({ logo, name, onClick }: { logo?: string; name: string
       onMouseEnter={(e) => { if (onClick) e.currentTarget.style.background = "rgba(255,255,255,.04)"; }}
       onMouseLeave={(e) => { e.currentTarget.style.background = "transparent"; }}
     >
-      <LogoFrame src={logo} size={17} />
+      <LogoFrame size={17} fallback={label}>
+        <CompatibleLogo logo={logo} size={17} alt={`${name} logo`} fallbackLabel={label} />
+      </LogoFrame>
       <span style={{ fontSize: 10.5, color: wk.t1, fontWeight: 500 }}>{name}</span>
       {onClick && <span style={{ fontSize: 9, color: wk.t3 }}>▾</span>}
     </button>

@@ -73,6 +73,7 @@ import {
 } from "../data/empxRegistry";
 import { V2_AGGREGATOR_CHAINS, getV2Chain } from "../data/v2ChainView";
 import { getTokensForChain } from "../data/v2TokenView";
+import { formatScannedUsdTotal, toMultiPickerToken } from "../data/multiV2Adapters";
 
 
 const AUTO_FUND_MAX_TOPUP_USD = 10;
@@ -188,15 +189,19 @@ const PRICE_USD_FALLBACK: Record<string, number> = {
 
 function nextId() { return Math.random().toString(36).slice(2, 9); }
 
-function priceOf(ticker: string, chainId?: number): number {
+function availablePriceOf(ticker: string, chainId?: number, tokenAddress?: string): number | null {
   if (chainId != null) {
-    const live = getCachedPrice(chainId, ticker);
+    const live = getCachedPrice(chainId, ticker, tokenAddress);
     if (live != null) return live;
   }
-  return PRICE_USD_FALLBACK[ticker.toUpperCase()] ?? 1;
+  return PRICE_USD_FALLBACK[ticker.toUpperCase()] ?? null;
 }
 
-function _prefetchBasketPrices(pairs: { chainId: number; ticker: string }[]) {
+function priceOf(ticker: string, chainId?: number, tokenAddress?: string): number {
+  return availablePriceOf(ticker, chainId, tokenAddress) ?? 0;
+}
+
+function _prefetchBasketPrices(pairs: { chainId: number; ticker: string; tokenAddress?: string }[]) {
   void getTokenPrices(pairs);
 }
 
@@ -502,7 +507,9 @@ export default function MultiPage() {
                   token: asset.token,
                   decimals: asset.decimals,
                   amountBase: asset.amountBase,
-                  usdPrice: asset.usd / Number(asset.amount || 1) || priceOf(asset.ticker, asset.chainId),
+                  usdPrice: asset.usd != null
+                    ? asset.usd / Number(asset.amount || 1)
+                    : 0,
                 })))}
               />
             )}
@@ -836,15 +843,12 @@ export default function MultiPage() {
           : outputs.find((l) => l.id === tokenPickerTarget.id);
         if (!targetLeg) return null;
         const targetChain = getV2Chain(targetLeg.chainId);
-        const sampleTokens: PickerToken[] = getTokensForChain(targetLeg.chainId).map((token) => ({
-          ticker: token.ticker,
-          name: token.name,
-          address: token.address,
-          chainId: token.chainId,
-          chainName: targetChain?.name ?? chainName(targetLeg.chainId),
-          chainColor: targetChain?.color ?? chainColor(targetLeg.chainId),
-          badge: token.badge,
-        }));
+        const pickerChain = targetChain ?? {
+          name: chainName(targetLeg.chainId),
+          color: chainColor(targetLeg.chainId),
+        };
+        const sampleTokens: PickerToken[] = getTokensForChain(targetLeg.chainId)
+          .map((token) => toMultiPickerToken(token, pickerChain));
         return (
           <TokenPicker
             open={!!tokenPickerTarget}
@@ -1294,7 +1298,7 @@ interface ScannedAsset {
   amount: string;
   amountBase: string;
   balance: string;
-  usd: number;
+  usd: number | null;
   selected: boolean;
 }
 
@@ -1317,7 +1321,7 @@ function LiquidatorScanCard({
     decimals: number;
     amount: string;
     amountBase: string;
-    usd: number;
+    usd: number | null;
   }>) => void;
 }) {
   const [scanning, setScanning] = useState(false);
@@ -1340,9 +1344,16 @@ function LiquidatorScanCard({
     onSelected([]);
     try {
       const result = await basketApi.scanWallet({ wallet, chainIds });
+      await getTokenPrices(result.balances
+        .filter((balance) => typeof balance.balanceUsd !== "number" || !Number.isFinite(balance.balanceUsd))
+        .map((balance) => ({
+          chainId: balance.chainId,
+          ticker: balance.symbol?.trim() ?? "",
+          tokenAddress: balance.token,
+        })));
       const mapped = mapWalletScanBalances(result, {
         supportedChainIds: chainIds,
-        usdPrice: priceOf,
+        usdPrice: availablePriceOf,
       }).map((asset): ScannedAsset => ({
         ...asset,
         chain: chainName(asset.chainId),
@@ -1404,9 +1415,11 @@ function LiquidatorScanCard({
     });
 
   const selectedAssets = (assets ?? []).filter((a) => a.selected);
-  const totalSelectedUSD = selectedAssets.reduce((s, a) => s + a.usd, 0);
-  const totalAllUSD = (assets ?? []).reduce((s, a) => s + a.usd, 0);
-  const preservedUSD = totalAllUSD - totalSelectedUSD;
+  const preservedAssets = (assets ?? []).filter((a) => !a.selected);
+  const totalSelectedUSD = selectedAssets.reduce((s, a) => s + (a.usd ?? 0), 0);
+  const preservedUSD = preservedAssets.reduce((s, a) => s + (a.usd ?? 0), 0);
+  const selectedUnpriced = selectedAssets.filter((a) => a.usd == null).length;
+  const preservedUnpriced = preservedAssets.filter((a) => a.usd == null).length;
 
   return (
     <Card style={{ padding: 16 }}>
@@ -1456,8 +1469,8 @@ function LiquidatorScanCard({
           {/* Totals + controls */}
           {assets.length > 0 && <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
             <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
-              <Totals label="Liquidating" value={`$${totalSelectedUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`} accent />
-              <Totals label="Preserving" value={`$${preservedUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`} muted />
+              <Totals label="Liquidating" value={formatScannedUsdTotal(totalSelectedUSD, selectedUnpriced)} accent />
+              <Totals label="Preserving" value={formatScannedUsdTotal(preservedUSD, preservedUnpriced)} muted />
             </div>
             <div style={{ display: "flex", gap: 6 }}>
               <button
@@ -1541,7 +1554,9 @@ function LiquidatorScanCard({
                 <span style={{ color: a.selected ? "rgba(255,255,255,0.65)" : "rgba(255,255,255,0.40)" }}>{a.chain}</span>
                 <span style={{ color: a.selected ? "rgba(255,255,255,0.75)" : "rgba(255,255,255,0.40)", fontFamily: "'Space Grotesk', sans-serif" }}>{a.balance}</span>
                 <span style={{ color: a.selected ? "#fff" : "rgba(255,255,255,0.40)", fontFamily: "'Space Grotesk', sans-serif", textAlign: "right", fontWeight: a.selected ? 600 : 400 }}>
-                  ${a.usd.toLocaleString("en-US", { maximumFractionDigits: 2 })}
+                  {a.usd == null
+                    ? "Price unavailable"
+                    : formatScannedUsdTotal(a.usd, 0)}
                 </span>
               </button>
             ))}

@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 import {
   AccountModal,
   Card,
+  ChainLogo,
   ChainPicker,
   DappFooter,
   DappNavbar,
@@ -146,6 +147,14 @@ export default function PortfolioPage() {
             <NetworkSelector
               name={walletState.status === "connected" ? walletState.chain.name : DEFAULT_CHAIN.name}
               color={walletState.status === "connected" ? walletState.chain.color : DEFAULT_CHAIN.color}
+              logo={(
+                <ChainLogo
+                  chainId={walletState.status === "connected" ? walletState.chain.id : DEFAULT_CHAIN.id}
+                  symbol={(walletState.status === "connected" ? walletState.chain.name : DEFAULT_CHAIN.name).slice(0, 3).toUpperCase()}
+                  bg={walletState.status === "connected" ? walletState.chain.color : DEFAULT_CHAIN.color}
+                  size={14}
+                />
+              )}
               onClick={() => setShowChainPicker(true)}
             />
             <WalletButton
@@ -333,6 +342,10 @@ export default function PortfolioPage() {
             chainColor: asset.chainColor,
             balance: asset.balance,
             balanceUSD: asset.balanceUSD,
+            chainId: asset.chainId,
+            address: asset.address,
+            logoUrl: asset.logoUrl,
+            isNative: asset.isNative,
           }))}
           networks={portfolio?.chains.map((chain) => ({
             chainName: chain.chainName,

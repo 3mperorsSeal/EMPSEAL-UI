@@ -40,6 +40,17 @@ async function confirm() {
 describe("GasPage wallet handoff", () => {
   beforeEach(() => { wallet.send.mockReset(); wallet.balance = 1000000000000000000n; });
 
+  it("renders source and destination chain identities instead of empty frames", () => {
+    render(<GasPage />);
+    const arbitrum = screen.getAllByRole("img", { name: "ARB logo" });
+    const base = screen.getAllByRole("img", { name: "BAS logo" });
+    expect(arbitrum.length).toBeGreaterThan(0);
+    expect(base.length).toBeGreaterThan(0);
+    expect(arbitrum[0]).toHaveAttribute("src", "/icons/arbitrum.svg");
+    expect(base[0]).toHaveAttribute("src", "/icons/base.svg");
+    expect(screen.getAllByText("Base").length).toBeGreaterThan(0);
+  });
+
   it("keeps the send form while awaiting the wallet and opens lookup only after submission", async () => {
     let resolve!: (hash: string) => void;
     wallet.send.mockImplementation(() => new Promise<string>((done) => { resolve = done; }));

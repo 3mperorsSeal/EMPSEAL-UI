@@ -38,6 +38,7 @@ import {
   AccountModal,
   BrandMark,
   Card,
+  ChainLogo,
   ChainPicker,
   ConfirmTradeModal,
   DappFooter,
@@ -428,6 +429,14 @@ export default function GasPage() {
             <NetworkSelector
               name={sourceChain.name}
               color={sourceChain.color}
+              logo={(
+                <ChainLogo
+                  chainId={sourceChain.id}
+                  symbol={sourceChain.name.slice(0, 3).toUpperCase()}
+                  bg={sourceChain.color}
+                  size={14}
+                />
+              )}
               onClick={() => setChainPickerTarget({ kind: "source" })}
             />
             <WalletButton
@@ -500,14 +509,40 @@ export default function GasPage() {
             {/* LEFT — gas widget (same anatomy as swap/cross widgets) */}
             <div style={{ display: "flex", justifyContent: "center" }}>
               <EmpxGasWidget
-                sourceChain={{ id: sourceChain.id, name: sourceChain.name, color: sourceChain.color, ticker: sourceChain.ticker }}
+                sourceChain={{
+                  id: sourceChain.id,
+                  name: sourceChain.name,
+                  color: sourceChain.color,
+                  ticker: sourceChain.ticker,
+                  logo: (
+                    <ChainLogo
+                      chainId={sourceChain.id}
+                      symbol={sourceChain.name.slice(0, 3).toUpperCase()}
+                      bg={sourceChain.color}
+                      size={17}
+                    />
+                  ),
+                }}
                 sourceAmount={sourceAmountDisplay}
                 sourceUsdValue={totalCostUSD}
                 sourceBalance={sourceBalance ? `${Number(sourceBalance.formatted).toLocaleString(undefined, { maximumFractionDigits: 6 })} ${sourceChain.ticker}` : undefined}
                 onSelectSourceChain={() => setChainPickerTarget({ kind: "source" })}
                 onSwitchChains={switchChains}
                 canSwitchChains={Boolean(chainSwap)}
-                destination={gasDestination}
+                destination={{
+                  ...gasDestination,
+                  chain: {
+                    ...gasDestination.chain,
+                    logo: (
+                      <ChainLogo
+                        chainId={gasDestination.chain.id}
+                        symbol={gasDestination.chain.name.slice(0, 3).toUpperCase()}
+                        bg={gasDestination.chain.color}
+                        size={17}
+                      />
+                    ),
+                  },
+                }}
                 onSelectDestinationChain={() => setChainPickerTarget({ kind: "destination" })}
                 onSetDestinationUsd={setDestUsd}
                 presets={PER_DEST_USD_PRESETS}
