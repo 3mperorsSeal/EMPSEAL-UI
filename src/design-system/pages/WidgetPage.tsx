@@ -45,6 +45,7 @@ import {
 } from "../components";
 import { useWalletConnection } from "../hooks/useWalletConnection";
 import { useV2Balances } from "../hooks/useV2Balances";
+import { useAccountSnapshot } from "../hooks/useAccountSnapshot";
 import { tierForChainId, tierLabel } from "../data/empxRegistry";
 import { getExplorerAddressUrl } from "../data/explorers";
 import { getV2Chain } from "../data/v2ChainView";
@@ -86,6 +87,7 @@ export default function WidgetPage() {
   const { walletState, walletOptions, onSelectWallet, disconnect, switchChain, currentChain } =
     useWalletConnection();
   const connectedBalance = useV2Balances();
+  const accountSnapshot = useAccountSnapshot(walletState.status === "connected" ? walletState.address : null);
   const [showWalletModal, setShowWalletModal] = useState(false);
   const [showAccountModal, setShowAccountModal] = useState(false);
 
@@ -155,6 +157,7 @@ export default function WidgetPage() {
             <WalletButton
               connected={walletState.status === "connected"}
               address={walletState.status === "connected" ? walletState.address : undefined}
+              balanceUSD={accountSnapshot.balanceUSD}
               onConnect={() => setShowWalletModal(true)}
               onClick={() => setShowAccountModal(true)}
             />
@@ -248,7 +251,7 @@ export default function WidgetPage() {
               <p style={{ margin: "10px 0 0", fontSize: 11.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.55 }}>
                 Don't have one yet?{" "}
                 <a
-                  href="https://docs.empx.network/integrators"
+                  href="https://docs.empx.io/integrators"
                   target="_blank"
                   rel="noreferrer"
                   style={{ color: "#FF8A00", textDecoration: "none", borderBottom: "1px solid rgba(255,138,0,0.40)" }}
@@ -480,12 +483,16 @@ export default function WidgetPage() {
           onClose={() => setShowAccountModal(false)}
           address={walletState.address}
           providerName={walletState.providerName}
-          chainName={chain.name}
-          chainColor={chain.color}
-          balanceUSD={connectedBalance.nativeBalanceUSD ?? undefined}
+          chainName={walletState.chain.name}
+          chainColor={walletState.chain.color}
+          balanceUSD={accountSnapshot.balanceUSD}
+          portfolioStatus={accountSnapshot.status}
+          activityAvailable={false}
+          tokens={accountSnapshot.tokens}
+          networks={accountSnapshot.networks}
           nativeBalance={connectedBalance.nativeBalance}
           nativeTicker={connectedBalance.nativeTicker}
-          explorerUrl={getExplorerAddressUrl(chain.chainId, walletState.address) ?? undefined}
+          explorerUrl={getExplorerAddressUrl(walletState.chain.id, walletState.address) ?? undefined}
           onCopy={() => toast.success("Address copied")}
           onSwitchNetwork={() => { setShowAccountModal(false); setChainPickerOpen(true); }}
           onSwitchWallet={() => { setShowAccountModal(false); setShowWalletModal(true); }}

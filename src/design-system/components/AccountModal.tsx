@@ -56,6 +56,8 @@ interface AccountModalProps {
   chainName?: string;
   chainColor?: string;
   balanceUSD?: number;
+  portfolioStatus?: "idle" | "loading" | "ready" | "error" | "unsupported";
+  activityAvailable?: boolean;
   nativeBalance?: string;
   nativeTicker?: string;
   activity?: RecentActivityItem[];
@@ -101,6 +103,8 @@ export default function AccountModal({
   chainName,
   chainColor,
   balanceUSD,
+  portfolioStatus = "ready",
+  activityAvailable = true,
   nativeBalance,
   nativeTicker,
   activity,
@@ -119,10 +123,11 @@ export default function AccountModal({
   const [tab, setTab] = useState<Tab>("activity");
 
   const counts = {
-    activity: activity?.length ?? 0,
-    tokens: tokens?.length ?? 0,
-    networks: networks?.length ?? 0,
+    activity: activityAvailable ? activity?.length ?? 0 : undefined,
+    tokens: portfolioStatus === "ready" ? tokens?.length ?? 0 : undefined,
+    networks: portfolioStatus === "ready" ? networks?.length ?? 0 : undefined,
   };
+  const quickActionCount = Number(Boolean(onReceive)) + Number(Boolean(onBuy)) + Number(Boolean(onBridge)) + Number(activityAvailable);
 
   return (
     <Modal open={open} onClose={onClose} eyebrow="ACCOUNT" title="Wallet" maxWidth={520}>
@@ -226,12 +231,17 @@ export default function AccountModal({
               ? `$${balanceUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`
               : "—"}
           </p>
-          {nativeBalance && (
+          {nativeBalance && nativeBalance !== "—" && (
             <p style={{ margin: "6px 0 0", fontSize: 11, color: "rgba(255,255,255,0.50)" }}>
               {nativeBalance} {nativeTicker || ""}
               {chainName && (
                 <span style={{ color: "rgba(255,255,255,0.30)" }}> on {chainName}</span>
               )}
+            </p>
+          )}
+          {portfolioStatus !== "ready" && (
+            <p style={{ margin: "6px 0 0", fontSize: 11, color: "rgba(255,255,255,0.55)" }}>
+              {portfolioStatus === "loading" ? "Loading balances…" : portfolioStatus === "unsupported" ? "Native wallet balances unavailable" : "Balances unavailable"}
             </p>
           )}
         </div>
@@ -315,8 +325,8 @@ export default function AccountModal({
       </div>
 
       {/* Quick actions */}
-      <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 6, marginBottom: 14 }}>
-        <QuickAction
+      {quickActionCount > 0 && <div style={{ display: "grid", gridTemplateColumns: `repeat(${quickActionCount}, 1fr)`, gap: 6, marginBottom: 14 }}>
+        {onReceive && <QuickAction
           label="Receive"
           onClick={onReceive}
           icon={
@@ -325,8 +335,8 @@ export default function AccountModal({
               <path d="M1.5 13H12.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
           }
-        />
-        <QuickAction
+        />}
+        {onBuy && <QuickAction
           label="Buy"
           onClick={onBuy}
           icon={
@@ -335,8 +345,8 @@ export default function AccountModal({
               <path d="M7 4.5V9.5M4.5 7H9.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
             </svg>
           }
-        />
-        <QuickAction
+        />}
+        {onBridge && <QuickAction
           label="Bridge"
           onClick={onBridge}
           icon={
@@ -346,8 +356,8 @@ export default function AccountModal({
               <path d="M4 7H12" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeDasharray="2 1.5" />
             </svg>
           }
-        />
-        <QuickAction
+        />}
+        {activityAvailable && <QuickAction
           label="Activity"
           onClick={() => setTab("activity")}
           icon={
@@ -355,8 +365,8 @@ export default function AccountModal({
               <path d="M1.5 7L4 7L6 3L8 11L10 7L12.5 7" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round" />
             </svg>
           }
-        />
-      </div>
+        />}
+      </div>}
 
       {/* Tabs */}
       <div
@@ -376,7 +386,9 @@ export default function AccountModal({
       {/* Tab content */}
       <div style={{ minHeight: 180 }}>
         {tab === "activity" && (
-          activity && activity.length > 0 ? (
+          !activityAvailable ? (
+            <EmptyTab message="Activity unavailable" />
+          ) : activity && activity.length > 0 ? (
             <div
               style={{
                 background: "rgba(255,255,255,0.02)",
@@ -456,7 +468,9 @@ export default function AccountModal({
         )}
 
         {tab === "tokens" && (
-          tokens && tokens.length > 0 ? (
+          portfolioStatus !== "ready" ? (
+            <EmptyTab message={portfolioStatus === "loading" ? "Loading balances…" : "Balances unavailable"} />
+          ) : tokens && tokens.length > 0 ? (
             <div
               style={{
                 background: "rgba(255,255,255,0.02)",
@@ -525,7 +539,9 @@ export default function AccountModal({
         )}
 
         {tab === "networks" && (
-          networks && networks.length > 0 ? (
+          portfolioStatus !== "ready" ? (
+            <EmptyTab message={portfolioStatus === "loading" ? "Loading balances…" : "Balances unavailable"} />
+          ) : networks && networks.length > 0 ? (
             <div
               style={{
                 background: "rgba(255,255,255,0.02)",
@@ -696,7 +712,7 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: ReactNode;
   );
 }
 
-function TabButton({ label, count, active, onClick }: { label: string; count: number; active: boolean; onClick: () => void }) {
+function TabButton({ label, count, active, onClick }: { label: string; count?: number; active: boolean; onClick: () => void }) {
   return (
     <button
       type="button"
@@ -725,9 +741,9 @@ function TabButton({ label, count, active, onClick }: { label: string; count: nu
       }}
     >
       {label}
-      <span style={{ marginLeft: 6, color: "rgba(255,255,255,0.30)", fontWeight: 500, letterSpacing: "0.08em" }}>
+      {count !== undefined && <span style={{ marginLeft: 6, color: "rgba(255,255,255,0.30)", fontWeight: 500, letterSpacing: "0.08em" }}>
         {count}
-      </span>
+      </span>}
     </button>
   );
 }
