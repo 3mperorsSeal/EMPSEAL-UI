@@ -139,7 +139,7 @@ export default function AccountModal({
           gap: 14,
           padding: "12px 14px",
           background:
-            "linear-gradient(135deg, rgba(255,138,0,0.04) 0%, transparent 75%)",
+            "linear-gradient(135deg, rgba(var(--widget-primary-rgb, 255, 138, 0), 0.04) 0%, transparent 75%)",
           border: "1px solid rgba(255,255,255,0.08)",
           borderRadius: 5,
           marginBottom: 14,
@@ -260,7 +260,7 @@ export default function AccountModal({
           }}
           onMouseEnter={(e) => {
             if (!onSwitchNetwork) return;
-            e.currentTarget.style.borderColor = "rgba(255,138,0,0.35)";
+            e.currentTarget.style.borderColor = "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.35)";
             e.currentTarget.style.background = "rgba(255,255,255,0.04)";
           }}
           onMouseLeave={(e) => {
@@ -319,7 +319,7 @@ export default function AccountModal({
                 boxShadow: "0 0 5px #34D399",
               }}
             />
-            Active {onSwitchNetwork && <span style={{ color: "#FF8A00", marginLeft: 4 }}>· Switch ↕</span>}
+            Active {onSwitchNetwork && <span style={{ color: "var(--widget-primary, #FF8A00)", marginLeft: 4 }}>· Switch ↕</span>}
           </p>
         </button>
       </div>
@@ -652,9 +652,9 @@ function IconBtn({ onClick, icon, ...rest }: { onClick?: () => void; icon: React
         transition: "color 160ms ease, border-color 160ms ease, background 160ms ease",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.color = "#FF8A00";
-        e.currentTarget.style.borderColor = "rgba(255,138,0,0.40)";
-        e.currentTarget.style.background = "rgba(255,138,0,0.06)";
+        e.currentTarget.style.color = "var(--widget-primary, #FF8A00)";
+        e.currentTarget.style.borderColor = "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.40)";
+        e.currentTarget.style.background = "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.06)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.color = "rgba(255,255,255,0.65)";
@@ -695,9 +695,9 @@ function QuickAction({ label, icon, onClick }: { label: string; icon: ReactNode;
       }}
       onMouseEnter={(e) => {
         if (!onClick) return;
-        e.currentTarget.style.borderColor = "rgba(255,138,0,0.40)";
-        e.currentTarget.style.color = "#FF8A00";
-        e.currentTarget.style.background = "rgba(255,138,0,0.05)";
+        e.currentTarget.style.borderColor = "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.40)";
+        e.currentTarget.style.color = "var(--widget-primary, #FF8A00)";
+        e.currentTarget.style.background = "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.05)";
       }}
       onMouseLeave={(e) => {
         if (!onClick) return;
@@ -721,8 +721,8 @@ function TabButton({ label, count, active, onClick }: { label: string; count?: n
         padding: "8px 14px",
         background: "transparent",
         border: "none",
-        borderBottom: `2px solid ${active ? "#FF8A00" : "transparent"}`,
-        color: active ? "#FF8A00" : "rgba(255,255,255,0.55)",
+        borderBottom: `2px solid ${active ? "var(--widget-primary, #FF8A00)" : "transparent"}`,
+        color: active ? "var(--widget-primary, #FF8A00)" : "rgba(255,255,255,0.55)",
         fontFamily: "Inter, sans-serif",
         fontSize: 11,
         fontWeight: 700,
@@ -770,7 +770,7 @@ function ActionButton({ children, onClick, danger }: { children: ReactNode; onCl
       }}
       onMouseEnter={(e) => {
         e.currentTarget.style.background = danger ? "rgba(239,68,68,0.12)" : "rgba(255,255,255,0.07)";
-        e.currentTarget.style.borderColor = danger ? "rgba(239,68,68,0.50)" : "rgba(255,138,0,0.40)";
+        e.currentTarget.style.borderColor = danger ? "rgba(239,68,68,0.50)" : "rgba(var(--widget-primary-rgb, 255, 138, 0), 0.40)";
       }}
       onMouseLeave={(e) => {
         e.currentTarget.style.background = danger ? "rgba(239,68,68,0.06)" : "rgba(255,255,255,0.04)";
