@@ -165,7 +165,7 @@ const SwapWrapper = ({ children }) => (
       <ChainSwitcher>
         {children}
         <ToastContainer
-          position="bottom-right"
+          position="bottom-center"
           autoClose={5000}
           hideProgressBar={true}
           newestOnTop={true}
@@ -190,7 +190,7 @@ const ViaBridgeWrapper = ({ children }) => (
     <Provider store={store}>
       {children}
       <ToastContainer
-        position="bottom-right"
+        position="bottom-center"
         autoClose={5000}
         hideProgressBar={true}
         newestOnTop={true}
@@ -231,7 +231,9 @@ function MyRoutes() {
           {/* <BreadCrumb /> */}
           <Routes>
             {/* <Route path="/" element={<Navigate to="/landing" replace />} /> */}
-            <Route path="/" element={<LandingV2 />} />
+            {/* v4 promoted to "/" — owner approved 2026-08-20. Prior landings
+                kept reachable at their own paths for comparison/rollback. */}
+            <Route path="/" element={<LandingV4 />} />
             <Route path="/landing-v2" element={<LandingV2 />} />
             <Route path="/landing-v3" element={<LandingV3 />} />
             <Route path="/landing-v4" element={<LandingV4 />} />
