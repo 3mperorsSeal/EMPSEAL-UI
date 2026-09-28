@@ -1,21 +1,28 @@
-import { useSendTransaction, useWaitForTransactionReceipt, useAccount, useSwitchChain, useWalletClient } from 'wagmi';
+import { useSendTransaction, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 import { toast } from '../utils/toastHelper';
-import { useSearchTransaction, useGetChains } from './useGasBridgeAPI';
+import { useSearchTransaction } from './useGasBridgeAPI';
 import { useEffect, useState } from 'react';
 import { useGasBridgeStore } from '../redux/store/gasBridgeStore';
 
 export const useGasBridgeTx = () => {
   const [txHash, setTxHash] = useState(null);
-  
+  // Chain the tx was sent on, so the receipt is looked up on the right chain
+  // even if the user changes the source chain afterwards.
+  const [txChainId, setTxChainId] = useState(null);
+
   const { sendTransactionAsync, isPending: isSending } = useSendTransaction();
   const { switchChainAsync } = useSwitchChain();
   const { chainId } = useAccount();
-  const { data: walletClient } = useWalletClient();
   const { fromChainId } = useGasBridgeStore();
-  const { data: chains } = useGetChains();
 
-  const { data: receipt, isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({
+  const {
+    data: receipt,
+    isLoading: isConfirming,
+    isSuccess: isConfirmed,
+    error: receiptError,
+  } = useWaitForTransactionReceipt({
     hash: txHash,
+    chainId: txChainId,
   });
 
   // Start polling for backend status once the on-chain tx is confirmed
@@ -27,61 +34,27 @@ export const useGasBridgeTx = () => {
     try {
       // 1. Check Chain
       if (chainId !== fromChainId) {
-        const targetChain = chains?.find((c) => c.chain === fromChainId);
-        
-        if (!targetChain) {
-          toast.error(`Chain data not found for ID ${fromChainId}`);
-          return;
-        }
-
         try {
-          // Try standard switch (works if chain is in wagmi config)
           await switchChainAsync({ chainId: fromChainId });
         } catch (switchError) {
-          // If chain not configured or switch failed, try adding it manually
-          // Error code 4902 indicates the chain has not been added to the wallet.
-          // We also catch generic errors as wagmi might throw "Chain not configured"
-          if (walletClient) {
-             try {
-               await walletClient.request({
-                 method: 'wallet_addEthereumChain',
-                 params: [
-                   {
-                     chainId: `0x${fromChainId.toString(16)}`,
-                     chainName: targetChain.name,
-                     nativeCurrency: {
-                       name: targetChain.symbol,
-                       symbol: targetChain.symbol,
-                       decimals: targetChain.decimals || 18,
-                     },
-                     rpcUrls: targetChain.rpcs,
-                     blockExplorerUrls: targetChain.explorer ? [targetChain.explorer] : [],
-                   },
-                 ],
-               });
-               // After adding, we assume the wallet switches to it or we can try switching again.
-               // Most wallets switch automatically upon addition.
-             } catch (addError) {
-               console.error("Failed to add chain:", addError);
-               toast.error("Failed to switch/add network. Please switch manually.");
-               return;
-             }
-          } else {
-             console.error("No wallet client available to add chain");
-             toast.error("Please switch network manually in your wallet.");
-             return;
-          }
+          console.error("Failed to switch chain:", switchError);
+          toast.error("Please switch your wallet to the source chain and try again.");
+          return;
         }
       }
 
       // 2. Send Transaction
+      // Passing chainId makes the send fail if the wallet isn't on the source chain,
+      // instead of sending the deposit on whatever chain the wallet is on.
       toast.info('Waiting for signature...');
       const hash = await sendTransactionAsync({
+        chainId: fromChainId,
         to: txData.to,
         value: txData.value,
         data: txData.data,
       });
 
+      setTxChainId(fromChainId);
       setTxHash(hash);
       toast.success('Transaction submitted! Waiting for confirmation...');
 
@@ -90,30 +63,34 @@ export const useGasBridgeTx = () => {
       if (error.message?.includes('User rejected')) {
          toast.error("Transaction rejected by user.");
       } else {
-         toast.error(error.message || 'Transaction failed');
+         toast.error(error.shortMessage || error.message || 'Transaction failed');
       }
     }
   };
 
   useEffect(() => {
-    if (isConfirming) {
-      // Toast for confirming state
-    }
     if (isConfirmed && receipt) {
       toast.success('Transaction confirmed on source chain! Verifying bridge...');
     }
-  }, [isConfirming, isConfirmed, receipt]);
+  }, [isConfirmed, receipt]);
 
   useEffect(() => {
-    if (isPolling) {
-      // Toast for polling state
+    // Reverted txs surface here as an error rather than a receipt
+    if (receiptError) {
+      console.error("Bridge transaction failed:", receiptError);
+      toast.error(
+        `Transaction failed on the source chain: ${receiptError.shortMessage || receiptError.message || 'unknown reason'}`,
+      );
     }
+  }, [receiptError]);
+
+  useEffect(() => {
     if (backendStatus?.deposit?.status === 'CONFIRMED') {
       toast.success('Bridge complete! Funds received on destination chain.');
     } else if (backendStatus?.deposit?.status === 'ERROR') {
       toast.error('An error occurred with the bridge transfer.');
     }
-  }, [isPolling, backendStatus]);
+  }, [backendStatus]);
 
   return {
     executeBridge,
