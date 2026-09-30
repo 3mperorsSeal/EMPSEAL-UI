@@ -37,7 +37,6 @@ import { config } from "../../Wagmi/config";
 import { resolveCrossNavbarChainId } from "../data/crossPageIdentity";
 import {
   AccountModal,
-  Card,
   ChainLogo,
   ChainPicker,
   ConfirmTradeModal,
@@ -45,8 +44,6 @@ import {
   DappNavbar,
   NetworkSelector,
   Pill,
-  QuoteCountdown,
-  Tabs,
   Toaster,
   TokenLogo,
   TokenPicker,
@@ -95,6 +92,7 @@ import {
 import { useCrossExecutionSession } from "../../features/cross/hooks/useCrossExecutionSession";
 import { useCrossIntentTracking } from "../../features/cross/hooks/useCrossIntentTracking";
 import { useCrossQuote } from "../../features/cross/hooks/useCrossQuote";
+import { useLayerZeroDestinations, filterLayerZeroDestinations, layerZeroDestinationListed } from "../../features/cross/hooks/useLayerZeroDestinations";
 import { useCrossRecovery } from "../../features/cross/hooks/useCrossRecovery";
 import {
   findMatchingRefreshedOffer,
@@ -108,7 +106,7 @@ import {
   getRailCapability,
   type OfferCapabilityContext,
 } from "../../features/cross/model/capabilities";
-import { mapCrossApiError } from "../../features/cross/utils/errors";
+import { mapCrossApiError, layerZeroDiagnosticMessage } from "../../features/cross/utils/errors";
 import type {
   CrossExecutionSession,
   LayerZeroValueTransferApiQuoteContext,
@@ -129,7 +127,8 @@ import { useWalletConnection } from "../hooks/useWalletConnection";
 import { useUnifiedPrice } from "../hooks/useUnifiedPrice";
 import { useV2Balances } from "../hooks/useV2Balances";
 import { useAccountSnapshot } from "../hooks/useAccountSnapshot";
-import EmpxCrossWidget from "../EmpxCrossWidget";
+import EmpxCrossWidget, { type CrossNotice, type CrossRailsState } from "../EmpxCrossWidget";
+import { Disclosure, MicroLabel, WidgetKitKeyframes, wk } from "../widgetKit";
 import { getExplorerAddressUrl, getExplorerTxUrl } from "../data/explorers";
 import { V2_ALL_CHAINS, getV2Chain } from "../data/v2ChainView";
 import { getTokensForChain, type V2TokenConfig } from "../data/v2TokenView";
@@ -351,7 +350,6 @@ export function tokensFor(
 
 type ChainPickerTarget = "from" | "to";
 type TokenPickerTarget = "from" | "to";
-type SidePanelTab = "offers" | "settings" | "rails" | "lifecycle";
 
 function findTokenByTicker(tokens: Token[], ticker: string) {
   const normalized = ticker.toUpperCase();
@@ -361,6 +359,8 @@ function findTokenByTicker(tokens: Token[], ticker: string) {
 // Gas-drop typical USD value per destination chain (rough — production reads
 // from DestinationGasAutoFund.ts policy).
 const GAS_DROP_USD = 2.5;
+/** Cross quote validity shown on the quote row (unchanged from the old side-panel countdown). */
+const CROSS_QUOTE_VALID_MS = 30_000;
 
 export default function CrossPage() {
   const isMobile = useIsMobile();
@@ -429,7 +429,13 @@ export default function CrossPage() {
   // Gas settings. Paymaster is intentionally disabled in the UI for now.
   const [gasDropOnDestination, setGasDropOnDestination] = useState(false);
 
-  const [sidePanel, setSidePanel] = useState<SidePanelTab>("offers");
+  // Confirming a route renders the execution panels under the widget; this
+  // brings them into view (they used to live in a side-panel tab).
+  const executionRef = useRef<HTMLElement>(null);
+  const [executionFocusTick, setExecutionFocusTick] = useState(0);
+  useEffect(() => {
+    if (executionFocusTick) executionRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, [executionFocusTick]);
   const deferredFromAmount = useDeferredValue(fromAmount);
 
   const layerZeroCatalog = useQuery({
@@ -512,6 +518,16 @@ export default function CrossPage() {
     () => toTokenCatalog.find((token) => tokenKey(token) === toTokenKey) ??
       toTokenCatalog.find((token) => token.ticker === toTicker) ?? null,
     [toTicker, toTokenCatalog, toTokenKey, tokenKey],
+  );
+  const layerZeroDestinations = useLayerZeroDestinations({
+    chainKey: fromChain.providerChainKey,
+    chainType: fromChain.providerChainType,
+    address: fromTokenConfig?.providerAssetId ?? fromTokenConfig?.address,
+  });
+  const destinationChainRef = { chainKey: toChain.providerChainKey, chainType: toChain.providerChainType };
+  const selectedLayerZeroDestinationListed = layerZeroDestinationListed(
+    layerZeroDestinations.isError ? undefined : layerZeroDestinations.data,
+    destinationChainRef, toTokenConfig?.providerAssetId ?? toTokenConfig?.address,
   );
   const fromTokenPriceUSD = useUnifiedPrice(
     fromChainId,
@@ -1109,6 +1125,12 @@ export default function CrossPage() {
   }, [now, session]);
 
   const quoteErrorMessage = quote.error ? mapCrossApiError(quote.error) : null;
+  const layerZeroNotice = layerZeroDiagnosticMessage(effectiveQuote?.providerDiagnostics)
+    ?? (layerZeroDestinations.isError
+      ? "LayerZero destination discovery is unavailable. Token choices remain available; request a quote to check the route."
+      : selectedLayerZeroDestinationListed === false
+        ? "LayerZero does not list this destination for the selected source token. Other providers will still be checked."
+        : null);
   const trackingData = tracking.data as any;
   const fromBalanceLabel =
     sourceUsesEvmWallet && walletState.status === "connected" && fromTokenBalance
@@ -1207,13 +1229,21 @@ export default function CrossPage() {
       selectedChain.providerChainKey &&
       (layerZeroCatalog.data?.tokens ?? []).some((token) => token.chainKey === selectedChain.providerChainKey),
     );
-    const { tokens, restrictedReason } = tokensFor(
+    const { tokens: candidates, restrictedReason } = tokensFor(
       chainId,
       role,
       eligible,
       catalog,
       providerDiscovered,
     );
+    const otherRails = eligible.filter(rail => rail.name !== "LayerZero");
+    const otherRailTokens = otherRails.length === 0 ? []
+      : tierForChainId(chainId) === 1 ? catalog
+      : tokensFor(chainId, role, otherRails, configTokensForChain(chainId), false).tokens;
+    const tokens = role === "to" ? filterLayerZeroDestinations(
+      candidates, layerZeroDestinations.isError ? undefined : layerZeroDestinations.data,
+      { chainKey: selectedChain.providerChainKey, chainType: selectedChain.providerChainType }, otherRailTokens,
+    ) : candidates;
     const chainName = selectedChain.name;
     const chainColor = selectedChain.color;
     return {
@@ -1235,9 +1265,11 @@ export default function CrossPage() {
           ? connectedBalance.nativeBalanceUSD ?? undefined
           : undefined,
       })),
-      restrictedReason,
+      restrictedReason: role === "to" && layerZeroDestinations.data && !layerZeroDestinations.isError
+        ? "LayerZero destinations are filtered by your source token. Other-rail candidates are retained. A live quote confirms availability."
+        : restrictedReason,
     };
-  }, [tokenPickerTarget, fromChainId, toChainId, connectedBalance.nativeBalance, connectedBalance.nativeBalanceUSD, connectedBalance.nativeTicker, fromChain, toChain, fromTokenCatalog, toTokenCatalog, layerZeroCatalog.data?.tokens, tokenKey]);
+  }, [layerZeroDestinations.data, layerZeroDestinations.isError, tokenPickerTarget, fromChainId, toChainId, connectedBalance.nativeBalance, connectedBalance.nativeBalanceUSD, connectedBalance.nativeTicker, fromChain, toChain, fromTokenCatalog, toTokenCatalog, layerZeroCatalog.data?.tokens, tokenKey]);
 
   const routeHops: RouteHop[] = useMemo(() => {
     if (!selectedOffer) return [];
@@ -1608,7 +1640,7 @@ export default function CrossPage() {
     }
 
     // Selection creates a backend intent but does not submit user funds. The
-    // lifecycle tab owns the subsequent wallet execution step.
+    // execution panel (rendered under the widget) owns the subsequent wallet execution step.
     const response = await execution.selectSingleIntent({
       offerSetId: quoteForSelection.offerSetId,
       offerId: offerForSelection.offerId,
@@ -1704,7 +1736,7 @@ export default function CrossPage() {
       }
 
       setShowConfirm(false);
-      setSidePanel("lifecycle");
+      setExecutionFocusTick((t) => t + 1);
     } catch (error: any) {
       toast.error(mapCrossApiError(error));
     }
@@ -2061,6 +2093,29 @@ export default function CrossPage() {
       : null;
   const sourceWalletModalOptions = sourceUsesNativeWallet ? nativeWalletOptions : walletOptions;
 
+  // ─── Widget view state (replaces the old side panel) ────────────────────
+  const railsState: CrossRailsState = !quoteEnabled
+    ? "idle"
+    : quote.isFetching
+      ? offerEntries.length > 0 ? "refreshing" : "loading"
+      : quoteErrorMessage
+        ? "error"
+        : offerEntries.length === 0
+          ? "empty"
+          : "ready";
+  const railsMessage = railsState === "error"
+    ? quoteErrorMessage ?? undefined
+    : quoteUiState.emptyMessage || undefined;
+  const gasDropHint = selectedOfferIsGardenNative
+    ? "Garden native routes cannot be composed with Gas.zip. Select a different rail to drop destination gas."
+    : gasDropAvailable
+      ? `Arrive on ${toChain.name} with ~$${GAS_DROP_USD.toFixed(2)} of ${toChain.ticker} so you can transact immediately. Routed via Gas.zip side-leg.`
+      : `Gas.zip doesn't support ${toChain.name} as a destination.`;
+  const crossNotice: CrossNotice | undefined =
+    selectedOfferId && selectedOfferId !== effectiveQuote?.bestOfferId
+      ? { tone: "info", text: "User-selected route — select it again to return to the best route." }
+      : undefined;
+
   // ─── Render ──────────────────────────────────────────────────────────────
   return (
     <div style={{ minHeight: "100vh", background: "#05050c", color: "#fff", fontFamily: "Inter, sans-serif" }}>
@@ -2092,291 +2147,258 @@ export default function CrossPage() {
         }
       />
 
-      <main style={{ maxWidth: 1180, margin: "0 auto", padding: isMobile ? "24px 16px 56px" : "32px 24px 72px" }}>
-        <header style={{ marginBottom: isMobile ? 18 : 24 }}>
-          <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "#FF8A00", textTransform: "uppercase", fontWeight: 700 }}>
-            CROSS-CHAIN · {RAILS.length} RAILS
+      <WidgetKitKeyframes />
+
+      {/* Single centred 480px column — identical desktop and mobile. No page
+          header or side panel: rails, the full offers list, gas drop and the
+          quote row live in the widget; once a route is confirmed the
+          execution + tracking panels render directly beneath it. */}
+      <main
+        style={{
+          maxWidth: 480 + (isMobile ? 32 : 40),
+          margin: "0 auto",
+          padding: isMobile ? "24px 16px 40px" : "38px 20px 48px",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+        }}
+      >
+        {layerZeroNotice && (
+          <p role="status" style={{ width: "100%", margin: "0 0 12px", fontSize: 12, color: "#aaa", lineHeight: 1.5 }}>
+            {layerZeroNotice}
           </p>
-          <h1
-            style={{
-              margin: "8px 0 0",
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: isMobile ? 32 : "clamp(34px, 4.5vw, 56px)",
-              fontWeight: 300,
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              color: "#fff",
-            }}
-          >
-            Cross.{" "}
-            <span
-              style={{
-                fontFamily: "'Instrument Serif', serif",
-                fontStyle: "italic",
-                color: "#FF8A00",
-                letterSpacing: "-0.02em",
-              }}
-            >
-              Every chain, every rail.
-            </span>
-          </h1>
-        </header>
-
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.4fr) minmax(0, 1fr)",
-            gap: isMobile ? 18 : 28,
-            alignItems: "start",
-          }}
-        >
-          {/* LEFT — cross widget */}
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
-            <EmpxCrossWidget
-              fromChain={{
-                ...fromChain,
-                logo: (
-                  <ChainLogo
-                    chainId={fromChainId}
-                    symbol={fromChain.name.slice(0, 3).toUpperCase()}
-                    bg={fromChain.color}
-                    size={17}
-                  />
-                ),
-              }}
-              fromToken={{
-                ticker: fromTicker,
-                logo: (
-                  <TokenLogo
-                    ticker={fromTicker}
-                    chainId={fromChainId}
-                    address={fromTokenConfig?.address}
-                    logoUrl={fromTokenConfig?.logoUrl}
-                    isNative={fromTokenConfig?.isNative}
-                    size={30}
-                  />
-                ),
-              }}
-              fromAmount={fromAmount}
-              fromBalance={fromBalanceLabel}
-              fromUsdValue={fromUsdValue}
-              onFromAmountChange={setFromAmount}
-              onSelectFromToken={() => setTokenPickerTarget("from")}
-              onSelectFromChain={() => setChainPickerTarget("from")}
-              onPercentClick={(pct) => setFromAmount(String((fromBalanceNumeric * pct) / 100))}
-
-              toChain={{
-                ...toChain,
-                logo: (
-                  <ChainLogo
-                    chainId={toChainId}
-                    symbol={toChain.name.slice(0, 3).toUpperCase()}
-                    bg={toChain.color}
-                    size={17}
-                  />
-                ),
-              }}
-              toToken={{
-                ticker: toTicker,
-                logo: (
-                  <TokenLogo
-                    ticker={toTicker}
-                    chainId={toChainId}
-                    address={toTokenConfig?.address}
-                    logoUrl={toTokenConfig?.logoUrl}
-                    isNative={toTokenConfig?.isNative}
-                    size={30}
-                  />
-                ),
-              }}
-              toAmount={toAmountDisplay}
-              toUsdValue={toUsdValue}
-              onSelectToToken={() => setTokenPickerTarget("to")}
-              onSelectToChain={() => setChainPickerTarget("to")}
-
-              railName={selectedOfferDisplay?.railName}
-              railBadge={selectedOfferDisplay?.executionLabel}
-              protocolFeeBps={selectedOffer?.economics?.protocolFeeBps ?? selectedOffer?.fees?.protocolFeeBps}
-              protocolFeeUSD={selectedOfferDisplay?.protocolFeeUSD}
-              bridgeFeeUSD={selectedOfferDisplay?.bridgeFeeUSD}
-              estimatedTime={selectedOfferDisplay?.estimatedTimeSeconds ? formatEtaSeconds(selectedOfferDisplay.estimatedTimeSeconds) : undefined}
-              minimumReceived={selectedOfferDisplay ? `${selectedOfferDisplay.minimumReceived} ${toTicker}` : undefined}
-              slippageBps={30}
-              priceImpactBps={priceImpactBps}
-              routeHops={routeHops}
-
-              walletConnected={sourceWalletConnected}
-              onConnect={() => setShowWalletModal(true)}
-              onSwap={onSwap}
-              onFlip={flip}
-              swapDisabled={
-                !selectedOffer ||
-                !selectedOfferDisplay?.selectable ||
-                quote.isFetching ||
-                execution.isSelecting ||
-                (nativeDestinationRequired && !nativeDstAddressValid) ||
-                (destinationAddressRequired && !destinationAddressValid)
-              }
-              rails={offerEntries.map((o): RailCardData => ({
-                name: o.railName,
-                mode: "B",
-                outAmount: o.outputAmount,
-                eta: o.estimatedTimeSeconds != null ? formatEtaSeconds(o.estimatedTimeSeconds) : "—",
-                tag: o.isBest ? "BEST" : undefined,
-                isActive: o.offerId === (selectedOffer?.offerId ?? selectedOfferId),
-              }))}
-              onSelectRail={(name) => {
-                const hit = offerEntries.find((entry) => entry.railName === name);
-                if (!hit) return;
-                setSelectedOfferId((cur) => (cur === hit.offerId ? effectiveQuote?.bestOfferId ?? null : hit.offerId));
-              }}
-              swapLoading={quote.isFetching || execution.isSelecting}
-              swapLabel={
-                !sourceWalletConnected
-                  ? "Connect wallet"
-                  : quote.isFetching
-                    ? "Fetching route..."
-                    : selectedOffer
-                      ? "Review route"
-                      : quoteErrorMessage ?? "No route"
-              }
-            />
-            {nativeDestinationRequired ? (
-              <Card style={{ width: "100%", maxWidth: 620, padding: 16 }}>
-                {nativeDestinationKind ? (
-                  <DestinationAddressInput
-                    id="cross-v2-native-destination"
-                    chainKind={nativeDestinationKind}
-                    chainLabel={toChain.name}
-                    value={nativeDstAddress}
-                    onChange={setNativeDstAddress}
-                    onValidate={handleNativeDestinationValidation}
-                    required
-                    label="Native destination address"
-                  />
-                ) : (
-                  <p style={{ margin: 0, color: "rgba(255,255,255,0.58)", fontSize: 12, lineHeight: 1.5 }}>
-                    Address validation for {toChain.name} is not available yet,
-                    so quoting and execution remain disabled for this destination.
-                  </p>
-                )}
-                <p style={{ margin: "10px 0 0", color: "rgba(255,138,0,0.72)", fontSize: 10.5, lineHeight: 1.45 }}>
-                  This address receives funds on {toChain.name}. Your connected
-                  source wallet remains the source/refund address.
-                </p>
-              </Card>
-            ) : null}
-            {destinationAddressRequired ? (
-              <Card style={{ width: "100%", maxWidth: 620, padding: 16 }}>
-                <DestinationAddressInput
-                  id="cross-v2-evm-destination"
-                  chainKind="evm"
-                  chainLabel={toChain.name}
-                  value={destinationAddress}
-                  onChange={setDestinationAddress}
-                  onValidate={handleDestinationAddressValidation}
-                  required
-                  label="Destination address"
-                />
-                <p style={{ margin: "10px 0 0", color: "rgba(255,138,0,0.72)", fontSize: 10.5, lineHeight: 1.45 }}>
-                  This address receives funds on {toChain.name}. Your connected
-                  {sourceWalletKind === "solana" ? " Solana" : " Bitcoin"} wallet remains the source/refund address.
-                </p>
-              </Card>
-            ) : null}
-          </div>
-
-          {/* RIGHT — context panel */}
-          <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {sourceWalletConnected && (
-              <Card style={{ padding: 14 }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 10 }}>
-                  {quoteEnabled ? (
-                    <QuoteCountdown
-                      totalMs={30000}
-                      issuedAt={quoteIssuedAt}
-                      onRefresh={() => {
-                        refreshQuote();
-                        toast.info("Quote refreshed");
-                      }}
-                      compact
-                    />
-                  ) : null}
-                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-                    <Pill variant="info">{quoteUiState.summary}</Pill>
-                    {selectedOfferId && selectedOfferId !== effectiveQuote?.bestOfferId && <Pill variant="accent">User-selected</Pill>}
-                  </div>
-                </div>
-              </Card>
-            )}
-
-            <Card style={{ padding: 18, paddingBottom: 14 }}>
-              <p style={{ margin: "0 0 12px", fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.40)", textTransform: "uppercase", fontWeight: 700 }}>
-                Rail intelligence
-              </p>
-              <Tabs
-                options={[
-                  { value: "offers" as const,    label: "Live offers", count: offerEntries.length },
-                  { value: "settings" as const,  label: "Gas" },
-                  { value: "rails" as const,     label: "Rail guide", count: RAILS.length },
-                  { value: "lifecycle" as const, label: "Lifecycle" },
-                ]}
-                active={sidePanel}
-                onChange={(value) => setSidePanel(value as SidePanelTab)}
-                variant="pill"
+        )}
+        <EmpxCrossWidget
+          fromChain={{
+            ...fromChain,
+            logo: (
+              <ChainLogo
+                chainId={fromChainId}
+                symbol={fromChain.name.slice(0, 3).toUpperCase()}
+                bg={fromChain.color}
+                size={17}
               />
-              <div style={{ marginTop: 14 }}>
-                {sidePanel === "offers"   && (
-                  <OffersList
-                    offers={offerEntries}
-                    bestOfferId={effectiveQuote?.bestOfferId}
-                    selectedOfferId={selectedOffer?.offerId ?? selectedOfferId}
-                    isLoading={quote.isFetching}
-                    error={quoteErrorMessage}
-                    emptyMessage={quoteUiState.emptyMessage}
-                    onSelectOffer={(offerId) => {
-                      setSelectedOfferId((cur) => (cur === offerId ? effectiveQuote?.bestOfferId ?? null : offerId));
-                      toast.info(selectedOfferId === offerId ? "Reverted to best route" : "Selected route");
-                    }}
-                    toTicker={toTicker}
+            ),
+          }}
+          fromToken={{
+            ticker: fromTicker,
+            logo: (
+              <TokenLogo
+                ticker={fromTicker}
+                chainId={fromChainId}
+                address={fromTokenConfig?.address}
+                logoUrl={fromTokenConfig?.logoUrl}
+                isNative={fromTokenConfig?.isNative}
+                size={30}
+              />
+            ),
+          }}
+          fromAmount={fromAmount}
+          fromBalance={fromBalanceLabel}
+          fromUsdValue={fromUsdValue}
+          onFromAmountChange={setFromAmount}
+          onSelectFromToken={() => setTokenPickerTarget("from")}
+          onSelectFromChain={() => setChainPickerTarget("from")}
+          onPercentClick={(pct) => setFromAmount(String((fromBalanceNumeric * pct) / 100))}
+
+          toChain={{
+            ...toChain,
+            logo: (
+              <ChainLogo
+                chainId={toChainId}
+                symbol={toChain.name.slice(0, 3).toUpperCase()}
+                bg={toChain.color}
+                size={17}
+              />
+            ),
+          }}
+          toToken={{
+            ticker: toTicker,
+            logo: (
+              <TokenLogo
+                ticker={toTicker}
+                chainId={toChainId}
+                address={toTokenConfig?.address}
+                logoUrl={toTokenConfig?.logoUrl}
+                isNative={toTokenConfig?.isNative}
+                size={30}
+              />
+            ),
+          }}
+          toAmount={toAmountDisplay}
+          toUsdValue={toUsdValue}
+          onSelectToToken={() => setTokenPickerTarget("to")}
+          onSelectToChain={() => setChainPickerTarget("to")}
+          destinationSlot={nativeDestinationRequired || destinationAddressRequired ? (
+            <>
+              {nativeDestinationRequired ? (
+                <div>
+                  {nativeDestinationKind ? (
+                    <DestinationAddressInput
+                      id="cross-v2-native-destination"
+                      chainKind={nativeDestinationKind}
+                      chainLabel={toChain.name}
+                      value={nativeDstAddress}
+                      onChange={setNativeDstAddress}
+                      onValidate={handleNativeDestinationValidation}
+                      required
+                      label="Native destination address"
+                    />
+                  ) : (
+                    <p style={{ margin: 0, color: "rgba(255,255,255,0.58)", fontSize: 12, lineHeight: 1.5 }}>
+                      Address validation for {toChain.name} is not available yet,
+                      so quoting and execution remain disabled for this destination.
+                    </p>
+                  )}
+                  <p style={{ margin: "10px 0 0", color: "rgba(255,138,0,0.72)", fontSize: 10.5, lineHeight: 1.45 }}>
+                    This address receives funds on {toChain.name}. Your connected
+                    source wallet remains the source/refund address.
+                  </p>
+                </div>
+              ) : null}
+              {destinationAddressRequired ? (
+                <div>
+                  <DestinationAddressInput
+                    id="cross-v2-evm-destination"
+                    chainKind="evm"
+                    chainLabel={toChain.name}
+                    value={destinationAddress}
+                    onChange={setDestinationAddress}
+                    onValidate={handleDestinationAddressValidation}
+                    required
+                    label="Destination address"
                   />
-                )}
-                {sidePanel === "settings" && (
-                  <GasSettings
-                    gasDropOnDestination={gasDropOnDestination}
-                    setGasDropOnDestination={setGasDropOnDestination}
-                    gasDropAvailable={gasDropAvailable}
-                    gardenNativeSelected={selectedOfferIsGardenNative}
-                    destinationName={toChain.name}
-                    destinationNative={toChain.ticker}
-                    gasDropUSD={GAS_DROP_USD}
-                  />
-                )}
-                {sidePanel === "rails"     && <RailsCatalog />}
-                {sidePanel === "lifecycle" && (
-                  <LifecycleStatus
-                    session={session}
-                    tracking={trackingData}
-                    trackingLinks={crossTrackingLinks}
-                    isExecuting={isExecuting}
-                    isCancelling={recovery.cancel.isPending}
-                    isRefunding={recovery.refund.isPending}
-                    onExecuteSingle={handleSingleAction}
-                    onExecutePrimary={() => handleExecuteComposedLeg("primary")}
-                    onExecuteGas={() => handleExecuteComposedLeg("gas")}
-                    onCancel={handleCancel}
-                    onRefund={handleRefund}
-                    onClearSession={() => setSession(null)}
-                    singleActionLabel={singleActionLabel}
-                    singleActionDisabled={singleActionDisabled}
-                    singleExecutionHint={singleExecutionHint}
-                    singleExecutionError={session?.lastError ?? null}
-                    sourceWallet={offerCapabilityContext?.sourceWallet}
-                  />
-                )}
-              </div>
-            </Card>
-          </aside>
+                  <p style={{ margin: "10px 0 0", color: "rgba(255,138,0,0.72)", fontSize: 10.5, lineHeight: 1.45 }}>
+                    This address receives funds on {toChain.name}. Your connected
+                    {sourceWalletKind === "solana" ? " Solana" : " Bitcoin"} wallet remains the source/refund address.
+                  </p>
+                </div>
+              ) : null}
+            </>
+          ) : undefined}
+
+          railName={selectedOfferDisplay?.railName}
+          railBadge={selectedOfferDisplay?.executionLabel}
+          protocolFeeBps={selectedOffer?.economics?.protocolFeeBps ?? selectedOffer?.fees?.protocolFeeBps}
+          protocolFeeUSD={selectedOfferDisplay?.protocolFeeUSD}
+          bridgeFeeUSD={selectedOfferDisplay?.bridgeFeeUSD}
+          estimatedTime={selectedOfferDisplay?.estimatedTimeSeconds ? formatEtaSeconds(selectedOfferDisplay.estimatedTimeSeconds) : undefined}
+          minimumReceived={selectedOfferDisplay ? `${selectedOfferDisplay.minimumReceived} ${toTicker}` : undefined}
+          slippageBps={30}
+          priceImpactBps={priceImpactBps}
+          routeHops={routeHops}
+
+          walletConnected={sourceWalletConnected}
+          onConnect={() => setShowWalletModal(true)}
+          onSwap={onSwap}
+          onFlip={flip}
+          swapDisabled={
+            !selectedOffer ||
+            !selectedOfferDisplay?.selectable ||
+            quote.isFetching ||
+            execution.isSelecting ||
+            (nativeDestinationRequired && !nativeDstAddressValid) ||
+            (destinationAddressRequired && !destinationAddressValid)
+          }
+          rails={offerEntries.map((o): RailCardData => ({
+            name: o.railName,
+            mode: "B",
+            outAmount: o.outputAmount,
+            eta: o.estimatedTimeSeconds != null ? formatEtaSeconds(o.estimatedTimeSeconds) : "—",
+            tag: o.isBest ? "BEST" : undefined,
+            isActive: o.offerId === (selectedOffer?.offerId ?? selectedOfferId),
+          }))}
+          onSelectRail={(name) => {
+            const hit = offerEntries.find((entry) => entry.railName === name);
+            if (!hit) return;
+            setSelectedOfferId((cur) => (cur === hit.offerId ? effectiveQuote?.bestOfferId ?? null : hit.offerId));
+          }}
+          railsState={railsState}
+          railsMessage={railsMessage}
+          railsFooter={offerEntries.length > 0 ? (
+            <Disclosure label={`All offers · ${offerEntries.length}`}>
+              <OffersList
+                offers={offerEntries}
+                bestOfferId={effectiveQuote?.bestOfferId}
+                selectedOfferId={selectedOffer?.offerId ?? selectedOfferId}
+                isLoading={quote.isFetching}
+                error={quoteErrorMessage}
+                emptyMessage={quoteUiState.emptyMessage}
+                onSelectOffer={(offerId) => {
+                  setSelectedOfferId((cur) => (cur === offerId ? effectiveQuote?.bestOfferId ?? null : offerId));
+                  toast.info(selectedOfferId === offerId ? "Reverted to best route" : "Selected route");
+                }}
+                toTicker={toTicker}
+              />
+            </Disclosure>
+          ) : undefined}
+          gasDrop={{
+            enabled: gasDropOnDestination,
+            available: gasDropAvailable,
+            hint: gasDropHint,
+            onToggle: () => setGasDropOnDestination(!gasDropOnDestination),
+          }}
+          quote={sourceWalletConnected && quoteEnabled ? {
+            issuedAt: quoteIssuedAt,
+            validMs: CROSS_QUOTE_VALID_MS,
+            onRefresh: () => {
+              refreshQuote();
+              toast.info("Quote refreshed");
+            },
+          } : undefined}
+          notice={crossNotice}
+          swapLoading={quote.isFetching || execution.isSelecting}
+          swapLabel={
+            !sourceWalletConnected
+              ? "Connect wallet"
+              : quote.isFetching
+                ? "Fetching route..."
+                : selectedOffer
+                  ? "Review route"
+                  : quoteErrorMessage ?? "No route"
+          }
+        />
+
+        {session && (
+          <section
+            ref={executionRef}
+            aria-label="Execution"
+            style={{ width: "100%", maxWidth: 480, marginTop: 28, scrollMarginTop: 24 }}
+          >
+            <div style={{ marginBottom: 12 }}>
+              <MicroLabel>Execution</MicroLabel>
+            </div>
+            <LifecycleStatus
+              session={session}
+              tracking={trackingData}
+              trackingLinks={crossTrackingLinks}
+              isExecuting={isExecuting}
+              isCancelling={recovery.cancel.isPending}
+              isRefunding={recovery.refund.isPending}
+              onExecuteSingle={handleSingleAction}
+              onExecutePrimary={() => handleExecuteComposedLeg("primary")}
+              onExecuteGas={() => handleExecuteComposedLeg("gas")}
+              onCancel={handleCancel}
+              onRefund={handleRefund}
+              onClearSession={() => setSession(null)}
+              singleActionLabel={singleActionLabel}
+              singleActionDisabled={singleActionDisabled}
+              singleExecutionHint={singleExecutionHint}
+              singleExecutionError={session?.lastError ?? null}
+              sourceWallet={offerCapabilityContext?.sourceWallet}
+            />
+          </section>
+        )}
+
+        <div style={{ width: "100%", maxWidth: 480, marginTop: session ? 18 : 28, borderTop: `1px solid ${wk.border}` }}>
+          {!session && (
+            <Disclosure label="How execution works">
+              <LifecycleExplainer />
+            </Disclosure>
+          )}
+          <Disclosure label={`Rail guide · ${RAILS.length} rails`}>
+            <RailsCatalog />
+          </Disclosure>
         </div>
       </main>
 
@@ -2510,11 +2532,11 @@ export default function CrossPage() {
             : []
         }
         quoteIssuedAt={quoteIssuedAt}
-        quoteValidMs={30000}
+        quoteValidMs={CROSS_QUOTE_VALID_MS}
         onRefreshQuote={quoteEnabled ? refreshQuote : undefined}
         warning={
           selectedOffer?.executionMode === "provider_direct"
-            ? "Provider-direct routes may require wallet-specific transaction steps. Review the lifecycle tab after route selection."
+            ? "Provider-direct routes may require wallet-specific transaction steps. Review the execution steps below the widget after route selection."
             : undefined
         }
       />
@@ -2791,153 +2813,13 @@ function OffersList({
   );
 }
 
-// ─── Gas settings tab ─────────────────────────────────────────────────────
-
-function GasSettings({
-  gasDropOnDestination, setGasDropOnDestination, gasDropAvailable,
-  gardenNativeSelected, destinationName, destinationNative, gasDropUSD,
-}: {
-  gasDropOnDestination: boolean;
-  setGasDropOnDestination: (v: boolean) => void;
-  gasDropAvailable: boolean;
-  gardenNativeSelected?: boolean;
-  destinationName: string;
-  destinationNative: string;
-  gasDropUSD: number;
-}) {
-  return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-      {/* <GasToggle
-        title="Gasless source"
-        hint="Paymaster execution is temporarily unavailable in this interface."
-        enabled={false}
-        disabled
-        tag="EIP-4337"
-      /> */}
-      <GasToggle
-        title="Drop destination gas"
-        hint={
-          gardenNativeSelected
-            ? "Garden native routes cannot be composed with Gas.zip. Select a different rail to drop destination gas."
-            : gasDropAvailable
-            ? `Arrive on ${destinationName} with ~$${gasDropUSD.toFixed(2)} of ${destinationNative} so you can transact immediately. Routed via Gas.zip side-leg.`
-            : `Gas.zip doesn't support ${destinationName} as a destination.`
-        }
-        enabled={gasDropOnDestination}
-        disabled={!gasDropAvailable}
-        onToggle={() => setGasDropOnDestination(!gasDropOnDestination)}
-        tag="GAS.ZIP"
-      />
-    </div>
-  );
-}
-
-function GasToggle({
-  title, hint, enabled, disabled, onToggle, tag,
-}: {
-  title: string;
-  hint: string;
-  enabled: boolean;
-  disabled?: boolean;
-  onToggle?: () => void;
-  tag?: string;
-}) {
-  return (
-    <div
-      style={{
-        display: "flex",
-        gap: 12,
-        padding: "12px 12px",
-        background: disabled ? "rgba(255,255,255,0.015)" : "rgba(255,255,255,0.03)",
-        border: `1px solid ${enabled ? "rgba(255,138,0,0.30)" : "rgba(255,255,255,0.06)"}`,
-        borderRadius: 4,
-        opacity: disabled ? 0.55 : 1,
-      }}
-    >
-      <div style={{ flex: 1 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-          <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: "#fff" }}>{title}</p>
-          {tag && (
-            <span
-              style={{
-                fontSize: 8.5,
-                fontWeight: 700,
-                letterSpacing: "0.20em",
-                padding: "1px 5px",
-                borderRadius: 2,
-                color: "rgba(255,255,255,0.55)",
-                background: "rgba(255,255,255,0.05)",
-                border: "1px solid rgba(255,255,255,0.10)",
-              }}
-            >
-              {tag}
-            </span>
-          )}
-          {disabled && (
-            <span
-              style={{
-                fontSize: 8.5,
-                fontWeight: 700,
-                letterSpacing: "0.18em",
-                padding: "1px 5px",
-                borderRadius: 2,
-                color: "#A78BFA",
-                background: "rgba(139,92,246,0.10)",
-                border: "1px solid rgba(139,92,246,0.25)",
-              }}
-            >
-              N/A HERE
-            </span>
-          )}
-        </div>
-        <p style={{ margin: "4px 0 0", fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
-          {hint}
-        </p>
-      </div>
-      <button
-        type="button"
-        onClick={disabled ? undefined : onToggle}
-        disabled={disabled}
-        aria-pressed={enabled}
-        style={{
-          width: 34,
-          height: 20,
-          flexShrink: 0,
-          alignSelf: "center",
-          position: "relative",
-          background: enabled ? "#FF8A00" : "rgba(255,255,255,0.10)",
-          border: "1px solid " + (enabled ? "rgba(255,138,0,0.60)" : "rgba(255,255,255,0.15)"),
-          borderRadius: 999,
-          cursor: disabled ? "not-allowed" : "pointer",
-          transition: "all 180ms ease",
-          padding: 0,
-        }}
-      >
-        <span
-          style={{
-            position: "absolute",
-            top: 1.5,
-            left: enabled ? 15 : 1.5,
-            width: 15,
-            height: 15,
-            background: "#fff",
-            borderRadius: "50%",
-            transition: "left 180ms ease",
-            boxShadow: "0 1px 3px rgba(0,0,0,0.30)",
-          }}
-        />
-      </button>
-    </div>
-  );
-}
-
 // ─── Rails catalog (read-only) ────────────────────────────────────────────
 
 function RailsCatalog() {
   return (
     <div>
       <p style={{ margin: "0 0 10px", fontSize: 10.5, color: "rgba(255,255,255,0.45)", lineHeight: 1.5 }}>
-        Reference catalog only. Live availability for the selected pair appears under Live offers.
+        Reference catalog only. Live availability for the selected pair appears under All offers.
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 4, maxHeight: 330, overflowY: "auto", paddingRight: 4 }}>
         {RAILS.map((r) => {

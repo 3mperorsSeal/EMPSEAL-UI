@@ -1,3 +1,20 @@
+import type { LayerZeroQuoteDiagnostic } from "../api/contracts";
+
+export function layerZeroDiagnosticMessage(diagnostics?: LayerZeroQuoteDiagnostic[]): string | null {
+  const diagnostic = diagnostics?.find(item => item.provider === "layerzero_value_transfer_api");
+  if (!diagnostic) return null;
+  switch (diagnostic.code) {
+    case "unsupported_route": return "LayerZero does not support this token pair, even if both tokens appear in its catalog.";
+    case "authentication_failed": return "LayerZero quotes are unavailable because provider authentication failed.";
+    case "rate_limited": return "LayerZero is rate limiting quotes. Wait a moment and retry.";
+    case "timeout": return "LayerZero's quote request timed out. Please retry.";
+    case "unavailable": return "LayerZero quotes are temporarily unavailable. Please retry.";
+    case "invalid_response": return "LayerZero returned an incomplete quote. Please retry.";
+    case "quote_rejected": return `LayerZero: ${diagnostic.message || "No quote is available for this pair and amount."}`;
+  }
+  return null;
+}
+
 function readErrorMessage(error: any): string | null {
   if (!error) return null;
 
@@ -24,6 +41,11 @@ function readErrorMessage(error: any): string | null {
 }
 
 export function mapCrossApiError(error: any): string {
+  const diagnostic = layerZeroDiagnosticMessage(error?.body?.providerDiagnostics);
+  if (diagnostic) return diagnostic;
+  if (error?.body?.error === "No route available for this pair") {
+    return "No provider returned a route for this token pair and amount.";
+  }
   if (error?.status === 409 && error?.body?.fallbackOfferSet) {
     return "Selected route expired. Please choose an updated route.";
   }

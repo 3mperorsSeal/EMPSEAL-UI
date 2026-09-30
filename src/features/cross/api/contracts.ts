@@ -239,7 +239,17 @@ export interface RailOffer {
   isComposedEligible?: boolean;
 }
 
+export interface LayerZeroQuoteDiagnostic {
+  provider: "layerzero_value_transfer_api";
+  code: "unsupported_route" | "quote_rejected" | "authentication_failed" | "rate_limited" | "timeout" | "unavailable" | "invalid_response";
+  message: string;
+  httpStatus?: number;
+  providerCode?: string | number;
+  rejectedQuotes?: Array<{ code?: string | number; message: string }>;
+}
+
 export interface OfferSet {
+  providerDiagnostics?: LayerZeroQuoteDiagnostic[];
   offerSetId: string;
   expiresAt: number;
   offers: RailOffer[];

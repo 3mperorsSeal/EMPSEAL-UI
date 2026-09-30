@@ -18,6 +18,12 @@
 // allocationBps MUST sum to 10_000 across outputs in one-to-many /
 // many-to-many; the form enforces this before letting the user quote.
 //
+// Layout: one centred 480px column (same measure as swap / cross / gas) —
+// mode tabs, legs, collapsible constraints, then the basket review / execute
+// card. The locked EmpxMultiWidget is NOT used here: it models a demo review
+// flow, while this page runs the real quote → plan → execute → retry
+// pipeline, per-output recipients and the live liquidator scan.
+//
 // Honest disclosures:
 //   • Per-leg revenueTier surfaced ("agg-wired" / "api-direct" / "unknown")
 //   • `skipped` legs from BasketQuote are explicit in the review panel
@@ -64,6 +70,7 @@ import {
   type PickerChain,
   type PickerToken,
 } from "../components";
+import { Disclosure } from "../widgetKit";
 import { useWalletConnection } from "../hooks/useWalletConnection";
 import { useV2Balances } from "../hooks/useV2Balances";
 import { useAccountSnapshot } from "../hooks/useAccountSnapshot";
@@ -98,6 +105,15 @@ const MODE_LABEL: Record<BasketMode, string> = {
   "one-to-many":      "Split routes",
   "wallet-liquidator":"Liquidator",
   "many-to-many":     "Rebalancer",
+};
+
+// Short tab names (from the locked EmpxMultiWidget) so four tabs fit the
+// 480px column without wrapping; MODE_LABEL stays the full name elsewhere.
+const MODE_TAB_LABEL: Record<BasketMode, string> = {
+  "multi-to-one":     "Multiswap",
+  "one-to-many":      "Split",
+  "wallet-liquidator":"Liquidator",
+  "many-to-many":     "Rebalance",
 };
 
 const MODE_SUBTITLE: Record<BasketMode, string> = {
@@ -415,262 +431,116 @@ export default function MultiPage() {
         }
       />
 
-      <main style={{ maxWidth: 1180, margin: "0 auto", padding: isMobile ? "24px 16px 56px" : "32px 24px 72px" }}>
-        {/* Header */}
-        <header style={{ marginBottom: isMobile ? 22 : 28 }}>
-          <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "#FF8A00", textTransform: "uppercase", fontWeight: 700 }}>
-            INTENT BASKETS · 4 MODES · 1 PIPELINE
-          </p>
-          <h1
-            style={{
-              margin: "8px 0 0",
-              fontFamily: "'Space Grotesk', sans-serif",
-              fontSize: isMobile ? 32 : "clamp(34px, 4.5vw, 56px)",
-              fontWeight: 300,
-              letterSpacing: "-0.03em",
-              lineHeight: 1,
-              color: "#fff",
-            }}
-          >
-            Multi.{" "}
-            <span style={{ fontFamily: "'Instrument Serif', serif", fontStyle: "italic", color: "#FF8A00", letterSpacing: "-0.02em" }}>
-              Many in, many out.
-            </span>
-          </h1>
-          <p style={{ margin: "12px 0 0", fontSize: 13, color: "rgba(255,255,255,0.65)", lineHeight: 1.6, maxWidth: 720 }}>
-            All four flows share the IntentBasket abstraction. Each leg becomes a regular Intent — same-chain via the aggregator, cross-chain via the best eligible rail.
-          </p>
-        </header>
-
-        {/* Mode tabs */}
-        <div style={{ marginBottom: 18, overflowX: "auto", paddingBottom: 2 }}>
-          <Tabs
-            options={(["multi-to-one", "one-to-many", "wallet-liquidator", "many-to-many"] as const).map((m) => ({
-              value: m,
-              label: MODE_LABEL[m],
-            }))}
-            active={mode}
-            onChange={switchMode}
-            variant="underline"
-          />
-          <div style={{ marginTop: 10, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 4 }}>
-            <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.70)", lineHeight: 1.55 }}>
-              <strong style={{ color: "#fff" }}>{MODE_LABEL[mode]}</strong>{" "}
-              <span style={{ color: "rgba(255,255,255,0.45)" }}>· {MODE_SUBTITLE[mode]}</span>
-              <br />
-              <span style={{ color: "rgba(255,255,255,0.60)" }}>{MODE_BLURB[mode]}</span>
-            </p>
-            <div
-              style={{
-                marginTop: 10,
-                padding: "10px 12px",
-                background: "rgba(255,138,0,0.05)",
-                border: "1px solid rgba(255,138,0,0.18)",
-                borderRadius: 4,
-              }}
-            >
-              <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.30em", color: "#FF8A00", textTransform: "uppercase", fontWeight: 700 }}>
-                {MODE_EXAMPLE[mode].title}
-              </p>
-              <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
-                {MODE_EXAMPLE[mode].lines.map((line, i) => (
-                  <li key={i} style={{ display: "flex", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.70)", lineHeight: 1.55 }}>
-                    <span style={{ color: "rgba(255,138,0,0.70)", flexShrink: 0, fontWeight: 700, minWidth: 14, textAlign: "right" }}>{i + 1}.</span>
-                    <span>{line}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
+      {/* Single centred column, same measure as swap / cross / gas — no page
+          header or side panel. Every component and handler below is unchanged
+          from the two-column version; only the arrangement moved: legs, then
+          constraints, then the review / execute card (the page's action). */}
+      <main
+        style={{
+          maxWidth: 480 + (isMobile ? 32 : 40),
+          margin: "0 auto",
+          padding: isMobile ? "24px 16px 40px" : "38px 20px 48px",
+        }}
+      >
+        {/* Mode tabs — one-line shape hint; the full explanation and worked
+            example sit behind a disclosure. */}
+        <div style={{ marginBottom: 18 }}>
+          <div style={{ overflowX: "auto", paddingBottom: 2 }}>
+            <Tabs
+              options={(["multi-to-one", "one-to-many", "wallet-liquidator", "many-to-many"] as const).map((m) => ({
+                value: m,
+                label: MODE_TAB_LABEL[m],
+              }))}
+              active={mode}
+              onChange={switchMode}
+              variant="underline"
+            />
           </div>
+          <p style={{ margin: "10px 0 0", fontSize: 11, color: "rgba(255,255,255,0.55)", lineHeight: 1.5 }}>
+            <strong style={{ color: "#fff" }}>{MODE_LABEL[mode]}</strong>{" "}
+            <span style={{ color: "rgba(255,255,255,0.45)" }}>· {MODE_SUBTITLE[mode]}</span>
+          </p>
+          <Disclosure label="How this mode works">
+            <div style={{ marginTop: 10, padding: "12px 14px", background: "rgba(255,255,255,0.02)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: 4 }}>
+              <p style={{ margin: 0, fontSize: 11.5, color: "rgba(255,255,255,0.70)", lineHeight: 1.55 }}>
+                <strong style={{ color: "#fff" }}>{MODE_LABEL[mode]}</strong>{" "}
+                <span style={{ color: "rgba(255,255,255,0.45)" }}>· {MODE_SUBTITLE[mode]}</span>
+                <br />
+                <span style={{ color: "rgba(255,255,255,0.60)" }}>{MODE_BLURB[mode]}</span>
+              </p>
+              <div
+                style={{
+                  marginTop: 10,
+                  padding: "10px 12px",
+                  background: "rgba(255,138,0,0.05)",
+                  border: "1px solid rgba(255,138,0,0.18)",
+                  borderRadius: 4,
+                }}
+              >
+                <p style={{ margin: 0, fontSize: 9.5, letterSpacing: "0.30em", color: "#FF8A00", textTransform: "uppercase", fontWeight: 700 }}>
+                  {MODE_EXAMPLE[mode].title}
+                </p>
+                <ul style={{ margin: "6px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 4 }}>
+                  {MODE_EXAMPLE[mode].lines.map((line, i) => (
+                    <li key={i} style={{ display: "flex", gap: 8, fontSize: 11, color: "rgba(255,255,255,0.70)", lineHeight: 1.55 }}>
+                      <span style={{ color: "rgba(255,138,0,0.70)", flexShrink: 0, fontWeight: 700, minWidth: 14, textAlign: "right" }}>{i + 1}.</span>
+                      <span>{line}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </Disclosure>
         </div>
 
-        {/* Body grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: isMobile ? "1fr" : "minmax(0, 1.4fr) minmax(0, 1fr)",
-            gap: isMobile ? 18 : 28,
-            alignItems: "start",
-          }}
-        >
-          {/* LEFT — inputs + outputs */}
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            {/* Inputs panel */}
-            {mode === "wallet-liquidator" && (
-              <LiquidatorScanCard
-                walletConnected={walletState.status === "connected"}
-                wallet={connectedAddress}
-                chainIds={capabilities?.supportedChainIds ?? []}
-                maxInputs={modeConfig.maxInputs}
-                onSelected={(next) => setLiquidatorInputs(next.map((asset) => ({
-                  id: asset.id,
-                  chainId: asset.chainId,
-                  ticker: asset.ticker,
-                  amount: asset.amount,
-                  token: asset.token,
-                  decimals: asset.decimals,
-                  amountBase: asset.amountBase,
-                  usdPrice: asset.usd != null
-                    ? asset.usd / Number(asset.amount || 1)
-                    : 0,
-                })))}
-              />
-            )}
-            <LegsPanel
-              kind="input"
-              legs={inputs as any}
-              setLegs={setInputs as any}
-              mode={mode}
-              disabled={mode === "one-to-many" && inputs.length >= 1}
-              maxAdd={modeConfig.maxInputs}
-              onPickChain={(id) => setChainPickerTarget({ kind: "input", id })}
-              onPickToken={(id) => setTokenPickerTarget({ kind: "input", id })}
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          {/* Inputs panel */}
+          {mode === "wallet-liquidator" && (
+            <LiquidatorScanCard
+              walletConnected={walletState.status === "connected"}
+              wallet={connectedAddress}
+              chainIds={capabilities?.supportedChainIds ?? []}
+              maxInputs={modeConfig.maxInputs}
+              onSelected={(next) => setLiquidatorInputs(next.map((asset) => ({
+                id: asset.id,
+                chainId: asset.chainId,
+                ticker: asset.ticker,
+                amount: asset.amount,
+                token: asset.token,
+                decimals: asset.decimals,
+                amountBase: asset.amountBase,
+                usdPrice: asset.usd != null
+                  ? asset.usd / Number(asset.amount || 1)
+                  : 0,
+              })))}
             />
+          )}
+          <LegsPanel
+            kind="input"
+            legs={inputs as any}
+            setLegs={setInputs as any}
+            mode={mode}
+            disabled={mode === "one-to-many" && inputs.length >= 1}
+            maxAdd={modeConfig.maxInputs}
+            onPickChain={(id) => setChainPickerTarget({ kind: "input", id })}
+            onPickToken={(id) => setTokenPickerTarget({ kind: "input", id })}
+          />
 
-            {/* Outputs panel */}
-            <LegsPanel
-              kind="output"
-              legs={outputs as any}
-              setLegs={setOutputs as any}
-              mode={mode}
-              disabled={(mode === "multi-to-one" || mode === "wallet-liquidator") && outputs.length >= 1}
-              maxAdd={modeConfig.maxOutputs}
-              onPickChain={(id) => setChainPickerTarget({ kind: "output", id })}
-              onPickToken={(id) => setTokenPickerTarget({ kind: "output", id })}
-            />
-          </div>
+          {/* Outputs panel */}
+          <LegsPanel
+            kind="output"
+            legs={outputs as any}
+            setLegs={setOutputs as any}
+            mode={mode}
+            disabled={(mode === "multi-to-one" || mode === "wallet-liquidator") && outputs.length >= 1}
+            maxAdd={modeConfig.maxOutputs}
+            onPickChain={(id) => setChainPickerTarget({ kind: "output", id })}
+            onPickToken={(id) => setTokenPickerTarget({ kind: "output", id })}
+          />
 
-          {/* RIGHT — review + execute */}
-          <aside style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <Card style={{ padding: 16, position: "relative", overflow: "hidden" }}>
-              <div style={{ position: "absolute", top: -16, right: -16, opacity: 0.05, pointerEvents: "none" }}>
-                <BrandMark size={110} color="#FF8A00" />
-              </div>
-              <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.50)", textTransform: "uppercase", fontWeight: 700 }}>
-                Basket review
-              </p>
-
-              <div style={{ marginTop: 14 }}>
-                <FeeBreakdown
-                  rows={(() => {
-                    const rows: FeeRow[] = [
-                      { label: "Mode",          value: MODE_LABEL[mode] },
-                      { label: "Legs",          value: `${legCount} configured · cap ${limits.maxLegs}` },
-                      { label: "Input estimate", value: `$${totalInputUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, muted: true },
-                      {
-                        label: "Capabilities",
-                        value: capabilities?.enabled ? "Available" : "Disabled",
-                        sub: capabilitiesError ?? capabilities?.modes?.[mode]?.reason,
-                        accent: !capabilities?.enabled,
-                      },
-                      ...(basket.quote ? [
-                        { label: "Quote", value: basket.quote.basketId, sub: `${basket.quote.legs.length} legs · v${basket.quote.quoteVersion}` },
-                        { label: "Skipped", value: String(basket.quote.skipped.length), muted: true },
-                      ] : []),
-                      ...(basket.status ? [
-                        { label: "Status", value: basket.status.composite, accent: true },
-                      ] : []),
-                    ];
-                    return rows;
-                  })()}
-                  bordered
-                />
-              </div>
-
-              {/* Allocation status */}
-              {(mode === "one-to-many" || mode === "many-to-many") && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: "10px 12px",
-                    background: allocOk ? "rgba(52,211,153,0.06)" : "rgba(248,113,113,0.08)",
-                    border: `1px solid ${allocOk ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.30)"}`,
-                    borderRadius: 4,
-                    fontSize: 11.5,
-                    color: allocOk ? "#34D399" : "#F87171",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Allocations: {(totalBps / 100).toFixed(2)}% of 100% · {allocOk ? "balanced" : `off by ${(10_000 - totalBps) > 0 ? "+" : ""}${((10_000 - totalBps) / 100).toFixed(2)}%`}
-                </div>
-              )}
-
-              {!recipientsValid && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: "10px 12px",
-                    background: "rgba(248,113,113,0.08)",
-                    border: "1px solid rgba(248,113,113,0.30)",
-                    borderRadius: 4,
-                    fontSize: 11.5,
-                    color: "#F87171",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Each output recipient must be empty (connected wallet) or a valid address.
-                </div>
-              )}
-
-              {!inputsValid && (
-                <div
-                  style={{
-                    marginTop: 12,
-                    padding: "10px 12px",
-                    background: "rgba(255,138,0,0.06)",
-                    border: "1px solid rgba(255,138,0,0.25)",
-                    borderRadius: 4,
-                    fontSize: 11.5,
-                    color: "#FFB347",
-                    lineHeight: 1.5,
-                  }}
-                >
-                  Enter an amount &gt; 0 on every input leg to keep the preview valid.
-                </div>
-              )}
-
-              <div style={{ marginTop: 14 }}>
-                <BasketReviewPanel
-                  mode={mode}
-                  capabilities={capabilities}
-                  capabilitiesError={capabilitiesError}
-                  quote={basket.quote}
-                  plan={basket.plan}
-                  status={basket.status}
-                  busy={basket.busy}
-                  walletConnected={walletState.status === "connected"}
-                  canQuote={inputsValid && allocOk && recipientsValid && !overCap}
-                  executeLocked={basket.executeLocked}
-                  onQuote={() => { void runQuote(); }}
-                  onPlan={() => {
-                    void basket.requestPlan().then(() => toast.success("Server plan ready")).catch(() => {
-                      toast.error(basket.errorMessage ?? "Plan failed");
-                    });
-                  }}
-                  onExecute={() => {
-                    void basket.executePlan().then(() => toast.success("Submitted hashes acknowledged")).catch(() => {
-                      toast.error(basket.errorMessage ?? "Execution failed");
-                    });
-                  }}
-                  onRetry={() => {
-                    void basket.retryFailedLegs().then(() => toast.success("Failed legs retried")).catch(() => {
-                      toast.error(basket.errorMessage ?? "Retry failed");
-                    });
-                  }}
-                />
-                {basket.errorMessage && (
-                  <p style={{ margin: "10px 0 0", fontSize: 11.5, color: "#F87171", lineHeight: 1.5 }}>
-                    {basket.errorMessage}
-                  </p>
-                )}
-              </div>
-            </Card>
-
-            {/* Constraints */}
-            <Card style={{ padding: 16 }}>
-              <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.50)", textTransform: "uppercase", fontWeight: 700 }}>
-                Constraints
-              </p>
+          {/* Constraints — collapsed; the label carries the current values. */}
+          <Card style={{ padding: "2px 16px 4px" }}>
+            <Disclosure label={`Constraints · ${bpsToPct(slippageBps)}% slippage · ${Math.round(deadlineSeconds / 60)} min deadline`}>
               <div style={{ marginTop: 10, display: "flex", flexDirection: "column", gap: 12 }}>
                 {/* Slippage — percent UI mapped to SDK bps */}
                 <div>
@@ -772,27 +642,132 @@ export default function MultiPage() {
               <p style={{ margin: "10px 0 0", fontSize: 10.5, color: "rgba(255,255,255,0.40)", lineHeight: 1.5 }}>
                 Caps: max {limits.maxInputs} inputs · max {limits.maxOutputs} outputs · max {limits.maxLegs} total legs.
               </p>
-            </Card>
+            </Disclosure>
+          </Card>
 
-            {/* SDK source */}
-            {/* <Card style={{ padding: 14 }}>
-              <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.50)", textTransform: "uppercase", fontWeight: 700 }}>
-                Backed by
-              </p>
-              <ul style={{ margin: "8px 0 0", padding: 0, listStyle: "none", display: "flex", flexDirection: "column", gap: 6 }}>
-                {[
-                  ["core/IntentBasket.ts", "validateBasket + 4 modes + caps"],
-                  ["services/BasketQuoteEngine.ts", "per-leg quote orchestration"],
-                  ["services/BasketStatusEngine.ts", "composite status rollup"],
-                  ["services/WalletScanner.ts", "liquidator chain scan (5×50)"],
-                ].map(([f, role]) => (
-                  <li key={f} style={{ fontSize: 11, color: "rgba(255,255,255,0.60)", lineHeight: 1.5 }}>
-                    <code style={{ color: "rgba(255,255,255,0.85)" }}>{f}</code>{" — "}{role}
-                  </li>
-                ))}
-              </ul>
-            </Card> */}
-          </aside>
+          <Card style={{ padding: 16, position: "relative", overflow: "hidden" }}>
+            <div style={{ position: "absolute", top: -16, right: -16, opacity: 0.05, pointerEvents: "none" }}>
+              <BrandMark size={110} color="#FF8A00" />
+            </div>
+            <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.50)", textTransform: "uppercase", fontWeight: 700 }}>
+              Basket review
+            </p>
+
+            <div style={{ marginTop: 14 }}>
+              <FeeBreakdown
+                rows={(() => {
+                  const rows: FeeRow[] = [
+                    { label: "Mode",          value: MODE_LABEL[mode] },
+                    { label: "Legs",          value: `${legCount} configured · cap ${limits.maxLegs}` },
+                    { label: "Input estimate", value: `$${totalInputUSD.toLocaleString("en-US", { maximumFractionDigits: 2 })}`, muted: true },
+                    {
+                      label: "Capabilities",
+                      value: capabilities?.enabled ? "Available" : "Disabled",
+                      sub: capabilitiesError ?? capabilities?.modes?.[mode]?.reason,
+                      accent: !capabilities?.enabled,
+                    },
+                    ...(basket.quote ? [
+                      { label: "Quote", value: basket.quote.basketId, sub: `${basket.quote.legs.length} legs · v${basket.quote.quoteVersion}` },
+                      { label: "Skipped", value: String(basket.quote.skipped.length), muted: true },
+                    ] : []),
+                    ...(basket.status ? [
+                      { label: "Status", value: basket.status.composite, accent: true },
+                    ] : []),
+                  ];
+                  return rows;
+                })()}
+                bordered
+              />
+            </div>
+
+            {/* Allocation status */}
+            {(mode === "one-to-many" || mode === "many-to-many") && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 12px",
+                  background: allocOk ? "rgba(52,211,153,0.06)" : "rgba(248,113,113,0.08)",
+                  border: `1px solid ${allocOk ? "rgba(52,211,153,0.25)" : "rgba(248,113,113,0.30)"}`,
+                  borderRadius: 4,
+                  fontSize: 11.5,
+                  color: allocOk ? "#34D399" : "#F87171",
+                  lineHeight: 1.5,
+                }}
+              >
+                Allocations: {(totalBps / 100).toFixed(2)}% of 100% · {allocOk ? "balanced" : `off by ${(10_000 - totalBps) > 0 ? "+" : ""}${((10_000 - totalBps) / 100).toFixed(2)}%`}
+              </div>
+            )}
+
+            {!recipientsValid && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 12px",
+                  background: "rgba(248,113,113,0.08)",
+                  border: "1px solid rgba(248,113,113,0.30)",
+                  borderRadius: 4,
+                  fontSize: 11.5,
+                  color: "#F87171",
+                  lineHeight: 1.5,
+                }}
+              >
+                Each output recipient must be empty (connected wallet) or a valid address.
+              </div>
+            )}
+
+            {!inputsValid && (
+              <div
+                style={{
+                  marginTop: 12,
+                  padding: "10px 12px",
+                  background: "rgba(255,138,0,0.06)",
+                  border: "1px solid rgba(255,138,0,0.25)",
+                  borderRadius: 4,
+                  fontSize: 11.5,
+                  color: "#FFB347",
+                  lineHeight: 1.5,
+                }}
+              >
+                Enter an amount &gt; 0 on every input leg to keep the preview valid.
+              </div>
+            )}
+
+            <div style={{ marginTop: 14 }}>
+              <BasketReviewPanel
+                mode={mode}
+                capabilities={capabilities}
+                capabilitiesError={capabilitiesError}
+                quote={basket.quote}
+                plan={basket.plan}
+                status={basket.status}
+                busy={basket.busy}
+                walletConnected={walletState.status === "connected"}
+                canQuote={inputsValid && allocOk && recipientsValid && !overCap}
+                executeLocked={basket.executeLocked}
+                onQuote={() => { void runQuote(); }}
+                onPlan={() => {
+                  void basket.requestPlan().then(() => toast.success("Server plan ready")).catch(() => {
+                    toast.error(basket.errorMessage ?? "Plan failed");
+                  });
+                }}
+                onExecute={() => {
+                  void basket.executePlan().then(() => toast.success("Submitted hashes acknowledged")).catch(() => {
+                    toast.error(basket.errorMessage ?? "Execution failed");
+                  });
+                }}
+                onRetry={() => {
+                  void basket.retryFailedLegs().then(() => toast.success("Failed legs retried")).catch(() => {
+                    toast.error(basket.errorMessage ?? "Retry failed");
+                  });
+                }}
+              />
+              {basket.errorMessage && (
+                <p style={{ margin: "10px 0 0", fontSize: 11.5, color: "#F87171", lineHeight: 1.5 }}>
+                  {basket.errorMessage}
+                </p>
+              )}
+            </div>
+          </Card>
         </div>
       </main>
 

@@ -159,27 +159,33 @@ const ChainSwitcher = ({ children }) => {
   return children;
 };
 
+// One react-toastify container config for every wrapper that hosts
+// utils/toastHelper toasts.
+const AppToastContainer = () => (
+  <ToastContainer
+    position="bottom-center"
+    autoClose={5000}
+    hideProgressBar={true}
+    newestOnTop={true}
+    closeOnClick={false}
+    rtl={false}
+    pauseOnFocusLoss={true}
+    draggable={true}
+    pauseOnHover={true}
+    theme="dark"
+    transition={Slide}
+    toastClassName="empseal-toast"
+    bodyClassName="empseal-toast-body"
+    closeButton={false}
+  />
+);
+
 const SwapWrapper = ({ children }) => (
   <WagmiProviderWrapper appType="swap">
     <Provider store={store}>
       <ChainSwitcher>
         {children}
-        <ToastContainer
-          position="bottom-center"
-          autoClose={5000}
-          hideProgressBar={true}
-          newestOnTop={true}
-          closeOnClick={false}
-          rtl={false}
-          pauseOnFocusLoss={true}
-          draggable={true}
-          pauseOnHover={true}
-          theme="dark"
-          transition={Slide}
-          toastClassName="empseal-toast"
-          bodyClassName="empseal-toast-body"
-          closeButton={false}
-        />
+        <AppToastContainer />
       </ChainSwitcher>
     </Provider>
   </WagmiProviderWrapper>
@@ -189,32 +195,22 @@ const ViaBridgeWrapper = ({ children }) => (
   <WagmiProviderWrapper appType="via-bridge">
     <Provider store={store}>
       {children}
-      <ToastContainer
-        position="bottom-center"
-        autoClose={5000}
-        hideProgressBar={true}
-        newestOnTop={true}
-        closeOnClick={false}
-        rtl={false}
-        pauseOnFocusLoss={true}
-        draggable={true}
-        pauseOnHover={true}
-        theme="dark"
-        transition={Slide}
-        toastClassName="empseal-toast"
-        bodyClassName="empseal-toast-body"
-        closeButton={false}
-      />
+      <AppToastContainer />
     </Provider>
   </WagmiProviderWrapper>
 );
 
 // Minimal wrapper for V2 design-system pages — provides wagmi + RainbowKit
 // context so useWalletConnection() hook works.  V2 pages manage their own
-// toast / chain-switch / nav, so this wrapper is intentionally lean.
+// chain-switch / nav and render the design-system <Toaster /> themselves.
+// The react-toastify container is still needed: shared execution code
+// (useSwapExecution, utils/contractCalls) reports approve / swap / rejection
+// through utils/toastHelper, and without a container those toasts are
+// silently dropped.
 const V2Wrapper = ({ children }) => (
   <WagmiProviderWrapper appType="swap">
     {children}
+    <AppToastContainer />
   </WagmiProviderWrapper>
 );
 
@@ -245,11 +241,15 @@ function MyRoutes() {
             <Route path="/portfolio-v2" element={<V2Wrapper><PortfolioPageV2 /></V2Wrapper>} />
             <Route path="/swap-v2" element={<V2Wrapper><SwapPageV2 /></V2Wrapper>} />
             <Route path="/cross-v2" element={<V2Wrapper><CrossPageV2 /></V2Wrapper>} />
-            <Route path="/bridge-v2" element={<V2Wrapper><BridgePageV2 /></V2Wrapper>} />
+            {/* Bridge + Ramp disabled for now (also disabled in the nav) — direct
+                URLs redirect to Swap. Restore by swapping these back:
+                <Route path="/bridge-v2" element={<V2Wrapper><BridgePageV2 /></V2Wrapper>} /> */}
+            <Route path="/bridge-v2" element={<Navigate to="/swap-v2" replace />} />
             <Route path="/multi-v2"  element={<V2Wrapper><MultiPageV2 /></V2Wrapper>} />
             <Route path="/gas-v2"    element={<V2Wrapper><GasPageV2 /></V2Wrapper>} />
             <Route path="/widget-v2" element={<V2Wrapper><WidgetPageV2 /></V2Wrapper>} />
-            <Route path="/ramp-v2" element={<V2Wrapper><RampPageV2 /></V2Wrapper>} />
+            {/* <Route path="/ramp-v2" element={<V2Wrapper><RampPageV2 /></V2Wrapper>} /> */}
+            <Route path="/ramp-v2" element={<Navigate to="/swap-v2" replace />} />
             {/* /landing kept for backwards-compat links; redirects to /. */}
             <Route path="/landing" element={<Navigate to="/" replace />} />
             <Route

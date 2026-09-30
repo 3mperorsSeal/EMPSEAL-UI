@@ -43,6 +43,7 @@ export function normalizeOfferSet(response: QuoteResponse): NormalizedOfferSet {
     offerSetId: offerSet.offerSetId,
     expiresAt: offerSet.expiresAt,
     bestOfferId: offerSet.bestOfferId,
+    providerDiagnostics: offerSet.providerDiagnostics,
     gasZipComposition,
     offers: (offerSet.offers ?? []).map((offer) => {
       const actionKind =
