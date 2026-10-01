@@ -240,8 +240,16 @@ export default function EmpxBridgeWidget(props: EmpxBridgeWidgetProps) {
           <div style={{ fontSize: 12.5, fontWeight: 500, color: wk.orange, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
             {totalFeeUSD != null ? (totalFeeUSD <= 0.005 ? "FREE" : `$${totalFeeUSD.toFixed(2)}`) : "—"}
           </div>
-          {protocolFeeBps != null && (
-            <div style={{ fontSize: 9.5, color: wk.t3, marginTop: 4 }}>{protocolFeeBps} bps · via Via Labs</div>
+          {(protocolFeeBps != null || protocolFeeUSD != null) && (
+            <div style={{ fontSize: 9.5, color: wk.t3, marginTop: 4 }}>
+              {[
+                "Protocol fee",
+                protocolFeeBps != null ? `${protocolFeeBps} bps` : null,
+                protocolFeeUSD != null ? `$${protocolFeeUSD.toFixed(2)}` : null,
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </div>
           )}
         </div>
         <div>

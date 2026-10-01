@@ -96,8 +96,12 @@ import { useLayerZeroDestinations, filterLayerZeroDestinations, layerZeroDestina
 import { useCrossRecovery } from "../../features/cross/hooks/useCrossRecovery";
 import {
   findMatchingRefreshedOffer,
+  getBestAvailableOfferId,
+  getDefaultPrimaryOfferId,
+  getGasDropBlockReason,
   getPrimaryOffers,
   isGardenNativeOffer,
+  isGasDropComposableOffer,
   normalizeOfferSet,
 } from "../../features/cross/model/quotes";
 import {
@@ -777,13 +781,22 @@ export default function CrossPage() {
     isFetching: quote.isFetching,
     offerCount: offerEntries.length,
   });
+  // With Gas Drop on, the default primary must be composable with Gas.zip, so
+  // it can differ from bestOfferId (e.g. when the best route is multi-step).
+  const defaultOfferId = useMemo(
+    () => getDefaultPrimaryOfferId(effectiveQuote, displayOffers, gasDropOnDestination),
+    [displayOffers, effectiveQuote, gasDropOnDestination],
+  );
+  const bestAvailableOfferId = useMemo(
+    () => getBestAvailableOfferId(effectiveQuote, displayOffers),
+    [displayOffers, effectiveQuote],
+  );
   const selectedOffer = useMemo(
     () =>
       displayOffers.find((offer: any) => offer.offerId === selectedOfferId) ??
-      displayOffers.find((offer: any) => offer.offerId === effectiveQuote?.bestOfferId) ??
-      displayOffers[0] ??
+      displayOffers.find((offer: any) => offer.offerId === defaultOfferId) ??
       null,
-    [displayOffers, effectiveQuote?.bestOfferId, selectedOfferId],
+    [defaultOfferId, displayOffers, selectedOfferId],
   );
   const selectedOfferDisplay = useMemo(
     () => (selectedOffer ? formatCrossOffer(selectedOffer, toTokenDecimals, offerCapabilityContext) : null),
@@ -800,14 +813,9 @@ export default function CrossPage() {
       !selectedOfferId ||
       !displayOffers.some((offer: any) => offer.offerId === selectedOfferId)
     ) {
-      setSelectedOfferId(
-        displayOffers.find((offer: any) => offer.offerId === effectiveQuote?.bestOfferId)
-          ?.offerId ??
-          displayOffers[0]?.offerId ??
-          null,
-      );
+      setSelectedOfferId(defaultOfferId);
     }
-  }, [displayOffers, effectiveQuote?.bestOfferId, selectedOfferId]);
+  }, [defaultOfferId, displayOffers, selectedOfferId]);
 
   useEffect(() => {
     if (!gasOffers.length) {
@@ -955,18 +963,36 @@ export default function CrossPage() {
     tokenKey,
   ]);
 
-  // Gas-drop eligibility — Gas.zip must support the destination
+  // Gas-drop eligibility — Gas.zip must support the destination and the
+  // primary must be a one-step route. A non-composable route the user picked
+  // blocks Gas Drop; one that is only the default gets swapped for a
+  // composable primary when Gas Drop is turned on.
   const gasZipRail = RAILS.find((r) => r.name === "Gas.zip");
-  const selectedOfferIsGardenNative = Boolean(
-    selectedOffer && isGardenNativeOffer(selectedOffer),
+  const gasDropSupported = !!gasZipRail && gasZipRail.destinations.includes(toChainId);
+  const selectedOfferGasDropBlockReason = getGasDropBlockReason(selectedOffer);
+  const selectedOfferIsUserChoice = Boolean(
+    selectedOffer && selectedOffer.offerId !== defaultOfferId,
   );
-  const gasDropAvailable =
-    !!gasZipRail &&
-    gasZipRail.destinations.includes(toChainId) &&
-    !selectedOfferIsGardenNative;
+  const composableOfferAvailable =
+    !displayOffers.length || displayOffers.some((offer) => isGasDropComposableOffer(offer));
+  const gasDropBlockReason = !composableOfferAvailable
+    ? `${getGasDropBlockReason(displayOffers[0]) ?? "No available route can be combined with Gas Drop."} No other route is available for this pair.`
+    : selectedOfferGasDropBlockReason && selectedOfferIsUserChoice
+      ? `${selectedOfferGasDropBlockReason} Select a one-step route to drop destination gas.`
+      : null;
+  const gasDropAvailable = gasDropSupported && !gasDropBlockReason;
   useEffect(() => {
     if (!gasDropAvailable && gasDropOnDestination) setGasDropOnDestination(false);
   }, [gasDropAvailable, gasDropOnDestination]);
+  const toggleGasDrop = useCallback(() => {
+    if (!gasDropOnDestination && selectedOfferGasDropBlockReason) {
+      // The current default is not composable; fall back to the Gas Drop
+      // default primary instead of composing with a multi-step route.
+      setSelectedOfferId(null);
+      toast.info("Gas Drop needs a one-step route. Switched to the best one-step route.");
+    }
+    setGasDropOnDestination(!gasDropOnDestination);
+  }, [gasDropOnDestination, selectedOfferGasDropBlockReason]);
 
   const tracking = useCrossIntentTracking(
     session?.mode === "single" ? session.intentId : undefined,
@@ -1700,11 +1726,13 @@ export default function CrossPage() {
         );
       }
 
-      if (
-        gasDropOnDestination &&
-        selectedGasOfferId &&
-        !isGardenNativeOffer(selectedOffer)
-      ) {
+      if (gasDropOnDestination && selectedGasOfferId) {
+        // Never compose with a multi-step or explicit-only primary: the
+        // backend rejects it, and silently dropping the gas leg would be wrong.
+        const blockReason = getGasDropBlockReason(selectedOffer);
+        if (blockReason) {
+          throw new Error(`${blockReason} Turn off Gas Drop or choose a one-step route.`);
+        }
         // Gas.zip destination gas is a composed route: primary bridge leg plus
         // an independent gas-drop leg, each with its own intent lifecycle.
         const response = await execution.selectComposedIntent({
@@ -2106,13 +2134,12 @@ export default function CrossPage() {
   const railsMessage = railsState === "error"
     ? quoteErrorMessage ?? undefined
     : quoteUiState.emptyMessage || undefined;
-  const gasDropHint = selectedOfferIsGardenNative
-    ? "Garden native routes cannot be composed with Gas.zip. Select a different rail to drop destination gas."
-    : gasDropAvailable
-      ? `Arrive on ${toChain.name} with ~$${GAS_DROP_USD.toFixed(2)} of ${toChain.ticker} so you can transact immediately. Routed via Gas.zip side-leg.`
-      : `Gas.zip doesn't support ${toChain.name} as a destination.`;
+  const gasDropHint = !gasDropSupported
+    ? `Gas.zip doesn't support ${toChain.name} as a destination.`
+    : gasDropBlockReason
+      ?? `Arrive on ${toChain.name} with ~$${GAS_DROP_USD.toFixed(2)} of ${toChain.ticker} so you can transact immediately. Routed via Gas.zip side-leg.`;
   const crossNotice: CrossNotice | undefined =
-    selectedOfferId && selectedOfferId !== effectiveQuote?.bestOfferId
+    selectedOfferId && selectedOfferId !== defaultOfferId
       ? { tone: "info", text: "User-selected route — select it again to return to the best route." }
       : undefined;
 
@@ -2284,7 +2311,7 @@ export default function CrossPage() {
           bridgeFeeUSD={selectedOfferDisplay?.bridgeFeeUSD}
           estimatedTime={selectedOfferDisplay?.estimatedTimeSeconds ? formatEtaSeconds(selectedOfferDisplay.estimatedTimeSeconds) : undefined}
           minimumReceived={selectedOfferDisplay ? `${selectedOfferDisplay.minimumReceived} ${toTicker}` : undefined}
-          slippageBps={30}
+          slippageBps={selectedOffer?.economics?.slippageBps}
           priceImpactBps={priceImpactBps}
           routeHops={routeHops}
 
@@ -2305,13 +2332,13 @@ export default function CrossPage() {
             mode: "B",
             outAmount: o.outputAmount,
             eta: o.estimatedTimeSeconds != null ? formatEtaSeconds(o.estimatedTimeSeconds) : "—",
-            tag: o.isBest ? "BEST" : undefined,
+            tag: o.isBest ? "BEST" : o.offerId === bestAvailableOfferId ? "BEST AVAILABLE" : undefined,
             isActive: o.offerId === (selectedOffer?.offerId ?? selectedOfferId),
           }))}
           onSelectRail={(name) => {
             const hit = offerEntries.find((entry) => entry.railName === name);
             if (!hit) return;
-            setSelectedOfferId((cur) => (cur === hit.offerId ? effectiveQuote?.bestOfferId ?? null : hit.offerId));
+            setSelectedOfferId((cur) => (cur === hit.offerId ? defaultOfferId : hit.offerId));
           }}
           railsState={railsState}
           railsMessage={railsMessage}
@@ -2320,12 +2347,13 @@ export default function CrossPage() {
               <OffersList
                 offers={offerEntries}
                 bestOfferId={effectiveQuote?.bestOfferId}
+                bestAvailableOfferId={bestAvailableOfferId}
                 selectedOfferId={selectedOffer?.offerId ?? selectedOfferId}
                 isLoading={quote.isFetching}
                 error={quoteErrorMessage}
                 emptyMessage={quoteUiState.emptyMessage}
                 onSelectOffer={(offerId) => {
-                  setSelectedOfferId((cur) => (cur === offerId ? effectiveQuote?.bestOfferId ?? null : offerId));
+                  setSelectedOfferId((cur) => (cur === offerId ? defaultOfferId : offerId));
                   toast.info(selectedOfferId === offerId ? "Reverted to best route" : "Selected route");
                 }}
                 toTicker={toTicker}
@@ -2336,7 +2364,7 @@ export default function CrossPage() {
             enabled: gasDropOnDestination,
             available: gasDropAvailable,
             hint: gasDropHint,
-            onToggle: () => setGasDropOnDestination(!gasDropOnDestination),
+            onToggle: toggleGasDrop,
           }}
           quote={sourceWalletConnected && quoteEnabled ? {
             issuedAt: quoteIssuedAt,
@@ -2619,6 +2647,7 @@ type CrossOfferEntry = CrossV2OfferDisplay & {
 function OffersList({
   offers,
   bestOfferId,
+  bestAvailableOfferId,
   selectedOfferId,
   onSelectOffer,
   toTicker,
@@ -2628,6 +2657,8 @@ function OffersList({
 }: {
   offers: CrossOfferEntry[];
   bestOfferId?: string;
+  /** Tagged when bestOfferId is hidden in this UI and this offer is the fallback. */
+  bestAvailableOfferId?: string | null;
   selectedOfferId: string | null;
   onSelectOffer: (offerId: string) => void;
   toTicker: string;
@@ -2665,7 +2696,8 @@ function OffersList({
       </p>
       <div style={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 320, overflowY: "auto" }}>
         {offers.map((o, idx) => {
-          const isBest = o.offerId === bestOfferId || o.isBest;
+          const isBestAvailable = o.offerId === bestAvailableOfferId;
+          const isBest = o.offerId === bestOfferId || o.isBest || isBestAvailable;
           const isSelected = o.offerId === selectedOfferId;
           const isActive = isSelected || (!selectedOfferId && isBest);
           const capabilityTag =
@@ -2680,9 +2712,11 @@ function OffersList({
             capabilityTag ??
             (isSelected && !isBest
               ? "SELECTED"
-              : isBest
-                ? "BEST"
-                : null);
+              : isBestAvailable
+                ? "BEST AVAILABLE"
+                : isBest
+                  ? "BEST"
+                  : null);
           const tagAccent = isSelected || isBest;
           const modeColor = o.executionLabel === "Provider Direct" ? "#93C5FD" : "#FFB347";
           return (

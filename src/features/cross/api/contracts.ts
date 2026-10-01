@@ -214,6 +214,8 @@ export interface RailOffer {
     | "src_and_dst_swap_required"
     | "multi_hop";
   executionMode?: "router_intent" | "provider_direct" | "sequential_wallet";
+  /** Omitted means "automatic"; explicit_only offers never become bestOfferId. */
+  selectionPolicy?: "automatic" | "explicit_only";
   routeAsset?: ProviderAssetRef;
   sourceSettlementAsset: ProviderAssetRef;
   destinationSettlementAsset: ProviderAssetRef;

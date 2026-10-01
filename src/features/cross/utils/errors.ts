@@ -120,6 +120,12 @@ export function mapCrossApiError(error: any): string {
   if (code.includes("INVALID_SELECTION_RESPONSE")) {
     return "The route response was incomplete. No transaction was sent.";
   }
+  if (code.includes("SEQUENTIAL_PRIMARY_NOT_COMPOSABLE")) {
+    return "Multi-step routes cannot be combined with Gas Drop. Turn off Gas Drop or choose a one-step route.";
+  }
+  if (code.includes("GARDEN_NATIVE_SOURCE_NOT_COMPOSABLE")) {
+    return "Garden native routes cannot be combined with Gas Drop. Turn off Gas Drop or choose another route.";
+  }
   if (code.includes("GARDEN_SOLANA_TRANSACTION_EXPIRED")) {
     return "Garden Solana transaction expired. Request a new quote and try again.";
   }
