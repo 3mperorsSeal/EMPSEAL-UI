@@ -1,20 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { lazy, Suspense } from "react";
 
-// import Base from "../layout/base/Base";
-// Home page removed — root path redirects to /swap
-import Swap from "../pages/swap/Main";
-import BreadCrumb from "../components/BreadCrumb";
-import NFTMarketplace from "../pages/Home/NFTMarketPlace";
-import CollectionDetail from "../components/CollectionDetail";
-import ItemDetail from "../pages/Home/ItemDetail";
-import Bridge from "../pages/bridge/Main";
-import NativeBridge from "../pages/nativeBridge";
-import Widget from "../pages/widget/Main";
 import WidgetSwapPage from "../pages/widget/SwapEmbed";
-import Cross from "../pages/cross/Main";
-import Limit from "../pages/limit/Main";
-import BridgeWrapper from "../components/BridgeWrapper";
 import WagmiProviderWrapper from "../Wagmi/WagmiProvider";
 import { Provider } from "react-redux";
 import store from "../redux/store/store";
@@ -32,7 +18,6 @@ import {
   polygon,
   avalanche,
 } from "wagmi/chains";
-import ViaBridge from "../pages/via-bridge/BridgePage";
 import NotFound from "../pages/NotFound";
 import Landing from "../pages/landing/Home";
 import LandingV2 from "../pages/landing/v2/LandingV2";
@@ -42,15 +27,10 @@ import DesignSystemPreview from "../design-system/DesignSystemPreview";
 import PortfolioPageV2 from "../design-system/pages/PortfolioPage";
 import SwapPageV2 from "../design-system/pages/SwapPage";
 import CrossPageV2 from "../design-system/pages/CrossPage";
-import BridgePageV2 from "../design-system/pages/BridgePage";
 import MultiPageV2 from "../design-system/pages/MultiPage";
 import GasPageV2 from "../design-system/pages/GasPage";
 import WidgetPageV2 from "../design-system/pages/WidgetPage";
-import RampPageV2 from "../design-system/pages/RampPage";
-import Portfolio from "../pages/portfolio/Portfolio";
 import ErrorBoundary from "../components/ErrorBoundary";
-
-const GasBridgePage = lazy(() => import("../pages/GasBridgePage"));
 // When a user connects an unsupported chain, ChainSwitcher prompts via
 // a toast with an explicit "Switch to PulseChain" action — NOT a silent
 // programmatic switch (which was the prior UX).
@@ -191,15 +171,6 @@ const SwapWrapper = ({ children }) => (
   </WagmiProviderWrapper>
 );
 
-const ViaBridgeWrapper = ({ children }) => (
-  <WagmiProviderWrapper appType="via-bridge">
-    <Provider store={store}>
-      {children}
-      <AppToastContainer />
-    </Provider>
-  </WagmiProviderWrapper>
-);
-
 // Minimal wrapper for V2 design-system pages — provides wagmi + RainbowKit
 // context so useWalletConnection() hook works.  V2 pages manage their own
 // chain-switch / nav and render the design-system <Toaster /> themselves.
@@ -222,9 +193,7 @@ function MyRoutes() {
              route so the whole app doesn't go blank.  Per-page boundaries
              can wrap sub-trees independently for finer recovery. */}
         <ErrorBoundary>
-        {/* <Base> */}
         <div>
-          {/* <BreadCrumb /> */}
           <Routes>
             {/* <Route path="/" element={<Navigate to="/landing" replace />} /> */}
             {/* v4 promoted to "/" — owner approved 2026-08-20. Prior landings
@@ -252,22 +221,8 @@ function MyRoutes() {
             <Route path="/ramp-v2" element={<Navigate to="/swap-v2" replace />} />
             {/* /landing kept for backwards-compat links; redirects to /. */}
             <Route path="/landing" element={<Navigate to="/" replace />} />
-            <Route
-              path="/portfolio"
-              element={
-                <SwapWrapper>
-                  <Portfolio />
-                </SwapWrapper>
-              }
-            />
-            <Route
-              path="/widget"
-              element={
-                <SwapWrapper>
-                  <Widget />
-                </SwapWrapper>
-              }
-            />
+            {/* Embeddable swap widget loaded in partner iframes (vercel.json
+                allows framing for this path only). Must stay live. */}
             <Route
               path="/widget/swap"
               element={
@@ -276,80 +231,12 @@ function MyRoutes() {
                 </SwapWrapper>
               }
             />
-            <Route
-              path="/cross"
-              element={
-                <SwapWrapper>
-                  <Cross />
-                </SwapWrapper>
-              }
-            />
-            <Route
-              path="/limit"
-              element={
-                <SwapWrapper>
-                  <Limit />
-                </SwapWrapper>
-              }
-            />
-            {/* <Route path="/" element={<Navigate to="/swap" replace />} /> */}
-            <Route
-              path="/swap"
-              element={
-                <SwapWrapper>
-                  <Swap />
-                </SwapWrapper>
-              }
-            />
-            <Route
-              path="/nft-marketplace/:name"
-              element={<CollectionDetail />}
-            />
-            <Route path="/nft-marketplace" element={<NFTMarketplace />} />
-            <Route path="/item-detail" element={<ItemDetail />} />
-            <Route
-              path="/bridge"
-              element={
-                <BridgeWrapper>
-                  <Bridge />
-                </BridgeWrapper>
-              }
-            /> 
-            {/* /native-bridge — disabled; preserved for the Via Labs bridge
-                 rebuild. */}
-            {/* <Route
-              path="/native-bridge"
-              element={
-                <BridgeWrapper>
-                  <NativeBridge />
-                </BridgeWrapper>
-              }
-            /> */}
-            {/* via-bridge disabled — coming soon */}
-            <Route
-              path="/via-bridge"
-              element={<Navigate to="/swap" replace />}
-            />
-            <Route
-              path="/gas"
-              element={
-                <BridgeWrapper>
-                  <Suspense
-                    fallback={
-                      <div className="w-full h-screen flex items-center justify-center">
-                        <div className="animate-spin rounded-full h-10 w-10 border-2 border-white border-t-transparent" />
-                      </div>
-                    }
-                  >
-                    <GasBridgePage />
-                  </Suspense>
-                </BridgeWrapper>
-              }
-            />
+            {/* v1 app routes (/swap, /cross, /gas, /portfolio, /widget, /bridge,
+                /limit, /nft-marketplace, /item-detail, /via-bridge) removed —
+                the -v2 pages replace them; old URLs fall through to 404. */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </div>
-        {/* </Base> */}
         </ErrorBoundary>
       </BrowserRouter>
     </>

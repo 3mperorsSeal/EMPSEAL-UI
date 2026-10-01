@@ -48,7 +48,22 @@ interface ChainPickerProps {
   title?: string;
   /** Override eyebrow */
   eyebrow?: string;
+  /**
+   * Show the All / Aggregator / Rail-only / Native L1 tier tabs. Defaults to
+   * on in cross mode when the chains carry a tier; false also hides the
+   * per-tile tier badge and footer legend.
+   */
+  showTiers?: boolean;
 }
+
+type TierFilter = 1 | 2 | 3 | "all";
+
+const TIER_TABS: { tier: TierFilter; label: string }[] = [
+  { tier: "all", label: "All" },
+  { tier: 1, label: "Aggregator" },
+  { tier: 2, label: "Rail-only" },
+  { tier: 3, label: "Native L1" },
+];
 
 const KIND_LABEL: Record<NonNullable<PickerChain["kind"]>, string> = {
   EVM: "EVM Chains",
@@ -66,19 +81,35 @@ export default function ChainPicker({
   mode = "swap",
   title,
   eyebrow,
+  showTiers,
 }: ChainPickerProps) {
   const [query, setQuery] = useState("");
+  const [tierFilter, setTierFilter] = useState<TierFilter>("all");
+  const hasTiers = chains.some((c) => c.tier !== undefined);
+  // Tier badges + legend follow the data; the filter tabs default to cross
+  // mode, where all three tiers actually coexist.
+  const tiersVisible = showTiers ?? hasTiers;
+  const tierTabsVisible = showTiers ?? (mode === "cross" && hasTiers);
+  const tierCounts = useMemo(() => {
+    const counts: Record<string, number> = { all: chains.length };
+    chains.forEach((c) => {
+      if (c.tier !== undefined) counts[c.tier] = (counts[c.tier] ?? 0) + 1;
+    });
+    return counts;
+  }, [chains]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return chains;
-    return chains.filter(
-      (c) =>
+    return chains.filter((c) => {
+      if (tierTabsVisible && tierFilter !== "all" && c.tier !== tierFilter) return false;
+      if (!q) return true;
+      return (
         c.name.toLowerCase().includes(q) ||
         c.ticker?.toLowerCase().includes(q) ||
         String(c.id).includes(q)
-    );
-  }, [chains, query]);
+      );
+    });
+  }, [chains, query, tierFilter, tierTabsVisible]);
 
   // Sort: chains with balance first (highest USD first), then alphabetical
   const sorted = useMemo(() => {
@@ -139,7 +170,7 @@ export default function ChainPicker({
           <span>
             {sorted.length} chain{sorted.length === 1 ? "" : "s"}
           </span>
-          {chains.some((c) => c.tier !== undefined) && <span>T1 aggregator · T2 rail-only · T3 native L1</span>}
+          {tiersVisible && <span>T1 aggregator · T2 rail-only · T3 native L1</span>}
         </div>
       }
     >
@@ -179,9 +210,53 @@ export default function ChainPicker({
         />
       </div>
 
+      {/* Tier tabs */}
+      {tierTabsVisible && (
+        <div style={{ display: "flex", gap: 20, marginBottom: 4, borderBottom: "1px solid rgba(255,255,255,0.07)", overflowX: "auto" }}>
+          {TIER_TABS.filter((t) => t.tier === "all" || tierCounts[t.tier]).map((t) => {
+            const active = tierFilter === t.tier;
+            return (
+              <button
+                key={String(t.tier)}
+                type="button"
+                onClick={() => setTierFilter(t.tier)}
+                aria-pressed={active}
+                style={{
+                  position: "relative",
+                  background: "transparent",
+                  border: "none",
+                  padding: "9px 0",
+                  margin: "0 0 -1px",
+                  fontFamily: "Inter, sans-serif",
+                  fontSize: 10,
+                  fontWeight: 600,
+                  letterSpacing: "0.16em",
+                  textTransform: "uppercase",
+                  whiteSpace: "nowrap",
+                  color: active ? "var(--widget-primary, #FF8A00)" : "rgba(255,255,255,0.36)",
+                  cursor: "pointer",
+                  transition: "color 160ms ease",
+                }}
+                onMouseEnter={(e) => {
+                  if (!active) e.currentTarget.style.color = "rgba(255,255,255,0.65)";
+                }}
+                onMouseLeave={(e) => {
+                  if (!active) e.currentTarget.style.color = "rgba(255,255,255,0.36)";
+                }}
+              >
+                {t.label}
+                {active && (
+                  <span aria-hidden style={{ position: "absolute", left: 0, right: 0, bottom: -1, height: 1.5, background: "var(--widget-primary, #FF8A00)" }} />
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
+
       {sorted.length === 0 ? (
         <div style={{ padding: "32px 12px", textAlign: "center", color: "rgba(255,255,255,0.40)", fontSize: 12 }}>
-          No chains match "{query}"
+          {query.trim() ? `No chains match "${query}"` : "No chains in this tier"}
         </div>
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
@@ -250,7 +325,7 @@ export default function ChainPicker({
                         if (!selected) e.currentTarget.style.background = "transparent";
                       }}
                     >
-                      {c.tier !== undefined && (
+                      {tiersVisible && c.tier !== undefined && (
                         <span
                           aria-hidden
                           style={{

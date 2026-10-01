@@ -15,6 +15,22 @@ export function layerZeroDiagnosticMessage(diagnostics?: LayerZeroQuoteDiagnosti
   return null;
 }
 
+/**
+ * LayerZero diagnostic for the quote page. "No LayerZero route for this pair"
+ * (quote_rejected / unsupported_route) is noise when other rails returned
+ * offers, so it only shows when nothing quoted or a LayerZero offer is selected.
+ */
+export function layerZeroQuoteNotice(
+  diagnostics: LayerZeroQuoteDiagnostic[] | undefined,
+  { hasOffers, layerZeroSelected }: { hasOffers: boolean; layerZeroSelected: boolean },
+): string | null {
+  const diagnostic = diagnostics?.find(item => item.provider === "layerzero_value_transfer_api");
+  if (!diagnostic) return null;
+  const noRouteOnly = diagnostic.code === "quote_rejected" || diagnostic.code === "unsupported_route";
+  if (noRouteOnly && hasOffers && !layerZeroSelected) return null;
+  return layerZeroDiagnosticMessage(diagnostics);
+}
+
 function readErrorMessage(error: any): string | null {
   if (!error) return null;
 

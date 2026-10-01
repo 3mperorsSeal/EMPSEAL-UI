@@ -98,6 +98,34 @@ describe("EmpxCrossWidget", () => {
     expect(onToggleUnavailable).not.toHaveBeenCalled();
   });
 
+  it("labels fees taken from the output as included, not free, and shows the network fee", () => {
+    const { rerender } = renderWidget({ protocolFeeUSD: 0, bridgeFeeUSD: 0, feeIncludedInQuote: true, networkFee: "0.00042 BNB" });
+    expect(screen.getByText("Included in quote")).toBeInTheDocument();
+    expect(screen.queryByText("FREE")).not.toBeInTheDocument();
+    expect(screen.getByText("Network fee")).toBeInTheDocument();
+    expect(screen.getByText("0.00042 BNB")).toBeInTheDocument();
+
+    rerender(
+      <EmpxCrossWidget
+        fromChain={{ id: 42161, name: "Arbitrum" }}
+        fromToken={{ ticker: "USDC" }}
+        fromAmount="100"
+        onFromAmountChange={vi.fn()}
+        onSelectFromToken={vi.fn()}
+        onSelectFromChain={vi.fn()}
+        toChain={{ id: 8453, name: "Base" }}
+        toToken={{ ticker: "USDC" }}
+        toAmount="99.8"
+        onSelectToToken={vi.fn()}
+        onSelectToChain={vi.fn()}
+        onSwap={vi.fn()}
+        protocolFeeUSD={0}
+        bridgeFeeUSD={0}
+      />,
+    );
+    expect(screen.getByText("FREE")).toBeInTheDocument();
+  });
+
   it("shows the quote row with refresh locked until expiry", () => {
     renderWidget({ quote: { issuedAt: Date.now(), validMs: 30_000, onRefresh: vi.fn() } });
     expect(screen.getByText(/quote fresh · 30s/i)).toBeInTheDocument();

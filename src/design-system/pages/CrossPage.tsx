@@ -110,7 +110,7 @@ import {
   getRailCapability,
   type OfferCapabilityContext,
 } from "../../features/cross/model/capabilities";
-import { mapCrossApiError, layerZeroDiagnosticMessage } from "../../features/cross/utils/errors";
+import { mapCrossApiError, layerZeroQuoteNotice } from "../../features/cross/utils/errors";
 import type {
   CrossExecutionSession,
   LayerZeroValueTransferApiQuoteContext,
@@ -146,6 +146,8 @@ import {
   buildLayerZeroChainCatalog,
   formatCrossOffer,
   getCrossQuoteUiState,
+  isImplausibleOfferOutput,
+  sizeDestinationGasAmount,
   mergeLayerZeroChainOptions,
   mergeLayerZeroTokens,
   shortHash,
@@ -362,7 +364,6 @@ function findTokenByTicker(tokens: Token[], ticker: string) {
 
 // Gas-drop typical USD value per destination chain (rough — production reads
 // from DestinationGasAutoFund.ts policy).
-const GAS_DROP_USD = 2.5;
 /** Cross quote validity shown on the quote row (unchanged from the old side-panel countdown). */
 const CROSS_QUOTE_VALID_MS = 30_000;
 
@@ -543,6 +544,9 @@ export default function CrossPage() {
     toTicker,
     toTokenConfig?.address,
   );
+  const destinationNativePriceUSD = useUnifiedPrice(toChainId, toChain.ticker);
+  // Gas Drop asks for ~$2 of destination native gas, whatever the chain.
+  const destinationGasAmount = sizeDestinationGasAmount(destinationNativePriceUSD);
   const toTokenDecimals = Number(toTokenConfig?.decimals ?? 18);
   const providerDestinationIsNonEvm = Boolean(
     toChain.providerChainType && toChain.providerChainType.toUpperCase() !== "EVM",
@@ -704,12 +708,13 @@ export default function CrossPage() {
         nativeSource: layerZeroValueTransferApi ? undefined : quoteNativeSourceCandidate,
         layerZeroValueTransferApi,
         includeDestinationGas: gasDropOnDestination,
-        destinationGasAmount: "0.001",
+        destinationGasAmount,
       }),
     [
       activeNativeSourceWallet?.address,
       deferredFromAmount,
       destinationAddressRequired,
+      destinationGasAmount,
       destinationWalletAddress,
       fromChainId,
       fromChain.quoteChainId,
@@ -769,12 +774,41 @@ export default function CrossPage() {
     () => getPrimaryOffers(effectiveQuote),
     [effectiveQuote],
   );
+  // Value of the amount this quote was requested for (the quote key uses the
+  // deferred amount, and a new key clears quote.data until it resolves).
+  const quotedFromAmount = Number(deferredFromAmount.replace(/,/g, ""));
+  const quotedInputUSD =
+    fromTokenPriceUSD != null && Number.isFinite(quotedFromAmount)
+      ? quotedFromAmount * fromTokenPriceUSD
+      : undefined;
   const offerEntries = useMemo<CrossOfferEntry[]>(() => {
-    return displayOffers.map((offer: any) => ({
-      ...formatCrossOffer(offer, toTokenDecimals, offerCapabilityContext),
-      rawOffer: offer,
-    }));
-  }, [displayOffers, offerCapabilityContext, toTokenDecimals]);
+    return displayOffers.map((offer: any) => {
+      const display = formatCrossOffer(offer, toTokenDecimals, offerCapabilityContext);
+      // Output sanity guard: an offer worth far more than its input is a unit
+      // or routing bug, so it is shown as unavailable and never selected.
+      if (!isImplausibleOfferOutput(display.outputAmount, toTokenPriceUSD, quotedInputUSD)) {
+        return { ...display, rawOffer: offer };
+      }
+      return {
+        ...display,
+        outputAmount: "—",
+        minimumReceived: "—",
+        isBest: false,
+        selectable: false,
+        quoteUnavailable: true,
+        restrictionReason: "Quote unavailable: the quoted output is far above the input value.",
+        rawOffer: offer,
+      };
+    });
+  }, [displayOffers, offerCapabilityContext, quotedInputUSD, toTokenDecimals, toTokenPriceUSD]);
+  const eligibleOffers = useMemo(() => {
+    const unavailable = new Set(
+      offerEntries.filter((entry) => entry.quoteUnavailable).map((entry) => entry.offerId),
+    );
+    return unavailable.size
+      ? displayOffers.filter((offer) => !unavailable.has(offer.offerId))
+      : displayOffers;
+  }, [displayOffers, offerEntries]);
   const quoteUiState = getCrossQuoteUiState({
     walletConnected: sourceWalletConnected,
     quoteReady: quoteEnabled,
@@ -784,19 +818,19 @@ export default function CrossPage() {
   // With Gas Drop on, the default primary must be composable with Gas.zip, so
   // it can differ from bestOfferId (e.g. when the best route is multi-step).
   const defaultOfferId = useMemo(
-    () => getDefaultPrimaryOfferId(effectiveQuote, displayOffers, gasDropOnDestination),
-    [displayOffers, effectiveQuote, gasDropOnDestination],
+    () => getDefaultPrimaryOfferId(effectiveQuote, eligibleOffers, gasDropOnDestination),
+    [effectiveQuote, eligibleOffers, gasDropOnDestination],
   );
   const bestAvailableOfferId = useMemo(
-    () => getBestAvailableOfferId(effectiveQuote, displayOffers),
-    [displayOffers, effectiveQuote],
+    () => getBestAvailableOfferId(effectiveQuote, eligibleOffers),
+    [effectiveQuote, eligibleOffers],
   );
   const selectedOffer = useMemo(
     () =>
-      displayOffers.find((offer: any) => offer.offerId === selectedOfferId) ??
-      displayOffers.find((offer: any) => offer.offerId === defaultOfferId) ??
+      eligibleOffers.find((offer: any) => offer.offerId === selectedOfferId) ??
+      eligibleOffers.find((offer: any) => offer.offerId === defaultOfferId) ??
       null,
-    [defaultOfferId, displayOffers, selectedOfferId],
+    [defaultOfferId, eligibleOffers, selectedOfferId],
   );
   const selectedOfferDisplay = useMemo(
     () => (selectedOffer ? formatCrossOffer(selectedOffer, toTokenDecimals, offerCapabilityContext) : null),
@@ -804,18 +838,18 @@ export default function CrossPage() {
   );
 
   useEffect(() => {
-    if (!displayOffers.length) {
+    if (!eligibleOffers.length) {
       setSelectedOfferId(null);
       return;
     }
 
     if (
       !selectedOfferId ||
-      !displayOffers.some((offer: any) => offer.offerId === selectedOfferId)
+      !eligibleOffers.some((offer: any) => offer.offerId === selectedOfferId)
     ) {
       setSelectedOfferId(defaultOfferId);
     }
-  }, [defaultOfferId, displayOffers, selectedOfferId]);
+  }, [defaultOfferId, eligibleOffers, selectedOfferId]);
 
   useEffect(() => {
     if (!gasOffers.length) {
@@ -974,9 +1008,9 @@ export default function CrossPage() {
     selectedOffer && selectedOffer.offerId !== defaultOfferId,
   );
   const composableOfferAvailable =
-    !displayOffers.length || displayOffers.some((offer) => isGasDropComposableOffer(offer));
+    !eligibleOffers.length || eligibleOffers.some((offer) => isGasDropComposableOffer(offer));
   const gasDropBlockReason = !composableOfferAvailable
-    ? `${getGasDropBlockReason(displayOffers[0]) ?? "No available route can be combined with Gas Drop."} No other route is available for this pair.`
+    ? `${getGasDropBlockReason(eligibleOffers[0]) ?? "No available route can be combined with Gas Drop."} No other route is available for this pair.`
     : selectedOfferGasDropBlockReason && selectedOfferIsUserChoice
       ? `${selectedOfferGasDropBlockReason} Select a one-step route to drop destination gas.`
       : null;
@@ -1151,10 +1185,16 @@ export default function CrossPage() {
   }, [now, session]);
 
   const quoteErrorMessage = quote.error ? mapCrossApiError(quote.error) : null;
-  const layerZeroNotice = layerZeroDiagnosticMessage(effectiveQuote?.providerDiagnostics)
+  // "No LayerZero route" diagnostics only matter when nothing else quoted or
+  // the user is looking at a LayerZero offer.
+  const layerZeroNotice = layerZeroQuoteNotice(effectiveQuote?.providerDiagnostics, {
+    hasOffers: offerEntries.length > 0,
+    layerZeroSelected: String(selectedOffer?.rail ?? "").toUpperCase() === "LAYERZERO",
+  })
     ?? (layerZeroDestinations.isError
       ? "LayerZero destination discovery is unavailable. Token choices remain available; request a quote to check the route."
-      : selectedLayerZeroDestinationListed === false
+      : selectedLayerZeroDestinationListed === false &&
+          (offerEntries.length === 0 || String(selectedOffer?.rail ?? "").toUpperCase() === "LAYERZERO")
         ? "LayerZero does not list this destination for the selected source token. Other providers will still be checked."
         : null);
   const trackingData = tracking.data as any;
@@ -2134,10 +2174,28 @@ export default function CrossPage() {
   const railsMessage = railsState === "error"
     ? quoteErrorMessage ?? undefined
     : quoteUiState.emptyMessage || undefined;
+  // Price the gas drop from what is actually requested: the quoted Gas.zip
+  // output when present, otherwise the requested native amount.
+  const selectedGasOffer =
+    gasOffers.find((offer: any) => offer.offerId === selectedGasOfferId) ?? gasOffers[0];
+  const gasDropNativeAmount = (() => {
+    try {
+      const quoted = selectedGasOffer?.estimatedOut ? BigInt(selectedGasOffer.estimatedOut) : 0n;
+      if (quoted > 0n) return Number(formatUnits(quoted, 18));
+    } catch {
+      // Fall through to the requested amount.
+    }
+    return Number(destinationGasAmount);
+  })();
+  const gasDropUSD =
+    destinationNativePriceUSD != null ? gasDropNativeAmount * destinationNativePriceUSD : null;
+  const gasDropLabel = `${gasDropNativeAmount.toLocaleString("en-US", { maximumFractionDigits: 6 })} ${toChain.ticker}${
+    gasDropUSD != null ? ` (~$${gasDropUSD.toFixed(2)})` : ""
+  }`;
   const gasDropHint = !gasDropSupported
     ? `Gas.zip doesn't support ${toChain.name} as a destination.`
     : gasDropBlockReason
-      ?? `Arrive on ${toChain.name} with ~$${GAS_DROP_USD.toFixed(2)} of ${toChain.ticker} so you can transact immediately. Routed via Gas.zip side-leg.`;
+      ?? `Arrive on ${toChain.name} with ~${gasDropLabel} so you can transact immediately. Routed via Gas.zip side-leg.`;
   const crossNotice: CrossNotice | undefined =
     selectedOfferId && selectedOfferId !== defaultOfferId
       ? { tone: "info", text: "User-selected route — select it again to return to the best route." }
@@ -2309,6 +2367,8 @@ export default function CrossPage() {
           protocolFeeBps={selectedOffer?.economics?.protocolFeeBps ?? selectedOffer?.fees?.protocolFeeBps}
           protocolFeeUSD={selectedOfferDisplay?.protocolFeeUSD}
           bridgeFeeUSD={selectedOfferDisplay?.bridgeFeeUSD}
+          feeIncludedInQuote={selectedOfferDisplay?.feeIncludedInQuote}
+          networkFee={selectedOfferDisplay?.networkFeeNative ? `${selectedOfferDisplay.networkFeeNative} ${fromChain.ticker}` : undefined}
           estimatedTime={selectedOfferDisplay?.estimatedTimeSeconds ? formatEtaSeconds(selectedOfferDisplay.estimatedTimeSeconds) : undefined}
           minimumReceived={selectedOfferDisplay ? `${selectedOfferDisplay.minimumReceived} ${toTicker}` : undefined}
           slippageBps={selectedOffer?.economics?.slippageBps}
@@ -2332,12 +2392,14 @@ export default function CrossPage() {
             mode: "B",
             outAmount: o.outputAmount,
             eta: o.estimatedTimeSeconds != null ? formatEtaSeconds(o.estimatedTimeSeconds) : "—",
-            tag: o.isBest ? "BEST" : o.offerId === bestAvailableOfferId ? "BEST AVAILABLE" : undefined,
+            tag: o.quoteUnavailable
+              ? "UNAVAILABLE"
+              : o.isBest ? "BEST" : o.offerId === bestAvailableOfferId ? "BEST AVAILABLE" : undefined,
             isActive: o.offerId === (selectedOffer?.offerId ?? selectedOfferId),
           }))}
           onSelectRail={(name) => {
             const hit = offerEntries.find((entry) => entry.railName === name);
-            if (!hit) return;
+            if (!hit || hit.quoteUnavailable) return;
             setSelectedOfferId((cur) => (cur === hit.offerId ? defaultOfferId : hit.offerId));
           }}
           railsState={railsState}
@@ -2549,8 +2611,16 @@ export default function CrossPage() {
                   ? [{ label: "Route steps", value: selectedOfferDisplay.stepSummary }]
                   : []),
                 { label: "Protocol fee",  value: `$${selectedOfferDisplay.protocolFeeUSD.toFixed(2)}`, accent: true },
-                { label: "Bridge fee",    value: selectedOfferDisplay.bridgeFeeUSD <= 0.005 ? "FREE" : `$${selectedOfferDisplay.bridgeFeeUSD.toFixed(2)}` },
-                ...(gasDropOnDestination ? [{ label: "Gas drop", value: `+$${GAS_DROP_USD.toFixed(2)} ${toChain.ticker}` }] : []),
+                {
+                  label: "Bridge fee",
+                  value: selectedOfferDisplay.bridgeFeeUSD > 0.005
+                    ? `$${selectedOfferDisplay.bridgeFeeUSD.toFixed(2)}`
+                    : selectedOfferDisplay.feeIncludedInQuote ? "Included in quote" : "FREE",
+                },
+                ...(selectedOfferDisplay.networkFeeNative
+                  ? [{ label: "Network fee", value: `${selectedOfferDisplay.networkFeeNative} ${fromChain.ticker}` }]
+                  : []),
+                ...(gasDropOnDestination ? [{ label: "Gas drop", value: `+${gasDropLabel}` }] : []),
                 ...(selectedOfferDisplay.estimatedTimeSeconds ? [{ label: "Est. time", value: formatEtaSeconds(selectedOfferDisplay.estimatedTimeSeconds) }] : []),
                 { label: "Minimum received", value: `${selectedOfferDisplay.minimumReceived} ${toTicker}`, muted: true },
                 ...(priceImpactBps !== undefined
@@ -2642,6 +2712,8 @@ export default function CrossPage() {
 
 type CrossOfferEntry = CrossV2OfferDisplay & {
   rawOffer: any;
+  /** Failed the output sanity guard: shown, but never default, best or selectable. */
+  quoteUnavailable?: boolean;
 };
 
 function OffersList({
@@ -2697,11 +2769,12 @@ function OffersList({
       <div style={{ display: "flex", flexDirection: "column", gap: 1, maxHeight: 320, overflowY: "auto" }}>
         {offers.map((o, idx) => {
           const isBestAvailable = o.offerId === bestAvailableOfferId;
-          const isBest = o.offerId === bestOfferId || o.isBest || isBestAvailable;
+          const isBest = !o.quoteUnavailable && (o.offerId === bestOfferId || o.isBest || isBestAvailable);
           const isSelected = o.offerId === selectedOfferId;
           const isActive = isSelected || (!selectedOfferId && isBest);
-          const capabilityTag =
-            o.capabilityStatus === "quote_only"
+          const capabilityTag = o.quoteUnavailable
+            ? "UNAVAILABLE"
+            : o.capabilityStatus === "quote_only"
               ? "QUOTE ONLY"
               : o.capabilityStatus === "restricted"
                 ? "RESTRICTED"

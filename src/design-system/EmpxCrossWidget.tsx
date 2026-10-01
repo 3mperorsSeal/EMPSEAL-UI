@@ -106,6 +106,10 @@ export interface EmpxCrossWidgetProps {
   protocolFeeBps?: number;
   protocolFeeUSD?: number;
   bridgeFeeUSD?: number;
+  /** Zero provider fee that is really taken from the output (provider-direct rails). */
+  feeIncludedInQuote?: boolean;
+  /** Fee paid in source native units outside the USD totals, e.g. "0.00042 BNB". */
+  networkFee?: string;
   outboundFeeUSD?: number;
   sourceGasUSD?: number;
   destinationGasUSD?: number;
@@ -168,6 +172,8 @@ export default function EmpxCrossWidget({
   protocolFeeBps,
   protocolFeeUSD,
   bridgeFeeUSD,
+  feeIncludedInQuote,
+  networkFee,
   outboundFeeUSD,
   sourceGasUSD,
   destinationGasUSD,
@@ -224,7 +230,10 @@ export default function EmpxCrossWidget({
     { label: "Outbound fee", value: outboundFeeUSD },
     { label: "Source gas (est.)", value: sourceGasUSD },
     { label: "Destination gas (est.)", value: destinationGasUSD },
-  ].filter((f): f is { label: string; value: number } => f.value != null && f.value > 0);
+  ]
+    .filter((f): f is { label: string; value: number } => f.value != null && f.value > 0)
+    .map((f) => ({ label: f.label, value: `$${f.value.toFixed(2)}` }));
+  if (networkFee) extraFees.push({ label: "Network fee", value: networkFee });
 
   return (
     <WidgetShell edge>
@@ -392,7 +401,11 @@ export default function EmpxCrossWidget({
         <div>
           <MicroLabel>Total cost</MicroLabel>
           <div style={{ fontSize: 12.5, fontWeight: 500, color: wk.orange, marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
-            {hasFee ? (totalFeeUSD <= 0.005 ? "FREE" : `$${totalFeeUSD.toFixed(2)}`) : "—"}
+            {hasFee
+              ? totalFeeUSD > 0.005
+                ? `$${totalFeeUSD.toFixed(2)}`
+                : feeIncludedInQuote ? "Included in quote" : "FREE"
+              : "—"}
           </div>
           {(protocolFeeBps != null || railName) && (
             <div style={{ fontSize: 9.5, color: wk.t3, marginTop: 4 }}>
@@ -459,7 +472,7 @@ export default function EmpxCrossWidget({
           {extraFees.map((f) => (
             <div key={f.label} style={{ display: "flex", justifyContent: "space-between", fontSize: 9.5 }}>
               <span style={{ color: wk.t3 }}>{f.label}</span>
-              <span style={{ color: wk.t2, fontVariantNumeric: "tabular-nums" }}>${f.value.toFixed(2)}</span>
+              <span style={{ color: wk.t2, fontVariantNumeric: "tabular-nums" }}>{f.value}</span>
             </div>
           ))}
         </div>

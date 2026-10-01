@@ -70,6 +70,7 @@ import {
   buildGasTxRequest,
   formatGasHistoryRows,
   formatGasLookupResult,
+  type GasHistoryRow,
   normalizeGasChains,
   resolveGasSourceAmount,
   resolveSingleGasDestinationChain,
@@ -752,65 +753,85 @@ function HistoryPanel({
     [chains, history.data],
   );
 
+  const muted = (text: string, color = "rgba(255,255,255,0.45)") => (
+    <p style={{ margin: "10px 0 0", fontSize: 11.5, color, lineHeight: 1.6 }}>{text}</p>
+  );
+
   return (
-    <Card style={{ padding: 22, position: "relative", overflow: "hidden" }}>
-      <div style={{ position: "absolute", top: -16, right: -16, opacity: 0.05, pointerEvents: "none" }}>
-        <BrandMark size={120} color="#FF8A00" />
-      </div>
-      <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.50)", textTransform: "uppercase", fontWeight: 700 }}>
+    <div style={{ width: "100%" }}>
+      <p style={{ margin: 0, fontSize: 10, letterSpacing: "0.40em", color: "rgba(255,255,255,0.45)", textTransform: "uppercase", fontWeight: 700 }}>
         Your gas history
       </p>
       {!address ? (
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.55)", lineHeight: 1.6 }}>
-          Connect your wallet to load past Gas.zip transactions.
-        </p>
+        muted("Connect your wallet to load past Gas.zip transactions.")
       ) : history.isLoading ? (
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.55)" }}>
-          Loading history...
-        </p>
+        muted("Loading history...")
       ) : history.error ? (
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "#F87171" }}>
-          Could not fetch transaction history from Gas.zip.
-        </p>
+        muted("Could not fetch transaction history from Gas.zip.", "#F87171")
       ) : rows.length === 0 ? (
-        <p style={{ margin: "12px 0 0", fontSize: 12.5, color: "rgba(255,255,255,0.55)" }}>
-          No past gas top-ups found for this wallet.
-        </p>
+        muted("No past gas top-ups found for this wallet.")
       ) : (
-        <div style={{ marginTop: 14, display: "flex", flexDirection: "column", gap: 8 }}>
+        <div style={{ marginTop: 18, display: "flex", flexDirection: "column" }}>
           {rows.map((row) => (
-            <div
-              key={row.sourceHash}
-              style={{
-                display: "grid",
-                gridTemplateColumns: "minmax(0, 1fr) 0.7fr 0.8fr 0.8fr",
-                alignItems: "center",
-                gap: 10,
-                padding: "10px 12px",
-                background: "rgba(255,255,255,0.02)",
-                border: "1px solid rgba(255,255,255,0.06)",
-                borderRadius: 4,
-                fontSize: 11,
-              }}
-            >
-              <a
-                href={row.sourceExplorer}
-                target="_blank"
-                rel="noreferrer"
-                style={{ color: "#fff", textDecoration: "none", fontFamily: "'Space Grotesk', sans-serif" }}
-              >
-                {row.sourceHashShort}
-              </a>
-              <span style={{ color: "rgba(255,255,255,0.55)" }}>{row.sourceChainName}</span>
-              <span style={{ color: row.status === "failed" ? "#F87171" : row.status === "delivered" ? "#34D399" : "#FF8A00", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.12em" }}>
-                {row.status}
-              </span>
-              <span style={{ color: "rgba(255,255,255,0.60)", textAlign: "right" }}>{row.value || row.destinationsLabel}</span>
-            </div>
+            <HistoryRow key={row.sourceHash} row={row} />
           ))}
         </div>
       )}
-    </Card>
+    </div>
+  );
+}
+
+const HISTORY_STATUS_COLOR: Record<GasHistoryRow["status"], string> = {
+  delivered: "#34D399",
+  pending: "#FF8A00",
+  failed: "#F87171",
+};
+const HISTORY_STATUS_LABEL: Record<GasHistoryRow["status"], string> = {
+  delivered: "Delivered",
+  pending: "In flight",
+  failed: "Failed",
+};
+
+function HistoryRow({ row }: { row: GasHistoryRow }) {
+  const tileChain = row.destinationChain ?? row.txChain;
+  const amount = row.usdValue != null ? `$${row.usdValue.toFixed(2)}` : row.nativeLabel || "—";
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 12,
+        padding: "12px 0",
+        borderTop: "1px solid rgba(255,255,255,0.07)",
+      }}
+    >
+      <ChainLogo
+        chainId={tileChain.id}
+        symbol={tileChain.ticker}
+        bg={tileChain.color}
+        size={30}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <p style={{ margin: 0, fontSize: 12.5, fontWeight: 600, color: "#fff", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+          {row.sourceChainName} → {row.destinationsLabel}
+        </p>
+        <p style={{ margin: "2px 0 0", fontSize: 10, color: "rgba(255,255,255,0.40)" }}>{row.seenLabel}</p>
+      </div>
+      <div style={{ textAlign: "right", flexShrink: 0 }}>
+        <p
+          title={row.usdValue != null ? row.nativeLabel : undefined}
+          style={{ margin: 0, fontSize: 12.5, fontWeight: 500, color: "#fff", fontVariantNumeric: "tabular-nums" }}
+        >
+          {amount}
+        </p>
+        <p style={{ margin: "2px 0 0", fontSize: 9.5, fontWeight: 700, letterSpacing: "0.10em", textTransform: "uppercase", color: HISTORY_STATUS_COLOR[row.status] }}>
+          {HISTORY_STATUS_LABEL[row.status]}
+        </p>
+      </div>
+      {row.txShort && row.txExplorer && (
+        <TxHashChip chain={row.txChain} hashShort={row.txShort} explorer={row.txExplorer} compact />
+      )}
+    </div>
   );
 }
 

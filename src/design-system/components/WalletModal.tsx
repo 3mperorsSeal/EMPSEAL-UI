@@ -40,7 +40,7 @@ interface WalletModalProps {
 }
 
 const KIND_HEADER: Record<WalletKind, { label: string; hint: string }> = {
-  evm:     { label: "EVM",     hint: "MetaMask / Rabby / WalletConnect / Privy" },
+  evm:     { label: "EVM",     hint: "Browser extension / WalletConnect" },
   solana:  { label: "Solana",  hint: "Read-only address connection" },
   bitcoin: { label: "Bitcoin", hint: "Read-only address connection" },
   tron:    { label: "Tron",    hint: "Read-only address connection" },
