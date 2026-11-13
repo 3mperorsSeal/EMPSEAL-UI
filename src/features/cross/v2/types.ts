@@ -127,6 +127,7 @@ export type WithheldOffer = WireOffer & { executableByApiKey?: boolean; label?: 
 
 export interface WireQuoteResponse {
   plans: WireOffer[];
+  gasTopUp?: { reason: string; plan: WireOffer };
   withheld?: WithheldOffer[];
   degraded?: boolean;
   /** Present only with `substitutes`. */
@@ -227,10 +228,29 @@ export interface IntentStatus {
   anomalies: string[];
   conflicts: string[];
   guarantee: unknown;
+  reason?: string;
   expiresAt: number;
   /** A parked delivery the recipient can claim on the destination settler (`SettlerBase.claim(key, to)`); null or absent otherwise. */
   claim?: { chain: string; settler: string; key: string; recipient: string; token: string; amount: string } | null;
   /** Source and destination transactions the server has seen, in order. */
   transactions?: Array<{ kind: "source" | "destination"; chain: string; txHash: string }>;
+}
+export interface CompositionLeg {
+  plan: WirePlan;
+  journey: JourneyQuote;
+  humanAcceptance?: HumanAcceptance;
+}
+export interface CompositionCommit {
+  compositionId: string;
+  replayed: boolean;
+  primary: { intentId: string; kind: "contract" | "provider-direct"; replayed: boolean };
+  gas?: { intentId: string; kind: "contract" | "provider-direct"; replayed: boolean };
+  gasError?: string;
+}
+export interface CompositionStatus {
+  compositionId: string;
+  state: "in_progress" | "delivered" | "delivered_without_gas" | "failed";
+  primary: IntentStatus;
+  gas?: IntentStatus | { error: string } | "requote-required";
 }
 export const TERMINAL_STATUSES: ReadonlySet<string> = new Set(["delivered", "claimed", "refunded", "failed"]);

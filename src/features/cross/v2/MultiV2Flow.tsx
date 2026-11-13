@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { isAddress } from "viem";
 import EmpxMultiWidget from "../../../design-system/EmpxMultiWidget";
 import { ChainPicker, DappFooter, DappNavbar, TokenPicker, WalletButton, WalletModal, Toaster } from "../../../design-system/components";
@@ -9,19 +9,21 @@ import { WidgetKitKeyframes } from "../../../design-system/widgetKit";
 import { BASKET_MODES, MODE_LABEL } from "../../basket/model/modes";
 import type { BasketMode } from "../../basket/api/contracts";
 import type { BasketUiInput } from "../../basket/model/quoteRequest";
+import type { V2LiquidateQuote, V2WalletScanRequest } from "../../basket/api/contracts";
+import { mapV2WalletScan, type MappedWalletScanAsset } from "../../basket/model/walletScan";
 import { buildV2BasketRequest } from "./basketRequest";
 import type { V2BasketUiOutput } from "./basketRequest";
 import { createCrossV2Client } from "./client";
 import { useV2Basket } from "./useV2Basket";
 import { useV2WalletPort } from "./useV2WalletPort";
-import { v2Chains, v2Tokens } from "./assets";
+import { assetIdOf, v2Chains, v2Tokens } from "./assets";
 import { openBaskets } from "./journeyStore";
 import BasketV2Progress from "./BasketV2Progress";
 
-type Mode = Exclude<BasketMode, "wallet-liquidator">;
+type Mode = BasketMode;
 type Target = { side: "input" | "output"; id: string };
 const client = createCrossV2Client();
-const modes = BASKET_MODES.filter((m): m is Mode => m !== "wallet-liquidator").map((value) => ({ value, label: MODE_LABEL[value] }));
+const modes = BASKET_MODES.map(value => ({value, label: value === "wallet-liquidator" ? "Sweep wallet" : MODE_LABEL[value]}));
 
 export default function MultiV2Flow() {
   const { walletState, walletOptions, onSelectWallet, disconnect } = useWalletConnection();
@@ -37,6 +39,64 @@ export default function MultiV2Flow() {
   const [chainTarget, setChainTarget] = useState<Target | null>(null);
   const [tokenTarget, setTokenTarget] = useState<Target | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
+  const [scanAssets, setScanAssets] = useState<MappedWalletScanAsset[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [scanMessages, setScanMessages] = useState<string[]>([]);
+  const [skipped, setSkipped] = useState<V2LiquidateQuote["skipped"]>([]);
+  const [scanRequest, setScanRequest] = useState<V2WalletScanRequest | null>(null);
+  const scanController = useRef(new AbortController());
+  const evmChains = v2Chains().filter(c => c.kind === "EVM");
+  const [scanChains, setScanChains] = useState<number[]>(evmChains.slice(0, 10).map(c => c.id));
+  useEffect(() => {
+    scanController.current.abort();
+    scanController.current = new AbortController();
+    setScanAssets([]); setSelected([]); setScanMessages([]); setSkipped([]); setScanRequest(null); setScanning(false);
+    return () => scanController.current.abort();
+  }, [sender, mode]);
+  async function scan() {
+    if (!sender || scanning) return;
+    scanController.current.abort();
+    const controller = new AbortController();
+    scanController.current = controller;
+    setScanning(true); setFormError(null); setSkipped([]);
+    const tokensByChain: Record<number, string[]> = {};
+    let remaining = 200;
+    for (const id of scanChains.slice(0, 10)) {
+      const tokens = v2Tokens(id).filter(t => !t.isNative && t.address && !/^0x(0{40}|e{40})$/i.test(t.address));
+      tokensByChain[id] = tokens.slice(0, Math.min(50, remaining)).map(t => t.address!.toLowerCase());
+      remaining -= tokensByChain[id]!.length;
+    }
+    const request = {wallet: sender, tokensByChain, includeNative: true};
+    try {
+      const mapped = mapV2WalletScan(await client.scanWallet(request, controller.signal));
+      if (controller.signal.aborted) return;
+      setScanRequest(request); setScanAssets(mapped.assets);
+      setSelected(mapped.assets.filter(a => !a.dust && a.usd !== null).map(a => a.id));
+      setScanMessages([...mapped.errors.map(e => `Chain ${e.chainId}: ${e.error}`), ...mapped.unreadable.map(a => `${a}: unreadable`)]);
+    } catch (e) {
+      if (!controller.signal.aborted) setFormError(e instanceof Error ? e.message : String(e));
+    } finally { if (!controller.signal.aborted) setScanning(false); }
+  }
+  async function liquidate() {
+    if (!scanRequest || !sender || scanning || selected.length === 0) return;
+    const target = outputs[0]!;
+    const token = v2Tokens(target.chainId).find(t => target.token ? t.address === target.token : t.ticker === target.ticker);
+    if (!token) { setFormError("Select a target token"); return; }
+    const signal = scanController.current.signal;
+    setScanning(true); setFormError(null);
+    try {
+      const quote = await client.liquidateQuote({...scanRequest, target: assetIdOf(token), recipient: target.recipient?.trim() || sender, include: selected, slippageBps, maxTier: 3}, signal);
+      if (signal.aborted) return;
+      setSkipped(quote.skipped);
+      const mapped = mapV2WalletScan(quote.scan);
+      setScanMessages([...mapped.errors.map(e => `Chain ${e.chainId}: ${e.error}`), ...mapped.unreadable.map(a => `${a}: unreadable`)]);
+      if (quote.basket) await basket.resume(quote.basket.basketId);
+      else setFormError("No selected balances are eligible for liquidation.");
+    } catch (e) {
+      if (!signal.aborted) setFormError(e instanceof Error ? e.message : String(e));
+    } finally { if (!signal.aborted) setScanning(false); }
+  }
   const ctx = useMemo(
     () => ({ fromAsset: "", amount: "", toAsset: "", sender: sender ?? "", recipient: sender ?? "", now: Math.floor(Date.now() / 1000) }),
     [sender],
@@ -44,15 +104,19 @@ export default function MultiV2Flow() {
   const basket = useV2Basket(client, wallet, ctx);
   const busy = basket.phase === "planning";
   const editing = !basket.view;
-  const usesAllocation = mode !== "multi-to-one";
-  const legCount = inputs.length * outputs.length;
+  const usesAllocation = mode === "one-to-many" || mode === "many-to-many";
+  const legCount = mode === "wallet-liquidator" ? Math.min(10, selected.length) : inputs.length * outputs.length;
   const tokenLeg = tokenTarget ? (tokenTarget.side === "input" ? inputs : outputs).find((l) => l.id === tokenTarget.id) : undefined;
   const tokenChain = tokenLeg ? getV2Chain(tokenLeg.chainId) : undefined;
   const pickerTokens = tokenLeg
     ? v2Tokens(tokenLeg.chainId).map((t) => toMultiPickerToken(t, tokenChain ?? { name: `Chain ${tokenLeg.chainId}`, color: "#888" }))
     : [];
   let blockedReason: string | undefined;
-  if (legCount > 10) blockedReason = "A V2 basket has 1 to 10 legs";
+  if (mode === "wallet-liquidator") {
+    if (!scanRequest) blockedReason = "Scan your wallet first";
+    else if (!selected.length) blockedReason = "Select balances to sweep";
+    else if (outputs[0]?.recipient?.trim() && !isAddress(outputs[0].recipient.trim())) blockedReason = "Enter a valid recipient";
+  } else if (legCount > 10) blockedReason = "A V2 basket has 1 to 10 legs";
   else if (inputs.some((i) => !/^(0|[1-9]\d*)(\.\d+)?$/.test(i.amount.trim()))) blockedReason = "Enter an amount for every input";
   else if (usesAllocation && outputs.reduce((s, o) => s + o.allocationBps, 0) !== 10000) blockedReason = "Allocations must sum to 100%";
   else if (outputs.some((o) => o.recipient?.trim() && !isAddress(o.recipient.trim()))) blockedReason = "Enter a valid recipient";
@@ -72,14 +136,25 @@ export default function MultiV2Flow() {
       <main style={{ maxWidth: 520, margin: "0 auto", padding: "32px 20px" }}>
         {editing && (
           <>
+            {mode === "wallet-liquidator" && <fieldset disabled={scanning}>
+              <legend>Sweep wallet scan chains</legend>
+              <p>Scans native balances and the first 50 listed tokens per chain, up to 200 tokens total and 10 chains. Unpriced balances require explicit selection. Native gas reserves are retained.</p>
+              {evmChains.map(c => <label key={c.id} style={{display: "block"}}>
+                <input type="checkbox" checked={scanChains.includes(c.id)} onChange={e => {
+                  setScanChains(e.target.checked ? [...scanChains, c.id].slice(0, 10) : scanChains.filter(id => id !== c.id));
+                  setScanRequest(null); setScanAssets([]); setSelected([]);
+                }}/>{c.name}
+              </label>)}
+            </fieldset>}
             <EmpxMultiWidget
+              engine="v2"
               mode={mode}
               modeOptions={modes}
               onModeChange={(next) => {
-                if (next === "wallet-liquidator") return;
+                if (scanning) return;
                 setMode(next);
                 if (next === "one-to-many") setInputs(inputs.slice(0, 1));
-                if (next === "multi-to-one") setOutputs([{ ...outputs[0]!, allocationBps: 10000 }]);
+                if (next === "multi-to-one" || next === "wallet-liquidator") setOutputs([{ ...outputs[0]!, allocationBps: 10000 }]);
               }}
               modeSubtitle={MODE_LABEL[mode]}
               modeBlurb="Each basket leg is a separate V2 intent."
@@ -115,12 +190,16 @@ export default function MultiV2Flow() {
               onAddOutput={() => setOutputs([...outputs, { id: crypto.randomUUID(), chainId: 42161, ticker: "USDC", allocationBps: 0 }])}
               canAddOutput={usesAllocation && inputs.length * (outputs.length + 1) <= 10}
               onOutputRecipientChange={(id, recipient) => setOutputs(outputs.map((l) => (l.id === id ? { ...l, recipient } : l)))}
-              scanRows={[]}
-              blockedReason={busy ? "Planning basket…" : blockedReason}
+              scanRows={scanAssets.map(a => ({id: a.id, token: {ticker: a.ticker}, chainName: getV2Chain(a.chainId)?.name ?? String(a.chainId), amount: a.amount, usdValue: a.usd, selected: selected.includes(a.id)}))}
+              onToggleScanRow={id => { if (!scanning) setSelected(selected.includes(id) ? selected.filter(a => a !== id) : [...selected, id]); }}
+              onRescan={() => { if (scanChains.length) void scan(); }}
+              scanning={scanning}
+              blockedReason={scanning ? "Scanning or quoting…" : busy ? "Planning basket…" : blockedReason}
               walletConnected={!!sender}
               onConnect={() => setShowWallet(true)}
               onReview={() => {
                 if (!sender || busy) return;
+                if (mode === "wallet-liquidator") { void liquidate(); return; }
                 try {
                   setFormError(null);
                   void basket.plan(buildV2BasketRequest({ mode, wallet: sender, inputs, outputs, slippageBps, maxTier: 3 }));
@@ -142,6 +221,8 @@ export default function MultiV2Flow() {
           </>
         )}
         {(formError || basket.error) && <p role="alert">{formError ?? basket.error}</p>}
+        {scanMessages.map(message => <p role="status" key={message}>{message}</p>)}
+        {skipped.length > 0 && <section aria-label="Skipped sweep balances"><h2>Skipped balances</h2>{skipped.map(s => <p key={s.asset}>{s.asset}: {s.reason}</p>)}</section>}
         {basket.view && (basket.phase === "review" || basket.view.status === "quoted") && (
           <section aria-label="Basket review">
             <h1>Review basket</h1>

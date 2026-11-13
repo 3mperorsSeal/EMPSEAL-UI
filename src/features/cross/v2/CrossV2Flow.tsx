@@ -1,7 +1,3 @@
-// EMPX V2 cross-chain page, built from the V1 page's own pieces (navbar, EmpxCrossWidget, pickers, confirm modal, footer) so the two engines
-// look like one product and only the data differs. Rendered by CrossEnginePage when the V2 engine is selected (see ../engine.ts).
-// Flow: live quote (useV2Quote) -> rail cards -> confirm -> the wallet signs the locally checked plan -> tracking (useV2Intent) to a terminal state.
-// Chains come from the live capability corridors. Held-back routes need an explicit accept; two-order journeys and recovery come in later sections.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatUnits, type Address } from "viem";
 import { useBalance } from "wagmi";
@@ -26,6 +22,7 @@ import { describeV2Error, errText } from "./errors";
 import { executeCheckedPlan, type ExecuteResult } from "./execute";
 import { checkOffer } from "./planCheck";
 import type { HumanAcceptance } from "./types";
+import type { StoredIntent } from "./journeyStore";
 import { useV2Corridors } from "./useV2Corridors";
 import { claimTx, useV2Intent } from "./useV2Intent";
 import { useV2Quote } from "./useV2Quote";
@@ -86,8 +83,6 @@ export default function CrossV2Flow() {
     },
     errText,
   );
-  // Selection: the user's pick while it is still offered (a normal route, an accepted held-back route, or one delivering another token),
-  // else the first normal route that passed the local check. Held-back and other-token routes are never selected automatically.
   const [pickedPlanId, setPickedPlanId] = useState<string | null>(null);
   const acceptable = quote.withheld.filter(acceptableWithheld);
   const pool = [...quote.offers, ...acceptable, ...quote.substitutes.flatMap((s) => s.offers)];
@@ -105,6 +100,11 @@ export default function CrossV2Flow() {
   const journeyFlow = useV2TwoHopFlow(client, sender, port, errText);
   const chosenToAsset = chosen?.offer.execution.plan.journey.toAsset ?? toAsset;
   const delivers = chosen?.offer.execution.plan.delivers;
+  const [gasEnabled, setGasEnabled] = useState(true);
+  const gas = quote.gasTopUp?.offer;
+  const primaryPlan = chosen?.offer.execution.plan;
+  const gasOffer = gas?.check.ok && primaryPlan && primaryPlan.compiled.rail !== "gaszip" && !(primaryPlan.compiled.rail === "garden" && primaryPlan.journey.from.asset.includes("/slip44:")) && gas.offer.journey.toAsset.split("/")[0] === chosenToAsset.split("/")[0] && gas.offer.journey.recipient === primaryPlan.journey.recipient ? gas : null;
+  useEffect(() => setGasEnabled(true), [gas?.offer.execution.plan.hash, primaryPlan?.hash]);
 
   const fromPrice = useUnifiedPrice(fromChainId, fromToken?.ticker, fromToken?.address);
   const toPrice = useUnifiedPrice(toChainId, toToken?.ticker, toToken?.address);
@@ -127,7 +127,6 @@ export default function CrossV2Flow() {
   });
   const fromBalanceNum = fromBalance ? Number(formatUnits(fromBalance.value, fromBalance.decimals)) : 0;
   const amountNum = Number(fromAmount.replace(/,/g, ""));
-  // Execution
   const [stepNote, setStepNote] = useState<string | null>(null);
   const [deposit, setDeposit] = useState<{ instruction: NonNullable<ExecuteResult["deposit"]>; rail: string; sourceAddress: string; client: typeof client }>();
   const [execError, setExecError] = useState<string | null>(null);
@@ -150,6 +149,8 @@ export default function CrossV2Flow() {
     const recheck = checkOffer(chosen.offer, {
       fromAsset, amount: chosen.offer.execution.plan.journey.from.amount, toAsset: chosenToAsset, sender: quoteSender!, recipient: recipientOrSender, now: Math.floor(Date.now() / 1000), allowHeldBack: Boolean(humanAcceptance),
     });
+    const gasCheck = gasEnabled && gasOffer ? checkOffer(gasOffer.offer, { fromAsset: gasOffer.offer.journey.input.asset, amount: gasOffer.offer.journey.input.amount, toAsset: gasOffer.offer.journey.toAsset, sender: quoteSender, recipient: recipientOrSender, now: Math.floor(Date.now() / 1000), allowHeldBack: true }) : null;
+    if (gasCheck && !gasCheck.ok) { setExecError("Gas quote expired or changed. Refresh before signing."); return; }
     setInFlight(true);
     intent.clear();
     setExecErrorRef(undefined);
@@ -160,21 +161,19 @@ export default function CrossV2Flow() {
     }
     setExecuting(true);
     setExecError(null);
-    // One commit key per plan: retrying after a network failure replays the same intent instead of creating a second one.
     const plan = recheck.plan;
-    const commitKey = commitKeys.current.get(plan.hash) ?? `commit-${crypto.randomUUID()}`;
-    commitKeys.current.set(plan.hash, commitKey);
-    // Remembered from the commit on, and updated per broadcast, so a stop midway (or a reload) keeps the transfer and its links.
-    const record = { intentId: "", createdAt: Date.now(), fromChain: fromAsset.split("/")[0], toChain: chosenToAsset.split("/")[0]!, toAsset: chosenToAsset, rail: plan.compiled.rail, sourceTxs: [] as Array<{ chainId: number; hash: string; stepId?: string }> };
+    const selectionKey = `${plan.hash}:${gasCheck?.ok ? gasCheck.plan.hash : "plain"}`;
+    const commitKey = commitKeys.current.get(selectionKey) ?? `commit-${crypto.randomUUID()}`;
+    commitKeys.current.set(selectionKey, commitKey);
+    const record: StoredIntent = { intentId: "", createdAt: Date.now(), fromChain: fromAsset.split("/")[0], toChain: chosenToAsset.split("/")[0]!, toAsset: chosenToAsset, rail: plan.compiled.rail, sourceTxs: [] };
     try {
       const r = await executeCheckedPlan(client, { plan, journey: chosen.offer.journey }, recheck.sourceChainId, port, {
         commitKey,
         sender: quoteSender,
         humanAcceptance,
-        onCommitted: (id) => {
-          record.intentId = id;
-          intent.track({ ...record });
-        },
+        ...(gasCheck?.ok && gasOffer ? { gasTopUp: { offer: gasOffer.offer, sourceChainId: gasCheck.sourceChainId } } : {}),
+        onComposition: (id) => { record.compositionId = id; },
+        onCommitted: (id) => { record.intentId = id; intent.track({ ...record }); },
         onSent: (t) => {
           record.sourceTxs = [...record.sourceTxs, { chainId: t.chainId, hash: t.hash, stepId: t.stepId }];
           if (record.intentId) intent.track({ ...record });
@@ -183,8 +182,9 @@ export default function CrossV2Flow() {
       });
       record.intentId = r.intentId;
       if (r.deposit) setDeposit({ instruction: r.deposit, rail: plan.compiled.rail, sourceAddress: quoteSender, client });
-      intent.track({ ...record, sourceTxs: r.txs.map((t) => ({ chainId: t.chainId, hash: t.hash, stepId: t.stepId })) });
+      intent.track({ ...record });
       if (r.waiting.length) setExecError(`Steps still waiting: ${r.waiting.join(", ")}`);
+      if (r.gasError) setExecError(`Transfer submitted. Gas top-up: ${r.gasError}`);
       if (r.tracking === "unavailable" || r.tracking === "failed")
         toast.info("Sent. Live tracking for this provider is not linked yet, so the status may stay pending: check the provider's explorer.");
     } catch (e) {
@@ -197,15 +197,12 @@ export default function CrossV2Flow() {
     }
   }
 
-  // The server's word on delivery; the toast fires once per transfer.
   const toasted = useRef<string | null>(null);
   useEffect(() => {
     if (!intentId || toasted.current === intentId) return;
-    if (status?.status === "delivered" || status?.status === "claimed") {
-      toasted.current = intentId;
-      toast.success("Delivered");
-    }
-  }, [intentId, status?.status]);
+    if (intent.composition?.state === "delivered_without_gas") { toasted.current = intentId; toast.info("Delivered, gas top-up failed"); }
+    else if ((!intent.composition || intent.composition.state === "delivered") && (status?.status === "delivered" || status?.status === "claimed")) { toasted.current = intentId; toast.success("Delivered"); }
+  }, [intentId, status?.status, intent.composition?.state]);
   async function claimParked() {
     const err = await intent.claim();
     if (err) toast.error(err);
@@ -372,6 +369,7 @@ export default function CrossV2Flow() {
             sameChain ? undefined : (
               <V2OffersFooter
                 withheld={quote.withheld}
+                gasTopUp={gasOffer ? { offer: gasOffer.offer, reason: quote.gasTopUp!.reason, enabled: gasEnabled, chain: toChain.name, onToggle: () => setGasEnabled(v => !v) } : undefined}
                 substitutes={quote.substitutes}
                 twoHop={quote.twoHop}
                 selectedPlanId={chosen ? planIdOf(chosen.offer) : null}
@@ -390,7 +388,6 @@ export default function CrossV2Flow() {
           onConnect={() => setShowWalletModal(true)}
           onSwap={() => setShowConfirm(true)}
           onFlip={flip}
-          // While a quote is in flight the routes on screen are for the previous input: nothing can be reviewed until it lands.
           swapDisabled={!(chosen?.check.ok || twoHop) || (!port && !isNonEvmChain(fromChainId)) || executing || sameChain || !recipientValid || quoting}
           swapLoading={quoting || executing}
           swapLabel={!quoteSender ? "Connect wallet" : quoting ? "Fetching route..." : chosen || twoHop ? "Review route" : quote.twoHop?.check.ok ? "Pick the two-step route" : "No route"}
@@ -416,6 +413,7 @@ export default function CrossV2Flow() {
             deposit={deposit}
             intentId={intentId}
             status={status}
+            composition={intent.composition}
             delivered={deliveredLine}
             error={execError ?? intent.pollError}
             errorRef={execErrorRef}
@@ -456,6 +454,7 @@ export default function CrossV2Flow() {
           { label: "Guarantee", value: view.railBadge },
           ...view.feeRows.map((f, i) => ({ ...f, accent: i === 0 })),
           ...(extraNativeText ? [{ label: "Provider fee (gas token)", value: extraNativeText }] : []),
+          ...(gasEnabled && gasOffer ? [{ label: "Independent gas top-up", value: `${formatUnitsShort(gasOffer.offer.journey.expectedOutput)} native for ${formatUnitsShort(gasOffer.offer.journey.input)} ${ticker(gasOffer.offer.journey.input.asset)}` }] : []),
           { label: "Est. time", value: view.estimatedTime },
           { label: "Recipient", value: recipientOrSender ? `${recipientOrSender.slice(0, 6)}…${recipientOrSender.slice(-4)}` : "—", muted: true },
           { label: "Minimum received", value: view.minimumReceived, muted: true },
