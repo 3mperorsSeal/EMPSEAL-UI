@@ -5,6 +5,8 @@ import type { CrossV2Client } from "./client";
 import { providerReference, referenceKind, type ReceiptLog } from "./providerReference";
 import type { CompositionCommit, WireOffer, WirePlan, WireStep } from "./types";
 import { depositOf, type DepositInstruction } from "./planCheck";
+import type { SolanaWalletPort } from "./solanaWallet";
+import { performSolanaSteps } from "./executeSolana";
 
 export interface WalletPort {
   readonly address: string;
@@ -51,6 +53,7 @@ export interface ExecuteOptions {
   humanAcceptance?: Parameters<CrossV2Client["commit"]>[5];
   /** Non-EVM quote sender (the refund address); no EVM wallet is needed for a manual deposit. */
   sender?: string;
+  solanaWallet?: SolanaWalletPort;
   gasTopUp?: { offer: WireOffer; sourceChainId: number };
   onComposition?: (compositionId: string) => void;
 }
@@ -123,6 +126,7 @@ export async function performSteps(
   wallet: WalletPort | null,
   o: ExecuteOptions = {},
 ): Promise<ExecuteResult> {
+  if (plan.steps.some(s => s.walletMode === "solana-signer")) return performSolanaSteps(client, intentId, plan, sourceChainId, o);
   const deposit = depositOf(plan);
   if (deposit && !deposit.chain.startsWith("eip155:")) {
     return { intentId, done: [], waiting: [], tracking: "not-needed", txs: [], deposit };

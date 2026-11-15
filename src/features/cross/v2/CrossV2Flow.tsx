@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { formatUnits, type Address } from "viem";
 import { useBalance } from "wagmi";
-import DestinationAddressInput from "../../../components/DestinationAddressInput";
+import V2AddressFields from "./V2AddressFields";
 import EmpxCrossWidget from "../../../design-system/EmpxCrossWidget";
 import {
   AccountModal, ChainLogo, ChainPicker, ConfirmTradeModal, DappFooter, DappNavbar, NetworkSelector, Toaster, TokenLogo,
@@ -12,7 +12,7 @@ import { useAccountSnapshot } from "../../../design-system/hooks/useAccountSnaps
 import { useUnifiedPrice } from "../../../design-system/hooks/useUnifiedPrice";
 import { useV2Balances } from "../../../design-system/hooks/useV2Balances";
 import { useWalletConnection } from "../../../design-system/hooks/useWalletConnection";
-import { Disclosure, WidgetKitKeyframes } from "../../../design-system/widgetKit";
+import { WidgetKitKeyframes } from "../../../design-system/widgetKit";
 import type { V2TokenConfig } from "../../../design-system/data/v2TokenView";
 import { assetIdOf, defaultToken, tickerForAsset, v2ChainById, v2Tokens } from "./assets";
 import { createCrossV2Client } from "./client";
@@ -30,8 +30,10 @@ import { useV2TwoHopFlow } from "./useV2TwoHopFlow";
 import V2OffersFooter, { acceptableWithheld } from "./V2OffersFooter";
 import { useV2WalletPort } from "./useV2WalletPort";
 import { formatUnitsShort, planIdOf, railCardNames, railNameOf, routeHopsOf, selectedOfferView, toRailCards } from "./widgetView";
-import { chainKindFor, isNonEvmChain } from "@/lib/wallet/chainKind";
-import { addressValidFor } from "./nonEvm";
+import { isNonEvmChain } from "@/lib/wallet/chainKind";
+import { addressValidFor, chainIdOfCaip2 } from "./nonEvm";
+import { useSolanaSender } from "./useSolanaSender";
+import { allowSameChain } from "./solanaSwap";
 
 const client = createCrossV2Client();
 type Side = "from" | "to";
@@ -57,6 +59,8 @@ export default function CrossV2Flow() {
   const destinations = corridors.destinationsFor(fromChainId);
   const fromChain = corridors.sources.find((c) => c.id === fromChainId) ?? corridors.sources[0]!;
   const toChain = destinations.find((c) => c.id === toChainId) ?? destinations[0] ?? fromChain;
+  const solana = useSolanaSender(fromChain.id, sender);
+  const connectSource = () => solana.isSolana ? void solana.connect().catch(e => toast.error(errText(e))) : setShowWalletModal(true);
   // When the live corridors drop the current pair, move to the first one they offer.
   useEffect(() => {
     if (fromChain.id !== fromChainId) {
@@ -70,16 +74,16 @@ export default function CrossV2Flow() {
   }, [fromChain.id, toChain.id]); // eslint-disable-line react-hooks/exhaustive-deps
   const fromAsset = fromToken ? assetIdOf(fromToken) : "";
   const toAsset = toToken ? assetIdOf(toToken) : "";
-  const recipientOrSender = recipient.trim() || (isNonEvmChain(toChain.id) ? "" : sender || "");
+  const recipientOrSender = allowSameChain(fromChain.id, toChain.id) ? solana.sender ?? "" : recipient.trim() || (isNonEvmChain(toChain.id) ? "" : sender || "");
   const recipientValid = addressValidFor(toChain.id, recipientOrSender);
-  const quoteSender = isNonEvmChain(fromChain.id) ? sourceAddress.trim() : sender;
+  const quoteSender = solana.isSolana ? solana.sender : isNonEvmChain(fromChain.id) ? sourceAddress.trim() : sender;
   const [showConfirm, setShowConfirm] = useState(false);
   const [executing, setExecuting] = useState(false);
   const quote = useV2Quote(
     client,
     {
-      fromAsset, fromDecimals: fromToken?.decimals ?? 18, toAsset, amount: fromAmount, sender, sourceAddress,
-      recipient: recipient.trim(), paused: showConfirm || executing,
+      fromAsset, fromDecimals: fromToken?.decimals ?? 18, toAsset, amount: fromAmount, sender, sourceAddress: solana.isSolana ? solana.sender ?? "" : sourceAddress,
+      recipient: recipientOrSender, paused: showConfirm || executing,
     },
     errText,
   );
@@ -169,7 +173,7 @@ export default function CrossV2Flow() {
     try {
       const r = await executeCheckedPlan(client, { plan, journey: chosen.offer.journey }, recheck.sourceChainId, port, {
         commitKey,
-        sender: quoteSender,
+        sender: quoteSender, solanaWallet: solana.wallet,
         humanAcceptance,
         ...(gasCheck?.ok && gasOffer ? { gasTopUp: { offer: gasOffer.offer, sourceChainId: gasCheck.sourceChainId } } : {}),
         onComposition: (id) => { record.compositionId = id; },
@@ -191,6 +195,7 @@ export default function CrossV2Flow() {
       const v = describeV2Error(e);
       setExecError(v.text);
       setExecErrorRef(v.requestId);
+      if (v.requote) { setShowConfirm(false); quote.refresh(); }
     } finally {
       setStepNote(null);
       setExecuting(false);
@@ -246,7 +251,7 @@ export default function CrossV2Flow() {
     }));
   };
 
-  const sameChain = fromChainId === toChainId;
+  const sameChain = fromChainId === toChainId && !allowSameChain(fromChainId, toChainId);
   // A provider's own fee in the source chain's gas token, sent on top of the transfer (shown before signing).
   const extraNative = chosen?.check.extraNative;
   const extraNativeText = extraNative ? `${formatUnitsShort({ amount: extraNative.toString(), decimals: 18 })} ${fromChain.ticker}` : null;
@@ -282,12 +287,12 @@ export default function CrossV2Flow() {
           ? "No automatic route: see the options below."
           : "No route is available for this transfer right now."
       : quote.state === "idle"
-        ? isNonEvmChain(fromChainId) ? "Enter the source and recipient addresses to fetch offers." : "Connect a wallet to fetch live cross-chain offers."
+        ? solana.isSolana ? "Connect Phantom and choose a recipient to fetch offers." : isNonEvmChain(fromChainId) ? "Enter the source and recipient addresses to fetch offers." : "Connect a wallet to fetch live cross-chain offers."
         : quote.error ?? undefined;
   const quoting = Boolean(quoteSender) && (quote.state === "loading" || (quote.state === "refreshing" && quote.forNewInput));
   const routeJourney = chosen?.offer.journey ?? twoHop?.journey;
   const routeHops = useMemo(
-    () => (routeJourney ? routeHopsOf(routeJourney, ticker, (c) => v2ChainById(Number(c.split(":")[1]))) : []),
+    () => (routeJourney ? routeHopsOf(routeJourney, ticker, (c) => v2ChainById(chainIdOfCaip2(c) ?? NaN)) : []),
     [routeJourney, ticker],
   );
   const walletDisplay = walletState.status === "connected" ? walletState : null;
@@ -337,18 +342,8 @@ export default function CrossV2Flow() {
           onSelectToToken={() => setTokenPicker("to")}
           onSelectToChain={() => setChainPicker("to")}
           destinationSlot={
-            <>
-              {isNonEvmChain(fromChain.id) && <DestinationAddressInput id="cross-v2-source-address"
-                chainKind={chainKindFor(fromChain.id)!} chainLabel={fromChain.name} value={sourceAddress}
-                onChange={setSourceAddress} label={`Your ${fromChain.name} address (refunds go here)`} required />}
-              {isNonEvmChain(toChain.id) ? <DestinationAddressInput id="cross-v2-recipient"
-                chainKind={chainKindFor(toChain.id)!} chainLabel={toChain.name} value={recipient} onChange={setRecipient}
-                label={`Recipient on ${toChain.name} (required)`} required /> :
-                <Disclosure label={recipient ? "Recipient · another address" : "Send to another address"}>
-                  <DestinationAddressInput id="cross-v2-recipient" chainKind={chainKindFor(toChain.id)!}
-                    chainLabel={toChain.name} value={recipient} onChange={setRecipient} label="Recipient (defaults to your wallet)" />
-                </Disclosure>}
-            </>
+            <V2AddressFields fromChain={fromChain} toChain={toChain} sourceAddress={sourceAddress} setSourceAddress={setSourceAddress}
+              recipient={recipient} setRecipient={setRecipient} solana={solana.isSolana} solanaSender={solana.sender} evmSender={sender} />
           }
           railName={view?.railName}
           routeHops={routeHops}
@@ -385,7 +380,7 @@ export default function CrossV2Flow() {
           railsState={sameChain ? "idle" : quote.state}
           railsMessage={sameChain ? "Pick two different chains." : railsMessage}
           walletConnected={Boolean(quoteSender)}
-          onConnect={() => setShowWalletModal(true)}
+          onConnect={connectSource} connectLabel={solana.isSolana ? "Connect Phantom" : undefined}
           onSwap={() => setShowConfirm(true)}
           onFlip={flip}
           swapDisabled={!(chosen?.check.ok || twoHop) || (!port && !isNonEvmChain(fromChainId)) || executing || sameChain || !recipientValid || quoting}

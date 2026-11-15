@@ -7,6 +7,13 @@ import { makeOffer } from "./v2Fixtures";
 const json = (status: number, body: unknown) => new Response(typeof body === "string" ? body : JSON.stringify(body), { status });
 
 describe("createCrossV2Client", () => {
+  it("submits only signed Solana bytes to the encoded intent", async () => {
+    const f = vi.fn(async (_url: string, _init: RequestInit) => json(200, { signature: "sig", replayed: false }));
+    const r = await createCrossV2Client({ fetchImpl: f as never }).submitSolana("provider:abc", "AQ==");
+    expect(r).toEqual({ signature: "sig", replayed: false });
+    expect(f.mock.calls[0]?.[0]).toBe("/api/cross-v2/v2/intents/provider%3Aabc/solana");
+    expect(JSON.parse(String(f.mock.calls[0]?.[1].body))).toEqual({ signedTransaction: "AQ==" });
+  });
   it("retries a composition with the same key after an uncertain HTTP result and reads combined status", async () => {
     const f = vi.fn(async (_url: string, _init: RequestInit) => json(503, { error: { code: "PROVIDER_UNAVAILABLE", message: "unavailable", retryable: true } }));
     const c = createCrossV2Client({ fetchImpl: f as never });

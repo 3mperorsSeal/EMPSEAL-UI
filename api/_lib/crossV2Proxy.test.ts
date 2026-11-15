@@ -26,6 +26,7 @@ describe("allowlist", () => {
     ["GET", "/api/cross-v2/v2/compositions/composition-1"],
     ["GET", "/api/cross-v2/v2/intents/int_123"],
     ["POST", "/api/cross-v2/v2/intents/int_123/orders"],
+    ["POST", "/api/cross-v2/v2/intents/int_123/solana"],
     ["POST", "/api/cross-v2/v2/intents/int_123/steps"],
     ["POST", "/api/cross-v2/v2/intents/int_123/reference"],
     // provider-direct intent ids are `provider:0x<plan hash>`, sent URL-encoded

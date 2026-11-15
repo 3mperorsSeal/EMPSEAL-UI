@@ -108,6 +108,11 @@ export function createCrossV2Client(o: CrossV2ClientOptions = {}) {
   });
 
   return {
+    submitSolana(intentId: string, signedTransaction: string, signal?: AbortSignal) {
+      return request<{ signature: string; replayed: boolean }>("POST", `/v2/intents/${encodeURIComponent(intentId)}/solana`, {
+        body: { signedTransaction }, idempotencyKey: `solana-${intentId}`, signal,
+      });
+    },
     scanWallet(r: V2WalletScanRequest, signal?: AbortSignal) {
       return request<V2WalletScanResult>("POST", "/v2/wallet/scan", {signal, body: r});
     },

@@ -309,7 +309,7 @@ export default function EmpxMultiWidget({
           </div>
           <div style={{ fontSize: 10, color: wk.t3, textAlign: "right", marginTop: 6, fontVariantNumeric: "tabular-nums" }}>
             {usesAllocation
-              ? `${((leg.allocationBps ?? 0) / 100).toFixed(2)}% allocation`
+              ? `${leg.convergedAmount ? `≈ ${leg.convergedAmount} ${leg.token.ticker} · ` : ""}${((leg.allocationBps ?? 0) / 100).toFixed(2)}% allocation`
               : leg.convergedUsd != null
                 ? `≈ $${leg.convergedUsd.toLocaleString(undefined, { maximumFractionDigits: 2 })} · converged`
                 : " "}

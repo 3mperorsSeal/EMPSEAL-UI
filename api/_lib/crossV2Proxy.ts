@@ -38,6 +38,7 @@ const ROUTES: ReadonlyArray<[string, RegExp]> = [
   ["GET", new RegExp(`^/v2/compositions/${ID}$`)],
   ["GET", new RegExp(`^/v2/intents/${ID}$`)],
   ["POST", new RegExp(`^/v2/intents/${ID}/orders$`)],
+  ["POST", new RegExp(`^/v2/intents/${ID}/solana$`)],
   ["POST", new RegExp(`^/v2/intents/${ID}/steps$`)],
   ["POST", new RegExp(`^/v2/intents/${ID}/reference$`)],
   ["POST", /^\/v2\/journeys\/quote$/],

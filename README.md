@@ -17,7 +17,7 @@ Each engine is lazy-loaded, so a build with one engine never downloads the other
 The browser never holds a V2 API key. It calls the same-origin route `/api/cross-v2/*`, which a small proxy forwards to the V2 API
 (`api/_lib/crossV2Proxy.ts`, served by the Vercel function in `api/cross-v2` and by `vite.config.js` in dev).
 Only the calls the cross-chain page makes are allowed (capabilities, quote, commit intent, submit order, report step, attach reference,
-intent status, gas composition commit/status, two-order journeys, basket plan/status/begin/cancel and leg commit/steps/requote). The proxy adds the server's key and ignores any key the browser sends. Everything else is a 404.
+intent status, signed Solana submission, gas composition commit/status, two-order journeys, basket plan/status/begin/cancel and leg commit/steps/requote). The proxy adds the server's key and ignores any key the browser sends. Everything else is a 404.
 
 Vercel environment variables (Project Settings → Environment Variables):
 
@@ -28,6 +28,14 @@ Vercel environment variables (Project Settings → Environment Variables):
 | `EMPX_V2_API_KEY` | server only | the app's V2 integrator key (mark it Sensitive) |
 
 The two `EMPX_V2_*` variables have no `VITE_` prefix, so Vite never puts them in the bundle. For local dev, put them in `.env.local`.
+
+### V2 Solana source
+
+When the server advertises `cctp-from-solana`, the single-transfer V2 page supports Solana USDC → EVM USDC. Connect Phantom on the source side; quotes and commits use its Solana pubkey, not the EVM account. Without an EVM wallet, enter the destination recipient explicitly.
+
+Phantom signs only. Signed transaction bytes go through the same-origin `/v2/intents/:id/solana` proxy route; the server verifies the committed bytes and all signatures, broadcasts and binds the tracking signature. The UI never calls Phantom `signAndSendTransaction` or attaches another reference for this rail. A changed message is refused; expiry requotes for another review; insufficient SOL/USDC is reported before signing.
+
+The backend rail opt-in, Solana RPC, fee owner with an existing USDC ATA, canary tenant and capability evidence must be configured separately. Offline tests and a browser smoke use synthetic RPC/Circle/Phantom responses; real Phantom extension behavior and funded mainnet delivery are not verified. Jupiter execution and Solana same-chain swaps remain disabled.
 
 ### V2 destination gas
 

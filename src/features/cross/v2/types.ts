@@ -10,7 +10,7 @@ export interface WireAmount {
 export type WireStep = {
   id: string;
   dependsOn: string[];
-  walletMode: "evm-signer" | "external-wallet" | "server";
+  walletMode: "evm-signer" | "external-wallet" | "solana-signer" | "server";
   expiresAt: number;
   readiness: "executable" | "blocked" | "informational";
 } & (
@@ -25,7 +25,8 @@ export type WireStep = {
     }
   | { type: "tx"; chain: string; to: string; data: string; value: string }
   | { type: "deposit"; chain: string; address: string; memo?: string; asset: string; amount: string }
-  | { type: "native_tx" | "submit" | "wait" | "relay" | "recovery"; [k: string]: unknown }
+  | { type: "native_tx"; chain: string; format: "solana-versioned-tx"; payload: string; submitVia: { kind: "rpc" } | { kind: "jupiter-execute"; requestId: string } }
+  | { type: "submit" | "wait" | "relay" | "recovery"; [k: string]: unknown }
 );
 
 export interface WirePlan {
@@ -34,7 +35,7 @@ export interface WirePlan {
   id: string;
   hash: string;
   expiresAt: number;
-  journey: { from: WireAmount; toAsset: string; recipient: string };
+  journey: { from: WireAmount; toAsset: string; sender?: string; recipient: string };
   /** `trackingRef`: the provider's own tracking id (deBridge order id, LayerZero VT quote id), recorded by the server at commit. */
   compiled: { rail: string; shape: string; carrier?: string; trackingRef?: string };
   amounts: { quoted: WireAmount; minimum: WireAmount | null; actual?: WireAmount };
